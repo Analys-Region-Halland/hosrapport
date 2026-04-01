@@ -13,6 +13,7 @@ interface Props {
 
 export default function Section({ section, vyData, editMode: _editMode, onOpenChart, visaDagar }: Props) {
   const [showSummary, setShowSummary] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const avvik = section.kpier.filter((k) => k.status !== "gron").length;
 
   return (
@@ -92,7 +93,11 @@ export default function Section({ section, vyData, editMode: _editMode, onOpenCh
       <div style={{ padding: "12px 14px 14px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, alignItems: "stretch" }}>
           {section.kpier.map((kpi) => (
-            <KpiCard key={kpi.id} kpi={kpi} vyData={vyData} onOpenChart={onOpenChart} visaDagar={visaDagar} />
+            <KpiCard
+              key={kpi.id} kpi={kpi} vyData={vyData} onOpenChart={onOpenChart} visaDagar={visaDagar}
+              expanded={expandedId === kpi.id}
+              onToggleExpand={() => setExpandedId(expandedId === kpi.id ? null : kpi.id)}
+            />
           ))}
         </div>
       </div>
