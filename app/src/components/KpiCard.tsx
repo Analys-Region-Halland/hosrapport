@@ -360,11 +360,10 @@ interface KpiCardProps {
   vyData: VyData;
   onOpenChart?: (kpi: KpiData) => void;
   visaDagar?: boolean;
-  expanded?: boolean;
-  onToggleExpand?: () => void;
 }
 
-export default function KpiCard({ kpi, vyData, onOpenChart, visaDagar, expanded = false, onToggleExpand }: KpiCardProps) {
+export default function KpiCard({ kpi, vyData, onOpenChart, visaDagar }: KpiCardProps) {
+  const [expanded, setExpanded] = useState(false);
 
   // Välj data: dagar (dagsnivå för aktuell period) eller aggregerad tidsserie
   const aktivSerie = visaDagar && kpi.dagar && kpi.dagar.length > 0
@@ -534,7 +533,7 @@ export default function KpiCard({ kpi, vyData, onOpenChart, visaDagar, expanded 
       {/* ── Undernivaer ── */}
       {hasUnder && (
         <div style={{ padding: "0 14px 10px", borderTop: "1px solid #f0f0f0" }}>
-          <button onClick={() => onToggleExpand?.()}
+          <button onClick={() => setExpanded(!expanded)}
             style={{
               background: "none", border: "none", cursor: "pointer",
               padding: "8px 0 4px", fontFamily: FONT, fontSize: 11.5, fontWeight: 500,
