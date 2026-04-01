@@ -1,0 +1,184 @@
+{
+  "vy": "dag",
+  "datum": "2026-03-31",
+  "uppdaterad": "08:00",
+  "analys": "Hälso- och sjukvården i Region Halland uppvisar en ansträngd men hanterbar situation den 31 mars 2026. Det samlade trycket drivs primärt av en stigande beläggningsgrad — nu 94,2 procent — i kombination med en växande grupp utskrivningsklara patienter som väntar på kommunal insats.\n\nAkutflödet visar paradoxalt nog minskande volymer. Antalet akutbesök och ambulansuppdrag ligger under periodens genomsnitt, vilket tyder på att belastningen inte drivs av ökat inflöde utan av förlängda vårdtider. Medianväntetiden på akutmottagningen har överstigit målvärdet 150 minuter sedan tre veckor.\n\nSlutenvården rapporterar ett normalt antal inläggningar, men trenden för utskrivningsklara patienter pekar uppåt sedan mitten av mars — främst i Halmstad och Kungsbacka.\n\nSammantaget kräver situationen daglig bevakning av beläggningsutvecklingen och prioriterad dialog med kommunerna om utskrivningstakten. Om beläggningen passerar 95 procent bör avlastningsplanen aktiveras.",
+  "sektioner": [
+    {
+      "id": "akutflode",
+      "namn": "Akutflöde & kapacitet",
+      "analys": "Akutflödet visar en ansträngd men stabil situation. Beläggningsgraden på 94,2 procent närmar sig den kritiska 95-procentsgränsen, drivet av säsongens influensatopp snarare än ökat inflöde.\n\nAntalet akutbesök och ambulansuppdrag ligger under periodens genomsnitt, vilket tyder på att belastningen drivs av förlängda vårdtider. Medianväntetiden har överstigit målvärdet 150 minuter i tre veckor.\n\nRekommendation: bevaka beläggningen dagligen och överväg avlastningsplan om 95 procent nås.",
+      "kpier": [
+        {
+          "id": "belaggning",
+          "namn": "Beläggningsgrad",
+          "enhet": "procent",
+          "inverterad": true,
+          "senaste": 94.2,
+          "forandring": 1.0,
+          "status": "gul",
+          "analystext": "Beläggningsgraden ligger på 94,2 procent, strax under den kritiska gränsen på 95 procent. Trenden senaste månaden visar en successiv ökning från 87 procent i början av mars, vilket sammanfaller med säsongens influensatopp. Situationen är ansträngd men hanterbar — vid fortsatt ökning kan avlastningsåtgärder behöva aktiveras.",
+          "tidsserie": [
+            {"datum": "2026-03-02", "varde": 87.3}, {"datum": "2026-03-03", "varde": 88.1},
+            {"datum": "2026-03-04", "varde": 86.9}, {"datum": "2026-03-05", "varde": 89.2},
+            {"datum": "2026-03-06", "varde": 90.5}, {"datum": "2026-03-07", "varde": 88.7},
+            {"datum": "2026-03-08", "varde": 87.4}, {"datum": "2026-03-09", "varde": 89.8},
+            {"datum": "2026-03-10", "varde": 91.2}, {"datum": "2026-03-11", "varde": 90.6},
+            {"datum": "2026-03-12", "varde": 89.3}, {"datum": "2026-03-13", "varde": 91.5},
+            {"datum": "2026-03-14", "varde": 92.1}, {"datum": "2026-03-15", "varde": 90.8},
+            {"datum": "2026-03-16", "varde": 91.7}, {"datum": "2026-03-17", "varde": 93.0},
+            {"datum": "2026-03-18", "varde": 91.5}, {"datum": "2026-03-19", "varde": 92.3},
+            {"datum": "2026-03-20", "varde": 93.8}, {"datum": "2026-03-21", "varde": 92.1},
+            {"datum": "2026-03-22", "varde": 93.5}, {"datum": "2026-03-23", "varde": 94.7},
+            {"datum": "2026-03-24", "varde": 93.2}, {"datum": "2026-03-25", "varde": 92.8},
+            {"datum": "2026-03-26", "varde": 93.9}, {"datum": "2026-03-27", "varde": 95.1},
+            {"datum": "2026-03-28", "varde": 93.8}, {"datum": "2026-03-29", "varde": 94.5},
+            {"datum": "2026-03-30", "varde": 93.7}, {"datum": "2026-03-31", "varde": 94.2}
+          ]
+        },
+        {
+          "id": "akutbesok",
+          "namn": "Besök akutmottagning",
+          "enhet": "antal",
+          "inverterad": false,
+          "senaste": 847,
+          "forandring": -42,
+          "status": "gron",
+          "analystext": "Akutmottagningen tog emot 847 besök senaste dygnet, en minskning med 42 jämfört med förra veckan. Minskningen kan delvis förklaras av att vårdcentralerna ökat sin tillgänglighet under mars, vilket avlastar akuten. Nivån ligger något under genomsnittet för perioden.",
+          "tidsserie": [
+            {"datum": "2026-03-02", "varde": 823}, {"datum": "2026-03-03", "varde": 856},
+            {"datum": "2026-03-04", "varde": 912}, {"datum": "2026-03-05", "varde": 879},
+            {"datum": "2026-03-06", "varde": 845}, {"datum": "2026-03-07", "varde": 801},
+            {"datum": "2026-03-08", "varde": 778}, {"datum": "2026-03-09", "varde": 834},
+            {"datum": "2026-03-10", "varde": 867}, {"datum": "2026-03-11", "varde": 901},
+            {"datum": "2026-03-12", "varde": 889}, {"datum": "2026-03-13", "varde": 856},
+            {"datum": "2026-03-14", "varde": 823}, {"datum": "2026-03-15", "varde": 798},
+            {"datum": "2026-03-16", "varde": 812}, {"datum": "2026-03-17", "varde": 845},
+            {"datum": "2026-03-18", "varde": 878}, {"datum": "2026-03-19", "varde": 912},
+            {"datum": "2026-03-20", "varde": 934}, {"datum": "2026-03-21", "varde": 897},
+            {"datum": "2026-03-22", "varde": 867}, {"datum": "2026-03-23", "varde": 834},
+            {"datum": "2026-03-24", "varde": 856}, {"datum": "2026-03-25", "varde": 889},
+            {"datum": "2026-03-26", "varde": 901}, {"datum": "2026-03-27", "varde": 878},
+            {"datum": "2026-03-28", "varde": 845}, {"datum": "2026-03-29", "varde": 867},
+            {"datum": "2026-03-30", "varde": 823}, {"datum": "2026-03-31", "varde": 847}
+          ]
+        },
+        {
+          "id": "vantetid",
+          "namn": "Medianväntetid akut",
+          "enhet": "minuter",
+          "inverterad": true,
+          "senaste": 164,
+          "forandring": 6,
+          "status": "gul",
+          "analystext": "Medianväntetiden uppgår till 164 minuter, en ökning med 6 minuter jämfört med föregående vecka. Ökningen hänger samman med den höga beläggningsgraden som begränsar genomflödet. Målvärdet på 150 minuter överskrids sedan tre veckor tillbaka.",
+          "tidsserie": [
+            {"datum": "2026-03-02", "varde": 142}, {"datum": "2026-03-03", "varde": 156},
+            {"datum": "2026-03-04", "varde": 168}, {"datum": "2026-03-05", "varde": 145},
+            {"datum": "2026-03-06", "varde": 138}, {"datum": "2026-03-07", "varde": 152},
+            {"datum": "2026-03-08", "varde": 161}, {"datum": "2026-03-09", "varde": 148},
+            {"datum": "2026-03-10", "varde": 135}, {"datum": "2026-03-11", "varde": 142},
+            {"datum": "2026-03-12", "varde": 158}, {"datum": "2026-03-13", "varde": 167},
+            {"datum": "2026-03-14", "varde": 175}, {"datum": "2026-03-15", "varde": 162},
+            {"datum": "2026-03-16", "varde": 148}, {"datum": "2026-03-17", "varde": 139},
+            {"datum": "2026-03-18", "varde": 155}, {"datum": "2026-03-19", "varde": 168},
+            {"datum": "2026-03-20", "varde": 172}, {"datum": "2026-03-21", "varde": 158},
+            {"datum": "2026-03-22", "varde": 145}, {"datum": "2026-03-23", "varde": 162},
+            {"datum": "2026-03-24", "varde": 170}, {"datum": "2026-03-25", "varde": 178},
+            {"datum": "2026-03-26", "varde": 165}, {"datum": "2026-03-27", "varde": 152},
+            {"datum": "2026-03-28", "varde": 143}, {"datum": "2026-03-29", "varde": 158},
+            {"datum": "2026-03-30", "varde": 171}, {"datum": "2026-03-31", "varde": 164}
+          ]
+        },
+        {
+          "id": "ambulans",
+          "namn": "Ambulansuppdrag",
+          "enhet": "antal",
+          "inverterad": false,
+          "senaste": 51,
+          "forandring": -7,
+          "status": "gron",
+          "analystext": "Ambulansverksamheten genomförde 51 uppdrag senaste dygnet, en minskning med 7 jämfört med veckan innan. Insatstiderna ligger inom målvärdena för samtliga prioritetsgrupper. Inga större händelser rapporterades under perioden.",
+          "tidsserie": [
+            {"datum": "2026-03-02", "varde": 48}, {"datum": "2026-03-03", "varde": 52},
+            {"datum": "2026-03-04", "varde": 57}, {"datum": "2026-03-05", "varde": 45},
+            {"datum": "2026-03-06", "varde": 42}, {"datum": "2026-03-07", "varde": 49},
+            {"datum": "2026-03-08", "varde": 54}, {"datum": "2026-03-09", "varde": 61},
+            {"datum": "2026-03-10", "varde": 53}, {"datum": "2026-03-11", "varde": 47},
+            {"datum": "2026-03-12", "varde": 44}, {"datum": "2026-03-13", "varde": 51},
+            {"datum": "2026-03-14", "varde": 58}, {"datum": "2026-03-15", "varde": 63},
+            {"datum": "2026-03-16", "varde": 55}, {"datum": "2026-03-17", "varde": 49},
+            {"datum": "2026-03-18", "varde": 46}, {"datum": "2026-03-19", "varde": 52},
+            {"datum": "2026-03-20", "varde": 57}, {"datum": "2026-03-21", "varde": 60},
+            {"datum": "2026-03-22", "varde": 54}, {"datum": "2026-03-23", "varde": 48},
+            {"datum": "2026-03-24", "varde": 53}, {"datum": "2026-03-25", "varde": 58},
+            {"datum": "2026-03-26", "varde": 62}, {"datum": "2026-03-27", "varde": 56},
+            {"datum": "2026-03-28", "varde": 51}, {"datum": "2026-03-29", "varde": 47},
+            {"datum": "2026-03-30", "varde": 54}, {"datum": "2026-03-31", "varde": 51}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "slutenvard",
+      "namn": "Slutenvård",
+      "analys": "Slutenvården har ett normalt inflöde med 23 inläggningar senaste dygnet, väl inom det förväntade intervallet.\n\nDen stigande trenden för utskrivningsklara patienter — nu 23 väntande — utgör dock en växande belastning. Halmstad och Kungsbacka har flest väntande, och trenden pekar uppåt sedan mitten av mars.\n\nUtan ökad kommunal kapacitet riskerar detta att bli den primära flaskhalsen i vårdkedjan.",
+      "kpier": [
+        {
+          "id": "inlaggningar",
+          "namn": "Inläggningar",
+          "enhet": "antal",
+          "inverterad": false,
+          "senaste": 23,
+          "forandring": -3,
+          "status": "gron",
+          "analystext": "Antalet inläggningar uppgår till 23 under det senaste dygnet, en minskning med 3 jämfört med förra veckan. Fördelningen mellan medicinska och kirurgiska inläggningar är i linje med normalmönstret för perioden.",
+          "tidsserie": [
+            {"datum": "2026-03-02", "varde": 24}, {"datum": "2026-03-03", "varde": 27},
+            {"datum": "2026-03-04", "varde": 31}, {"datum": "2026-03-05", "varde": 23},
+            {"datum": "2026-03-06", "varde": 19}, {"datum": "2026-03-07", "varde": 22},
+            {"datum": "2026-03-08", "varde": 26}, {"datum": "2026-03-09", "varde": 28},
+            {"datum": "2026-03-10", "varde": 25}, {"datum": "2026-03-11", "varde": 21},
+            {"datum": "2026-03-12", "varde": 24}, {"datum": "2026-03-13", "varde": 29},
+            {"datum": "2026-03-14", "varde": 32}, {"datum": "2026-03-15", "varde": 26},
+            {"datum": "2026-03-16", "varde": 23}, {"datum": "2026-03-17", "varde": 20},
+            {"datum": "2026-03-18", "varde": 25}, {"datum": "2026-03-19", "varde": 28},
+            {"datum": "2026-03-20", "varde": 30}, {"datum": "2026-03-21", "varde": 27},
+            {"datum": "2026-03-22", "varde": 24}, {"datum": "2026-03-23", "varde": 22},
+            {"datum": "2026-03-24", "varde": 26}, {"datum": "2026-03-25", "varde": 29},
+            {"datum": "2026-03-26", "varde": 31}, {"datum": "2026-03-27", "varde": 28},
+            {"datum": "2026-03-28", "varde": 25}, {"datum": "2026-03-29", "varde": 23},
+            {"datum": "2026-03-30", "varde": 27}, {"datum": "2026-03-31", "varde": 23}
+          ]
+        },
+        {
+          "id": "utskrivningsklara",
+          "namn": "Utskrivningsklara patienter",
+          "enhet": "antal",
+          "inverterad": true,
+          "senaste": 23,
+          "forandring": 1,
+          "status": "gul",
+          "analystext": "Antalet utskrivningsklara patienter som väntar på kommunal insats uppgår till 23, en ökning med 1 jämfört med förra veckan. Trenden är svagt stigande sedan mitten av mars. Halmstad och Kungsbacka kommun har flest väntande patienter, vilket belastar den somatiska slutenvården.",
+          "tidsserie": [
+            {"datum": "2026-03-02", "varde": 16}, {"datum": "2026-03-03", "varde": 17},
+            {"datum": "2026-03-04", "varde": 18}, {"datum": "2026-03-05", "varde": 15},
+            {"datum": "2026-03-06", "varde": 14}, {"datum": "2026-03-07", "varde": 16},
+            {"datum": "2026-03-08", "varde": 18}, {"datum": "2026-03-09", "varde": 19},
+            {"datum": "2026-03-10", "varde": 17}, {"datum": "2026-03-11", "varde": 15},
+            {"datum": "2026-03-12", "varde": 17}, {"datum": "2026-03-13", "varde": 19},
+            {"datum": "2026-03-14", "varde": 20}, {"datum": "2026-03-15", "varde": 18},
+            {"datum": "2026-03-16", "varde": 17}, {"datum": "2026-03-17", "varde": 19},
+            {"datum": "2026-03-18", "varde": 21}, {"datum": "2026-03-19", "varde": 22},
+            {"datum": "2026-03-20", "varde": 20}, {"datum": "2026-03-21", "varde": 18},
+            {"datum": "2026-03-22", "varde": 19}, {"datum": "2026-03-23", "varde": 21},
+            {"datum": "2026-03-24", "varde": 23}, {"datum": "2026-03-25", "varde": 22},
+            {"datum": "2026-03-26", "varde": 20}, {"datum": "2026-03-27", "varde": 21},
+            {"datum": "2026-03-28", "varde": 23}, {"datum": "2026-03-29", "varde": 24},
+            {"datum": "2026-03-30", "varde": 22}, {"datum": "2026-03-31", "varde": 23}
+          ]
+        }
+      ]
+    }
+  ]
+}

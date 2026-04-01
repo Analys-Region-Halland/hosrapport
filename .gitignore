@@ -1,0 +1,27 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+.Renviron
+
+# Data (rådata och RDS — genereras av pipeline)
+data/*.rds
+data/raw/
+data/excel/
+
+# Quarto
+_book/
+_site/
+_output/
+_publish/
+.quarto/
+*_files/
+
+# Node
+node_modules/
+app/dist/
+
+# Temporärt
+temp/
+_tmp_*
+*.log

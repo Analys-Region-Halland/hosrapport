@@ -1,0 +1,14 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "HoS-rapport Halland"
+
+format:
+  html:
+    theme:
+      - cosmo
+      - style.scss
+    toc: false
+    page-layout: full

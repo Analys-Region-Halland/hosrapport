@@ -1,0 +1,11 @@
+---
+---
+
+```{ojs}
+//| echo: false
+import { createDashboard } from "./js/dashboard.js"
+
+data = FileAttachment("data/hos-data.json").json()
+
+createDashboard(data)
+```

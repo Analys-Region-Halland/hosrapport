@@ -1,0 +1,224 @@
+{
+  "vy": "dag",
+  "datum": "2026-03-31",
+  "uppdaterad": "08:00",
+  "analys": "Hälso- och sjukvården i Region Halland uppvisar en ansträngd men hanterbar situation den 31 mars 2026. Det samlade trycket drivs primärt av en stigande beläggningsgrad — nu 94,2 procent — i kombination med en växande grupp utskrivningsklara patienter som väntar på kommunal insats.\n\nAkutflödet visar paradoxalt nog minskande volymer. Antalet akutbesök och ambulansuppdrag ligger under periodens genomsnitt, vilket tyder på att belastningen inte drivs av ökat inflöde utan av förlängda vårdtider. Medianväntetiden på akutmottagningen har överstigit målvärdet 150 minuter sedan tre veckor.\n\nSlutenvården rapporterar ett normalt antal inläggningar, men trenden för utskrivningsklara patienter pekar uppåt sedan mitten av mars — främst i Halmstad och Kungsbacka.\n\nSammantaget kräver situationen daglig bevakning av beläggningsutvecklingen och prioriterad dialog med kommunerna om utskrivningstakten. Om beläggningen passerar 95 procent bör avlastningsplanen aktiveras.",
+  "sektioner": [
+    {
+      "id": "akutflode",
+      "namn": "Akutflöde & kapacitet",
+      "analys": "Akutflödet visar en ansträngd men stabil situation. Beläggningsgraden på 94,2 procent närmar sig den kritiska 95-procentsgränsen, drivet av säsongens influensatopp snarare än ökat inflöde.\n\nAntalet akutbesök och ambulansuppdrag ligger under periodens genomsnitt, vilket tyder på att belastningen drivs av förlängda vårdtider. Medianväntetiden har överstigit målvärdet 150 minuter i tre veckor.\n\nRekommendation: bevaka beläggningen dagligen och överväg avlastningsplan om 95 procent nås.",
+      "kpier": [
+        {
+          "id": "belaggning",
+          "namn": "Beläggningsgrad",
+          "enhet": "procent",
+          "inverterad": true,
+          "senaste": 94.2,
+          "forandring": 1.0,
+          "status": "gul",
+          "analystext": "Beläggningsgraden ligger på 94,2 procent, strax under den kritiska gränsen på 95 procent.",
+          "beskrivning": "Andel av tillgängliga vårdplatser som är belagda vid mättillfället. Beräknas som antal belagda platser delat med antal disponibla platser. Målvärde: under 95 procent. Lägre värde är bättre.",
+          "tidsserie": [
+            {"datum":"2026-03-02","varde":87.3},{"datum":"2026-03-05","varde":89.2},
+            {"datum":"2026-03-08","varde":87.4},{"datum":"2026-03-11","varde":90.6},
+            {"datum":"2026-03-14","varde":92.1},{"datum":"2026-03-17","varde":93.0},
+            {"datum":"2026-03-20","varde":93.8},{"datum":"2026-03-23","varde":94.7},
+            {"datum":"2026-03-26","varde":93.9},{"datum":"2026-03-29","varde":94.5},
+            {"datum":"2026-03-31","varde":94.2}
+          ],
+          "undernivaer": [
+            {
+              "id": "bel-kirurgi", "namn": "Kirurgi", "senaste": 91.3, "forandring": -0.5, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":85.1},{"datum":"2026-03-11","varde":88.2},{"datum":"2026-03-20","varde":90.5},{"datum":"2026-03-31","varde":91.3}]
+            },
+            {
+              "id": "bel-medicin", "namn": "Medicin", "senaste": 97.1, "forandring": 2.3, "status": "rod",
+              "tidsserie": [{"datum":"2026-03-02","varde":89.4},{"datum":"2026-03-11","varde":93.1},{"datum":"2026-03-20","varde":95.8},{"datum":"2026-03-31","varde":97.1}]
+            },
+            {
+              "id": "bel-akut", "namn": "Akutvård", "senaste": 88.5, "forandring": 0.2, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":84.0},{"datum":"2026-03-11","varde":86.5},{"datum":"2026-03-20","varde":87.9},{"datum":"2026-03-31","varde":88.5}]
+            },
+            {
+              "id": "bel-ortopedi", "namn": "Ortopedi", "senaste": 93.8, "forandring": 1.1, "status": "gul",
+              "tidsserie": [{"datum":"2026-03-02","varde":86.2},{"datum":"2026-03-11","varde":89.7},{"datum":"2026-03-20","varde":92.1},{"datum":"2026-03-31","varde":93.8}]
+            }
+          ]
+        },
+        {
+          "id": "akutbesok",
+          "namn": "Besök akutmottagning",
+          "enhet": "antal",
+          "inverterad": false,
+          "senaste": 847,
+          "forandring": -42,
+          "status": "gron",
+          "analystext": "Akutmottagningen tog emot 847 besök senaste dygnet, en minskning med 42 jämfört med förra veckan.",
+          "beskrivning": "Totalt antal registrerade patientbesök på akutmottagningen under det senaste dygnet. Omfattar alla prioriteringsnivåer (1–5 enligt RETTS).",
+          "tidsserie": [
+            {"datum":"2026-03-02","varde":823},{"datum":"2026-03-05","varde":879},
+            {"datum":"2026-03-08","varde":778},{"datum":"2026-03-11","varde":901},
+            {"datum":"2026-03-14","varde":823},{"datum":"2026-03-17","varde":845},
+            {"datum":"2026-03-20","varde":934},{"datum":"2026-03-23","varde":834},
+            {"datum":"2026-03-26","varde":901},{"datum":"2026-03-29","varde":867},
+            {"datum":"2026-03-31","varde":847}
+          ],
+          "undernivaer": [
+            {
+              "id": "akut-halmstad", "namn": "Halmstad", "senaste": 412, "forandring": -18, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":398},{"datum":"2026-03-11","varde":435},{"datum":"2026-03-20","varde":452},{"datum":"2026-03-31","varde":412}]
+            },
+            {
+              "id": "akut-varberg", "namn": "Varberg", "senaste": 231, "forandring": -15, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":220},{"datum":"2026-03-11","varde":248},{"datum":"2026-03-20","varde":260},{"datum":"2026-03-31","varde":231}]
+            },
+            {
+              "id": "akut-kungsbacka", "namn": "Kungsbacka", "senaste": 204, "forandring": -9, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":205},{"datum":"2026-03-11","varde":218},{"datum":"2026-03-20","varde":222},{"datum":"2026-03-31","varde":204}]
+            }
+          ]
+        },
+        {
+          "id": "vantetid",
+          "namn": "Medianväntetid akut",
+          "enhet": "minuter",
+          "inverterad": true,
+          "senaste": 164,
+          "forandring": 6,
+          "status": "gul",
+          "analystext": "Medianväntetiden uppgår till 164 minuter. Målvärdet på 150 minuter överskrids sedan tre veckor.",
+          "beskrivning": "Mediantid i minuter från patientens ankomst till akutmottagningen till påbörjad läkarbedömning. Målvärde: högst 150 minuter. Lägre värde är bättre.",
+          "tidsserie": [
+            {"datum":"2026-03-02","varde":142},{"datum":"2026-03-05","varde":145},
+            {"datum":"2026-03-08","varde":161},{"datum":"2026-03-11","varde":142},
+            {"datum":"2026-03-14","varde":175},{"datum":"2026-03-17","varde":139},
+            {"datum":"2026-03-20","varde":172},{"datum":"2026-03-23","varde":162},
+            {"datum":"2026-03-26","varde":165},{"datum":"2026-03-29","varde":158},
+            {"datum":"2026-03-31","varde":164}
+          ],
+          "undernivaer": [
+            {
+              "id": "vt-halmstad", "namn": "Halmstad", "senaste": 178, "forandring": 12, "status": "rod",
+              "tidsserie": [{"datum":"2026-03-02","varde":148},{"datum":"2026-03-11","varde":155},{"datum":"2026-03-20","varde":170},{"datum":"2026-03-31","varde":178}]
+            },
+            {
+              "id": "vt-varberg", "namn": "Varberg", "senaste": 152, "forandring": 3, "status": "gul",
+              "tidsserie": [{"datum":"2026-03-02","varde":138},{"datum":"2026-03-11","varde":140},{"datum":"2026-03-20","varde":148},{"datum":"2026-03-31","varde":152}]
+            },
+            {
+              "id": "vt-kungsbacka", "namn": "Kungsbacka", "senaste": 143, "forandring": -4, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":139},{"datum":"2026-03-11","varde":132},{"datum":"2026-03-20","varde":150},{"datum":"2026-03-31","varde":143}]
+            }
+          ]
+        },
+        {
+          "id": "ambulans",
+          "namn": "Ambulansuppdrag",
+          "enhet": "antal",
+          "inverterad": false,
+          "senaste": 51,
+          "forandring": -7,
+          "status": "gron",
+          "analystext": "Ambulansverksamheten genomförde 51 uppdrag senaste dygnet.",
+          "beskrivning": "Antal genomförda ambulansuppdrag under det senaste dygnet, inklusive primäruppdrag och sekundärtransporter inom Region Halland.",
+          "tidsserie": [
+            {"datum":"2026-03-02","varde":48},{"datum":"2026-03-05","varde":45},
+            {"datum":"2026-03-08","varde":54},{"datum":"2026-03-11","varde":47},
+            {"datum":"2026-03-14","varde":58},{"datum":"2026-03-17","varde":49},
+            {"datum":"2026-03-20","varde":57},{"datum":"2026-03-23","varde":48},
+            {"datum":"2026-03-26","varde":62},{"datum":"2026-03-29","varde":47},
+            {"datum":"2026-03-31","varde":51}
+          ],
+          "undernivaer": [
+            {
+              "id": "amb-halmstad", "namn": "Halmstad", "senaste": 22, "forandring": -3, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":20},{"datum":"2026-03-11","varde":21},{"datum":"2026-03-20","varde":25},{"datum":"2026-03-31","varde":22}]
+            },
+            {
+              "id": "amb-varberg", "namn": "Varberg", "senaste": 16, "forandring": -2, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":15},{"datum":"2026-03-11","varde":14},{"datum":"2026-03-20","varde":18},{"datum":"2026-03-31","varde":16}]
+            },
+            {
+              "id": "amb-kungsbacka", "namn": "Kungsbacka/Falkenberg", "senaste": 13, "forandring": -2, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":13},{"datum":"2026-03-11","varde":12},{"datum":"2026-03-20","varde":14},{"datum":"2026-03-31","varde":13}]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "slutenvard",
+      "namn": "Slutenvård",
+      "analys": "Slutenvården har ett normalt inflöde med 23 inläggningar senaste dygnet.\n\nDen stigande trenden för utskrivningsklara patienter — nu 23 väntande — utgör dock en växande belastning. Halmstad och Kungsbacka har flest väntande.\n\nUtan ökad kommunal kapacitet riskerar detta att bli den primära flaskhalsen i vårdkedjan.",
+      "kpier": [
+        {
+          "id": "inlaggningar",
+          "namn": "Inläggningar",
+          "enhet": "antal",
+          "inverterad": false,
+          "senaste": 23,
+          "forandring": -3,
+          "status": "gron",
+          "analystext": "Antalet inläggningar uppgår till 23 under det senaste dygnet.",
+          "beskrivning": "Antal patienter som lagts in på vårdavdelning under det senaste dygnet. Omfattar akuta och elektiva inläggningar via samtliga ingångar.",
+          "tidsserie": [
+            {"datum":"2026-03-02","varde":24},{"datum":"2026-03-05","varde":23},
+            {"datum":"2026-03-08","varde":26},{"datum":"2026-03-11","varde":21},
+            {"datum":"2026-03-14","varde":32},{"datum":"2026-03-17","varde":20},
+            {"datum":"2026-03-20","varde":30},{"datum":"2026-03-23","varde":22},
+            {"datum":"2026-03-26","varde":31},{"datum":"2026-03-29","varde":23},
+            {"datum":"2026-03-31","varde":23}
+          ],
+          "undernivaer": [
+            {
+              "id": "inl-kirurgi", "namn": "Kirurgi", "senaste": 8, "forandring": -1, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":9},{"datum":"2026-03-11","varde":7},{"datum":"2026-03-20","varde":10},{"datum":"2026-03-31","varde":8}]
+            },
+            {
+              "id": "inl-medicin", "namn": "Medicin", "senaste": 10, "forandring": 0, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":10},{"datum":"2026-03-11","varde":9},{"datum":"2026-03-20","varde":13},{"datum":"2026-03-31","varde":10}]
+            },
+            {
+              "id": "inl-ortopedi", "namn": "Ortopedi", "senaste": 5, "forandring": -2, "status": "gul",
+              "tidsserie": [{"datum":"2026-03-02","varde":5},{"datum":"2026-03-11","varde":5},{"datum":"2026-03-20","varde":7},{"datum":"2026-03-31","varde":5}]
+            }
+          ]
+        },
+        {
+          "id": "utskrivningsklara",
+          "namn": "Utskrivningsklara patienter",
+          "enhet": "antal",
+          "inverterad": true,
+          "senaste": 23,
+          "forandring": 1,
+          "status": "gul",
+          "analystext": "Antalet utskrivningsklara patienter som väntar på kommunal insats uppgår till 23.",
+          "beskrivning": "Antal patienter som bedömts medicinskt färdigbehandlade men kvarstår i slutenvård i väntan på kommunal insats (hemtjänst, korttidsboende eller särskilt boende). Lägre värde är bättre.",
+          "tidsserie": [
+            {"datum":"2026-03-02","varde":16},{"datum":"2026-03-05","varde":15},
+            {"datum":"2026-03-08","varde":18},{"datum":"2026-03-11","varde":15},
+            {"datum":"2026-03-14","varde":20},{"datum":"2026-03-17","varde":19},
+            {"datum":"2026-03-20","varde":20},{"datum":"2026-03-23","varde":21},
+            {"datum":"2026-03-26","varde":20},{"datum":"2026-03-29","varde":24},
+            {"datum":"2026-03-31","varde":23}
+          ],
+          "undernivaer": [
+            {
+              "id": "utskr-halmstad", "namn": "Halmstad", "senaste": 9, "forandring": 1, "status": "gul",
+              "tidsserie": [{"datum":"2026-03-02","varde":6},{"datum":"2026-03-11","varde":7},{"datum":"2026-03-20","varde":8},{"datum":"2026-03-31","varde":9}]
+            },
+            {
+              "id": "utskr-kungsbacka", "namn": "Kungsbacka", "senaste": 7, "forandring": 1, "status": "gul",
+              "tidsserie": [{"datum":"2026-03-02","varde":4},{"datum":"2026-03-11","varde":5},{"datum":"2026-03-20","varde":6},{"datum":"2026-03-31","varde":7}]
+            },
+            {
+              "id": "utskr-ovriga", "namn": "Övriga kommuner", "senaste": 7, "forandring": -1, "status": "gron",
+              "tidsserie": [{"datum":"2026-03-02","varde":6},{"datum":"2026-03-11","varde":3},{"datum":"2026-03-20","varde":6},{"datum":"2026-03-31","varde":7}]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
