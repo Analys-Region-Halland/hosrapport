@@ -49,15 +49,13 @@ export default function App() {
         justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src={`${import.meta.env.BASE_URL}logo_vit.svg`} alt="Region Halland" style={{ height: 22 }} />
+          <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.25)" }} />
           <span style={{
             fontFamily: "'Lexend Deca', sans-serif", fontWeight: 600, fontSize: 14,
             color: "#fff", letterSpacing: "-0.01em",
           }}>
             HoS-rapport
-          </span>
-          <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.25)" }} />
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: 400 }}>
-            Region Halland
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

@@ -93,7 +93,7 @@ export default function ReportView({ data, sectionId, onClose }: Props) {
             {/* Logo */}
             <div style={{ marginBottom: 32 }}>
               <img
-                src="/logo_farg.svg"
+                src={`${import.meta.env.BASE_URL}logo_farg.svg`}
                 alt="Region Halland"
                 style={{ height: 36 }}
               />
@@ -197,7 +197,7 @@ export default function ReportView({ data, sectionId, onClose }: Props) {
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}>
             <img
-              src="/logo_farg.svg"
+              src={`${import.meta.env.BASE_URL}logo_farg.svg`}
               alt="Region Halland"
               style={{ height: 24, opacity: 0.5 }}
             />
@@ -498,7 +498,7 @@ function Toolbar({
       display: "flex", justifyContent: "space-between", alignItems: "center",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <img src="/logo_farg.svg" alt="" style={{ height: 20, opacity: 0.6 }} />
+        <img src={`${import.meta.env.BASE_URL}logo_farg.svg`} alt="" style={{ height: 20, opacity: 0.6 }} />
         <span style={{ width: 1, height: 14, background: "#ddd" }} />
         <span style={{
           fontFamily: FONT, fontSize: 12,
