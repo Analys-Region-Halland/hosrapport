@@ -55,19 +55,22 @@ function TitleWithTooltip({ title, description }: { title: string; description?:
 function MiniChart({ kpi, vy, accent }: { kpi: KpiData; vy: string; accent: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(90);
 
   useEffect(() => {
     if (!ref.current) return;
     const ro = new ResizeObserver((e) => {
       const w = Math.floor(e[0].contentRect.width);
+      const h = Math.floor(e[0].contentRect.height);
       if (w > 0) setWidth(w);
+      if (h > 0) setHeight(h);
     });
     ro.observe(ref.current);
     return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!ref.current || width < 80 || kpi.tidsserie.length < 2) return;
+    if (!ref.current || width < 80 || height < 40 || kpi.tidsserie.length < 2) return;
     const el = ref.current;
     el.innerHTML = "";
 
@@ -78,7 +81,7 @@ function MiniChart({ kpi, vy, accent }: { kpi: KpiData; vy: string; accent: stri
       etikett: d.etikett, period: d.period,
     })).filter((d) => d.d);
 
-    const H = 90;
+    const H = height;
     const mg = { t: 4, r: 4, b: 18, l: 32 };
 
     const svg = d3.select(el).append("svg")
@@ -292,9 +295,9 @@ function MiniChart({ kpi, vy, accent }: { kpi: KpiData; vy: string; accent: stri
       });
 
     return () => { tooltipNode.remove(); };
-  }, [kpi, width, vy, accent]);
+  }, [kpi, width, height, vy, accent]);
 
-  return <div ref={ref} style={{ width: "100%", height: 90 }} />;
+  return <div ref={ref} style={{ width: "100%", height: "100%" }} />;
 }
 
 // ════════════════════════════════════════════
@@ -384,6 +387,7 @@ export default function KpiCard({ kpi, vyData, onOpenChart, visaDagar }: KpiCard
       background: "#fff", border: "1px solid #e0e0dc", borderRadius: 8,
       fontFamily: FONT, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       transition: "box-shadow 0.15s", overflow: "hidden",
+      display: "flex", flexDirection: "column",
     }}
       onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 3px 12px rgba(0,0,0,0.08)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
@@ -391,7 +395,7 @@ export default function KpiCard({ kpi, vyData, onOpenChart, visaDagar }: KpiCard
       {/* ── Signalband topp ── */}
       <div style={{ height: 3, background: accent }} />
 
-      <div style={{ padding: "12px 14px 10px" }}>
+      <div style={{ padding: "12px 14px 10px", flex: 1, display: "flex", flexDirection: "column" }}>
 
         {/* ── Rad 1: Titel + öppna graf ── */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 8 }}>
@@ -464,7 +468,9 @@ export default function KpiCard({ kpi, vyData, onOpenChart, visaDagar }: KpiCard
 
         {/* ── Rad 4: Minigraf med axlar ── */}
         {aktivSerie.length > 1 && (
-          <MiniChart kpi={{ ...kpi, tidsserie: aktivSerie }} vy={aktivVy} accent={accent} />
+          <div style={{ flex: 1, minHeight: 90 }}>
+            <MiniChart kpi={{ ...kpi, tidsserie: aktivSerie }} vy={aktivVy} accent={accent} />
+          </div>
         )}
 
         {/* ── Rad 5: Dagsammanfattning (vid dag-toggle) ── */}
