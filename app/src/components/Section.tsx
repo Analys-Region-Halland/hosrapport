@@ -90,7 +90,7 @@ export default function Section({ section, vyData, editMode: _editMode, onOpenCh
 
       {/* ── KPI-grid ── */}
       <div style={{ padding: "12px 14px 14px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, alignItems: "stretch" }}>
           {section.kpier.map((kpi) => (
             <KpiCard key={kpi.id} kpi={kpi} vyData={vyData} onOpenChart={onOpenChart} visaDagar={visaDagar} />
           ))}
