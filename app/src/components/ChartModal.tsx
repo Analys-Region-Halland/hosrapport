@@ -126,9 +126,24 @@ export default function ChartModal({ kpi, vyData, visaDagar: initialVisaDagar, o
         })).filter((d) => d.d)
       : [];
 
+    // Kontextserier + Riket
+    const hasKontext = kpi.kontext_serier && kpi.kontext_serier.length > 0;
+    const kontextParsed = hasKontext
+      ? kpi.kontext_serier!.map((ks) => ({
+          namn: ks.namn,
+          pts: ks.tidsserie.map((d) => ({ d: parse(d.period)!, v: d.varde })).filter((d) => d.d),
+        }))
+      : [];
+    const hasRiket = kpi.riket_serie && kpi.riket_serie.length > 0;
+    const riketPts = hasRiket
+      ? kpi.riket_serie!.map((d) => ({ d: parse(d.period)!, v: d.varde })).filter((d) => d.d)
+      : [];
+
     const allVals = pts.flatMap((d) => [d.v, d.lo, d.hi].filter((v): v is number => v != null));
     if (hasBand) allVals.push(...pts.filter((p) => p.yhat != null).map((p) => p.yhat!));
     if (refPts.length > 0) allVals.push(...refPts.map((d) => d.v));
+    if (hasKontext) kontextParsed.forEach((ks) => allVals.push(...ks.pts.map((p) => p.v)));
+    if (hasRiket) allVals.push(...riketPts.map((d) => d.v));
     const ext = d3.extent(allVals) as [number, number];
     const pad = (ext[1] - ext[0]) * 0.12 || 1;
     const y = d3.scaleLinear()
@@ -177,8 +192,37 @@ export default function ChartModal({ kpi, vyData, visaDagar: initialVisaDagar, o
 
     const dense = pts.length > 30;
 
-    // Referenslinje (föregående år)
-    if (refPts.length > 1) {
+    // Kontextlinjer — andra regioner (tunna gråa)
+    if (hasKontext) {
+      for (const ks of kontextParsed) {
+        if (ks.pts.length < 2) continue;
+        svg.append("path").datum(ks.pts)
+          .attr("d", d3.line<typeof ks.pts[0]>()
+            .x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))
+          .attr("fill", "none").attr("stroke", "#d4d4d4")
+          .attr("stroke-width", 1).attr("opacity", 0.6);
+      }
+    }
+
+    // Riket-linje (streckad, mörkare grå)
+    if (riketPts.length > 1) {
+      svg.append("path").datum(riketPts)
+        .attr("d", d3.line<typeof riketPts[0]>()
+          .x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))
+        .attr("fill", "none").attr("stroke", "#666")
+        .attr("stroke-width", 2).attr("stroke-dasharray", "6,4")
+        .attr("opacity", 0.7);
+      // Etikett "Riket"
+      const lastRiket = riketPts[riketPts.length - 1];
+      svg.append("text")
+        .attr("x", x(lastRiket.d) + 6).attr("y", y(lastRiket.v) + 4)
+        .attr("fill", "#666").attr("font-size", "10px").attr("font-family", FONT)
+        .attr("font-weight", "500")
+        .text("Riket");
+    }
+
+    // Referenslinje (föregående år — bara om inga kontextserier)
+    if (refPts.length > 1 && !hasKontext) {
       svg.append("path").datum(refPts)
         .attr("d", d3.line<typeof refPts[0]>()
           .x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))

@@ -983,6 +983,33 @@ if (file.exists(npe_fil)) {
                            rikt, " med ", f_str, ".")
     }
 
+    # Kontextserier — alla regioner (utom Halland) som grå streck
+    kontext_serier <- lapply(seq_along(regioner), function(ri) {
+      if (ri == halland_idx) return(NULL)  # Hoppa över Halland
+      reg_vals <- as.numeric(val_mat[ri, ])
+      list(
+        id   = tolower(gsub(" ", "_", regioner[ri])),
+        namn = regioner[ri],
+        tidsserie = lapply(seq_along(ar_vec), function(j) {
+          list(
+            period  = paste0(ar_vec[j], "-01-01"),
+            etikett = as.character(ar_vec[j]),
+            varde   = round(reg_vals[j], 1)
+          )
+        })
+      )
+    })
+    kontext_serier <- Filter(Negate(is.null), kontext_serier)
+
+    # Riket-serie (streckad referenslinje)
+    riket_serie <- lapply(seq_along(ar_vec), function(j) {
+      list(
+        period  = paste0(ar_vec[j], "-01-01"),
+        etikett = as.character(ar_vec[j]),
+        varde   = round(riket_rad[j], 1)
+      )
+    })
+
     npe_kpier[[i]] <- list(
       id          = npe_meta$id[i],
       namn        = npe_meta$namn[i],
@@ -996,7 +1023,9 @@ if (file.exists(npe_fil)) {
       status      = signal,
       analystext  = analystext,
       tidsserie   = tidsserie,
-      referens    = referens
+      referens    = referens,
+      kontext_serier = kontext_serier,
+      riket_serie    = riket_serie
     )
 
     cat(sprintf("  %s: %.1f%% (rank %d → %s)\n",

@@ -97,9 +97,24 @@ function MiniChart({ kpi, vy, accent }: { kpi: KpiData; vy: string; accent: stri
         })).filter((d) => d.d)
       : [];
 
-    // Y-domän inkl referens
+    // Kontextserier (andra regioner) — parsa
+    const hasKontext = kpi.kontext_serier && kpi.kontext_serier.length > 0;
+    const kontextParsed = hasKontext
+      ? kpi.kontext_serier!.map((ks) => ({
+          namn: ks.namn,
+          pts: ks.tidsserie.map((d) => ({ d: parse(d.period)!, v: d.varde })).filter((d) => d.d),
+        }))
+      : [];
+    const hasRiket = kpi.riket_serie && kpi.riket_serie.length > 0;
+    const riketPts = hasRiket
+      ? kpi.riket_serie!.map((d) => ({ d: parse(d.period)!, v: d.varde })).filter((d) => d.d)
+      : [];
+
+    // Y-domän inkl referens + kontext
     const allV = pts.flatMap((d) => [d.v, d.lo, d.hi].filter((v): v is number => v != null));
     if (refPts.length > 0) allV.push(...refPts.map((d) => d.v));
+    if (hasKontext) kontextParsed.forEach((ks) => allV.push(...ks.pts.map((p) => p.v)));
+    if (hasRiket) allV.push(...riketPts.map((d) => d.v));
     const [lo, hi] = d3.extent(allV) as [number, number];
     const pad = (hi - lo) * 0.12 || 1;
     const y = d3.scaleLinear().domain([lo - pad, hi + pad]).range([H - mg.b, mg.t]).nice();
@@ -138,8 +153,30 @@ function MiniChart({ kpi, vy, accent }: { kpi: KpiData; vy: string; accent: stri
       .attr("font-size", "8.5px").attr("font-family", FONT)
       .text(fullEtikett(last.etikett, last.period, vy));
 
+    // Kontextlinjer — andra regioner (tunna gråa)
+    if (hasKontext) {
+      for (const ks of kontextParsed) {
+        if (ks.pts.length < 2) continue;
+        svg.append("path").datum(ks.pts)
+          .attr("d", d3.line<typeof ks.pts[0]>()
+            .x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))
+          .attr("fill", "none").attr("stroke", "#d0d0d0")
+          .attr("stroke-width", 0.8).attr("opacity", 0.55);
+      }
+    }
+
+    // Riket-linje (streckad, mörkare grå)
+    if (riketPts.length > 1) {
+      svg.append("path").datum(riketPts)
+        .attr("d", d3.line<typeof riketPts[0]>()
+          .x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))
+        .attr("fill", "none").attr("stroke", "#888")
+        .attr("stroke-width", 1.5).attr("stroke-dasharray", "5,3")
+        .attr("opacity", 0.7);
+    }
+
     // Referenslinje (föregående år)
-    if (refPts.length > 1) {
+    if (refPts.length > 1 && !hasKontext) {
       svg.append("path").datum(refPts)
         .attr("d", d3.line<typeof refPts[0]>()
           .x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))

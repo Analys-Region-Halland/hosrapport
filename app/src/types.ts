@@ -51,8 +51,18 @@ export interface KpiData {
   referens?: Referens;
   /** Referensserie — samma period föregående år (dag-vy) */
   referens_serie?: TidsseriePoint[];
+  /** Kontextlinjer — andra regioner/enheter visade som gråa streck */
+  kontext_serier?: KontextSerie[];
+  /** Rikssnitt-serie (visas som streckad grå linje) */
+  riket_serie?: { period: string; etikett: string; varde: number }[];
   /** Underkort — avdelningsnedbrytning */
   undernivaer?: SubKpi[];
+}
+
+export interface KontextSerie {
+  id: string;
+  namn: string;
+  tidsserie: { period: string; etikett: string; varde: number }[];
 }
 
 export interface SubKpi {
