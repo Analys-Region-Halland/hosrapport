@@ -254,11 +254,12 @@ function MiniChart({ kpi, vy, accent }: { kpi: KpiData; vy: string; accent: stri
             <span style="font-family:${FONT};font-size:10px;color:#888">Faktiskt</span>
             <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#0a0a0a">${fv}</span>
           </div>`;
-        if (pt.hi != null && pt.lo != null) {
+        {
           const yhatPt = kpi.tidsserie[idx];
           if (yhatPt?.yhat != null) {
+            const yhatLabel = kpi.kontext_serier ? "Riket" : "Förväntat";
             rows += `<div style="display:flex;justify-content:space-between;gap:14px;margin-bottom:2px">
-              <span style="font-family:${FONT};font-size:10px;color:#888">Förväntat</span>
+              <span style="font-family:${FONT};font-size:10px;color:#888">${yhatLabel}</span>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#888">${fmtVarde(yhatPt.yhat, kpi.enhet, dec)}${sfx}</span>
             </div>`;
           }
@@ -432,20 +433,22 @@ export default function KpiCard({ kpi, vyData, onOpenChart, visaDagar }: KpiCard
           </span>
         </div>
 
-        {/* ── Rad 3: Förväntat + signal ── */}
+        {/* ── Rad 3: Förväntat + signal (dölj "Förväntat" för NPE/kontext) ── */}
         {last?.yhat != null && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, color: "#777" }}>
-              Förväntat{" "}
-              <span style={{ ...mono, fontWeight: 500, fontSize: 11.5, color: "#555" }}>
-                {fmtVarde(last.yhat, kpi.enhet, dec)}{suffix}
-              </span>
-              {last.yhat_lower != null && last.yhat_upper != null && (
-                <span style={{ color: "#bbb", marginLeft: 3, fontSize: 10 }}>
-                  ({fmtVarde(last.yhat_lower, kpi.enhet, dec)}–{fmtVarde(last.yhat_upper, kpi.enhet, dec)})
+            {!kpi.kontext_serier && (
+              <span style={{ fontSize: 11, color: "#777" }}>
+                Förväntat{" "}
+                <span style={{ ...mono, fontWeight: 500, fontSize: 11.5, color: "#555" }}>
+                  {fmtVarde(last.yhat, kpi.enhet, dec)}{suffix}
                 </span>
-              )}
-            </span>
+                {last.yhat_lower != null && last.yhat_upper != null && (
+                  <span style={{ color: "#bbb", marginLeft: 3, fontSize: 10 }}>
+                    ({fmtVarde(last.yhat_lower, kpi.enhet, dec)}–{fmtVarde(last.yhat_upper, kpi.enhet, dec)})
+                  </span>
+                )}
+              </span>
+            )}
             {sigLabel && (
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 4,

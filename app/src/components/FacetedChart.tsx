@@ -20,6 +20,7 @@ function enhetLabel(e: string): string {
 
 interface Pt { d: Date; v: number; signal?: string; etikett?: string }
 interface BandPt { d: Date; lo: number; hi: number; lo80?: number; hi80?: number; yhat: number }
+interface KontextLine { namn: string; pts: Pt[] }
 interface SeriesData {
   id: string;
   name: string;
@@ -28,6 +29,8 @@ interface SeriesData {
   latest: number;
   status?: string;
   band?: BandPt[];
+  kontextLinjer?: KontextLine[];
+  riketPts?: Pt[];
 }
 
 // ════════════════════════════════════════
@@ -71,6 +74,17 @@ export default function FacetedChart({ kpi, vy }: Props) {
       }))
       .filter((d) => d.d);
 
+    // Kontextserier (andra regioner) och Riket
+    const kontextLinjer = kpi.kontext_serier
+      ? kpi.kontext_serier.map((ks) => ({
+          namn: ks.namn,
+          pts: ks.tidsserie.map((d) => ({ d: parse(d.period)!, v: d.varde })).filter((d) => d.d),
+        }))
+      : undefined;
+    const riketPts = kpi.riket_serie
+      ? kpi.riket_serie.map((d) => ({ d: parse(d.period)!, v: d.varde })).filter((d) => d.d) as Pt[]
+      : undefined;
+
     result.push({
       id: kpi.id,
       name: "Totalt",
@@ -79,6 +93,8 @@ export default function FacetedChart({ kpi, vy }: Props) {
       latest: kpi.senaste,
       status: kpi.status,
       band: bandPts.length > 0 ? bandPts : undefined,
+      kontextLinjer,
+      riketPts,
     });
 
     if (kpi.undernivaer) {
@@ -507,10 +523,12 @@ function drawPanel(container: HTMLDivElement, p: PanelProps): () => void {
 
   const x = d3.scaleTime().domain(xDomain).range([0, plotW]);
 
-  // ── Individuell y-axel per panel ──
+  // ── Individuell y-axel per panel (inkl kontext) ──
   const ownVals = [
     ...series.pts.map((d) => d.v),
     ...(series.band || []).flatMap((b) => [b.lo, b.hi]),
+    ...(series.kontextLinjer || []).flatMap((k) => k.pts.map((p) => p.v)),
+    ...(series.riketPts || []).map((p) => p.v),
   ];
   const [yMin, yMax] = d3.extent(ownVals) as [number, number];
   const span = yMax - yMin || 1;
@@ -601,6 +619,35 @@ function drawPanel(container: HTMLDivElement, p: PanelProps): () => void {
     .x((d) => x(d.d))
     .y((d) => y(d.v))
     .curve(d3.curveMonotoneX);
+
+  // ── Kontextlinjer (andra regioner — tunna gråa) ──
+  if (series.kontextLinjer) {
+    for (const kl of series.kontextLinjer) {
+      if (kl.pts.length < 2) continue;
+      g.append("path").datum(kl.pts)
+        .attr("d", d3.line<Pt>().x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))
+        .attr("fill", "none").attr("stroke", "#d4d4d4")
+        .attr("stroke-width", isSingle ? 1 : 0.7).attr("opacity", 0.6);
+    }
+  }
+
+  // ── Riket-linje (streckad mörkgrå) ──
+  if (series.riketPts && series.riketPts.length > 1) {
+    g.append("path").datum(series.riketPts)
+      .attr("d", d3.line<Pt>().x((d) => x(d.d)).y((d) => y(d.v)).curve(d3.curveMonotoneX))
+      .attr("fill", "none").attr("stroke", "#666")
+      .attr("stroke-width", isSingle ? 2 : 1.5)
+      .attr("stroke-dasharray", isSingle ? "6,4" : "4,3")
+      .attr("opacity", 0.7);
+    // Etikett
+    if (isSingle) {
+      const lastR = series.riketPts[series.riketPts.length - 1];
+      g.append("text")
+        .attr("x", x(lastR.d) + 6).attr("y", y(lastR.v) + 4)
+        .attr("fill", "#666").attr("font-size", "10px").attr("font-family", FONT)
+        .attr("font-weight", "500").text("Riket");
+    }
+  }
 
   // ── Prediktionsband (95 % yttre, 80 % inre) ──
   if (series.band && series.band.length > 0) {
