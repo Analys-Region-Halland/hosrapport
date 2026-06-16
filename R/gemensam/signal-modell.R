@@ -293,7 +293,13 @@ applicera_signal_agg <- function(agg_df, troesklar) {
 }
 
 # ══════════════════════════════════════════════════════════
-#  HUVUDFUNKTION — Kör hela signalpipelinen per KPI
+#  DIAGNOSTIK — kor_signal(): train/test-split för validering
+# ══════════════════════════════════════════════════════════
+#  Används ENBART för modellgranskning (test-signal.R,
+#  granskningsrapport.R) — INTE i produktion. Produktionspipelinen
+#  är kor_kpi_signal() längre ned (tränar på hela serien, villkorlig
+#  conformal). Delar samma kärna (modell_glm, forbered_features,
+#  conformal_kvantil) — håll bandlogiken synkad mellan de två.
 # ══════════════════════════════════════════════════════════
 
 kor_signal <- function(dagdata, kalender, modell_fn, agg_typ,
@@ -396,6 +402,95 @@ kor_signal <- function(dagdata, kalender, modell_fn, agg_typ,
   )
 
   agg_resultat
+}
+
+# ══════════════════════════════════════════════════════════
+#  HJÄLPFUNKTIONER FÖR UTSKRIFT
+# ══════════════════════════════════════════════════════════
+
+# ══════════════════════════════════════════════════════════
+#  PRODUKTION — kor_kpi_signal(): signal per KPI, alla nivåer
+# ══════════════════════════════════════════════════════════
+#  Detta är den funktion bearbeta.R använder. Tränar på hela serien
+#  och beräknar villkorlig conformal-band för dag/vecka/månad/kvartal/år.
+
+kor_kpi_signal <- function(df, kalender, familj, atyp) {
+  agg_fn <- if (atyp == "summa") sum else mean
+  m  <- modell_glm(df, kalender, familj = familj)
+  p  <- m$predict(tibble(ds = df$ds), kalender)
+
+  dag_pred <- df |>
+    inner_join(p, by = "ds") |>
+    mutate(signal = case_when(
+      y >= yhat_lower_80 & y <= yhat_upper_80 ~ "gron",
+      y >= yhat_lower & y <= yhat_upper        ~ "gul",
+      TRUE                                      ~ "rod"
+    ))
+
+  dag_out <- dag_pred |>
+    transmute(period = ds, yhat, yhat_lower_80, yhat_upper_80,
+              yhat_lower, yhat_upper, signal)
+
+  niva_spec <- list(
+    vecka   = \(d) floor_date(d, "week", week_start = 1),
+    manad   = \(d) floor_date(d, "month"),
+    kvartal = \(d) floor_date(d, "quarter"),
+    ar      = \(d) floor_date(d, "year")
+  )
+
+  agg_out <- list()
+  for (niva in names(niva_spec)) {
+    pfn <- niva_spec[[niva]]
+    agg_p <- dag_pred |>
+      mutate(period = pfn(ds)) |>
+      group_by(period) |>
+      summarise(y_a = agg_fn(y), yh_a = agg_fn(yhat), .groups = "drop") |>
+      mutate(avv = y_a - yh_a)
+
+    # Conformal band på aggregerad nivå
+    q80 <- NA_real_; q95 <- NA_real_
+    if (!is.null(m$kalibrering) && nrow(m$kalibrering) > 0) {
+      cal_p <- m$predict(tibble(ds = m$kalibrering$ds), kalender)
+      cal_a <- tibble(ds = m$kalibrering$ds, y = m$kalibrering$y) |>
+        inner_join(cal_p |> select(ds, yhat), by = "ds") |>
+        mutate(period = pfn(ds)) |>
+        group_by(period) |>
+        summarise(cy = agg_fn(y), cyh = agg_fn(yhat), .groups = "drop") |>
+        mutate(cavv = cy - cyh)
+      if (nrow(cal_a) >= 4) {
+        cal_scores <- abs(cal_a$cavv)
+        q80 <- conformal_kvantil(cal_scores, 0.20)
+        q95 <- conformal_kvantil(cal_scores, 0.05)
+      }
+    }
+    # Empirisk fallback
+    if (is.na(q80) || is.na(q95)) {
+      train_agg <- dag_pred |>
+        mutate(period = pfn(ds)) |>
+        group_by(period) |>
+        summarise(ty = agg_fn(y), tyh = agg_fn(yhat), .groups = "drop") |>
+        mutate(tavv = ty - tyh)
+      train_scores <- abs(train_agg$tavv)
+      if (is.na(q80)) q80 <- quantile(train_scores, 0.80, na.rm = TRUE, names = FALSE)
+      if (is.na(q95)) q95 <- quantile(train_scores, 0.95, na.rm = TRUE, names = FALSE)
+    }
+
+    agg_out[[niva]] <- agg_p |>
+      transmute(period, yhat = yh_a,
+        yhat_lower_80 = yh_a - q80,
+        yhat_upper_80 = yh_a + q80,
+        yhat_lower    = yh_a - q95,
+        yhat_upper    = yh_a + q95,
+        signal = case_when(
+          abs(avv) <= q80 ~ "gron",
+          abs(avv) <= q95 ~ "gul",
+          TRUE            ~ "rod"
+        ))
+  }
+
+  list(dag = dag_out, vecka = agg_out$vecka, manad = agg_out$manad,
+       kvartal = agg_out$kvartal, ar = agg_out$ar, modell_namn = m$namn,
+       kalibrering = m$kalibrering, kal = m$kal, fit = m$fit)
 }
 
 # ══════════════════════════════════════════════════════════

@@ -17,6 +17,7 @@
 source("paket.R")
 source("R/gemensam/helgdagar.R")
 source("R/gemensam/signal-modell.R")
+source("R/teman/register.R")
 
 if (!requireNamespace("knitr", quietly = TRUE)) install.packages("knitr")
 
@@ -30,16 +31,7 @@ kalender    <- bygg_kalender(min(radata$datum), max(radata$datum))
 
 split_datum <- as.Date("2025-01-01")
 
-kpi_meta <- tibble(
-  id          = c("belaggning", "akutbesok", "vantetid",
-                   "ambulans", "inlaggningar", "utskrivningsklara"),
-  namn        = c("Beläggningsgrad", "Besök akutmottagning",
-                   "Medianväntetid akut", "Ambulansuppdrag",
-                   "Inläggningar", "Utskrivningsklara patienter"),
-  aggregering = c("medel", "summa", "medel", "summa", "summa", "medel"),
-  familj      = c("gaussian", "nb", "gamma", "nb", "nb", "nb"),
-  enhet       = c("procent", "antal", "minuter", "antal", "antal", "antal")
-)
+# kpi_meta laddas från register.R (en enda källa)
 
 # Injicerade anomalier (för detektionstest)
 anomalier <- list(

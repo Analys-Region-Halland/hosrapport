@@ -1,7 +1,351 @@
 @import "tailwindcss";
 
+/* ── Reset ── */
 *, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* ════════════════════════════════════════════
+   Designtokens (speglar app/src/theme/tokens.ts)
+   ════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --brand-700: #00664D;
+  --brand-500: #00AB60;
+  --brand-50:  #E3F4E2;
+
+  /* Neutraler */
+  --ink:      #1a1a1a;
+  --muted:    #83888A;
+  --faint:    #999999;
+  --hairline: #e0e0dc;
+  --surface:  #ffffff;
+  --canvas:   #eeeee9;
+
+  /* Signal (färgblind-säker, Okabe-Ito) */
+  --sig-gron: #0072B2;
+  --sig-gul:  #E69F00;
+  --sig-rod:  #D55E00;
+
+  /* Spacing (4px-bas) */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+
+  /* Radie / skugga */
+  --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 10px;
+  --sh-card:  0 1px 3px rgba(0,0,0,.04);
+  --sh-hover: 0 3px 12px rgba(0,0,0,.08);
+  --sh-modal: 0 20px 60px rgba(0,0,0,.12);
+
+  /* Typsnitt */
+  --font-sans:    'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
+  --font-serif:   'Source Serif 4', Georgia, serif;
+  --font-display: 'Lexend Deca', sans-serif;
+
+  /* Lagerordning */
+  --z-toolbar: 10; --z-modal: 200; --z-tooltip: 9999;
+}
+
+/* ════════════════════════════════════════════
+   SegmentedControl (tabs + toggles)
+   ════════════════════════════════════════════ */
+.seg {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  width: fit-content;
+}
+.seg__btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.seg__btn + .seg__btn { border-left: 1px solid rgba(131,136,138,0.12); }
+.seg__btn:not([data-active="true"]):hover {
+  color: var(--brand-700);
+  background: rgba(227,244,226,0.5);
+}
+.seg__btn[data-active="true"] {
+  background: var(--brand-700);
+  color: #fff;
+  font-weight: 600;
+}
+.seg--sm .seg__btn { padding: 5px 13px; font-size: 11.5px; }
+.seg__btn:disabled {
+  color: #c4c4be;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+/* ════════════════════════════════════════════
+   KPI-grid (ersätter sköra substring-selektorer)
+   ════════════════════════════════════════════ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-3);
+  align-items: start;
+}
+.kpi-grid--report { grid-template-columns: repeat(3, 1fr); }
+.kpi-grid--report[data-count="2"] { grid-template-columns: repeat(2, 1fr); }
+.kpi-grid--report[data-count="1"] { grid-template-columns: 1fr; }
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .kpi-grid, .kpi-grid--report { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════
+   StartScreen — områdeskort
+   ════════════════════════════════════════════ */
+.start-card {
+  transition: box-shadow .18s, border-color .18s, transform .18s;
+}
+.start-card:hover {
+  box-shadow: var(--sh-hover);
+  transform: translateY(-2px);
+}
+.start-card:not(.start-card--hero):hover {
+  border-color: #c4c4be;
+}
+.start-card:hover .start-arrow {
+  transform: translateX(4px);
+}
+
+/* ════════════════════════════════════════════
+   Rapport: kapitelplatta + indikatorkort
+   ════════════════════════════════════════════ */
+/* Kapitelrubrik som grön platta (folio · avdelare · namn) — starkaste avgränsaren. */
+.chapter-plate {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--brand-700, #00664D);
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0,102,77,.18);
+}
+.chapter-plate__folio {
+  font-size: 22px;
+  font-weight: 700;
+  color: #7fd3b0;
+  letter-spacing: .02em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.chapter-plate__divider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(255,255,255,.22);
+  flex-shrink: 0;
+}
+.chapter-plate__namn {
+  margin: 0;
+  min-width: 0;
+  font-size: 25px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -.02em;
+  line-height: 1.18;
+}
+
+/* Delrubrik — tematisk del inom ett kapitel (t.ex. SKR-rapportens delar).
+   Lättare än kapitelplattan: vit yta med grön vänsterkant. */
+.del-plate {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #e8e8e4;
+  border-left: 4px solid var(--brand-700, #00664D);
+  border-radius: 10px;
+  padding: 13px 20px;
+  margin-bottom: 18px;
+}
+.del-plate__nr {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--brand-500, #00AB60);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.del-plate__namn {
+  margin: 0;
+  min-width: 0;
+  font-size: 21px;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -.015em;
+  line-height: 1.2;
+}
+
+/* AI-analys — inramad callout. Bakgrund + vänsterkantens färg sätts inline
+   per fas (signalstatus) i EditableBlock; här bara neutral ram + layout. */
+.ai-callout {
+  background: #f4f9f6;
+  border: 1px solid #e8e8e4;
+  border-left: 3px solid var(--brand-500, #00AB60);
+  border-radius: 10px;
+  padding: 14px 18px 16px;
+  margin-bottom: 14px;
+}
+.ai-callout__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--brand-700, #00664D);
+  margin-bottom: 8px;
+}
+
+/* Indikatorkort — distinkt yta så delarna inte flyter samman. */
+.indicator-card {
+  background: #fff;
+  border: 1px solid #e8e8e4;
+  border-radius: 12px;
+  padding: 24px 26px 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+/* ════════════════════════════════════════════
+   Rapport: textblock (AI + anteckning) + infogningsrad
+   ════════════════════════════════════════════ */
+.report-note { margin-bottom: 14px; }
+.report-note--editing { margin-bottom: 16px; }
+
+/* Subtil känsla av att en anteckning går att redigera. */
+.report-editable {
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-left: -8px;
+  margin-right: -8px;
+  transition: background .15s, box-shadow .15s;
+}
+.report-editable:hover {
+  background: #faf9f6;
+  box-shadow: inset 2px 0 0 #d9e7e1;
+}
+
+/* Indikator-board: radhover */
+.board-row { transition: background .12s; }
+.board-row:hover { background: #f6f7f6; }
+
+/* "+ Skriv här" — diskret rad som framträder vid hover/fokus */
+.report-insert {
+  display: flex;
+  align-items: center;
+  min-height: 14px;
+  margin: 2px 0;
+}
+.report-insert__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px dashed #d4d4d4;
+  border-radius: 5px;
+  background: transparent;
+  color: #00664D;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s, border-color .15s, background .15s;
+}
+.report-insert:hover .report-insert__btn,
+.report-insert__btn:focus-visible {
+  opacity: 1;
+}
+.report-insert__btn:hover {
+  border-color: #00AB60;
+  background: rgba(227,244,226,0.4);
+}
+.report-insert__plus {
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+/* ════════════════════════════════════════════
+   Tillgänglighet
+   ════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2px solid var(--brand-700);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Keyframes (flyttade från App.tsx) ── */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
+
+/* Pulsande "live"-ping på senaste punkten i linjegrafer (tidsserie.ts).
+   Bas-opacitet 0 → osynlig när animation är av (prefers-reduced-motion). */
+@keyframes pulse-ping {
+  0%   { transform: scale(0.5); opacity: 0.5; }
+  70%  { opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.pulse-ping {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+  animation: pulse-ping 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+/* ════════════════════════════════════════════
+   Rapport: utskrift/PDF + responsivt
+   ════════════════════════════════════════════ */
+/* Sidebar-TOC fälls ihop på smala skärmar (annars krockar den fasta 196px-kolumnen) */
+@media (max-width: 900px) { .report-toc { display: none; } }
+
+/* Facet-paneler: klickbara → storformat. Hover lyfter panelen + visar expand-ikon. */
+.facet-panel { transition: background .15s; }
+.facet-panel:hover { background: #f6f7f8; }
+.facet-expand { opacity: 0; transition: opacity .15s; }
+.facet-panel:hover .facet-expand { opacity: 1; }
+
+@media print {
+  .report-toolbar, .report-toc { display: none !important; }
+  /* Redigerings-affordanser hör inte hemma i utskriften */
+  .report-insert { display: none !important; }
+  /* Bryt inte sönder ett indikatorkort (rubrik+analys+graf) eller en figur över sidor */
+  .report-indicator, .indicator-card, .report-figure, .chapter-plate, .del-plate, .ai-callout { break-inside: avoid; }
+  .indicator-card { box-shadow: none !important; }
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page { margin: 16mm; }
 }

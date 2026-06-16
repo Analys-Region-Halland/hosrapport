@@ -1,0 +1,29 @@
+# register.R — Samlar alla tema-konfigurationer
+# En enda källa för kpi_meta, dept_config och sektioner.
+#
+# Ny sektion? Lägg till tre rader:
+#   1. source("R/teman/{namn}/config.R")
+#   2. Lägg till i alla_teman
+#   3. Klar.
+
+source("R/teman/akutflode/config.R")
+source("R/teman/slutenvard/config.R")
+source("R/teman/kolada/config.R")
+
+# Teman med daglig data (conformal prediction)
+dagliga_teman <- list(akutflode, slutenvard)
+
+# Alla teman (inklusive specialfall som Kolada-årsindikatorerna,
+# tidigare patientenkäten)
+alla_teman <- c(dagliga_teman, list(kolada_tema))
+
+# ── kpi_meta: en rad per KPI med sektion-info ──
+kpi_meta <- bind_rows(lapply(dagliga_teman, function(tema) {
+  tema$kpier |> mutate(sektion_id = tema$id, sektion_namn = tema$namn)
+}))
+
+# ── dept_config: avdelningsnamn per KPI ──
+dept_config <- unlist(
+  lapply(dagliga_teman, function(tema) tema$avdelningar),
+  recursive = FALSE
+)

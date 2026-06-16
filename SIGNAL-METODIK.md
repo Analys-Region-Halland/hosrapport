@@ -1,7 +1,7 @@
 # Signalsystem — Metodik och specifikation
 
 > Denna fil definierar hur signalsystemet i HoS-rapporten fungerar.
-> All kod i `R/gemensam/signal-modell.R`, `R/kap01-hamta.R` och `R/kap02-bearbeta.R`
+> All kod i `R/gemensam/signal-modell.R`, `R/hamta/demo-data.R` och `R/bearbeta.R`
 > följer denna specifikation. Ändringar i metodik görs här först, sedan i koden.
 
 ---

@@ -40,8 +40,13 @@ export interface KpiData {
   forandringar: { etikett: string; varde: number }[];
   status: "gron" | "gul" | "rod";
   analystext: string;
+  /** Kort, status-härledd rubrik för AI-analysen (genereras i R; faller
+   *  tillbaka på analysRubrik() i frontend om fältet saknas). */
+  analys_rubrik?: string;
   /** Statistisk definition och beskrivning av indikatorn */
   beskrivning?: string;
+  /** Målnivå — ritas som horisontell referenslinje i grafen. */
+  malniva?: number;
   tidsserie: TidsseriePoint[];
   /** Dagsnivådata för senaste kompletta period */
   dagar?: TidsseriePoint[];
@@ -55,6 +60,8 @@ export interface KpiData {
   kontext_serier?: KontextSerie[];
   /** Rikssnitt-serie (visas som streckad grå linje) */
   riket_serie?: { period: string; etikett: string; varde: number }[];
+  /** Topp 3-zon bland regionerna per år (riktningsmedveten) — grönt band */
+  topp3_band?: { period: string; etikett: string; lo: number; hi: number }[];
   /** Underkort — avdelningsnedbrytning */
   undernivaer?: SubKpi[];
 }
@@ -79,7 +86,22 @@ export interface Section {
   id: string;
   namn: string;
   analys: string;
+  /** Kort, status-härledd rubrik för sektionens AI-analys (se KpiData.analys_rubrik). */
+  analys_rubrik?: string;
   kpier: KpiData[];
+  /** Tematiska delar med egen översikt (t.ex. SKR-rapportens indelning).
+   *  kpi_ids refererar till kpier; KPI:er utan del renderas som vanligt. */
+  delar?: SektionDel[];
+}
+
+export interface SektionDel {
+  id: string;
+  namn: string;
+  /** Delens egen översiktsanalys */
+  analys: string;
+  analys_rubrik?: string;
+  /** KPI-id:n i visningsordning (refererar Section.kpier) */
+  kpi_ids: string[];
 }
 
 export interface DagarPeriod {
@@ -101,6 +123,8 @@ export interface VyData {
   uppdaterad: string;
   jmf_etikett: string;
   analys: string;
+  /** Kort, status-härledd rubrik för den globala AI-analysen (se KpiData.analys_rubrik). */
+  analys_rubrik?: string;
   /** Senaste kompletta period som visas i dag-toggle */
   dagar_period?: DagarPeriod;
   /** När nästa kompletta period är klar */
@@ -110,23 +134,24 @@ export interface VyData {
 
 export type AllData = Record<string, VyData>;
 
-// ── Kommentarer ──
-
-export interface VComment {
-  /** Nyckel: "global" | section.id | kpi.id */
-  targetId: string;
-  text: string;
-  author: string;
-  timestamp: string;
-}
+/** Rapportens omfattning: "alla" sakområden eller ett enskilt sektion-id. */
+export type Scope = "alla" | string;
 
 // ── Redigerbara innehållsblock ──
 
 export interface ContentBlock {
+  /** "ai"         = autogenererad (renderas alltid från R-texten, lagras ej).
+   *  "anteckning" = användarens egna block: rubrik (title) + text + skribent (author).
+   *  "rubrik"/"stycke"/"kommentar" = äldre format, migreras lazy till
+   *  "anteckning" vid läsning (stores/blocks.ts). */
   id: string;
-  type: "ai" | "kommentar";
+  type: "ai" | "anteckning" | "rubrik" | "stycke" | "kommentar";
+  /** Rubrik ovanför texten (type="anteckning"; äldre "kommentar"). */
   title?: string;
+  /** Rubriknivå för äldre type="rubrik" (migreras bort). */
+  level?: "h3" | "h4";
   text: string;
+  /** Skribentens namn/initialer — visas i bylinen. */
   author?: string;
   timestamp: string;
 }

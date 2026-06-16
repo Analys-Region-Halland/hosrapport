@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://region-halland.se/hos-data.schema.json",
+  "title": "HoS-rapport datakontrakt",
+  "description": "Kontrakt för data/hos-data.json. Härlett ur app/src/types.ts. R-sidan upprätthåller motsvarande invarianter som hård grind i R/gemensam/kontrakt.R (validera_kontrakt). Frontend gör en lättviktig dev-kontroll i app/src/utils/validateContract.ts.",
+  "type": "object",
+  "required": ["dag", "vecka", "manad", "kvartal", "ar"],
+  "properties": {
+    "dag": { "$ref": "#/$defs/VyData" },
+    "vecka": { "$ref": "#/$defs/VyData" },
+    "manad": { "$ref": "#/$defs/VyData" },
+    "kvartal": { "$ref": "#/$defs/VyData" },
+    "ar": { "$ref": "#/$defs/VyData" }
+  },
+  "$defs": {
+    "Signal": { "enum": ["gron", "gul", "rod"] },
+    "Enhet": { "enum": ["procent", "minuter", "antal"] },
+    "TidsseriePoint": {
+      "type": "object",
+      "required": ["period", "etikett", "varde"],
+      "properties": {
+        "period": { "type": "string" },
+        "etikett": { "type": "string" },
+        "varde": { "type": ["number", "null"] },
+        "yhat": { "type": ["number", "null"] },
+        "yhat_lower_80": { "type": ["number", "null"] },
+        "yhat_upper_80": { "type": ["number", "null"] },
+        "yhat_lower": { "type": ["number", "null"] },
+        "yhat_upper": { "type": ["number", "null"] },
+        "signal": { "$ref": "#/$defs/Signal" }
+      }
+    },
+    "SimpleSerie": {
+      "type": "object",
+      "required": ["period", "etikett", "varde"],
+      "properties": {
+        "period": { "type": "string" },
+        "etikett": { "type": "string" },
+        "varde": { "type": ["number", "null"] }
+      }
+    },
+    "SubKpi": {
+      "type": "object",
+      "required": ["id", "namn", "senaste", "forandring", "status", "tidsserie"],
+      "properties": {
+        "id": { "type": "string" },
+        "namn": { "type": "string" },
+        "senaste": { "type": "number" },
+        "forandring": { "type": "number" },
+        "status": { "$ref": "#/$defs/Signal" },
+        "tidsserie": { "type": "array", "items": { "$ref": "#/$defs/TidsseriePoint" } },
+        "dagar": { "type": "array", "items": { "$ref": "#/$defs/TidsseriePoint" } }
+      }
+    },
+    "KontextSerie": {
+      "type": "object",
+      "required": ["id", "namn", "tidsserie"],
+      "properties": {
+        "id": { "type": "string" },
+        "namn": { "type": "string" },
+        "tidsserie": { "type": "array", "items": { "$ref": "#/$defs/SimpleSerie" } }
+      }
+    },
+    "Referens": {
+      "type": "object",
+      "required": ["period", "etikett", "varde", "forandring"],
+      "properties": {
+        "period": { "type": "string" },
+        "etikett": { "type": "string" },
+        "varde": { "type": "number" },
+        "forandring": { "type": "number" }
+      }
+    },
+    "DagarSammanfattning": {
+      "type": "object",
+      "required": ["n_dagar", "n_i_fas", "n_bevaka", "n_avvikelse"],
+      "properties": {
+        "n_dagar": { "type": "number" },
+        "n_i_fas": { "type": "number" },
+        "n_bevaka": { "type": "number" },
+        "n_avvikelse": { "type": "number" }
+      }
+    },
+    "KpiData": {
+      "type": "object",
+      "required": ["id", "namn", "enhet", "inverterad", "senaste", "forandring", "status", "analystext", "tidsserie"],
+      "properties": {
+        "id": { "type": "string" },
+        "namn": { "type": "string" },
+        "enhet": { "$ref": "#/$defs/Enhet" },
+        "inverterad": { "type": "boolean" },
+        "senaste": { "type": "number" },
+        "forandring": { "type": "number" },
+        "forandringar": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["etikett", "varde"],
+            "properties": { "etikett": { "type": "string" }, "varde": { "type": "number" } }
+          }
+        },
+        "status": { "$ref": "#/$defs/Signal" },
+        "analystext": { "type": "string" },
+        "analys_rubrik": { "type": "string" },
+        "beskrivning": { "type": "string" },
+        "malniva": { "type": "number" },
+        "tidsserie": { "type": "array", "items": { "$ref": "#/$defs/TidsseriePoint" } },
+        "dagar": { "type": "array", "items": { "$ref": "#/$defs/TidsseriePoint" } },
+        "dagar_sammanfattning": { "$ref": "#/$defs/DagarSammanfattning" },
+        "referens": { "$ref": "#/$defs/Referens" },
+        "referens_serie": { "type": "array", "items": { "$ref": "#/$defs/TidsseriePoint" } },
+        "kontext_serier": { "type": "array", "items": { "$ref": "#/$defs/KontextSerie" } },
+        "riket_serie": { "type": "array", "items": { "$ref": "#/$defs/SimpleSerie" } },
+        "undernivaer": { "type": "array", "items": { "$ref": "#/$defs/SubKpi" } }
+      }
+    },
+    "Section": {
+      "type": "object",
+      "required": ["id", "namn", "analys", "kpier"],
+      "properties": {
+        "id": { "type": "string" },
+        "namn": { "type": "string" },
+        "analys": { "type": "string" },
+        "analys_rubrik": { "type": "string" },
+        "kpier": { "type": "array", "items": { "$ref": "#/$defs/KpiData" } }
+      }
+    },
+    "DagarPeriod": {
+      "type": "object",
+      "required": ["start", "slut", "etikett"],
+      "properties": {
+        "start": { "type": "string" },
+        "slut": { "type": "string" },
+        "etikett": { "type": "string" }
+      }
+    },
+    "NastaPeriod": {
+      "type": "object",
+      "required": ["datum", "etikett"],
+      "properties": {
+        "datum": { "type": "string" },
+        "etikett": { "type": "string" }
+      }
+    },
+    "VyData": {
+      "type": "object",
+      "required": ["vy", "etikett", "period", "datum", "uppdaterad", "jmf_etikett", "analys", "sektioner"],
+      "properties": {
+        "vy": { "type": "string" },
+        "etikett": { "type": "string" },
+        "period": { "type": "string" },
+        "datum": { "type": "string" },
+        "uppdaterad": { "type": "string" },
+        "jmf_etikett": { "type": "string" },
+        "analys": { "type": "string" },
+        "analys_rubrik": { "type": "string" },
+        "dagar_period": { "$ref": "#/$defs/DagarPeriod" },
+        "nasta_period": { "$ref": "#/$defs/NastaPeriod" },
+        "sektioner": { "type": "array", "items": { "$ref": "#/$defs/Section" } }
+      }
+    }
+  }
+}

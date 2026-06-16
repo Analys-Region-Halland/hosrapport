@@ -21,7 +21,13 @@ _publish/
 node_modules/
 app/dist/
 
+# Claude Code (lokala arbetsanteckningar — ej för publika repot)
+memory/
+
 # Temporärt
 temp/
 _tmp_*
 *.log
+
+/.quarto/
+**/*.quarto_ipynb

@@ -1,11 +1,11 @@
-# kap01-hamta.R — Generera syntetisk daglig demodata
+# demo-data.R — Generera syntetisk daglig demodata
 # I produktion ersätts detta med hämtning från API/databas
 #
 # Förbättringar:
 #   - Autokorrelation (AR1) ger realistisk daglig samvariation
 #   - Helgdagseffekter (röda dagar, klämdagar → lägre aktivitet)
 #   - Injicerade anomalier för att validera signalsystemet
-#   - Se SIGNAL-METODIK.md för parameterdokumentation
+
 source("paket.R")
 source("R/gemensam/helgdagar.R")
 
@@ -32,7 +32,6 @@ sasong_faktor <- function(datum) {
 # Veckodagseffekt: differentierad per dag
 veckodag_faktor <- function(datum) {
   vd <- wday(datum, week_start = 1)
-  # mån–fre ≈ 0, lördag ≈ -0.12, söndag ≈ -0.18
   case_when(
     vd == 1 ~ 0.02,   # måndag: lätt förhöjd
     vd == 5 ~ -0.03,  # fredag: lätt sänkt
@@ -50,11 +49,11 @@ helgdag_faktor <- function(datum, kalender_df, helg_amp) {
     rad <- kal |> filter(ds == datum[i])
     if (nrow(rad) == 0) next
     if (rad$rod_dag[1] || rad$afton[1]) {
-      effekt[i] <- -helg_amp  # Full helgdagseffekt
+      effekt[i] <- -helg_amp
     } else if (rad$klamdag[1]) {
-      effekt[i] <- -helg_amp * 0.5  # Halv effekt klämdagar
+      effekt[i] <- -helg_amp * 0.5
     } else if (rad$halvdag[1]) {
-      effekt[i] <- -helg_amp * 0.3  # Svagare halvdagseffekt
+      effekt[i] <- -helg_amp * 0.3
     }
   }
   effekt
@@ -69,17 +68,14 @@ generera_serie <- function(datum, bas, trend_ar, sasong_amp, vd_amp, brus_sd,
   n <- length(datum)
   ar_progress <- as.numeric(datum - datum[1]) / 365.25
 
-  # Deterministiska komponenter
   signal <- bas + trend_ar * ar_progress +
     sasong_amp * sasong_faktor(datum) +
     vd_amp * veckodag_faktor(datum)
 
-  # Helgdagseffekt
   if (helg_amp > 0 && !is.null(kalender_df)) {
     signal <- signal + helgdag_faktor(datum, kalender_df, helg_amp)
   }
 
-  # Autokorrelerat brus (AR1)
   brus <- numeric(n)
   brus[1] <- rnorm(1, 0, brus_sd)
   for (i in 2:n) {
@@ -127,11 +123,8 @@ radata <- tibble(datum = datum_seq) |>
 # ══════════════════════════════════════════════
 #  INJICERADE ANOMALIER
 # ══════════════════════════════════════════════
-# Kända avvikelser för att validera signalsystemet.
-# Dokumenteras i SIGNAL-METODIK.md.
 
 # Anomali 1: Vintervåg december 2025 (akutbesök + beläggning)
-# Vecka 50–52, 2025: +15–20 % över förväntat
 vintervag <- radata$datum >= as.Date("2025-12-08") & radata$datum <= as.Date("2025-12-28")
 radata$akutbesok[vintervag] <- round(radata$akutbesok[vintervag] * 1.18)
 radata$belaggning[vintervag] <- pmin(
@@ -139,13 +132,11 @@ radata$belaggning[vintervag] <- pmin(
 )
 
 # Anomali 2: Ambulanshändelse februari 2026
-# 16–20 feb: +40 % ambulansuppdrag
 ambulans_anomali <- radata$datum >= as.Date("2026-02-16") &
                     radata$datum <= as.Date("2026-02-20")
 radata$ambulans[ambulans_anomali] <- round(radata$ambulans[ambulans_anomali] * 1.40)
 
 # Anomali 3: Gradvis ökande väntetid mars 2026
-# 1–14 mars: +3 minuter per dag (kumulativt)
 vantetid_anomali <- radata$datum >= as.Date("2026-03-01") &
                     radata$datum <= as.Date("2026-03-14")
 dagar_i_anomali <- as.numeric(radata$datum[vantetid_anomali] - as.Date("2026-02-28"))
@@ -157,11 +148,9 @@ saveRDS(radata, "data/radata-hos.rds")
 # ══════════════════════════════════════════════
 #  AVDELNINGSDATA (daglig, långformat)
 # ══════════════════════════════════════════════
-# Varje avdelning har egen daglig tidsserie.
-# Summa-KPI:er: proportionell del av totalen + eget brus
-# Medel-KPI:er: offset från totalen + eget brus
 
-dept_config <- list(
+# Syntes-parametrar per KPI (separata från tema-configs)
+dept_synth <- list(
   belaggning        = list(dept = c("Halmstad", "Varberg", "Kungsbacka"),
                            typ = "medel",  offsets = c(2, -1.5, -3)),
   akutbesok         = list(dept = c("Halmstad", "Varberg", "Kungsbacka"),
@@ -176,8 +165,8 @@ dept_config <- list(
                            typ = "medel",  offsets = c(1.5, -1, -2.5))
 )
 
-dept_radata <- bind_rows(lapply(names(dept_config), function(kpi_id) {
-  cfg <- dept_config[[kpi_id]]
+dept_radata <- bind_rows(lapply(names(dept_synth), function(kpi_id) {
+  cfg <- dept_synth[[kpi_id]]
   total <- radata[[kpi_id]]
   dec <- if (kpi_id == "belaggning") 1 else 0
 
@@ -201,7 +190,7 @@ dept_radata <- bind_rows(lapply(names(dept_config), function(kpi_id) {
 
 saveRDS(dept_radata, "data/radata-dept.rds")
 
-cat("Rådata genererad:", nrow(radata), "dagar,", ncol(radata) - 1, "KPI:er\n")
+cat("R\u00e5data genererad:", nrow(radata), "dagar,", ncol(radata) - 1, "KPI:er\n")
 cat("Avdelningsdata:", nrow(dept_radata), "rader,",
     length(unique(dept_radata$dept)), "avdelningar\n")
-cat("Injicerade anomalier: 3 st (vintervåg, ambulanshändelse, väntetidsökning)\n")
+cat("Injicerade anomalier: 3 st (vinterv\u00e5g, ambulansh\u00e4ndelse, v\u00e4ntetids\u00f6kning)\n")

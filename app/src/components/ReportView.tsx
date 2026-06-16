@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type {
   VyData,
   KpiData,
@@ -6,19 +6,19 @@ import type {
   ContentBlock,
 } from "../types";
 import FacetedChart from "./FacetedChart";
-import EditableBlock, { InsertZone } from "./EditableBlock";
-import { getBlocks, setBlocks as persistBlocks } from "../stores/blocks";
-import { fmtVarde, fmtSuffix, fullEtikett } from "../utils/format";
+import SignalTimeline from "./SignalTimeline";
+import { SignalLegend, StatusTag } from "./SignalStrip";
+import EditableBlock, { type AnteckningData } from "./EditableBlock";
+import { getBlocks, setBlocks as persistBlocks, getForfattare, BLOCKS_KEY } from "../stores/blocks";
+import { hasDirty } from "../stores/dirty";
+import { fullEtikett } from "../utils/format";
+import { ANALYS_RUBRIK_GLOBAL, analysRubrikForStatus } from "../utils/analys";
+import SegmentedControl from "./SegmentedControl";
+import SignalBadge from "./SignalBadge";
 
 // ════════════════════════════════════════════════════════
-//  ReportView — fullskärms huvudrapport
-//  NYT × offentlig förvaltning
+//  ReportView — fullskärms rapport (översikt + dokument)
 // ════════════════════════════════════════════════════════
-
-const SIGNAL: Record<string, { color: string; label: string }> = {
-  gron: { color: "#16a34a", label: "Inom förväntat" },
-  rod:  { color: "#dc2626", label: "Utanför förväntat" },
-};
 
 const mono: React.CSSProperties = {
   fontFamily: "'IBM Plex Mono', monospace",
@@ -37,176 +37,338 @@ const VY_LABELS: Record<string, string> = {
   ar: "Årsuppföljning",
 };
 
-interface Props {
-  data: VyData;
-  /** Om angivet, visa bara denna sektion (delrapport) */
-  sectionId?: string;
-  onClose: () => void;
+export interface VyItem { id: string; label: string; disabled?: boolean }
+
+// ── Delar: expandera en sektion med delar till pseudo-sektioner ──
+// Används av heatmap-gruppering och TOC så att t.ex. SKR-rapportens sex
+// tematiska delar blir egna grupper. Sektion utan delar passerar oförändrad.
+function delSektioner(s: Section): Section[] {
+  if (!s.delar || s.delar.length === 0) return [s];
+  const byId = new Map(s.kpier.map((k) => [k.id, k]));
+  return s.delar.map((d) => ({
+    id: d.id,
+    namn: d.namn,
+    analys: d.analys,
+    kpier: d.kpi_ids.map((id) => byId.get(id)).filter((k): k is KpiData => !!k),
+  }));
 }
 
-export default function ReportView({ data, sectionId, onClose }: Props) {
-  const [locked, setLocked] = useState(true);
+interface Props {
+  /** Färdigladdad vy-data, eller null medan den hämtas. */
+  data: VyData | null;
+  /** Felmeddelande från dataladdning, om något. */
+  error?: string | null;
+  /** Om angivet, visa bara denna sektion (delrapport / ett sakområde) */
+  sectionId?: string;
+  /** Aktiv tidsvy + väljare (rapporten äger tidsperioden) */
+  aktivVy: string;
+  vyItems: VyItem[];
+  onChangeVy: (id: string) => void;
+  /** Global Aggregerat/Dag för översikten (per-indikator har egen toggle) */
+  visaDagar?: boolean;
+  onChangeVisaDagar?: (v: boolean) => void;
+  /** Öppna en KPI i stor graf (översikt + heatmap) */
+  onOpenChart?: (kpi: KpiData) => void;
+  /** Tillbaka till startsidan */
+  onBack: () => void;
+}
+
+export default function ReportView({
+  data, error, sectionId, aktivVy, vyItems, onChangeVy,
+  visaDagar = false, onChangeVisaDagar, onOpenChart, onBack,
+}: Props) {
+  const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onBack();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [onBack]);
 
-  const visadeSektioner = sectionId
-    ? data.sektioner.filter((s) => s.id === sectionId)
-    : data.sektioner;
+  // Varna vid stängning/omladdning om något fortfarande är osparat (utöver
+  // autospar + spara-vid-blur/unmount som täcker de flesta fall).
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasDirty()) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  // Scroll spy — markerar aktiv sektion i sidebar-TOC
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          setActiveId(entry.target.id.replace("rapport-", ""));
+        }
+      }
+    }, { rootMargin: "-72px 0px -55% 0px" });
+
+    requestAnimationFrame(() => {
+      const targets = document.querySelectorAll("[id^='rapport-']");
+      targets.forEach(t => observer.observe(t));
+    });
+    return () => observer.disconnect();
+  }, [data, sectionId]);
+
+  // Memoiseras så att t.ex. scroll-spy-omritningar inte bygger om heatmapen.
+  const visadeSektioner = useMemo(
+    () => data ? (sectionId ? data.sektioner.filter((s) => s.id === sectionId) : data.sektioner) : [],
+    [data, sectionId],
+  );
+  // Sektioner med delar (t.ex. SKR) får sin signalöversikt PER DEL inne i
+  // kapitlet (DelBlock) — den stora heatmapen överst visar bara övriga
+  // sektioner, annars blir den för tung med alla indikatorer i början.
+  const heatmapSektioner = useMemo(
+    () => visadeSektioner.filter((s) => !s.delar || s.delar.length === 0),
+    [visadeSektioner],
+  );
   const allKpier = visadeSektioner.flatMap((s) => s.kpier);
   const within = allKpier.filter((k) => {
     const last = k.tidsserie[k.tidsserie.length - 1];
     return last?.signal === "gron";
   }).length;
   const outside = allKpier.length - within;
-  const vyLabel = VY_LABELS[data.vy] || "";
+  const vyLabel = data ? (VY_LABELS[data.vy] || "") : "";
   const sectionTitle = sectionId ? visadeSektioner[0]?.namn : null;
+  const showSidebar = (!sectionId && visadeSektioner.length > 1) ||
+    Boolean(sectionId && visadeSektioner[0]?.delar?.length);
 
   return (
     <div
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed", inset: 0, background: "#fbfbf9",
         zIndex: 200, overflowY: "auto", animation: "fadeIn 0.2s ease",
       }}
     >
-      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
+      <div style={{ maxWidth: 1320, margin: "0 auto", position: "relative" }}>
 
         {/* ── Verktygsfält ── */}
-        <Toolbar locked={locked} setLocked={setLocked} vyData={data} onClose={onClose} />
+        <Toolbar
+          onBack={onBack}
+          aktivVy={aktivVy} vyItems={vyItems} onChangeVy={onChangeVy}
+        />
 
-        {/* ── Dokument ── */}
-        <article style={{
-          maxWidth: 780, margin: "0 auto", padding: "56px 32px 80px",
-          fontFamily: FONT,
-        }}>
-          {/* Redigeringsindikator */}
-          {!locked && <EditBanner />}
+        {error ? (
+          <ReportStatus tone="error" text={`Kunde inte ladda data: ${error}`} />
+        ) : !data ? (
+          <ReportStatus tone="loading" text="Laddar rapport…" />
+        ) : visadeSektioner.length === 0 ? (
+          <ReportStatus tone="loading" text="Området saknas i denna tidsvy. Välj en annan vy ovan." />
+        ) : (
+        /* ── Layout: sidebar + dokument ── */
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
 
-          {/* ── Rapportens rubrik ── */}
-          <header style={{ marginBottom: 48 }}>
-            {/* Logo */}
-            <div style={{ marginBottom: 32 }}>
+          {/* ── Sidebar-TOC ── */}
+          {showSidebar && (
+            <SidebarToc
+              sections={visadeSektioner}
+              activeId={activeId}
+              visaOversikt={heatmapSektioner.length > 0}
+            />
+          )}
+
+          {/* ── Dokument ── */}
+          <article style={{
+            flex: 1, maxWidth: 880, padding: "40px 32px 64px",
+            fontFamily: FONT,
+            marginLeft: showSidebar ? 0 : "auto",
+            marginRight: showSidebar ? 0 : "auto",
+          }}>
+            {/* ── Rapportens rubrik (masthead) ── */}
+            <header style={{ marginBottom: 36 }}>
+              <div style={{ marginBottom: 24 }}>
+                <img
+                  src={`${import.meta.env.BASE_URL}logo_farg.svg`}
+                  alt="Region Halland"
+                  style={{ height: 32 }}
+                />
+              </div>
+
+              <h1 style={{
+                fontFamily: FONT_RUBRIK,
+                fontWeight: 700, fontSize: 42, color: "#1a1a1a",
+                letterSpacing: "-0.025em", lineHeight: 1.06, margin: "0 0 16px",
+              }}>
+                {sectionTitle || "Hälso- och sjukvården"}
+              </h1>
+
+              {/* Datelinje: vy + period till vänster, uppdaterad (mono) till höger */}
+              <div style={{
+                display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                gap: 16, paddingTop: 14, borderTop: "3px solid #00664D",
+              }}>
+                <span style={{ fontFamily: FONT, fontSize: 14, color: "#555", fontWeight: 500 }}>
+                  {vyLabel} &middot; {data.etikett} &middot; {data.period}
+                </span>
+                <span style={{ ...mono, fontSize: 11.5, color: "#aaa" }}>
+                  Uppdaterad {data.uppdaterad}
+                </span>
+              </div>
+            </header>
+
+            {/* ── Nyckeltal-sammanfattning ── */}
+            <div style={{
+              display: "flex", gap: 24, alignItems: "baseline",
+              marginBottom: 28, paddingBottom: 20,
+              borderBottom: "1px solid #e0e0dc",
+            }}>
+              <MiniStat value={allKpier.length} label="indikatorer" />
+              <MiniStat value={within} label="inom förväntat" signal="gron" />
+              {outside > 0 && <MiniStat value={outside} label="utanför" signal="rod" />}
+            </div>
+
+            {/* ── Översikt: titel i platta + AI-analys + heatmap (samma mönster som övriga kapitel).
+                   Döljs när alla visade sektioner har delar (delarnas heatmaps bor i kapitlet). ── */}
+            {(heatmapSektioner.length > 0 || !sectionId) && (
+              <OversiktBlock
+                sektioner={heatmapSektioner}
+                vyData={data}
+                visaDagar={visaDagar}
+                onChangeVisaDagar={onChangeVisaDagar}
+                onOpenChart={onOpenChart}
+                showGlobal={!sectionId}
+              />
+            )}
+
+            {/* ── Sektioner ── */}
+            {visadeSektioner.map((sek, i) => (
+              <SectionBlock
+                key={sek.id}
+                section={sek}
+                index={sectionId ? undefined : i + 1}
+                vyLabel={vyLabel}
+                vy={data.vy}
+                onOpenChart={onOpenChart}
+              />
+            ))}
+
+            {/* ── Footer ── */}
+            <footer style={{
+              marginTop: 56, paddingTop: 20,
+              borderTop: "1px solid #e0e0dc",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
               <img
                 src={`${import.meta.env.BASE_URL}logo_farg.svg`}
                 alt="Region Halland"
-                style={{ height: 36 }}
+                style={{ height: 20, opacity: 0.5 }}
               />
-            </div>
-
-            {/* Typ-etikett */}
-            <div style={{
-              fontSize: 11, fontWeight: 600, textTransform: "uppercase",
-              letterSpacing: "0.12em", color: "#00AB60", marginBottom: 12,
-              fontFamily: FONT,
-            }}>
-              {vyLabel}
-            </div>
-
-            {/* Titel */}
-            <h1 style={{
-              fontFamily: FONT_RUBRIK,
-              fontWeight: 400, fontSize: 36, color: "#1a1a1a",
-              letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px",
-            }}>
-              {sectionTitle || "Hälso- och sjukvården"}
-            </h1>
-
-            {/* Undertitel */}
-            <p style={{
-              fontFamily: FONT, fontSize: 16, color: "#666",
-              lineHeight: 1.5, margin: "0 0 20px", maxWidth: 520,
-            }}>
-              {data.etikett} &mdash; {data.period}
-            </p>
-
-            {/* Linje */}
-            <div style={{ height: 2, background: "#00664D", width: 48 }} />
-          </header>
-
-          {/* ── Nyckeltal-sammanfattning ── */}
-          <div style={{
-            display: "flex", gap: 28, alignItems: "baseline",
-            marginBottom: 40, paddingBottom: 24,
-            borderBottom: "1px solid #e0e0dc",
-          }}>
-            <MiniStat value={allKpier.length} label="indikatorer" />
-            <MiniStat value={within} label="inom förväntat" dot="#16a34a" />
-            {outside > 0 && <MiniStat value={outside} label="utanför" dot="#dc2626" />}
-          </div>
-
-          {/* ── Innehållsförteckning (bara huvudrapport) ── */}
-          {!sectionId && (
-            <nav style={{ marginBottom: 48 }}>
-              <div style={{
-                fontSize: 10, fontWeight: 600, textTransform: "uppercase",
-                letterSpacing: "0.1em", color: "#999", marginBottom: 12,
-                fontFamily: FONT,
-              }}>
-                Innehåll
-              </div>
-              <ol style={{
-                margin: 0, padding: "0 0 0 20px",
-                listStyle: "decimal",
-              }}>
-                {data.sektioner.map((sek) => (
-                  <li key={sek.id} style={{ marginBottom: 3 }}>
-                    <a
-                      href={`#rapport-${sek.id}`}
-                      style={{
-                        fontSize: 14, color: "#00664D", textDecoration: "none",
-                        fontWeight: 500, lineHeight: 1.7,
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
-                    >
-                      {sek.namn}
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </nav>
-          )}
-
-          {/* ── Global sammanfattning (bara huvudrapport) ── */}
-          {!sectionId && (
-            <BlocksEditor targetId="global" defaultAiText={data.analys} locked={locked} vy={data.vy} />
-          )}
-
-          {/* ── Sektioner ── */}
-          {visadeSektioner.map((sek, i) => (
-            <SectionBlock
-              key={sek.id}
-              section={sek}
-              index={sectionId ? undefined : i + 1}
-              vyLabel={vyLabel}
-              vy={data.vy}
-              locked={locked}
-            />
-          ))}
-
-          {/* ── Footer ── */}
-          <footer style={{
-            marginTop: 72, paddingTop: 28,
-            borderTop: "1px solid #e0e0dc",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-          }}>
-            <img
-              src={`${import.meta.env.BASE_URL}logo_farg.svg`}
-              alt="Region Halland"
-              style={{ height: 24, opacity: 0.5 }}
-            />
-            <span style={{ fontSize: 11, color: "#bbb", fontFamily: FONT }}>
-              HoS-rapport &middot; {new Date().toLocaleDateString("sv-SE")}
-            </span>
-          </footer>
-        </article>
+              <span style={{ fontSize: 11, color: "#bbb", fontFamily: FONT }}>
+                HoS-rapport &middot; {new Date().toLocaleDateString("sv-SE")}
+              </span>
+            </footer>
+          </article>
+        </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ── Status (laddar/fel) inom rapportskalet ──
+function ReportStatus({ tone, text }: { tone: "loading" | "error"; text: string }) {
+  return (
+    <div role="status" style={{
+      padding: "120px 32px", textAlign: "center",
+      fontFamily: FONT, fontSize: 15,
+      color: tone === "error" ? "#D55E00" : "#83888A",
+    }}>
+      {text}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════
+//  OversiktBlock — heatmap (rapportens ingång)
+// ════════════════════════════════════════
+
+function OversiktBlock({
+  sektioner, vyData, visaDagar, onChangeVisaDagar, onOpenChart, showGlobal,
+}: {
+  sektioner: Section[];
+  vyData: VyData;
+  visaDagar: boolean;
+  onChangeVisaDagar?: (v: boolean) => void;
+  onOpenChart?: (kpi: KpiData) => void;
+  showGlobal?: boolean;
+}) {
+  const harDagar = vyData.vy !== "dag" &&
+    sektioner.some((s) => s.kpier.some((k) => k.dagar && k.dagar.length > 0));
+
+  return (
+    <section id="rapport-oversikt" style={{ scrollMarginTop: 60, marginBottom: 48 }}>
+      {/* Titel i platta — exakt samma utseende som övriga kapitel (folio 00). */}
+      <ChapterPlate index={0} namn="Översikt" />
+
+      {/* ETT kort med egen titel + AI-analys + heatmap — exakt som indikatorkorten. */}
+      <figure className="report-indicator indicator-card report-figure" style={{ margin: 0 }}>
+        {/* Egen titel (H3, som indikatorernas) + ev. toggle */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+          <h3 style={{
+            fontFamily: FONT_RUBRIK,
+            fontSize: 22, fontWeight: 600, color: "#1a1a1a",
+            margin: 0, letterSpacing: "-0.01em", lineHeight: 1.25,
+          }}>
+            Signalöversikt
+          </h3>
+          {harDagar && onChangeVisaDagar && (
+            <SegmentedControl
+              size="sm"
+              ariaLabel="Aggregerat eller dagsnivå"
+              items={[{ id: "aggregerat", label: "Aggregerat" }, { id: "dag", label: "Dag" }]}
+              value={visaDagar ? "dag" : "aggregerat"}
+              onChange={(id) => onChangeVisaDagar(id === "dag")}
+            />
+          )}
+        </div>
+
+        {/* AI-analys INOM samma box, precis som indikatorernas analys */}
+        {showGlobal && (
+          <div style={{ maxWidth: 680, marginBottom: 18 }}>
+            <BlocksEditor
+              targetId="global"
+              aiText={vyData.analys}
+              aiRubrik={vyData.analys_rubrik || ANALYS_RUBRIK_GLOBAL}
+              vy={vyData.vy}
+            />
+          </div>
+        )}
+
+        <SignalTimeline sektioner={sektioner} vy={vyData.vy} visaDagar={visaDagar} onCellClick={onOpenChart} />
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #ececea" }}>
+          <SignalLegend note="Peka på en lane för värde och trend" />
+        </div>
+        <figcaption style={{
+          fontFamily: FONT_RUBRIK, fontStyle: "italic", fontSize: 13, color: "#888",
+          marginTop: 12, lineHeight: 1.5,
+        }}>
+          Signalens utveckling per indikator över perioden. Intilliggande perioder med samma signal slås ihop; peka för exakt värde och trend, klicka på en rad för större graf.
+        </figcaption>
+      </figure>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════
+//  ChapterPlate — kapitelrubrik som grön platta (folio + namn)
+// ════════════════════════════════════════
+
+function ChapterPlate({ index, namn }: { index?: number; namn: string }) {
+  return (
+    <div className="chapter-plate">
+      {index != null && (
+        <span className="chapter-plate__folio" style={mono}>
+          {String(index).padStart(2, "0")}
+        </span>
+      )}
+      {index != null && <span className="chapter-plate__divider" aria-hidden="true" />}
+      <h2 className="chapter-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
+        {namn}
+      </h2>
     </div>
   );
 }
@@ -216,60 +378,111 @@ export default function ReportView({ data, sectionId, onClose }: Props) {
 // ════════════════════════════════════════
 
 function SectionBlock({
-  section, index, vyLabel, vy, locked,
+  section, index, vyLabel, vy, onOpenChart,
 }: {
-  section: Section; index?: number; vyLabel: string; vy: string; locked: boolean;
+  section: Section; index?: number; vyLabel: string; vy: string;
+  onOpenChart?: (kpi: KpiData) => void;
 }) {
+  const harDelar = !!section.delar && section.delar.length > 0;
   return (
-    <div
+    <section
       id={`rapport-${section.id}`}
-      style={{ marginTop: index != null ? 64 : 0, scrollMarginTop: 60 }}
+      style={{ marginTop: index != null ? 56 : 0, scrollMarginTop: 60 }}
     >
-      {/* Sektionsrubrik */}
-      <div style={{ marginBottom: 20 }}>
-        {index != null && (
-          <div style={{
-            fontSize: 10, fontWeight: 600, textTransform: "uppercase",
-            letterSpacing: "0.1em", color: "#00AB60", marginBottom: 8,
-            fontFamily: FONT,
-          }}>
-            Kapitel {index}
-          </div>
-        )}
-        <h2 style={{
-          fontFamily: FONT_RUBRIK,
-          fontSize: 28, fontWeight: 400, color: "#1a1a1a",
-          margin: 0, letterSpacing: "-0.015em", lineHeight: 1.2,
-        }}>
-          {section.namn}
-        </h2>
-        <div style={{ height: 2, background: "#00664D", width: 32, marginTop: 12 }} />
-      </div>
+      {/* Plattan utelämnas för enskilt sakområde — namnet står redan i mastheaden. */}
+      {index != null && <ChapterPlate index={index} namn={section.namn} />}
 
-      {/* Sektionsanalys */}
-      <BlocksEditor
-        targetId={`section-${section.id}`}
-        defaultAiText={section.analys}
-        locked={locked}
-        vy={vy}
-      />
-
-      {/* Indikatorer */}
-      {section.kpier.map((kpi) => (
-        <IndicatorBlock key={kpi.id} kpi={kpi} vyLabel={vyLabel} vy={vy} locked={locked} />
-      ))}
-    </div>
+      {harDelar ? (
+        /* Tematiska delar (t.ex. SKR-rapporten) — egen rubrik + översikt per del */
+        delSektioner(section).map((del, di) => (
+          <DelBlock key={del.id} del={del} nr={di + 1} vyLabel={vyLabel} vy={vy} onOpenChart={onOpenChart} />
+        ))
+      ) : (
+        /* Indikatorer — varje som ett distinkt kort (analys + egna texter bor här) */
+        section.kpier.map((kpi) => (
+          <IndicatorBlock key={kpi.id} kpi={kpi} vyLabel={vyLabel} vy={vy} />
+        ))
+      )}
+    </section>
   );
 }
 
 // ════════════════════════════════════════
-//  IndicatorBlock — graf + analys separerade
+//  DelBlock — tematisk del: rubrik + egen översikt + signalöversikt + indikatorer
+// ════════════════════════════════════════
+
+function DelBlock({
+  del, nr, vyLabel, vy, onOpenChart,
+}: {
+  del: Section; nr: number; vyLabel: string; vy: string;
+  onOpenChart?: (kpi: KpiData) => void;
+}) {
+  const inom = del.kpier.filter((k) => k.status === "gron").length;
+  const utanfor = del.kpier.length - inom;
+
+  return (
+    <section
+      id={`rapport-${del.id}`}
+      style={{ marginTop: nr > 1 ? 48 : 0, scrollMarginTop: 60 }}
+    >
+      <div className="del-plate">
+        <span className="del-plate__nr" style={mono}>Del {nr}</span>
+        <h3 className="del-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
+          {del.namn}
+        </h3>
+      </div>
+
+      {/* Delens översikt — ETT kort: räknare + AI-analys + signalöversikt */}
+      <figure className="report-indicator indicator-card report-figure" style={{ margin: 0 }}>
+        <h3 style={{
+          fontFamily: FONT_RUBRIK,
+          fontSize: 22, fontWeight: 600, color: "#1a1a1a",
+          margin: "0 0 12px", letterSpacing: "-0.01em", lineHeight: 1.25,
+        }}>
+          Översikt
+        </h3>
+
+        {/* Räknare — samma mönster som rapportens topp */}
+        <div style={{
+          display: "flex", gap: 24, alignItems: "baseline",
+          marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid #ececea",
+        }}>
+          <MiniStat value={del.kpier.length} label="indikatorer" />
+          <MiniStat value={inom} label="inom förväntat" signal="gron" />
+          {utanfor > 0 && <MiniStat value={utanfor} label="utanför" signal="rod" />}
+        </div>
+
+        {/* AI-analys (delens egen översikt) + egna anteckningar */}
+        <div style={{ maxWidth: 680, marginBottom: 18 }}>
+          <BlocksEditor
+            targetId={del.id}
+            aiText={del.analys}
+            aiRubrik="Översikt"
+            vy={vy}
+          />
+        </div>
+
+        <SignalTimeline sektioner={[del]} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #ececea" }}>
+          <SignalLegend note="Peka på en lane för värde och trend, klicka för större graf" />
+        </div>
+      </figure>
+
+      {del.kpier.map((kpi) => (
+        <IndicatorBlock key={kpi.id} kpi={kpi} vyLabel={vyLabel} vy={vy} />
+      ))}
+    </section>
+  );
+}
+
+// ════════════════════════════════════════
+//  IndicatorBlock — distinkt kort: titel + analys + graf
 // ════════════════════════════════════════
 
 function IndicatorBlock({
-  kpi, vyLabel: _vyLabel, vy, locked,
+  kpi, vyLabel: _vyLabel, vy,
 }: {
-  kpi: KpiData; vyLabel: string; vy: string; locked: boolean;
+  kpi: KpiData; vyLabel: string; vy: string;
 }) {
   const [visaDagar, setVisaDagar] = useState(false);
   const harDagar = vy !== "dag" && kpi.dagar && kpi.dagar.length > 0;
@@ -278,11 +491,6 @@ function IndicatorBlock({
   const aktivVy = visaDagar && harDagar ? "dag" : vy;
 
   const last = aktivSerie[aktivSerie.length - 1];
-  const sig = last?.signal ? SIGNAL[last.signal] : null;
-  const accent = sig?.color || "#a3a3a3";
-  const dec = kpi.enhet === "procent" ? 1 : 0;
-  const suffix = fmtSuffix(kpi.enhet);
-
   const first = aktivSerie[0];
   const firstLabel = first ? fullEtikett(first.etikett, first.period, aktivVy) : "";
   const lastLabel = last ? fullEtikett(last.etikett, last.period, aktivVy) : "";
@@ -300,100 +508,62 @@ function IndicatorBlock({
     : kpi;
 
   return (
-    <div style={{ marginTop: 40, marginBottom: 44 }}>
+    <div id={`rapport-${kpi.id}`} className="report-indicator indicator-card" style={{ scrollMarginTop: 60 }}>
 
-      {/* ── Indikator-rubrik — samma nivå som underrubriker ── */}
-      <div style={{ marginBottom: 6 }}>
-        <div style={{
-          display: "flex", alignItems: "baseline", gap: 10,
+      {/* ── Titelrad: indikatornamn + status ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+        <h3 style={{
+          fontFamily: FONT_RUBRIK,
+          fontSize: 22, fontWeight: 600, color: "#1a1a1a",
+          margin: 0, letterSpacing: "-0.01em", lineHeight: 1.25,
         }}>
-          <h3 style={{
-            fontFamily: FONT_RUBRIK,
-            fontSize: 20, fontWeight: 400, color: "#1a1a1a",
-            margin: 0, letterSpacing: "-0.01em", lineHeight: 1.3,
-          }}>
-            {kpi.namn}
-          </h3>
-          {sig && (
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 4,
-              fontSize: 10, fontWeight: 600, color: accent,
-              flexShrink: 0,
-            }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: accent }} />
-              {sig.label}
-            </span>
-          )}
-        </div>
-        <div style={{ height: 1, background: "#e0e0dc", marginTop: 8 }} />
+          {kpi.namn}
+        </h3>
+        <StatusTag status={kpi.status} />
       </div>
 
-      {/* Meta-rad */}
-      <div style={{
-        fontSize: 12, color: "#999", marginBottom: 12, marginTop: 8,
-        fontFamily: FONT, lineHeight: 1.4,
-      }}>
-        {fmtVarde(kpi.senaste, kpi.enhet, dec)}{suffix}
-        {last?.yhat != null && (
-          <span style={{ color: "#bbb" }}>
-            {" "}&middot; förväntat {fmtVarde(last.yhat, kpi.enhet, dec)}{suffix}
-          </span>
-        )}
-        <span style={{ color: "#bbb" }}>
-          {" "}&middot; {firstLabel}&ndash;{lastLabel}
-        </span>
+      {/* ── Analystext (rubrik + text + byline) ── */}
+      <div style={{ maxWidth: 680, marginBottom: 18 }}>
+        <BlocksEditor
+          targetId={kpi.id}
+          aiText={kpi.analystext}
+          aiRubrik={kpi.analys_rubrik || analysRubrikForStatus(kpi.status)}
+          aiSignal={kpi.status}
+          vy={vy}
+        />
       </div>
 
-      {/* ── Analystext — direkt under rubriken ── */}
-      <div style={{ marginBottom: 24 }}>
-        <BlocksEditor targetId={kpi.id} defaultAiText={kpi.analystext} locked={locked} vy={vy} />
-      </div>
-
-      {/* ── Grafblock ── */}
-      <div style={{
-        background: "#fff",
-        border: "1px solid #e4e4e0",
-        borderRadius: 8,
-        padding: "12px 16px 16px",
-      }}>
-        {/* Aggregerat / Dag toggle */}
+      {/* ── Grafområde (fyller kortets bredd) ── */}
+      <figure className="report-figure" style={{ margin: 0 }}>
         {harDagar && (
-          <div style={{
-            display: "flex", gap: 0, marginBottom: 10,
-            background: "#f5f5f3", borderRadius: 5,
-            overflow: "hidden", width: "fit-content",
-          }}>
-            {(["aggregerat", "dag"] as const).map((mode, i) => {
-              const active = mode === "dag" ? visaDagar : !visaDagar;
-              return (
-                <button
-                  key={mode}
-                  onClick={() => setVisaDagar(mode === "dag")}
-                  style={{
-                    padding: "4px 12px",
-                    border: "none",
-                    background: active ? "#00664D" : "transparent",
-                    fontFamily: FONT, fontSize: 10.5,
-                    fontWeight: active ? 600 : 500,
-                    color: active ? "#fff" : "#888",
-                    cursor: "pointer", transition: "all 0.15s",
-                    borderRight: i === 0 ? "1px solid rgba(0,0,0,0.06)" : "none",
-                  }}
-                >
-                  {mode === "aggregerat" ? "Aggregerat" : "Dag"}
-                </button>
-              );
-            })}
+          <div style={{ marginBottom: 10, display: "flex", justifyContent: "flex-end" }}>
+            <SegmentedControl
+              size="sm"
+              ariaLabel="Aggregerat eller dagsnivå"
+              items={[{ id: "aggregerat", label: "Aggregerat" }, { id: "dag", label: "Dag" }]}
+              value={visaDagar ? "dag" : "aggregerat"}
+              onChange={(id) => setVisaDagar(id === "dag")}
+            />
           </div>
         )}
         <FacetedChart kpi={chartKpi} vy={aktivVy} />
-      </div>
+        {/* Kort undertext — bara det väsentliga om vad grafen visar.
+            Definition och teknik bor i infoknappen (indikatornamnets hover). */}
+        <figcaption style={{
+          fontFamily: FONT_RUBRIK, fontStyle: "italic", fontSize: 13, color: "#888",
+          marginTop: 10, lineHeight: 1.5,
+        }}>
+          {kpi.kontext_serier && kpi.kontext_serier.length > 0
+            ? <>Halland mot övriga regioner (grå) och riket (streckad) &middot; {firstLabel}&ndash;{lastLabel}.</>
+            : <>Utfall mot förväntat läge &middot; {firstLabel}&ndash;{lastLabel}.</>}
+        </figcaption>
+      </figure>
     </div>
   );
 }
 
 // ════════════════════════════════════════
-//  BlocksEditor — AI-text + kommentarer
+//  BlocksEditor — AI-analys (rubrik+text+byline) + egna anteckningar
 // ════════════════════════════════════════
 
 function genId(): string {
@@ -401,82 +571,89 @@ function genId(): string {
 }
 
 function BlocksEditor({
-  targetId, defaultAiText, locked, vy,
+  targetId, aiText, aiRubrik, aiSignal, vy,
 }: {
-  targetId: string; defaultAiText: string; locked: boolean; vy?: string;
+  targetId: string; aiText: string; aiRubrik?: string; aiSignal?: string; vy?: string;
 }) {
   const storeKey = vy ? `${vy}:${targetId}` : targetId;
 
-  const [blocks, setBlocksState] = useState<ContentBlock[]>(() => {
-    const stored = getBlocks(storeKey);
-    if (stored.length > 0) return stored;
-    return [{
-      id: `ai-${targetId}`, type: "ai" as const,
-      text: defaultAiText, timestamp: new Date().toISOString(),
-    }];
-  });
+  // Lagret innehåller ENDAST användarens egna anteckningar. AI-analysen
+  // renderas alltid från den aktuella R-texten och lagras aldrig.
+  const load = useCallback(() => getBlocks(storeKey), [storeKey]);
+  const [userBlocks, setUserBlocks] = useState<ContentBlock[]>(load);
 
-  const persist = useCallback(
-    (newBlocks: ContentBlock[]) => {
-      setBlocksState(newBlocks);
-      persistBlocks(storeKey, newBlocks);
-    },
-    [storeKey]
-  );
+  // Synk mellan flikar
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => { if (e.key === BLOCKS_KEY) setUserBlocks(load()); };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [load]);
 
-  function handleSave(blockId: string, text: string, title?: string) {
-    if (!text.trim()) {
-      const block = blocks.find((b) => b.id === blockId);
-      if (block?.type === "kommentar") {
-        persist(blocks.filter((b) => b.id !== blockId));
-        return;
-      }
+  const persist = useCallback((blocks: ContentBlock[]) => {
+    setUserBlocks(blocks);
+    persistBlocks(storeKey, blocks);
+  }, [storeKey]);
+
+  function saveBlock(blockId: string, d: AnteckningData) {
+    if (!d.title.trim() && !d.text.trim()) {
+      persist(userBlocks.filter((b) => b.id !== blockId));
+      return;
     }
-    persist(
-      blocks.map((b) =>
-        b.id === blockId
-          ? { ...b, text, ...(title !== undefined ? { title } : {}), timestamp: new Date().toISOString() }
-          : b
-      )
-    );
+    persist(userBlocks.map((b) => (b.id === blockId
+      ? { ...b, title: d.title.trim() || undefined, text: d.text, author: d.author, timestamp: new Date().toISOString() }
+      : b)));
   }
 
-  function handleDelete(blockId: string) {
-    persist(blocks.filter((b) => b.id !== blockId));
+  function deleteBlock(blockId: string) {
+    persist(userBlocks.filter((b) => b.id !== blockId));
   }
 
-  function handleCancel(blockId: string) {
-    const block = blocks.find((b) => b.id === blockId);
-    if (block && !block.text.trim()) {
-      persist(blocks.filter((b) => b.id !== blockId));
-    }
-  }
-
-  function handleInsert(afterIndex: number) {
-    const newBlock: ContentBlock = {
-      id: genId(), type: "kommentar", text: "",
-      author: "", timestamp: new Date().toISOString(),
+  // Infogar en ny (tom) anteckning vid given position. Tomt block öppnas
+  // direkt i redigeringsläge (EditableBlock).
+  function addBlock(pos: number) {
+    const block: ContentBlock = {
+      id: genId(), type: "anteckning", title: "", text: "",
+      author: getForfattare(), timestamp: new Date().toISOString(),
     };
-    const updated = [...blocks];
-    updated.splice(afterIndex + 1, 0, newBlock);
-    persist(updated);
+    const next = [...userBlocks];
+    next.splice(pos, 0, block);
+    persist(next);
   }
 
   return (
     <div>
-      {blocks.map((block, i) => (
+      {/* AI-analys — alltid aktuell R-text, skrivskyddad, färgsatt efter fas */}
+      <EditableBlock id={`ai-${targetId}`} type="ai" rubrik={aiRubrik} text={aiText} signal={aiSignal} />
+
+      {/* Infoga överst (efter AI-analysen) */}
+      <InsertLine onClick={() => addBlock(0)} />
+
+      {userBlocks.map((block, i) => (
         <div key={block.id}>
           <EditableBlock
-            type={block.type} text={block.text}
-            title={block.title} author={block.author}
-            timestamp={block.timestamp} locked={locked}
-            onSave={(text, title) => handleSave(block.id, text, title)}
-            onDelete={block.type === "kommentar" ? () => handleDelete(block.id) : undefined}
-            onCancel={() => handleCancel(block.id)}
+            id={block.id}
+            type="anteckning"
+            rubrik={block.title}
+            text={block.text}
+            author={block.author}
+            timestamp={block.timestamp}
+            onSave={(d) => saveBlock(block.id, d)}
+            onDelete={() => deleteBlock(block.id)}
           />
-          {!locked && <InsertZone onInsert={() => handleInsert(i)} />}
+          <InsertLine onClick={() => addBlock(i + 1)} />
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── InsertLine — diskret "+ Skriv här" som framträder vid hover/fokus ──
+function InsertLine({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="report-insert">
+      <button type="button" className="report-insert__btn" onClick={onClick} aria-label="Lägg till anteckning här">
+        <span className="report-insert__plus" aria-hidden="true">+</span> Skriv här
+      </button>
     </div>
   );
 }
@@ -486,92 +663,210 @@ function BlocksEditor({
 // ════════════════════════════════════════
 
 function Toolbar({
-  locked, setLocked, vyData, onClose,
+  onBack, aktivVy, vyItems, onChangeVy,
 }: {
-  locked: boolean; setLocked: (v: boolean) => void; vyData: VyData; onClose: () => void;
+  onBack: () => void;
+  aktivVy: string; vyItems: VyItem[]; onChangeVy: (id: string) => void;
 }) {
   return (
-    <div style={{
+    <div className="report-toolbar" style={{
       position: "sticky", top: 0, zIndex: 10,
       background: "rgba(251,251,249,0.92)", backdropFilter: "blur(12px)",
       borderBottom: "1px solid #e0e0dc", padding: "10px 32px",
-      display: "flex", justifyContent: "space-between", alignItems: "center",
+      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <img src={`${import.meta.env.BASE_URL}logo_farg.svg`} alt="" style={{ height: 20, opacity: 0.6 }} />
-        <span style={{ width: 1, height: 14, background: "#ddd" }} />
-        <span style={{
-          fontFamily: FONT, fontSize: 12,
-          fontWeight: 500, color: "#888",
-        }}>
-          {vyData.etikett} &middot; {vyData.period}
-        </span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
         <button
-          onClick={() => setLocked(!locked)}
+          onClick={onBack}
+          title="Tillbaka till områdesval"
           style={{
-            display: "inline-flex", alignItems: "center", gap: 5,
-            padding: "5px 12px", borderRadius: 5,
-            border: locked ? "1px solid #d4d4d4" : "1px solid #00AB60",
-            background: locked ? "#fff" : "#f0fdf4",
-            fontFamily: FONT, fontSize: 11, fontWeight: 500,
-            color: locked ? "#666" : "#00664D", cursor: "pointer", transition: "all 0.15s",
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "5px 12px 5px 9px", borderRadius: 5, border: "1px solid #d4d4d4",
+            background: "#fff", fontFamily: FONT, fontSize: 11.5, fontWeight: 500,
+            color: "#444", cursor: "pointer", flexShrink: 0,
           }}
         >
-          {locked ? (
-            <>
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2.5L4.5 10 3 13l3-1.5L13.5 4z" /><path d="M10.5 4L12 5.5" />
-              </svg>
-              Redigera
-            </>
-          ) : (
-            <>
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="7" width="10" height="8" rx="1.5" /><path d="M5 7V5a3 3 0 016 0v2" />
-              </svg>
-              Lås
-            </>
-          )}
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 3L5 8l5 5" />
+          </svg>
+          Områden
         </button>
-        <button
-          onClick={onClose}
-          style={{
-            padding: "5px 12px", borderRadius: 5,
-            border: "1px solid #d4d4d4", background: "#fff",
-            fontFamily: FONT, fontSize: 11, fontWeight: 500,
-            color: "#666", cursor: "pointer",
-          }}
-        >
-          &times; Stäng
-        </button>
+        <span style={{ width: 1, height: 16, background: "#ddd", flexShrink: 0 }} />
+        <SegmentedControl
+          size="sm"
+          ariaLabel="Tidsupplösning"
+          items={vyItems}
+          value={aktivVy}
+          onChange={onChangeVy}
+        />
       </div>
     </div>
   );
 }
 
-function EditBanner() {
+// ════════════════════════════════════════
+//  SidebarToc — sticky innehållsförteckning
+// ════════════════════════════════════════
+
+function SidebarToc({
+  sections, activeId, visaOversikt = true,
+}: {
+  sections: Section[]; activeId: string; visaOversikt?: boolean;
+}) {
+  // Manuellt öppnade/stängda grupper. Odefinierat = följ scrollen
+  // (gruppen som innehåller aktiv rubrik visas utfälld).
+  const [oppna, setOppna] = useState<Record<string, boolean>>({});
   return (
-    <div style={{
-      marginBottom: 24, padding: "8px 14px", borderRadius: 6,
-      background: "#f0fdf4", border: "1px solid #bbf7d0",
-      fontSize: 12, color: "#15803d", fontWeight: 500,
-      display: "inline-flex", alignItems: "center", gap: 6,
+    <nav className="report-toc" style={{
+      position: "sticky", top: 52,
+      alignSelf: "flex-start",
+      width: 196, flexShrink: 0,
+      padding: "28px 16px 28px 20px",
+      fontFamily: FONT,
+      borderRight: "1px solid #ebebea",
     }}>
-      <span style={{
-        width: 6, height: 6, borderRadius: "50%",
-        background: "#16a34a", animation: "pulse 2s infinite",
-      }} />
-      Klicka på text för att redigera &middot; + för att lägga till kommentarer
+      <div style={{
+        fontSize: 9.5, fontWeight: 600, textTransform: "uppercase",
+        letterSpacing: "0.1em", color: "#bbb", marginBottom: 14,
+      }}>
+        Innehåll
+      </div>
+      {visaOversikt && (
+        <a href="#rapport-oversikt"
+          style={{
+            display: "block", padding: "3px 0", marginBottom: 10,
+            fontSize: 12, fontWeight: activeId === "oversikt" ? 600 : 500,
+            color: activeId === "oversikt" ? "#00664D" : "#777",
+            textDecoration: "none", lineHeight: 1.4,
+            borderLeft: activeId === "oversikt" ? "2px solid #00664D" : "2px solid transparent",
+            paddingLeft: 10, marginLeft: -1, transition: "color 0.1s",
+          }}
+        >
+          Översikt
+        </a>
+      )}
+      {sections.flatMap((sek, i) => {
+        // Sektion med delar: delarna blir hopfällbara TOC-grupper (i del-
+        // rapporten på toppnivå; i helrapporten under kapitelrubriken).
+        // Indikatorlänkarna visas bara för öppna grupper — gruppen som läses
+        // följer scrollen automatiskt, övriga kan fällas ut manuellt.
+        const delar = sek.delar && sek.delar.length > 0 ? delSektioner(sek) : null;
+        const sekActive = activeId === sek.id ||
+          sek.kpier.some(k => k.id === activeId) ||
+          (delar?.some(d => d.id === activeId) ?? false);
+
+        const sekLank = sections.length > 1 && (
+          <a href={`#rapport-${sek.id}`}
+            style={{
+              display: "block", padding: "3px 0",
+              fontSize: 12, fontWeight: sekActive ? 600 : 500,
+              color: activeId === sek.id ? "#00664D" : sekActive ? "#333" : "#777",
+              textDecoration: "none", lineHeight: 1.4,
+              borderLeft: activeId === sek.id ? "2px solid #00664D" : "2px solid transparent",
+              paddingLeft: 10, marginLeft: -1,
+              transition: "color 0.1s",
+            }}
+          >
+            {i + 1}. {sek.namn}
+          </a>
+        );
+
+        const grupper = delar ?? [sek];
+        return (
+          <div key={sek.id} style={{ marginBottom: 10 }}>
+            {sekLank}
+            {grupper.map((grupp, gi) => (
+              <TocGrupp
+                key={grupp.id}
+                grupp={grupp}
+                nr={delar && sections.length === 1 ? gi + 1 : undefined}
+                visaRubrik={!!delar}
+                indent={sections.length > 1 ? 18 : 10}
+                activeId={activeId}
+                open={oppna[grupp.id]}
+                onToggle={(o) => setOppna((s) => ({ ...s, [grupp.id]: o }))}
+              />
+            ))}
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ── TocGrupp — hopfällbar grupp i innehållsförteckningen ──
+function TocGrupp({
+  grupp, nr, visaRubrik, indent, activeId, open, onToggle,
+}: {
+  grupp: Section; nr?: number; visaRubrik: boolean; indent: number;
+  activeId: string; open?: boolean; onToggle: (open: boolean) => void;
+}) {
+  const innehallerAktiv = activeId === grupp.id || grupp.kpier.some((k) => k.id === activeId);
+  // Manuellt val vinner; annars följer gruppen scrollen
+  const arOppen = open ?? innehallerAktiv;
+
+  return (
+    <div style={{ marginBottom: visaRubrik ? 6 : 0 }}>
+      {visaRubrik && (
+        <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+          <button
+            type="button"
+            onClick={() => onToggle(!arOppen)}
+            aria-expanded={arOppen}
+            aria-label={`${arOppen ? "Fäll ihop" : "Fäll ut"} ${grupp.namn}`}
+            style={{
+              border: "none", background: "none", cursor: "pointer",
+              padding: "2px 2px 2px 0", marginLeft: indent - 14,
+              display: "inline-flex", color: "#aaa", flexShrink: 0,
+            }}
+          >
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"
+              style={{ transform: arOppen ? "rotate(90deg)" : "none", transition: "transform 0.12s" }}>
+              <path d="M3 1.5L7.5 5L3 8.5Z" />
+            </svg>
+          </button>
+          <a href={`#rapport-${grupp.id}`}
+            style={{
+              display: "block", flex: 1, padding: "3px 0",
+              fontSize: 11.5, fontWeight: innehallerAktiv ? 600 : 500,
+              color: activeId === grupp.id ? "#00664D" : innehallerAktiv ? "#333" : "#777",
+              textDecoration: "none", lineHeight: 1.4,
+              transition: "color 0.1s",
+            }}
+          >
+            {nr != null ? `${nr}. ` : ""}{grupp.namn}
+            <span style={{ color: "#c4c4be", fontWeight: 400, marginLeft: 5, fontSize: 10.5 }}>
+              {grupp.kpier.length}
+            </span>
+          </a>
+        </div>
+      )}
+      {(arOppen || !visaRubrik) && grupp.kpier.map((kpi) => (
+        <a key={kpi.id} href={`#rapport-${kpi.id}`}
+          style={{
+            display: "block", padding: "2px 0 2px 22px",
+            fontSize: 11, fontWeight: activeId === kpi.id ? 600 : 400,
+            color: activeId === kpi.id ? "#00664D" : "#aaa",
+            textDecoration: "none", lineHeight: 1.45,
+            borderLeft: activeId === kpi.id ? "2px solid #00664D" : "2px solid transparent",
+            marginLeft: -1,
+            transition: "color 0.1s",
+          }}
+        >
+          {kpi.namn}
+        </a>
+      ))}
     </div>
   );
 }
 
-function MiniStat({ value, label, dot }: { value: number; label: string; dot?: string }) {
+function MiniStat({ value, label, signal }: { value: number; label: string; signal?: string }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-      {dot && <span style={{ width: 7, height: 7, borderRadius: "50%", background: dot }} />}
+    <span
+      style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
+      {...(signal ? { role: "img", "aria-label": `${value} ${label}` } : {})}
+    >
+      {signal && <SignalBadge signal={signal} size={8} />}
       <span style={{ ...mono, fontSize: 18, fontWeight: 600, color: "#0a0a0a" }}>{value}</span>
       <span style={{ fontSize: 13, color: "#888", fontFamily: FONT }}>{label}</span>
     </span>

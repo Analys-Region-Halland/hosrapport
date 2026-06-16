@@ -9,6 +9,7 @@
 source("paket.R")
 source("R/gemensam/helgdagar.R")
 source("R/gemensam/signal-modell.R")
+source("R/teman/register.R")
 
 # ══════════════════════════════════════════════════════════
 #  KONFIGURATION
@@ -16,19 +17,7 @@ source("R/gemensam/signal-modell.R")
 
 split_datum  <- as.Date("2025-01-01")   # Träning före, test efter
 
-# ══════════════════════════════════════════════════════════
-#  KPI-METADATA — Inklusive GLM-familj per KPI
-# ══════════════════════════════════════════════════════════
-
-kpi_meta <- tibble(
-  id          = c("belaggning", "akutbesok", "vantetid",
-                   "ambulans", "inlaggningar", "utskrivningsklara"),
-  namn        = c("Beläggningsgrad", "Besök akutmottagning",
-                   "Medianväntetid akut", "Ambulansuppdrag",
-                   "Inläggningar", "Utskrivningsklara patienter"),
-  aggregering = c("medel", "summa", "medel", "summa", "summa", "medel"),
-  familj      = c("gaussian", "nb", "gamma", "nb", "nb", "nb")
-)
+# kpi_meta laddas från register.R (en enda källa)
 
 # ══════════════════════════════════════════════════════════
 #  LADDA DATA OCH BYGG KALENDER
