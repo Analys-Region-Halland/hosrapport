@@ -10,8 +10,10 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
 export default defineConfig(({ command }) => ({
   // Dev: rot-bas (appen nås på http://localhost:5173/ — ingen /hosrapport/-fälla).
-  // Build: /hosrapport/ för GitHub Pages-utlägget.
-  base: command === "serve" ? "/" : "/hosrapport/",
+  // Build: /hosrapport/ för GitHub Pages-utlägget. BASE_PATH-miljövariabeln
+  // låter deploy-workflowet härleda basen från repo-namnet, så samma kodbas
+  // kan publiceras även som t.ex. /hosrapport-utkast/.
+  base: command === "serve" ? "/" : (process.env.BASE_PATH ?? "/hosrapport/"),
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
