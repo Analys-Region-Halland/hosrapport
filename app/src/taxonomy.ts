@@ -62,9 +62,7 @@ export const TAXONOMI: KategoriDef[] = [
       {
         id: "folkhalsa",
         namn: "Folkhälsa & prevention",
-        beskrivning: "Levnadsvanor och förebyggande insatser.",
-        planerad: true,
-        exempel: "Levnadsvanor (rökning, fysisk aktivitet), förebyggande arbete, våld i nära relationer.",
+        beskrivning: "Folkhälsomyndighetens indikatorer efter folkhälsopolitikens åtta målområden, med Halland jämfört mot övriga regioner.",
       },
     ],
   },

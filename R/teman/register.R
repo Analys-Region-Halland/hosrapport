@@ -11,14 +11,14 @@ source("R/teman/akutflode/config.R")
 source("R/teman/slutenvard/config.R")
 source("R/teman/personal/config.R")
 source("R/teman/kolada/config.R")
+source("R/teman/folkhalsa/config.R")
 
 # Teman med daglig data (conformal prediction).
 # Ordningen här styr visningsordningen i rapporten.
 dagliga_teman <- list(primarvard, akutflode, slutenvard, personal)
 
-# Alla teman (inklusive specialfall som Kolada-årsindikatorerna,
-# tidigare patientenkäten)
-alla_teman <- c(dagliga_teman, list(kolada_tema))
+# Alla teman (inklusive specialfall som Kolada- och FoHM-årsindikatorerna)
+alla_teman <- c(dagliga_teman, list(kolada_tema, folkhalsa_tema))
 
 # ── kpi_meta: en rad per KPI med sektion-info ──
 kpi_meta <- bind_rows(lapply(dagliga_teman, function(tema) {

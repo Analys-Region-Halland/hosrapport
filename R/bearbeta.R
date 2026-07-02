@@ -17,6 +17,7 @@ source("R/gemensam/aggregering.R")
 source("R/gemensam/analystext.R")
 source("R/gemensam/bygg-sektion.R")
 source("R/teman/kolada/bearbeta.R")
+source("R/teman/folkhalsa/bearbeta.R")
 
 # ══════════════════════════════════════════════
 #  LADDA DATA
@@ -236,6 +237,16 @@ for (si in seq_along(resultat$dag$sektioner)) {
       resultat$dag$sektioner[[si]]$kpier[[ki]]$referens_serie <- ref_df
     }
   }
+}
+
+# ══════════════════════════════════════════════
+#  FOLKHÄLSA (FoHM) — Enbart i årsvyn, FÖRST i sektionsordningen
+#  (kategorin Behov & befolkning inleder rapporten i taxonomin)
+# ══════════════════════════════════════════════
+
+folkhalsa_sektioner <- bearbeta_folkhalsa()
+if (length(folkhalsa_sektioner) > 0) {
+  resultat$ar$sektioner <- c(folkhalsa_sektioner, resultat$ar$sektioner)
 }
 
 # ══════════════════════════════════════════════

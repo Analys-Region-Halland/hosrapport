@@ -32,9 +32,12 @@ R/
 │   ├── patientenkat/            # (urkopplad — ersatt av kolada/)
 │   │   ├── config.R             # NPE-dimensioner (helhetsintryck, respekt, etc.)
 │   │   └── bearbeta.R           # Läser Excel, beräknar ranking-signaler
-│   └── kolada/
-│       ├── config.R             # Koladas HoS-rapport: sektioner (Koladas indelning), riktning per KPI
-│       └── bearbeta.R           # Läser data/kolada-hos.rds, kvartilranking med Halland i fokus
+│   ├── kolada/
+│   │   ├── config.R             # Koladas HoS-rapport: sektioner (Koladas indelning), riktning per KPI
+│   │   └── bearbeta.R           # Läser data/kolada-hos.rds, kvartilranking med Halland i fokus
+│   └── folkhalsa/
+│       ├── config.R             # FoHM: delar = folkhälsopolitikens 8 målområden + hälsoutfall
+│       └── bearbeta.R           # Läser data/fohm-folkhalsa.rds, topp 3-ranking med Halland i fokus
 ├── gemensam/                    # Delade moduler (inget beroende sinsemellan)
 │   ├── helgdagar.R              # Svensk kalender (röda dagar, klämdagar, skollov)
 │   ├── signal-modell.R          # GLM + conformal: kor_kpi_signal (produktion), kor_signal (diagnostik)
