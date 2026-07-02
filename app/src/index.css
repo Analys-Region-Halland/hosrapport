@@ -24,10 +24,10 @@
   --surface:  #ffffff;
   --canvas:   #eeeee9;
 
-  /* Signal (färgblind-säker, Okabe-Ito) */
-  --sig-gron: #0072B2;
-  --sig-gul:  #E69F00;
-  --sig-rod:  #D55E00;
+  /* Signal: trafikljus (form + etikett ger färgblind-redundans) */
+  --sig-gron: #2E7D52;
+  --sig-gul:  #C28A1E;
+  --sig-rod:  #B23A2E;
 
   /* Spacing (4px-bas) */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
@@ -129,81 +129,81 @@
 /* ════════════════════════════════════════════
    Rapport: kapitelplatta + indikatorkort
    ════════════════════════════════════════════ */
-/* Kapitelrubrik som grön platta (folio · avdelare · namn) — starkaste avgränsaren. */
+/* Kapitelrubrik — editoriell: grön vänster-spine + hairline, ingen fylld platta.
+   Folio i mono, titel i serif på pappret. Lugn men tydlig avgränsare. */
 .chapter-plate {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--brand-700, #00664D);
-  border-radius: 12px;
-  padding: 16px 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 10px rgba(0,102,77,.18);
-}
-.chapter-plate__folio {
-  font-size: 22px;
-  font-weight: 700;
-  color: #7fd3b0;
-  letter-spacing: .02em;
-  line-height: 1;
-  flex-shrink: 0;
-}
-.chapter-plate__divider {
-  width: 1px;
-  align-self: stretch;
-  background: rgba(255,255,255,.22);
-  flex-shrink: 0;
-}
-.chapter-plate__namn {
-  margin: 0;
-  min-width: 0;
-  font-size: 25px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -.02em;
-  line-height: 1.18;
-}
-
-/* Delrubrik — tematisk del inom ett kapitel (t.ex. SKR-rapportens delar).
-   Lättare än kapitelplattan: vit yta med grön vänsterkant. */
-.del-plate {
   display: flex;
   align-items: baseline;
   gap: 14px;
-  background: #fff;
-  border: 1px solid #e8e8e4;
+  background: transparent;
+  border: 0;
   border-left: 4px solid var(--brand-700, #00664D);
-  border-radius: 10px;
-  padding: 13px 20px;
-  margin-bottom: 18px;
+  border-radius: 0;
+  padding: 2px 0 2px 18px;
+  margin-bottom: 30px;
+  box-shadow: none;
+}
+.chapter-plate__folio {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand-700, #00664D);
+  letter-spacing: .04em;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.chapter-plate__divider { display: none; }
+.chapter-plate__namn {
+  margin: 0;
+  min-width: 0;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink, #1a1a1a);
+  letter-spacing: -.02em;
+  line-height: 1.16;
+}
+
+/* Delrubrik — tematisk del inom ett kapitel (t.ex. SKR-rapportens delar).
+   Samma editoriella språk som kapitlet, en snäpp lättare: tunnare spine. */
+.del-plate {
+  display: block;
+  background: transparent;
+  border: 0;
+  border-top: 2px solid var(--brand-700, #00664D);
+  border-radius: 0;
+  padding: 15px 0 0;
+  margin-bottom: 22px;
 }
 .del-plate__nr {
-  font-size: 11px;
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--brand-500, #00AB60);
-  flex-shrink: 0;
+  letter-spacing: .16em;
+  color: var(--brand-700, #00664D);
+  margin-bottom: 5px;
   white-space: nowrap;
 }
 .del-plate__namn {
+  display: block;
   margin: 0;
   min-width: 0;
-  font-size: 21px;
+  font-size: 26px;
   font-weight: 600;
-  color: #1a1a1a;
-  letter-spacing: -.015em;
-  line-height: 1.2;
+  color: var(--ink, #1a1a1a);
+  letter-spacing: -.018em;
+  line-height: 1.18;
 }
 
 /* AI-analys — inramad callout. Bakgrund + vänsterkantens färg sätts inline
    per fas (signalstatus) i EditableBlock; här bara neutral ram + layout. */
 .ai-callout {
-  background: #f4f9f6;
-  border: 1px solid #e8e8e4;
-  border-left: 3px solid var(--brand-500, #00AB60);
-  border-radius: 10px;
-  padding: 14px 18px 16px;
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--brand-500, #00AB60);
+  border-radius: 0;
+  padding: 1px 0 1px 16px;
   margin-bottom: 14px;
 }
 .ai-callout__label {
@@ -214,20 +214,22 @@
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .1em;
+  letter-spacing: .12em;
   color: var(--brand-700, #00664D);
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 
-/* Indikatorkort — distinkt yta så delarna inte flyter samman. */
+/* Indikatorsektion — inga kort, inga grå linjer. Varje indikator avgränsas av
+   vitrum; den stora serif-titeln + statuschippet markerar var en ny börjar. */
 .indicator-card {
-  background: #fff;
-  border: 1px solid #e8e8e4;
-  border-radius: 12px;
-  padding: 24px 26px 22px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 36px;
+  box-shadow: none;
 }
+.indicator-card:last-child { margin-bottom: 0; }
 
 /* ════════════════════════════════════════════
    Rapport: textblock (AI + anteckning) + infogningsrad
@@ -315,13 +317,9 @@
   70%  { opacity: 0; }
   100% { transform: scale(2.6); opacity: 0; }
 }
-.pulse-ping {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-  pointer-events: none;
-  animation: pulse-ping 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
-}
+/* "Live"-pulsen är borttagen — en formell årsrapport ska inte blinka.
+   Senaste datapunkten har kvar sin statiska markör i grafen. */
+.pulse-ping { display: none; }
 
 /* ════════════════════════════════════════════
    Rapport: utskrift/PDF + responsivt

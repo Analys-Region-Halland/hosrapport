@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import type { Section, KpiData, TidsseriePoint } from "../types";
 import { SIGNAL_COLORS, SIGNAL_BG, SIGNAL_LABELS, FONT, FONT_MONO, NEUTRAL_LINE, signalColor } from "../charts/constants";
 import { fmtVarde, fmtSuffix } from "../utils/format";
-import { kpiBeskrivning } from "../utils/definitions";
+import { kortBeskrivning } from "../utils/definitions";
 import { useResizeWidth } from "../hooks/useResizeWidth";
 import MiniTrend from "./MiniTrend";
 
@@ -250,7 +250,7 @@ export default function SignalTimeline({ sektioner, vy, visaDagar = false, onCel
         .attr("x", 0).attr("y", rowY).attr("width", leftW - 2).attr("height", rowH)
         .attr("fill", "transparent").style("cursor", onCellClick ? "pointer" : "help")
         .attr("tabindex", 0).attr("role", "button")
-        .attr("aria-label", `${kpi.namn}. ${kpiBeskrivning(kpi) || "Visa i graf"}`)
+        .attr("aria-label", `${kpi.namn}. ${kortBeskrivning(kpi) || "Visa i graf"}`)
         .on("mouseenter", (ev: MouseEvent) => {
           const r = (ev.currentTarget as SVGRectElement).getBoundingClientRect();
           setHover({ kind: "name", kpi, x: r.left + 20, yTop: r.top, yBot: r.bottom });
@@ -406,7 +406,7 @@ function CellCard({ hover }: { hover: Extract<Hover, { kind: "cell" }> }) {
 // ── Namn-ruta: vad indikatorn mäter ──
 function NameCard({ hover }: { hover: Extract<Hover, { kind: "name" }> }) {
   const { kpi, x, yTop, yBot } = hover;
-  const beskrivning = kpiBeskrivning(kpi);
+  const beskrivning = kortBeskrivning(kpi);
   const TW = 290;
   const below = yTop < 200;
   const left = Math.max(TW / 2 + 8, Math.min(window.innerWidth - TW / 2 - 8, x + TW / 2 - 20));

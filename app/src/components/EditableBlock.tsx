@@ -3,18 +3,11 @@ import { markDirty, markClean } from "../stores/dirty";
 import { getForfattare, setForfattare } from "../stores/blocks";
 import { SIGNAL_COLORS } from "../charts/constants";
 
-// Ljus bakgrundston per fas (signalstatus) för AI-rutan. Ljusare än
-// chips-tonerna (SIGNAL_BG) så texten andas. Ingen fas → neutral grön.
-const CALLOUT_BG: Record<string, string> = {
-  gron: "#f1f7fb",
-  gul: "#fdf7ee",
-  rod: "#fdf2ec",
-};
-function calloutColors(signal?: string): { accent: string; bg: string } {
-  if (signal && SIGNAL_COLORS[signal]) {
-    return { accent: SIGNAL_COLORS[signal], bg: CALLOUT_BG[signal] || "#f4f9f6" };
-  }
-  return { accent: "#00AB60", bg: "#f4f9f6" };
+// AI-rutans vänster-accent färgsätts efter fas (signalstatus). I den
+// editoriella designen finns ingen bakgrundston — bara en tunn linje, så
+// texten står direkt på pappret. Ingen fas → neutral grön.
+function calloutAccent(signal?: string): string {
+  return (signal && SIGNAL_COLORS[signal]) || "#00AB60";
 }
 
 // ════════════════════════════════════════
@@ -202,10 +195,10 @@ export default function EditableBlock({ id, type, text, rubrik, author, timestam
   // AI-analys — skrivskyddad, inramad som AI och färgsatt efter fas (status)
   if (type === "ai") {
     if (!text.trim()) return null;
-    const c = calloutColors(signal);
+    const accent = calloutAccent(signal);
     return (
-      <div className="ai-callout" style={{ borderLeftColor: c.accent, background: c.bg }}>
-        <div className="ai-callout__label" style={{ color: c.accent }}>
+      <div className="ai-callout" style={{ borderLeftColor: accent }}>
+        <div className="ai-callout__label" style={{ color: accent }}>
           <DiamondIcon /> AI-analys
         </div>
         {rubrik?.trim() && <NoteTitle>{rubrik}</NoteTitle>}

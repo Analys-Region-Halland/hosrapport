@@ -11,10 +11,11 @@ import { SignalLegend, StatusTag } from "./SignalStrip";
 import EditableBlock, { type AnteckningData } from "./EditableBlock";
 import { getBlocks, setBlocks as persistBlocks, getForfattare, BLOCKS_KEY } from "../stores/blocks";
 import { hasDirty } from "../stores/dirty";
-import { fullEtikett } from "../utils/format";
+import { fullEtikett, fmtVarde, fmtSuffix } from "../utils/format";
 import { ANALYS_RUBRIK_GLOBAL, analysRubrikForStatus } from "../utils/analys";
 import SegmentedControl from "./SegmentedControl";
 import SignalBadge from "./SignalBadge";
+import { kategoriForOmrade } from "../taxonomy";
 
 // ════════════════════════════════════════════════════════
 //  ReportView — fullskärms rapport (översikt + dokument)
@@ -188,6 +189,15 @@ export default function ReportView({
                 />
               </div>
 
+              {/* Kategorietikett (eyebrow) — visar var i taxonomin området hör hemma */}
+              {sectionId && kategoriForOmrade(sectionId) && (
+                <div style={{
+                  fontSize: 11, fontWeight: 600, textTransform: "uppercase",
+                  letterSpacing: "0.14em", color: "#00AB60", marginBottom: 10,
+                }}>
+                  {kategoriForOmrade(sectionId)!.namn}
+                </div>
+              )}
               <h1 style={{
                 fontFamily: FONT_RUBRIK,
                 fontWeight: 700, fontSize: 42, color: "#1a1a1a",
@@ -308,13 +318,12 @@ function OversiktBlock({
       <figure className="report-indicator indicator-card report-figure" style={{ margin: 0 }}>
         {/* Egen titel (H3, som indikatorernas) + ev. toggle */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-          <h3 style={{
-            fontFamily: FONT_RUBRIK,
-            fontSize: 22, fontWeight: 600, color: "#1a1a1a",
-            margin: 0, letterSpacing: "-0.01em", lineHeight: 1.25,
+          <div style={{
+            fontFamily: FONT, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.13em", color: "#00664D", margin: 0,
           }}>
             Signalöversikt
-          </h3>
+          </div>
           {harDagar && onChangeVisaDagar && (
             <SegmentedControl
               size="sm"
@@ -339,7 +348,7 @@ function OversiktBlock({
         )}
 
         <SignalTimeline sektioner={sektioner} vy={vyData.vy} visaDagar={visaDagar} onCellClick={onOpenChart} />
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #ececea" }}>
+        <div style={{ marginTop: 16 }}>
           <SignalLegend note="Peka på en lane för värde och trend" />
         </div>
         <figcaption style={{
@@ -357,18 +366,28 @@ function OversiktBlock({
 //  ChapterPlate — kapitelrubrik som grön platta (folio + namn)
 // ════════════════════════════════════════
 
-function ChapterPlate({ index, namn }: { index?: number; namn: string }) {
+function ChapterPlate({ index, namn, kicker }: { index?: number; namn: string; kicker?: string }) {
   return (
-    <div className="chapter-plate">
+    <div className="chapter-plate" style={kicker ? { alignItems: "flex-start" } : undefined}>
       {index != null && (
-        <span className="chapter-plate__folio" style={mono}>
+        <span className="chapter-plate__folio" style={{ ...mono, marginTop: kicker ? 3 : 0 }}>
           {String(index).padStart(2, "0")}
         </span>
       )}
       {index != null && <span className="chapter-plate__divider" aria-hidden="true" />}
-      <h2 className="chapter-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
-        {namn}
-      </h2>
+      <div style={{ minWidth: 0 }}>
+        {kicker && (
+          <div style={{
+            fontSize: 10.5, fontWeight: 600, textTransform: "uppercase",
+            letterSpacing: "0.13em", color: "#00AB60", marginBottom: 3,
+          }}>
+            {kicker}
+          </div>
+        )}
+        <h2 className="chapter-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
+          {namn}
+        </h2>
+      </div>
     </div>
   );
 }
@@ -390,7 +409,13 @@ function SectionBlock({
       style={{ marginTop: index != null ? 56 : 0, scrollMarginTop: 60 }}
     >
       {/* Plattan utelämnas för enskilt sakområde — namnet står redan i mastheaden. */}
-      {index != null && <ChapterPlate index={index} namn={section.namn} />}
+      {index != null && (
+        <ChapterPlate
+          index={index}
+          namn={section.namn}
+          kicker={kategoriForOmrade(section.id)?.namn}
+        />
+      )}
 
       {harDelar ? (
         /* Tematiska delar (t.ex. SKR-rapporten) — egen rubrik + översikt per del */
@@ -423,7 +448,7 @@ function DelBlock({
   return (
     <section
       id={`rapport-${del.id}`}
-      style={{ marginTop: nr > 1 ? 48 : 0, scrollMarginTop: 60 }}
+      style={{ marginTop: nr > 1 ? 56 : 0, scrollMarginTop: 60 }}
     >
       <div className="del-plate">
         <span className="del-plate__nr" style={mono}>Del {nr}</span>
@@ -432,20 +457,19 @@ function DelBlock({
         </h3>
       </div>
 
-      {/* Delens översikt — ETT kort: räknare + AI-analys + signalöversikt */}
-      <figure className="report-indicator indicator-card report-figure" style={{ margin: 0 }}>
-        <h3 style={{
-          fontFamily: FONT_RUBRIK,
-          fontSize: 22, fontWeight: 600, color: "#1a1a1a",
-          margin: "0 0 12px", letterSpacing: "-0.01em", lineHeight: 1.25,
+      {/* Delens översikt — räknare + AI-analys + signalöversikt. Vitrum avgränsar
+          mot första indikatorn. Sidmarginal 0 dödar <figure>-elementets default. */}
+      <figure className="report-indicator indicator-card report-figure" style={{ margin: "0 0 32px" }}>
+        <div style={{
+          fontFamily: FONT, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
+          letterSpacing: "0.13em", color: "#00664D", margin: "0 0 12px",
         }}>
           Översikt
-        </h3>
+        </div>
 
         {/* Räknare — samma mönster som rapportens topp */}
         <div style={{
-          display: "flex", gap: 24, alignItems: "baseline",
-          marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid #ececea",
+          display: "flex", gap: 24, alignItems: "baseline", marginBottom: 16,
         }}>
           <MiniStat value={del.kpier.length} label="indikatorer" />
           <MiniStat value={inom} label="inom förväntat" signal="gron" />
@@ -457,13 +481,13 @@ function DelBlock({
           <BlocksEditor
             targetId={del.id}
             aiText={del.analys}
-            aiRubrik="Översikt"
+            aiRubrik="Bedömning"
             vy={vy}
           />
         </div>
 
         <SignalTimeline sektioner={[del]} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #ececea" }}>
+        <div style={{ marginTop: 16 }}>
           <SignalLegend note="Peka på en lane för värde och trend, klicka för större graf" />
         </div>
       </figure>
@@ -511,15 +535,33 @@ function IndicatorBlock({
     <div id={`rapport-${kpi.id}`} className="report-indicator indicator-card" style={{ scrollMarginTop: 60 }}>
 
       {/* ── Titelrad: indikatornamn + status ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 7 }}>
         <h3 style={{
           fontFamily: FONT_RUBRIK,
-          fontSize: 22, fontWeight: 600, color: "#1a1a1a",
-          margin: 0, letterSpacing: "-0.01em", lineHeight: 1.25,
+          fontSize: 20, fontWeight: 600, color: "#1a1a1a",
+          margin: 0, letterSpacing: "-0.01em", lineHeight: 1.28,
         }}>
           {kpi.namn}
         </h3>
-        <StatusTag status={kpi.status} />
+        <StatusTag status={kpi.status} neutral={kpi.utan_mal} />
+      </div>
+
+      {/* ── Readout: Hallands nivå + placering. Siffror i mono (tabulära). ── */}
+      <div style={{
+        display: "flex", alignItems: "baseline", gap: 18, flexWrap: "wrap",
+        fontFamily: FONT, fontSize: 12.5, color: "#5b615e", marginBottom: 16,
+      }}>
+        <span>Halland{" "}
+          <strong style={{ ...mono, fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
+            {fmtVarde(kpi.senaste, kpi.enhet)}{fmtSuffix(kpi.enhet)}
+          </strong>
+        </span>
+        {kpi.rank != null && kpi.rank_av != null && (
+          <span>Plats{" "}
+            <strong style={{ ...mono, fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>{kpi.rank}/{kpi.rank_av}</strong>
+            {" "}bland regionerna
+          </span>
+        )}
       </div>
 
       {/* ── Analystext (rubrik + text + byline) ── */}
@@ -771,9 +813,24 @@ function SidebarToc({
           </a>
         );
 
+        // Kategorietikett före första sektionen i varje ny kategori
+        // (bara i helrapporten, där flera sektioner listas).
+        const kat = kategoriForOmrade(sek.id)?.namn;
+        const prevKat = i > 0 ? kategoriForOmrade(sections[i - 1].id)?.namn : undefined;
+        const visaKat = sections.length > 1 && kat && kat !== prevKat;
+
         const grupper = delar ?? [sek];
         return (
           <div key={sek.id} style={{ marginBottom: 10 }}>
+            {visaKat && (
+              <div style={{
+                fontSize: 9, fontWeight: 600, textTransform: "uppercase",
+                letterSpacing: "0.09em", color: "#a9ada8",
+                margin: "12px 0 4px", paddingLeft: 10,
+              }}>
+                {kat}
+              </div>
+            )}
             {sekLank}
             {grupper.map((grupp, gi) => (
               <TocGrupp

@@ -82,5 +82,10 @@ kolada_tema <- list(
     "U79029", "U79065", "U79066", "U79092", "U79093", "U79132", "U79133",
     "U79134", "U79135", "U79149"
   ),
-  riktning_neutral = c("N70808", "N70845", "N63125")
+  riktning_neutral = c("N70808", "N70845", "N63125"),
+
+  # Procent-override: indikatorer som redovisas som andel i procent men vars
+  # Kolada-titel säger "index" i stället för "andel (%)", så titel-heuristiken
+  # i bearbeta.R missar dem. Här: patientupplevelsen "Positivt helhetsintryck".
+  procent_kpier = c("N79171", "N79174", "N79178", "N79521", "U71451")
 )

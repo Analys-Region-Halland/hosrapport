@@ -6,12 +6,15 @@
 #   2. Lägg till i alla_teman
 #   3. Klar.
 
+source("R/teman/primarvard/config.R")
 source("R/teman/akutflode/config.R")
 source("R/teman/slutenvard/config.R")
+source("R/teman/personal/config.R")
 source("R/teman/kolada/config.R")
 
-# Teman med daglig data (conformal prediction)
-dagliga_teman <- list(akutflode, slutenvard)
+# Teman med daglig data (conformal prediction).
+# Ordningen här styr visningsordningen i rapporten.
+dagliga_teman <- list(primarvard, akutflode, slutenvard, personal)
 
 # Alla teman (inklusive specialfall som Kolada-årsindikatorerna,
 # tidigare patientenkäten)

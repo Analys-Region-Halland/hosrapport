@@ -1,53 +1,50 @@
 import type { TidsseriePoint } from "../types";
-import { SIGNAL_COLORS, SIGNAL_BG, SIGNAL_SHAPES, SIGNAL_LABELS, FONT, NEUTRAL, signalColor } from "../charts/constants";
+import { SIGNAL_COLORS, SIGNAL_BG, SIGNAL_LABELS, FONT, NEUTRAL, signalColor } from "../charts/constants";
 
 // ════════════════════════════════════════════════════════════
 //  Signalspråk — delas av signal-tidslinjen (SignalTimeline) och legenden.
 //  Färg + FORM (på avvikelser) + textlegend, så färg aldrig är enda
 //  informationsbäraren.
 //
-//  Designval: grön/neutral ritas som rena fält; bevaka (triangel) och
-//  avvikelse (romb) får en form — så att det som kräver uppmärksamhet
-//  framträder, både visuellt och för färgseende.
+//  Inga formsymboler — status bärs av trafikljusfärg + textetikett.
 // ════════════════════════════════════════════════════════════
 
-// Statustagg (pill med ord) — visar status vid t.ex. grafnamn/paneler.
-export function StatusTag({ status, size = "md" }: { status: string; size?: "sm" | "md" }) {
-  const color = SIGNAL_COLORS[status];
-  const bg = SIGNAL_BG[status];
+// Mörkare textton per status för chip (god kontrast mot ljus tonbotten).
+const CHIP_TEXT: Record<string, string> = {
+  gron: "#1F6A43",
+  gul:  "#8A5E12",
+  rod:  "#9A2E22",
+};
+
+// Statuschip — lugn tonbotten i statusfärg + etikett, inga symboler.
+// neutral=true: mått utan målriktning (volym-/strukturmått) → grått "Utan mål".
+export function StatusTag({ status, size = "md", neutral = false }: { status: string; size?: "sm" | "md"; neutral?: boolean }) {
+  const sm = size === "sm";
+  const pad = sm ? "2px 9px" : "3px 11px";
+  const fz = sm ? 10.5 : 11.5;
+  if (neutral) {
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", padding: pad, borderRadius: 999,
+        background: NEUTRAL, color: "#6B7270", fontFamily: FONT, fontSize: fz, fontWeight: 600,
+        letterSpacing: ".01em", whiteSpace: "nowrap", verticalAlign: "middle", flexShrink: 0,
+      }}>
+        Utan mål
+      </span>
+    );
+  }
   const label = SIGNAL_LABELS[status];
   if (!label) return null;
-  const sm = size === "sm";
   return (
     <span style={{
-      display: "inline-flex", alignItems: "center", gap: sm ? 4 : 5,
-      padding: sm ? "1px 7px" : "2px 10px", borderRadius: 999, background: bg, color,
-      fontFamily: FONT, fontSize: sm ? 9.5 : 11, fontWeight: 600, whiteSpace: "nowrap",
+      display: "inline-flex", alignItems: "center", padding: pad, borderRadius: 999,
+      background: SIGNAL_BG[status], color: CHIP_TEXT[status] || "#444", fontFamily: FONT,
+      fontSize: fz, fontWeight: 600, letterSpacing: ".01em", whiteSpace: "nowrap",
       verticalAlign: "middle", flexShrink: 0,
     }}>
-      <span style={{ width: sm ? 5 : 6, height: sm ? 5 : 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
       {label}
     </span>
   );
-}
-
-// Vit formglyf — ritas bara för gul/rod (avvikelser).
-export function ShapeGlyph({ shape, size = 9 }: { shape: "circle" | "triangle" | "diamond"; size?: number }) {
-  const fill = "rgba(255,255,255,0.96)";
-  const v = 10;
-  if (shape === "triangle") {
-    return <svg width={size} height={size} viewBox={`0 0 ${v} ${v}`} aria-hidden="true"><polygon points="5,1.2 9,8.8 1,8.8" fill={fill} /></svg>;
-  }
-  if (shape === "diamond") {
-    return <svg width={size} height={size} viewBox={`0 0 ${v} ${v}`} aria-hidden="true"><polygon points="5,1 9,5 5,9 1,5" fill={fill} /></svg>;
-  }
-  return <svg width={size - 1} height={size - 1} viewBox={`0 0 ${v} ${v}`} aria-hidden="true"><circle cx="5" cy="5" r="4" fill={fill} /></svg>;
-}
-
-/** En cells innehåll: färgat fält, glyf bara på gul/rod. */
-export function SignalCellInner({ sig }: { sig?: "gron" | "gul" | "rod" }) {
-  if (sig === "gul" || sig === "rod") return <ShapeGlyph shape={SIGNAL_SHAPES[sig]} />;
-  return null;
 }
 
 // ── Kort-remsa: en rad celler för EN indikator (i KPI-kortet) ──
@@ -84,13 +81,8 @@ export default function SignalStrip({ serie, periods = 12, height = 16 }: StripP
         <div
           key={i}
           title={`${p.etikett}: ${p.signal ? SIGNAL_LABELS[p.signal] : "ingen signal"}`}
-          style={{
-            flex: 1, height, borderRadius: 2.5, background: signalColor(p.signal),
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <SignalCellInner sig={p.signal} />
-        </div>
+          style={{ flex: 1, height, borderRadius: 2.5, background: signalColor(p.signal) }}
+        />
       ))}
     </div>
   );
@@ -102,17 +94,12 @@ export function SignalLegend({ note }: { note?: string }) {
     <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
       {(["gron", "gul", "rod"] as const).map((sig) => (
         <span key={sig} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <span style={{
-            width: 16, height: 16, borderRadius: 3, background: SIGNAL_COLORS[sig],
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <SignalCellInner sig={sig} />
-          </span>
+          <span style={{ width: 12, height: 12, borderRadius: 3, background: SIGNAL_COLORS[sig] }} />
           <span style={{ fontSize: 11.5, color: "#666", fontFamily: FONT }}>{SIGNAL_LABELS[sig]}</span>
         </span>
       ))}
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 16, height: 16, borderRadius: 3, background: NEUTRAL }} />
+        <span style={{ width: 12, height: 12, borderRadius: 3, background: NEUTRAL }} />
         <span style={{ fontSize: 11.5, color: "#999", fontFamily: FONT }}>Ingen signal</span>
       </span>
       {note && (

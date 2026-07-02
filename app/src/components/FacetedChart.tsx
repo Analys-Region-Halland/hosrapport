@@ -6,7 +6,7 @@ import { tidsserie, parseTidsserie, parseSimpleSerie } from "../charts/tidsserie
 import type { TidsserieSeries, Pt, BandPt, ToppBandPt } from "../charts/types";
 import { FONT, NEUTRAL_LINE, SIGNAL_COLORS } from "../charts/constants";
 import { useResizeWidth } from "../hooks/useResizeWidth";
-import { kpiBeskrivning } from "../utils/definitions";
+import { kortBeskrivning } from "../utils/definitions";
 import { StatusTag } from "./SignalStrip";
 
 function enhetLabel(e: string): string {
@@ -48,15 +48,20 @@ export default function FacetedChart({ kpi, vy }: Props) {
 
     const { pts: mainPts, band: mainBand } = parseTidsserie(kpi.tidsserie);
 
+    // Bryt jämförelseserierna vid sista perioden med Halland-data, annars
+    // sträcker sig regioner med nyare data förbi x-axeln (och blåser upp y-skalan).
+    const hallandMax = mainPts.length ? +mainPts[mainPts.length - 1].d : Infinity;
+    const inomX = (p: { d: Date }) => +p.d <= hallandMax;
+
     const kontextPts = kpi.kontext_serier
-      ? kpi.kontext_serier.map((ks) => ({ namn: ks.namn, pts: parseSimpleSerie(ks.tidsserie) }))
+      ? kpi.kontext_serier.map((ks) => ({ namn: ks.namn, pts: parseSimpleSerie(ks.tidsserie).filter(inomX) }))
       : undefined;
-    const riketPts = kpi.riket_serie ? parseSimpleSerie(kpi.riket_serie) : undefined;
+    const riketPts = kpi.riket_serie ? parseSimpleSerie(kpi.riket_serie).filter(inomX) : undefined;
     const parseDate = d3.timeParse("%Y-%m-%d");
     const toppBand = kpi.topp3_band
       ? kpi.topp3_band
           .map((b) => ({ d: parseDate(b.period)!, lo: b.lo, hi: b.hi }))
-          .filter((b) => b.d)
+          .filter((b) => b.d && inomX(b))
       : undefined;
 
     result.push({
@@ -156,10 +161,10 @@ export default function FacetedChart({ kpi, vy }: Props) {
                 }}>
                   {kpi.namn}{expandedSeries.name !== "Totalt" ? `, ${expandedSeries.name}` : ""}
                 </div>
-                {expandedSeries.status && <StatusTag status={expandedSeries.status} />}
+                {expandedSeries.status && <StatusTag status={expandedSeries.status} neutral={kpi.utan_mal} />}
               </div>
               <div style={{ fontFamily: FONT, fontSize: 12, color: "#555", marginTop: 4 }}>
-                {kpiBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+                {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
               </div>
             </div>
             <button
@@ -204,7 +209,7 @@ export default function FacetedChart({ kpi, vy }: Props) {
                 Nedbrytning per avdelning
               </h4>
               <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
-                {kpiBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+                {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
               </div>
             </div>
             <div style={{ position: "relative", flexShrink: 0 }}>
@@ -289,10 +294,11 @@ export default function FacetedChart({ kpi, vy }: Props) {
                 fontSize: 16, fontWeight: 600, color: "#1a1a1a",
                 letterSpacing: "-0.01em", lineHeight: 1.3, margin: "0 0 3px",
               }}>
-                Utveckling över tid
+                <span style={{ color: "#9a9a95", fontWeight: 500 }}>Diagram: </span>
+                {kpi.namn}
               </h4>
               <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
-                {kpiBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+                {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
               </div>
             </div>
             <div style={{ position: "relative", flexShrink: 0 }}>
@@ -329,6 +335,7 @@ export default function FacetedChart({ kpi, vy }: Props) {
             isSingle
             showEndLabels
             mainLabel="Halland"
+            vy={vy}
           />
         </div>
       )}
@@ -422,7 +429,9 @@ function Panel({ series, xDomain, yDomain, yTickCount, width, enhet, dec, suffix
       margins: isSingle
         // Bredare högermarginal när regionetiketter (högsta/lägsta) ska få plats
         ? { t: 16, r: showEndLabels ? (series.kontextLinjer?.length ? 136 : 96) : 20, b: 34, l: 48 }
-        : { t: 12, r: 8, b: 28, l: 38 },
+        // Högermarginal rymmer halva sista årtalet när det centreras under
+        // tickmarken vid plotkanten (annars sticker det ut till höger).
+        : { t: 12, r: 18, b: 28, l: 38 },
       enhet,
       vy,
       xDomain,

@@ -110,9 +110,19 @@ export function tidsserie(
 
   const dec = decimals ?? (enhet === "procent" ? 1 : 0);
   const sfx = sfxOverride ?? fmtSuffix(enhet);
-  const { pts, band, kontextLinjer, riketPts, refPts, toppBand, malniva, color } = series;
+  const { pts, band, kontextLinjer: kontextRaw, riketPts: riketRaw, refPts: refRaw, toppBand: toppRaw, malniva, color } = series;
 
   if (pts.length < 2) return () => {};
+
+  // Klipp jämförelseserierna (övriga regioner, riket, topp3-band, föreg. år) vid
+  // höger axelkant = sista perioden med Halland-data. Regioner med nyare data
+  // skulle annars ritas ut förbi x-axeln.
+  const xMaxMs = +((xDomain ? xDomain[1] : d3.max(pts, (d) => d.d)) as Date);
+  const inomX = <T extends { d: Date }>(p: T): boolean => +p.d <= xMaxMs;
+  const kontextLinjer = kontextRaw?.map((k) => ({ namn: k.namn, pts: k.pts.filter(inomX) }));
+  const riketPts = riketRaw?.filter(inomX);
+  const refPts = refRaw?.filter(inomX);
+  const toppBand = toppRaw?.filter(inomX);
 
   const dense = pts.length > denseThreshold;
   let plotW = width - mg.l - mg.r;
@@ -188,7 +198,7 @@ export function tidsserie(
     g.append("text")
       .attr("x", -8).attr("y", yScale(t) + (compact ? 3.5 : 4))
       .attr("text-anchor", "end")
-      .attr("fill", compact ? "#6b6b6b" : "#5b5b5b")
+      .attr("fill", "#1a1a1a")
       .attr("font-size", fontSize).attr("font-weight", "400")
       .attr("font-family", FONT)
       .style("font-feature-settings", '"tnum"')
@@ -212,45 +222,55 @@ export function tidsserie(
     g.append("line")
       .attr("x1", 0).attr("x2", plotW)
       .attr("y1", plotH).attr("y2", plotH)
-      .attr("stroke", compact ? "#e8e8e8" : "#d0d0d0")
-      .attr("stroke-width", compact ? 0.5 : 0.8);
+      .attr("stroke", "#1a1a1a")
+      .attr("stroke-width", compact ? 0.7 : 1.2);
 
     if (showBrackets) {
       g.append("line").attr("x1", 0).attr("x2", 0)
         .attr("y1", plotH - 4).attr("y2", plotH + 4)
-        .attr("stroke", "#999").attr("stroke-width", 1);
+        .attr("stroke", "#1a1a1a").attr("stroke-width", 1);
       g.append("line").attr("x1", plotW).attr("x2", plotW)
         .attr("y1", plotH - 4).attr("y2", plotH + 4)
-        .attr("stroke", "#999").attr("stroke-width", 1);
+        .attr("stroke", "#1a1a1a").attr("stroke-width", 1);
     }
 
     const xLabelFontSize = compact ? 10 : 12;
-    const xLabelColor = compact ? "#6b6b6b" : "#5b5b5b";
-    const xLabelYOffset = compact ? plotH + (height - mg.t - plotH - 3) : plotH + 18;
+    const xLabelColor = "#1a1a1a";
+    const xLabelYOffset = compact ? plotH + 14 : plotH + 18;
 
-    // Datumetiketter: jämnt fördelade i pixelrymden och snäppta till närmaste
-    // datapunkt → väljer bara så många som ryms och överlappar därför ALDRIG.
+    // Datumetiketter: vid årsvy bara första och sista årtalet, centrerade rakt
+    // under sina tickmarks. Vid finare upplösning jämnt fördelade i pixelrymden
+    // och snäppta till närmaste datapunkt → överlappar därför ALDRIG.
     const axLabels = pts.map(fmtAxisLabel);
     const maxLabelW = Math.max(...axLabels.map((l) => l.length)) * xLabelFontSize * 0.6;
     const pad = Math.min(maxLabelW / 2, plotW / 2);
-    const count = Math.max(2, Math.floor(plotW / (maxLabelW + 26)) + 1);
-    const chosen = new Set<number>();
-    for (let k = 0; k < count; k++) {
-      const targetX = pad + (k / (count - 1)) * (plotW - 2 * pad);
-      let bi = 0, bd = Infinity;
-      for (let i = 0; i < pts.length; i++) {
-        const d = Math.abs(xScale(pts[i].d) - targetX);
-        if (d < bd) { bd = d; bi = i; }
+    let chosen: number[];
+    if (vy === "ar") {
+      chosen = pts.length > 1 ? [0, pts.length - 1] : [0];
+    } else {
+      const count = Math.max(2, Math.floor(plotW / (maxLabelW + 26)) + 1);
+      const set = new Set<number>();
+      for (let k = 0; k < count; k++) {
+        const targetX = pad + (k / (count - 1)) * (plotW - 2 * pad);
+        let bi = 0, bd = Infinity;
+        for (let i = 0; i < pts.length; i++) {
+          const d = Math.abs(xScale(pts[i].d) - targetX);
+          if (d < bd) { bd = d; bi = i; }
+        }
+        set.add(bi);
       }
-      chosen.add(bi);
+      chosen = [...set];
     }
     for (const i of chosen) {
       const px = xScale(pts[i].d);
       g.append("line")
         .attr("x1", px).attr("x2", px).attr("y1", plotH).attr("y2", plotH + 3)
-        .attr("stroke", compact ? "#dcdcdc" : "#cccccc").attr("stroke-width", 0.8);
+        .attr("stroke", "#1a1a1a").attr("stroke-width", compact ? 0.8 : 1);
+      // Årtal centreras exakt under tickmarken; finare etiketter hålls innanför
+      // plotkanten så de inte sticker ut.
+      const labelX = vy === "ar" ? px : Math.max(pad, Math.min(plotW - pad, px));
       g.append("text")
-        .attr("x", Math.max(pad, Math.min(plotW - pad, px))).attr("y", xLabelYOffset)
+        .attr("x", labelX).attr("y", xLabelYOffset)
         .attr("text-anchor", "middle").attr("fill", xLabelColor)
         .attr("font-size", `${xLabelFontSize}px`).attr("font-family", FONT)
         .text(axLabels[i]);

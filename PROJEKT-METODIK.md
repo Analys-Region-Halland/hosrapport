@@ -21,10 +21,14 @@ R/
 │   └── demo-data.R              # Syntetisk demodata (ersätts med API i produktion)
 ├── teman/                       # En mapp per sektion — här läggs nya sektioner till
 │   ├── register.R               # Samlar alla configs → kpi_meta, dept_config
+│   ├── primarvard/
+│   │   └── config.R             # KPI-definitioner: pv_besok, digital_kontakt, telefon_svar
 │   ├── akutflode/
 │   │   └── config.R             # KPI-definitioner: beläggning, akutbesök, väntetid, ambulans
 │   ├── slutenvard/
 │   │   └── config.R             # KPI-definitioner: inläggningar, utskrivningsklara
+│   ├── personal/
+│   │   └── config.R             # KPI-definitioner: sjukfrånvaro, övertid, inhyrd
 │   ├── patientenkat/            # (urkopplad — ersatt av kolada/)
 │   │   ├── config.R             # NPE-dimensioner (helhetsintryck, respekt, etc.)
 │   │   └── bearbeta.R           # Läser Excel, beräknar ranking-signaler
@@ -48,7 +52,16 @@ R/
 1. Skapa `R/teman/{namn}/config.R` med id, namn, kpier (tibble), avdelningar (lista)
 2. Lägg till `source("R/teman/{namn}/config.R")` i `R/teman/register.R`
 3. Lägg till temat i `dagliga_teman` (eller som specialfall likt patientenkäten)
-4. Klar — bearbeta.R plockar upp nya KPI:er automatiskt via kpi_meta
+4. Lägg in området i taxonomin: `app/src/taxonomy.ts` (kategori + beskrivning;
+   områden utan data ligger kvar som `planerad: true` tills pipelinen levererar)
+5. Klar — bearbeta.R plockar upp nya KPI:er automatiskt via kpi_meta
+
+### Områdesindelning (taxonomi)
+
+Rapportens kategorier och områden (aktiva + planerade) definieras i
+`app/src/taxonomy.ts` — startsidans kategoriboxar, rapportens kategorietiketter
+och TOC-grupperingen läser alla därifrån. Researchunderlag och motivering:
+`docs/omradesindelning.md`.
 
 ### Pipeline-flöde
 

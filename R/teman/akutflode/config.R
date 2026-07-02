@@ -1,9 +1,9 @@
-# config.R — Akutflöde & kapacitet
+# config.R — Akutflöde
 # Definierar sektionens KPI:er och avdelningsstruktur.
 
 akutflode <- list(
   id   = "akutflode",
-  namn = "Akutfl\u00f6de & kapacitet",
+  namn = "Akutfl\u00f6de",
   kpier = tibble(
     id          = c("belaggning", "akutbesok", "vantetid", "ambulans"),
     namn        = c("Bel\u00e4ggningsgrad", "Bes\u00f6k akutmottagning",

@@ -47,6 +47,12 @@ export interface KpiData {
   beskrivning?: string;
   /** Målnivå — ritas som horisontell referenslinje i grafen. */
   malniva?: number;
+  /** Placering bland regionerna senaste året (ranking-indikatorer, t.ex. SKR). */
+  rank?: number;
+  /** Antal regioner i rankingen (nämnaren i "plats r / n"). */
+  rank_av?: number;
+  /** Mått utan målriktning (volym-/strukturmått) — visas med neutralt grått chip. */
+  utan_mal?: boolean;
   tidsserie: TidsseriePoint[];
   /** Dagsnivådata för senaste kompletta period */
   dagar?: TidsseriePoint[];

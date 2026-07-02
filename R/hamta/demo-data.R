@@ -117,7 +117,33 @@ radata <- tibble(datum = datum_seq) |>
     utskrivningsklara = generera_serie(datum, 16, 1.2, 3.5, 1.5, 2.0,
                                         helg_amp = 3, ar1 = 0.30,
                                         min_val = 2,
-                                        kalender_df = kalender)
+                                        kalender_df = kalender),
+    # ── Primärvård & nära vård ──
+    pv_besok = generera_serie(datum, 1450, 25, 90, 4500, 55,
+                               helg_amp = 950, ar1 = 0.30,
+                               min_val = 120,
+                               kalender_df = kalender),
+    digital_kontakt = generera_serie(datum, 260, 95, -20, 60, 22,
+                                      helg_amp = 60, ar1 = 0.25,
+                                      min_val = 40,
+                                      kalender_df = kalender),
+    telefon_svar = generera_serie(datum, 87, -1.5, -2.5, 2, 2.2,
+                                   helg_amp = 0, ar1 = 0.35,
+                                   min_val = 55, max_val = 100, decimaler = 1,
+                                   kalender_df = kalender),
+    # ── Personal & bemanning ──
+    sjukfranvaro = generera_serie(datum, 6.4, 0.25, 1.1, 0.5, 0.35,
+                                   helg_amp = 0, ar1 = 0.45,
+                                   min_val = 3, max_val = 14, decimaler = 1,
+                                   kalender_df = kalender),
+    overtid = generera_serie(datum, 620, 30, 70, 120, 45,
+                              helg_amp = 100, ar1 = 0.30,
+                              min_val = 150,
+                              kalender_df = kalender),
+    inhyrd = generera_serie(datum, 340, -35, 30, 25, 28,
+                             helg_amp = 40, ar1 = 0.35,
+                             min_val = 60,
+                             kalender_df = kalender)
   )
 
 # ══════════════════════════════════════════════
@@ -143,6 +169,18 @@ dagar_i_anomali <- as.numeric(radata$datum[vantetid_anomali] - as.Date("2026-02-
 radata$vantetid[vantetid_anomali] <- radata$vantetid[vantetid_anomali] +
   round(dagar_i_anomali * 3)
 
+# Anomali 4: Telefontillgänglighet viker ned mars 2026 (primärvård)
+telefon_anomali <- radata$datum >= as.Date("2026-03-10") &
+                   radata$datum <= as.Date("2026-03-31")
+radata$telefon_svar[telefon_anomali] <- pmax(
+  radata$telefon_svar[telefon_anomali] - 7, 55
+)
+
+# Anomali 5: Övertidstopp januari 2026 (vintervågens eftersläpning)
+overtid_anomali <- radata$datum >= as.Date("2026-01-05") &
+                   radata$datum <= as.Date("2026-01-25")
+radata$overtid[overtid_anomali] <- round(radata$overtid[overtid_anomali] * 1.30)
+
 saveRDS(radata, "data/radata-hos.rds")
 
 # ══════════════════════════════════════════════
@@ -162,7 +200,19 @@ dept_synth <- list(
   inlaggningar      = list(dept = c("Kirurgi", "Medicin", "Ortopedi"),
                            typ = "summa",  props = c(0.40, 0.38, 0.22)),
   utskrivningsklara = list(dept = c("Halmstad", "Varberg", "Kungsbacka"),
-                           typ = "medel",  offsets = c(1.5, -1, -2.5))
+                           typ = "medel",  offsets = c(1.5, -1, -2.5)),
+  pv_besok          = list(dept = c("Halmstad", "Varberg", "Kungsbacka"),
+                           typ = "summa",  props = c(0.44, 0.31, 0.25)),
+  digital_kontakt   = list(dept = c("Halmstad", "Varberg", "Kungsbacka"),
+                           typ = "summa",  props = c(0.40, 0.28, 0.32)),
+  telefon_svar      = list(dept = c("Halmstad", "Varberg", "Kungsbacka"),
+                           typ = "medel",  offsets = c(-2, 1.5, 3)),
+  sjukfranvaro      = list(dept = c("Hallands sjukhus", "Närsjukvården", "Psykiatrin"),
+                           typ = "medel",  offsets = c(0.4, -0.3, 0.8)),
+  overtid           = list(dept = c("Hallands sjukhus", "Närsjukvården", "Psykiatrin"),
+                           typ = "summa",  props = c(0.62, 0.21, 0.17)),
+  inhyrd            = list(dept = c("Hallands sjukhus", "Närsjukvården", "Psykiatrin"),
+                           typ = "summa",  props = c(0.48, 0.33, 0.19))
 )
 
 dept_radata <- bind_rows(lapply(names(dept_synth), function(kpi_id) {
@@ -193,4 +243,4 @@ saveRDS(dept_radata, "data/radata-dept.rds")
 cat("R\u00e5data genererad:", nrow(radata), "dagar,", ncol(radata) - 1, "KPI:er\n")
 cat("Avdelningsdata:", nrow(dept_radata), "rader,",
     length(unique(dept_radata$dept)), "avdelningar\n")
-cat("Injicerade anomalier: 3 st (vinterv\u00e5g, ambulansh\u00e4ndelse, v\u00e4ntetids\u00f6kning)\n")
+cat("Injicerade anomalier: 5 st (vinterv\u00e5g, ambulansh\u00e4ndelse, v\u00e4ntetids\u00f6kning, telefontillg\u00e4nglighet, \u00f6vertidstopp)\n")

@@ -69,7 +69,8 @@ bearbeta_kolada <- function() {
     if (nrow(d_fokus) < 1) return(NULL)
 
     riktning <- riktning_for(kpi_id)
-    enhet <- if (grepl("\\(%\\)|andel", meta$title, ignore.case = TRUE)) "procent" else "antal"
+    enhet <- if (kpi_id %in% kolada_tema$procent_kpier ||
+                 grepl("\\(%\\)|andel", meta$title, ignore.case = TRUE)) "procent" else "antal"
     dec <- 1
     namn <- kort_namn(kpi_id, meta$title)
 
@@ -147,7 +148,9 @@ bearbeta_kolada <- function() {
     # Status föregående år — underlag för utvecklingsbedömning i del/sektion
     status_fg <- if (length(signaler) >= 2) signaler[length(signaler) - 1] else status
 
-    # ── Analystext: nuläge → riketrelation → utveckling → positionering ──
+    # Analystext: position och nivå, målsättning, utveckling, relativt läge.
+    # Ordningen är fast och målet för ranking-KPI:er är en placering bland de
+    # tre främsta regionerna ("topp 3"). Inga em-streck i den genererade texten.
     fmt_v <- function(x) format(round(x, dec), big.mark = " ", decimal.mark = ",",
                                 trim = TRUE, scientific = FALSE)
     suffix <- if (enhet == "procent") " procent" else ""
@@ -157,6 +160,7 @@ bearbeta_kolada <- function() {
     v0 <- d_fokus$varde[i0]; ar0 <- d_fokus$ar[i0]
 
     analystext <- if (riktning == "neutral") {
+      # Neutralt mått: nivå, utveckling, konstaterande om utebliven målriktning.
       utv <- if (nrow(d_fokus) >= 4) {
         rel <- abs(senaste_val - v0) / max(abs(v0), 1e-9)
         if (rel < 0.03) paste0(" Nivån har varit i huvudsak stabil sedan ", ar0, ".")
@@ -165,62 +169,72 @@ bearbeta_kolada <- function() {
                     " från ", fmt_v(v0), " till ", fmt_v(senaste_val), ".")
       } else ""
       paste0(namn, " ligger på ", fmt_v(senaste_val), suffix, " (", senaste_ar, ").",
-             utv, " Måttet är ett volym-/strukturmått utan målriktning och färgsätts därför inte.")
+             utv, " Måttet är ett volym- eller strukturmått utan målriktning och färgsätts därför inte.")
     } else {
       r <- senaste_rk$rank; m <- senaste_rk$n
 
-      # Nuläge — formuleringen följer status så att texterna inte blir likformiga
-      nulage <- if (status == "gron") {
-        paste0("Halland är i fas: ", fmt_v(senaste_val), suffix,
-               " placerar regionen på plats ", r, " av ", m, " (", senaste_ar, ").")
+      # 1. Position och nivå: fastställ Hallands faktiska värde och placering.
+      nulage <- paste0("Region Halland redovisar ett utfall på ",
+                       fmt_v(senaste_val), suffix, " (", senaste_ar, ")",
+                       " och placerar sig på plats ", r, " av ", m,
+                       " bland regionerna.")
+
+      # 2. Målsättning: målet är en placering bland de tre främsta (topp 3).
+      #    Grön möter målet, gul ligger strax under, röd ligger under målet.
+      mal_txt <- if (status == "gron") {
+        " Placeringen möter målsättningen om en plats bland de tre främsta regionerna."
       } else if (status == "gul") {
-        paste0("Halland ligger på ", fmt_v(senaste_val), suffix, ", plats ", r,
-               " av ", m, " (", senaste_ar,
-               ") — under bevakning, utanför topp 3 men i det övre skiktet.")
+        paste0(" Resultatet ligger strax under målsättningen om en plats bland de tre",
+               " främsta: regionen står utanför topp 3 men håller sig i det övre skiktet.")
       } else {
-        paste0("Halland ligger på ", fmt_v(senaste_val), suffix, ", plats ", r,
-               " av ", m, " (", senaste_ar, ") — en avvikelse mot målet topp 3.")
+        " Resultatet ligger under målsättningen om en plats bland de tre främsta regionerna."
       }
 
-      # Relation till riket (riktningsmedveten: "bättre/sämre", inte "över/under")
-      riket_txt <- if (is.na(riket_senaste)) "" else {
-        diff <- senaste_val - riket_senaste
-        battre <- if (riktning == "lag") diff < 0 else diff > 0
-        if (abs(diff) < 0.01 * max(abs(riket_senaste), 1e-9)) {
-          paste0(" Nivån är i paritet med rikssnittet (", fmt_v(riket_senaste), suffix, ").")
-        } else if (battre) {
-          paste0(" Det är bättre än rikssnittet på ", fmt_v(riket_senaste), suffix, ".")
-        } else {
-          paste0(" Det är sämre än rikssnittet på ", fmt_v(riket_senaste), suffix, ".")
-        }
-      }
-
-      # Utveckling i utfall över fönstret (förbättring = rörelse i rätt riktning)
-      utv_txt <- if (nrow(d_fokus) >= 4) {
+      # 3. Utveckling i utfallet över fönstret (förbättring = rätt riktning).
+      #    Obligatorisk del: produceras så snart minst två mätningar finns
+      #    (första-till-senaste-jämförelse), oavsett periodens längd.
+      utv_txt <- if (nrow(d_fokus) >= 2) {
         f <- if (riktning == "lag") v0 - senaste_val else senaste_val - v0
         rel <- abs(f) / max(abs(v0), 1e-9)
-        if (rel < 0.03) paste0(" Utvecklingen sedan ", ar0, " är i huvudsak stabil.")
+        if (rel < 0.03) paste0(" Nivån har varit i huvudsak stabil sedan ", ar0, ".")
         else if (f > 0) paste0(" Sedan ", ar0, " har utfallet förbättrats, från ",
                                fmt_v(v0), " till ", fmt_v(senaste_val), ".")
         else paste0(" Sedan ", ar0, " har utfallet försämrats, från ",
                     fmt_v(v0), " till ", fmt_v(senaste_val), ".")
       } else ""
 
-      # Positionering över tid — nämns bara vid tydlig förflyttning (≥2 platser)
+      # 4a. Ranking-utveckling: nämns bara vid tydlig förflyttning (minst 2 platser).
       pos_txt <- {
         i0r <- max(1, length(rank_per_ar) - 5)
         r0 <- rank_per_ar[[i0r]]$rank
         if (!is.null(r0) && length(rank_per_ar) >= 4) {
           d_r <- r0 - r
-          if (d_r >= 2) paste0(" Positioneringen bland regionerna har samtidigt stärkts, från plats ",
+          if (d_r >= 2) paste0(" Placeringen bland regionerna har samtidigt stärkts, från plats ",
                                r0, " till plats ", r, ".")
-          else if (d_r <= -2) paste0(" Positioneringen bland regionerna har samtidigt försvagats, från plats ",
+          else if (d_r <= -2) paste0(" Placeringen bland regionerna har samtidigt försvagats, från plats ",
                                      r0, " till plats ", r, ".")
           else ""
         } else ""
       }
 
-      paste0(nulage, riket_txt, utv_txt, pos_txt)
+      # 4b. Relation till rikssnittet (riktningsmedveten: bättre eller sämre).
+      riket_txt <- if (is.na(riket_senaste)) "" else {
+        diff <- senaste_val - riket_senaste
+        battre <- if (riktning == "lag") diff < 0 else diff > 0
+        if (abs(diff) < 0.01 * max(abs(riket_senaste), 1e-9)) {
+          paste0(" Sett till riket ligger regionen i paritet med rikssnittet på ",
+                 fmt_v(riket_senaste), suffix, ".")
+        } else if (battre) {
+          paste0(" Sett till riket står sig regionen bättre än rikssnittet på ",
+                 fmt_v(riket_senaste), suffix, ".")
+        } else {
+          paste0(" Sett till riket står sig regionen sämre än rikssnittet på ",
+                 fmt_v(riket_senaste), suffix, ".")
+        }
+      }
+
+      # Sammansättning: position och nivå, mål, utveckling, relativt läge.
+      paste0(nulage, mal_txt, utv_txt, pos_txt, riket_txt)
     }
 
     kpi_obj <- list(
@@ -242,6 +256,13 @@ bearbeta_kolada <- function() {
     if (!is.null(riket_serie)) kpi_obj$riket_serie <- riket_serie
     if (!is.null(referens))    kpi_obj$referens    <- referens
     if (!is.null(topp3_band))  kpi_obj$topp3_band  <- topp3_band
+    # Placering bland regionerna (saknas för neutrala mått utan rankning).
+    if (!is.null(senaste_rk)) {
+      kpi_obj$rank    <- senaste_rk$rank
+      kpi_obj$rank_av <- senaste_rk$n
+    }
+    # Volym-/strukturmått utan målriktning visas med neutralt chip i frontend.
+    if (riktning == "neutral") kpi_obj$utan_mal <- TRUE
     kpi_obj
   }
 
@@ -267,9 +288,11 @@ bearbeta_kolada <- function() {
     n <- length(kpier)
     n_gron <- sum(statusar == "gron"); n_gul <- sum(statusar == "gul"); n_rod <- sum(statusar == "rod")
     d_gron <- n_gron - sum(fg == "gron"); d_rod <- n_rod - sum(fg == "rod")
-    paste0(namn, " omfattar ", n, " indikatorer: ", n_gron, " är i fas (topp ", g_gron,
-           "), ", n_gul, " under bevakning (plats ", g_gron + 1, "–", g_gul,
-           ") och ", n_rod, " utanför (plats ", g_gul + 1, " eller lägre). Sammantaget ",
+    paste0(namn, " omfattar ", n, " indikatorer. Av dessa är ", n_gron,
+           " i fas med målet topp ", g_gron, ", ", n_gul,
+           " ligger under bevakning (plats ", g_gron + 1, "–", g_gul,
+           ") och ", n_rod, " hamnar utanför (plats ", g_gul + 1,
+           " eller lägre). Sammantaget visar delen ",
            bedom_nulage(n_gron, n_rod, n), ", och ", bedom_utveckling(d_gron, d_rod), ".")
   }
 
@@ -310,9 +333,10 @@ bearbeta_kolada <- function() {
   sek_analys <- paste0(
     "Hälso- och sjukvårdsrapporten jämför ", length(alla_kpier),
     " indikatorer mellan regionerna, indelade i ", length(delar), " delar. ",
-    "Halland är i fas (topp ", g_gron, ") för ", n_gron_t,
-    " indikatorer, under bevakning för ", n_gul_t, " och utanför för ", n_rod_t,
-    ". Sammantaget ", bedom_nulage(n_gron_t, n_rod_t, length(alla_kpier)),
+    "Region Halland är i fas med målet topp ", g_gron, " för ", n_gron_t,
+    " indikatorer, ligger under bevakning för ", n_gul_t,
+    " och utanför för ", n_rod_t,
+    ". Sammantaget visar rapporten ", bedom_nulage(n_gron_t, n_rod_t, length(alla_kpier)),
     ", och ", bedom_utveckling(n_gron_t - sum(fg_alla == "gron"),
                                n_rod_t - sum(fg_alla == "rod")), ".")
 

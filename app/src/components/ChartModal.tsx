@@ -5,7 +5,7 @@ import { tidsserie, parseTidsserie, parseSimpleSerie } from "../charts/tidsserie
 import type { TidsserieSeries } from "../charts/types";
 import { FONT, FONT_TITEL, NEUTRAL_LINE } from "../charts/constants";
 import SegmentedControl from "./SegmentedControl";
-import { kpiBeskrivning } from "../utils/definitions";
+import { kortBeskrivning } from "../utils/definitions";
 import { StatusTag } from "./SignalStrip";
 
 interface Props {
@@ -31,7 +31,8 @@ export default function ChartModal({ kpi, vyData, visaDagar: initialVisaDagar, o
   const suffix = fmtSuffix(kpi.enhet);
 
   const titel = kpi.namn;
-  const beskrivning = kpiBeskrivning(kpi);
+  // Undertitel: max 2 meningar. Full text bor under infoknappen (KPI-korten).
+  const beskrivning = kortBeskrivning(kpi);
 
   // Förklaring i undertiteln av vad grafen visar
   const harBand = aktivData.some((p) => p.yhat_lower_80 != null);
@@ -156,7 +157,7 @@ export default function ChartModal({ kpi, vyData, visaDagar: initialVisaDagar, o
             }}>
               {titel}
             </h2>
-            <StatusTag status={kpi.status} />
+            <StatusTag status={kpi.status} neutral={kpi.utan_mal} />
           </div>
           {beskrivning && (
             <p style={{

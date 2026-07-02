@@ -6,7 +6,7 @@ bearbeta_patientenkat <- function() {
   npe_fil <- patientenkat$datakalla
 
   if (!file.exists(npe_fil)) {
-    cat("OBS: Patientenk\u00e4ten (", npe_fil, ") saknas \u2014 hoppar \u00f6ver\n")
+    cat("OBS: Patientenk\u00e4ten (", npe_fil, ") saknas, hoppar \u00f6ver\n")
     return(NULL)
   }
 
@@ -84,25 +84,89 @@ bearbeta_patientenkat <- function() {
       forandring = round(senaste_val - senaste_riket, 1)
     )
 
-    # Analystext
-    rank_text <- paste0("plats ", senaste_rank, " av ", n_regioner, " regioner")
-    rikt <- if (forandring > 0) "en \u00f6kning" else if (forandring < 0) "en minskning" else "of\u00f6r\u00e4ndrat"
-    f_str <- paste0(abs(forandring), " procentenheter")
-    jmf_riket <- if (senaste_val > senaste_riket) {
-      paste0(round(senaste_val - senaste_riket, 1), " procentenheter \u00f6ver rikssnittet")
-    } else if (senaste_val < senaste_riket) {
-      paste0(round(senaste_riket - senaste_val, 1), " procentenheter under rikssnittet")
-    } else "i niv\u00e5 med rikssnittet"
+    # Analystext: byggs i fyra steg
+    #  1) Position och niv\u00e5  2) M\u00e5ls\u00e4ttning  3) Utveckling  4) Relativt
+    namn_i      <- npe_meta$namn[i]
+    senaste_ar  <- tail(ar_vec, 1)
+    mal_i       <- mal_niva[[npe_meta$id[i]]]
+    val_str     <- round(senaste_val, 1)
+    rank_text   <- paste0("plats ", senaste_rank, " av ", n_regioner, " regioner")
 
-    analystext <- paste0(
-      npe_meta$namn[i], " ligger p\u00e5 ", round(senaste_val, 1),
-      " procent positiva svar (", rank_text, "), ",
-      jmf_riket, "."
-    )
-    if (forandring != 0) {
-      analystext <- paste0(analystext, " J\u00e4mf\u00f6rt med f\u00f6reg\u00e5ende m\u00e4tning \u00e4r det ",
-                           rikt, " med ", f_str, ".")
+    # (1) Position och niv\u00e5: niv\u00e5n (% positiva svar) + placering, formulerat efter status.
+    del_position <- if (signal == "gron") {
+      paste0(namn_i, " ligger p\u00e5 ", val_str,
+             " procent positiva svar vid ", senaste_ar, "-\u00e5rs m\u00e4tning och placerar Region Halland p\u00e5 ",
+             rank_text, ", vilket f\u00f6r regionen \u00e4r ett starkt utg\u00e5ngsl\u00e4ge.")
+    } else if (signal == "gul") {
+      paste0(namn_i, " ligger p\u00e5 ", val_str,
+             " procent positiva svar vid ", senaste_ar, "-\u00e5rs m\u00e4tning, vilket ger Region Halland ",
+             rank_text, ".")
+    } else {
+      paste0(namn_i, " ligger p\u00e5 ", val_str,
+             " procent positiva svar vid ", senaste_ar, "-\u00e5rs m\u00e4tning, en niv\u00e5 som ger Region Halland ",
+             rank_text, " och m\u00e5ste l\u00e4sas som ett f\u00f6rb\u00e4ttringsomr\u00e5de.")
     }
+
+    # (2) M\u00e5ls\u00e4ttning: j\u00e4mf\u00f6r niv\u00e5n mot det numeriska m\u00e5let (mal_niva, %).
+    del_mal <- if (is.null(mal_i) || is.na(mal_i)) {
+      ""
+    } else {
+      diff_mal <- round(senaste_val - mal_i, 1)
+      mal_str  <- paste0("m\u00e5lniv\u00e5n ", mal_i, " procent")
+      if (diff_mal >= 1) {
+        paste0(" Detta \u00e4r ", abs(diff_mal), " procentenheter \u00f6ver ", mal_str,
+               ", och m\u00e5ls\u00e4ttningen \u00e4r d\u00e4rmed uppn\u00e5dd med god marginal.")
+      } else if (diff_mal <= -1) {
+        paste0(" Detta ligger ", abs(diff_mal), " procentenheter under ", mal_str,
+               ", och m\u00e5ls\u00e4ttningen \u00e4r d\u00e4rmed \u00e4nnu inte n\u00e5dd.")
+      } else {
+        paste0(" Detta \u00e4r i linje med ", mal_str, ", och m\u00e5ls\u00e4ttningen kan betraktas som i allt v\u00e4sentligt uppfylld.")
+      }
+    }
+
+    # (3) Utveckling: niv\u00e5ns r\u00f6relse \u00f6ver perioden (f\u00f6rsta till senaste m\u00e4tningen),
+    #     annars f\u00f6r\u00e4ndring mot f\u00f6reg\u00e5ende m\u00e4tning. H\u00f6gre v\u00e4rde \u00e4r b\u00e4ttre.
+    del_utv <- if (length(halland_vals) >= 2) {
+      forsta_val <- round(halland_vals[1], 1)
+      forsta_ar  <- ar_vec[1]
+      diff_period <- round(senaste_val - forsta_val, 1)
+      if (abs(diff_period) < 0.5) {
+        paste0(" Sett \u00f6ver perioden fr\u00e5n ", forsta_ar, " till ", senaste_ar,
+               " har niv\u00e5n varit i huvudsak stabil kring ", val_str, " procent.")
+      } else if (diff_period > 0) {
+        paste0(" Sett \u00f6ver perioden har niv\u00e5n stigit, fr\u00e5n ", forsta_val, " procent ", forsta_ar,
+               " till ", val_str, " procent ", senaste_ar, ", en f\u00f6rb\u00e4ttring med ",
+               abs(diff_period), " procentenheter.")
+      } else {
+        paste0(" Sett \u00f6ver perioden har niv\u00e5n fallit, fr\u00e5n ", forsta_val, " procent ", forsta_ar,
+               " till ", val_str, " procent ", senaste_ar, ", en tillbakag\u00e5ng med ",
+               abs(diff_period), " procentenheter.")
+      }
+    } else {
+      ""
+    }
+
+    # (4) Relativt: relation till rikssnittet samt ranking-kontext bland regionerna.
+    diff_riket <- round(senaste_val - senaste_riket, 1)
+    jmf_riket <- if (diff_riket > 0) {
+      paste0("ligger Region Halland ", abs(diff_riket),
+             " procentenheter \u00f6ver rikssnittet p\u00e5 ", round(senaste_riket, 1), " procent")
+    } else if (diff_riket < 0) {
+      paste0("ligger Region Halland ", abs(diff_riket),
+             " procentenheter under rikssnittet p\u00e5 ", round(senaste_riket, 1), " procent")
+    } else {
+      paste0("ligger Region Halland i niv\u00e5 med rikssnittet p\u00e5 ", round(senaste_riket, 1), " procent")
+    }
+    rank_kontext <- if (senaste_rank <= g_gron) {
+      paste0(" och tillh\u00f6r de fr\u00e4msta regionerna i landet")
+    } else if (senaste_rank <= g_gul) {
+      paste0(" och placerar sig i det \u00f6vre skiktet bland regionerna")
+    } else {
+      paste0(" och har flera regioner framf\u00f6r sig i j\u00e4mf\u00f6relsen")
+    }
+    del_relativt <- paste0(" I en j\u00e4mf\u00f6relse med riket ", jmf_riket, rank_kontext, ".")
+
+    analystext <- paste0(del_position, del_mal, del_utv, del_relativt)
 
     # Riket-serie (streckad referenslinje)
     riket_serie <- lapply(seq_along(ar_vec), function(j) {
@@ -141,11 +205,11 @@ bearbeta_patientenkat <- function() {
   sek_analys <- if (n_rod == 0 && n_gul == 0) {
     "Patientenk\u00e4ten visar att Region Halland ligger bland de tre b\u00e4sta regionerna i samtliga dimensioner."
   } else if (n_rod == 0) {
-    "Patientenk\u00e4ten visar goda resultat \u00f6verlag, men enstaka dimensioner ligger utanf\u00f6r topp tre."
+    "Patientenk\u00e4ten visar goda resultat \u00f6verlag, \u00e4ven om enstaka dimensioner ligger utanf\u00f6r topp tre."
   } else {
     avvik_namn <- sapply(npe_kpier[sapply(npe_kpier, \(k) k$status == "rod")], \(k) k$namn)
     paste0("Patientenk\u00e4ten visar att ", paste(avvik_namn, collapse = " och "),
-           " kr\u00e4ver uppm\u00e4rksamhet \u2014 Halland hamnar utanf\u00f6r topp sju bland regionerna.")
+           " kr\u00e4ver s\u00e4rskild uppm\u00e4rksamhet, eftersom Region Halland h\u00e4r hamnar utanf\u00f6r topp sju bland regionerna.")
   }
 
   cat("Patientenk\u00e4ten tillagd i \u00e5rsvyn\n")
