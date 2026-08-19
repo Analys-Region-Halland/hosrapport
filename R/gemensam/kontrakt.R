@@ -49,6 +49,37 @@ validera_kontrakt <- function(res) {
       for (f in c("id", "namn", "analys")) if (!.kontrakt_skalar(s[[f]])) lagg(sp, ".", f, " saknas/NA")
       if (!is.list(s$kpier)) { lagg(sp, ".kpier är inte en lista (auto_unbox-risk)"); next }
 
+      # inledning (valfritt): redaktionell kontext, ETT stycke per element.
+      # Måste vara en lista även med ett enda stycke, annars kollapsar
+      # auto_unbox arrayen till en sträng och frontend renderar tecken för tecken.
+      if (!is.null(s$inledning)) {
+        if (!is.list(s$inledning)) {
+          lagg(sp, ".inledning är inte en lista (auto_unbox-risk)")
+        } else if (length(s$inledning) == 0) {
+          lagg(sp, ".inledning är tom")
+        } else {
+          for (pi in seq_along(s$inledning)) {
+            if (!.kontrakt_skalar(s$inledning[[pi]]))
+              lagg(sp, ".inledning[", pi, "] är inte ett textstycke")
+          }
+        }
+      }
+
+      # kallor / leverans (valfritt): källförteckning, array-av-objekt.
+      for (falt in c("kallor", "leverans")) {
+        if (is.null(s[[falt]])) next
+        if (!is.list(s[[falt]])) {
+          lagg(sp, ".", falt, " är inte en lista (auto_unbox-risk)")
+          next
+        }
+        for (qi in seq_along(s[[falt]])) {
+          q  <- s[[falt]][[qi]]
+          qp <- paste0(sp, ".", falt, "[", qi, "]")
+          for (f in c("namn", "huvudman", "typ", "om"))
+            if (!.kontrakt_skalar(q[[f]])) lagg(qp, ".", f, " saknas/NA")
+        }
+      }
+
       # delar (valfritt): tematiska undergrupper med egen översikt.
       # kpi_ids måste vara en lista (array-garanti) och referera befintliga KPI:er.
       if (!is.null(s$delar)) {

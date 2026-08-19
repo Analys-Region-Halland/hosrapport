@@ -14,8 +14,18 @@ import type { VyData, Section } from "../types";
 
 const BASE = import.meta.env.BASE_URL;
 
+/** Lätt sammanfattning per område i manifestet — underlaget för
+ *  startsidans områdeskort (full sektionsdata laddas först vid klick). */
+export interface SektionSummering {
+  id: string;
+  namn: string;
+  n_kpier: number;
+  n_delar: number;
+  status: { gron: number; gul: number; rod: number };
+}
+
 export interface ManifestEntry extends Omit<VyData, "sektioner"> {
-  sektioner: { id: string; namn: string }[];
+  sektioner: SektionSummering[];
 }
 export type Manifest = Record<string, ManifestEntry>;
 

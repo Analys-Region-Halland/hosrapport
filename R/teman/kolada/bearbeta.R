@@ -1,10 +1,20 @@
-# bearbeta.R — Kolada: Hälso- och sjukvårdsrapporten (SKR)
-# Läser data/kolada-hos.rds och bygger EN sektion ("skr") med sex tematiska
-# delar (SKR-rapportens indelning, se config.R). Varje del får en egen
-# översiktsanalys. Halland är fokus; ranking-baserade kvartilsignaler,
-# kontext_serier (övriga regioner) och riket_serie per indikator.
-# Returnerar en lista med en sektion (samma kontrakt som övriga teman).
-# Kräver: kolada_tema (R/teman/kolada/config.R), dplyr
+# bearbeta.R — Hälso- och sjukvårdsrapporten (SKR), ett kapitel per sektion
+#
+# Läser data/kolada-hos.rds och bygger SEX sektioner, en per kapitel i SKR:s
+# rapport (se config.R). Varje sektion är en fristående rapport:
+#   inledning  redaktionell kontext (ram + kapitlets egna stycken + läsanvisning)
+#   analys     bedömning av kapitlets läge, byggd av statusfördelningen
+#   delar      kapitlets tematiska avsnitt, med egen bedömning
+#   kallor     kapitlets primärkällor, en post per källa (kallor.R)
+#   kpier      indikatorerna, var och en med sin egen källa
+#
+# Halland är fokus. Rankingbaserade signaler, kontext_serier (övriga regioner)
+# och riket_serie per indikator. Returnerar en lista med sektioner (samma
+# kontrakt som övriga teman).
+#
+# Kräver: kolada_tema (config.R), källregistret (kallor.R), dplyr
+
+source("R/teman/kolada/kallor.R")
 
 bearbeta_kolada <- function() {
   fil <- kolada_tema$datakalla
@@ -13,7 +23,7 @@ bearbeta_kolada <- function() {
     return(NULL)
   }
 
-  cat("Bygger Hälso- och sjukvårdsrapporten (SKR)...\n")
+  cat("Bygger Hälso- och sjukvårdsrapportens kapitel...\n")
   kol <- readRDS(fil)
   fokus <- kolada_tema$fokus_region
   riket <- kolada_tema$riket_id
@@ -248,8 +258,13 @@ bearbeta_kolada <- function() {
       status      = status,
       status_fg   = status_fg,
       analystext  = analystext,
-      # Infoknappen: fullständig Kolada-titel + definition
+      # Infoknappen: fullständig Kolada-titel + definition.
+      # Em-strecket är separator, inte prosa: kortBeskrivning() i frontend
+      # delar på det för att slippa upprepa titeln i undertexten.
       beskrivning = paste0(meta$title, " — ", meta$description),
+      # Varifrån siffran faktiskt kommer: primärkälla + Koladas egen
+      # formulering ordagrant. Se R/teman/kolada/kallor.R.
+      kalla       = kalla_for_kpi(kpi_id, meta$description),
       tidsserie   = tidsserie,
       kontext_serier = kontext_serier
     )
@@ -282,71 +297,99 @@ bearbeta_kolada <- function() {
     else "ett i stort sett oförändrat läge jämfört med föregående år"
   }
 
-  del_analys <- function(namn, kpier) {
-    statusar <- vapply(kpier, function(k) k$status, character(1))
-    fg       <- vapply(kpier, function(k) k$status_fg %||% k$status, character(1))
-    n <- length(kpier)
-    n_gron <- sum(statusar == "gron"); n_gul <- sum(statusar == "gul"); n_rod <- sum(statusar == "rod")
-    d_gron <- n_gron - sum(fg == "gron"); d_rod <- n_rod - sum(fg == "rod")
-    paste0(namn, " omfattar ", n, " indikatorer. Av dessa är ", n_gron,
-           " i fas med målet topp ", g_gron, ", ", n_gul,
+  # Räkna status för en uppsättning KPI-objekt.
+  rakna <- function(kpier) {
+    s  <- vapply(kpier, function(k) k$status, character(1))
+    fg <- vapply(kpier, function(k) k$status_fg %||% k$status, character(1))
+    list(n = length(kpier),
+         gron = sum(s == "gron"), gul = sum(s == "gul"), rod = sum(s == "rod"),
+         d_gron = sum(s == "gron") - sum(fg == "gron"),
+         d_rod  = sum(s == "rod")  - sum(fg == "rod"))
+  }
+
+  # Bedömning av ett avsnitt inom ett kapitel.
+  avsnitt_analys <- function(namn, kpier) {
+    r <- rakna(kpier)
+    paste0(namn, " omfattar ", r$n, " indikatorer. Av dessa är ", r$gron,
+           " i fas med målet topp ", g_gron, ", ", r$gul,
            " ligger under bevakning (plats ", g_gron + 1, "–", g_gul,
-           ") och ", n_rod, " hamnar utanför (plats ", g_gul + 1,
-           " eller lägre). Sammantaget visar delen ",
-           bedom_nulage(n_gron, n_rod, n), ", och ", bedom_utveckling(d_gron, d_rod), ".")
+           ") och ", r$rod, " hamnar utanför (plats ", g_gul + 1,
+           " eller lägre). Sammantaget visar avsnittet ",
+           bedom_nulage(r$gron, r$rod, r$n), ", och ",
+           bedom_utveckling(r$d_gron, r$d_rod), ".")
   }
 
-  # ── Bygg delar i konfigurerad ordning + fånga oklassade ──
-  klassade <- unlist(lapply(kolada_tema$delar, function(d) d$kpier))
+  # Bedömning av ett helt kapitel.
+  kapitel_analys <- function(namn, kpier, n_avsnitt) {
+    r <- rakna(kpier)
+    paste0(namn, " jämför ", r$n, " indikatorer mellan regionerna, fördelade på ",
+           n_avsnitt, " avsnitt. Region Halland är i fas med målet topp ", g_gron,
+           " för ", r$gron, " indikatorer, ligger under bevakning för ", r$gul,
+           " och utanför för ", r$rod, ". Sammantaget visar kapitlet ",
+           bedom_nulage(r$gron, r$rod, r$n), ", och ",
+           bedom_utveckling(r$d_gron, r$d_rod), ".")
+  }
+
+  # ── Fånga indikatorer som inte placerats i något kapitel ──
+  klassade <- unlist(lapply(kolada_tema$kapitel, skr_kapitel_kpier))
   oklassade <- setdiff(kol$indikatorer$id, klassade)
-  del_lista <- kolada_tema$delar
+  kapitel_lista <- kolada_tema$kapitel
   if (length(oklassade) > 0) {
-    cat("  OBS: ", length(oklassade), " oklassade KPI:er läggs i Övrigt: ",
+    cat("  OBS: ", length(oklassade), " oklassade indikatorer läggs i ett eget kapitel: ",
         paste(oklassade, collapse = ", "), "\n", sep = "")
-    del_lista <- c(del_lista, list(list(id = "ovrigt", namn = "Övrigt",
-                                        kpier = oklassade)))
+    kapitel_lista <- c(kapitel_lista, list(list(
+      id = "skr-ovrigt",
+      namn = "Övriga indikatorer",
+      inledning = paste0(
+        "Kapitlet samlar de indikatorer i Koladas KPI-grupp som ännu inte ",
+        "placerats i något av rapportens kapitel. De visas här i stället för ",
+        "att tyst utelämnas, och flyttas när indelningen har uppdaterats."),
+      delar = list(list(id = "ovrigt-oklassade", namn = "Oklassade indikatorer",
+                        kpier = oklassade))
+    )))
   }
 
-  alla_kpier <- list()
-  delar <- list()
-  for (del in del_lista) {
-    kpier <- Filter(Negate(is.null), lapply(del$kpier, bygg_kpi))
-    if (length(kpier) == 0) next
-    statusar <- vapply(kpier, function(k) k$status, character(1))
-    delar[[length(delar) + 1]] <- list(
-      id      = del$id,
-      namn    = del$namn,
-      analys  = del_analys(del$namn, kpier),
-      # as.list: garantera JSON-array även för en ensam KPI (auto_unbox)
-      kpi_ids = as.list(vapply(kpier, function(k) k$id, character(1)))
+  # ── Bygg en sektion per kapitel ──
+  sektioner <- list()
+  for (kap in kapitel_lista) {
+    kap_kpier <- list()
+    delar <- list()
+
+    for (avsnitt in kap$delar) {
+      kpier <- Filter(Negate(is.null), lapply(avsnitt$kpier, bygg_kpi))
+      if (length(kpier) == 0) next
+      delar[[length(delar) + 1]] <- list(
+        id      = avsnitt$id,
+        namn    = avsnitt$namn,
+        analys  = avsnitt_analys(avsnitt$namn, kpier),
+        # as.list: garantera JSON-array även för ett ensamt id (auto_unbox)
+        kpi_ids = as.list(vapply(kpier, function(k) k$id, character(1)))
+      )
+      kap_kpier <- c(kap_kpier, kpier)
+    }
+    if (length(kap_kpier) == 0) next
+
+    # Inledning: gemensam ram, kapitlets egna stycken, gemensam läsanvisning.
+    # as.list ger en JSON-array även när kapitlet bara har ett eget stycke.
+    inledning <- as.list(c(SKR_RAM, kap$inledning, SKR_LASANVISNING))
+
+    r <- rakna(kap_kpier)
+    sektioner[[length(sektioner) + 1]] <- list(
+      id        = kap$id,
+      namn      = kap$namn,
+      analys    = kapitel_analys(kap$namn, kap_kpier, length(delar)),
+      inledning = inledning,
+      kallor    = kallforteckning(skr_kapitel_kpier(kap)),
+      leverans  = SKR_VIA,
+      kpier     = kap_kpier,
+      delar     = delar
     )
-    alla_kpier <- c(alla_kpier, kpier)
-    cat(sprintf("  %s: %d indikatorer (%d grön, %d gul, %d röd)\n",
-                del$namn, length(kpier), sum(statusar == "gron"),
-                sum(statusar == "gul"), sum(statusar == "rod")))
+
+    cat(sprintf("  %-24s %2d indikatorer i %d avsnitt (%d grön, %d gul, %d röd)\n",
+                kap$id, r$n, length(delar), r$gron, r$gul, r$rod))
   }
 
-  # Sektionsövergripande analys — konstaterande + bedömning, ingen uppräkning
-  statusar <- vapply(alla_kpier, function(k) k$status, character(1))
-  fg_alla  <- vapply(alla_kpier, function(k) k$status_fg %||% k$status, character(1))
-  n_gron_t <- sum(statusar == "gron"); n_gul_t <- sum(statusar == "gul"); n_rod_t <- sum(statusar == "rod")
-  sek_analys <- paste0(
-    "Hälso- och sjukvårdsrapporten jämför ", length(alla_kpier),
-    " indikatorer mellan regionerna, indelade i ", length(delar), " delar. ",
-    "Region Halland är i fas med målet topp ", g_gron, " för ", n_gron_t,
-    " indikatorer, ligger under bevakning för ", n_gul_t,
-    " och utanför för ", n_rod_t,
-    ". Sammantaget visar rapporten ", bedom_nulage(n_gron_t, n_rod_t, length(alla_kpier)),
-    ", och ", bedom_utveckling(n_gron_t - sum(fg_alla == "gron"),
-                               n_rod_t - sum(fg_alla == "rod")), ".")
-
-  cat("Hälso- och sjukvårdsrapporten (SKR) tillagd i årsvyn\n")
-
-  list(list(
-    id     = kolada_tema$id,
-    namn   = kolada_tema$namn,
-    analys = sek_analys,
-    kpier  = alla_kpier,
-    delar  = delar
-  ))
+  cat("Hälso- och sjukvårdsrapporten: ", length(sektioner),
+      " kapitel tillagda i årsvyn\n", sep = "")
+  sektioner
 }

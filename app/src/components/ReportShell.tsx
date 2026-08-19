@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { VyData, KpiData, Scope } from "../types";
 import { loadView, loadManifest } from "../data/load";
+import { VY_ORDNING, DEFAULT_VY, giltigaVyer, oppningsVy, type VyId } from "../utils/vyval";
 import ReportView from "./ReportView";
 import ChartModal from "./ChartModal";
 
@@ -9,19 +10,14 @@ import ChartModal from "./ChartModal";
 //  vyer som är giltiga för valt sakområde. Matar den befintliga
 //  ReportView med färdig VyData. Tidsperioden väljs alltså HÄR inne,
 //  inte globalt eller på startsidan.
+//
+//  Vilken vy rapporten ÖPPNAS i avgörs av utils/vyval.ts, som startsidan
+//  också använder för sina siffror. Ändra regeln där, inte här.
 // ════════════════════════════════════════════════════════════
 
-type VyId = "dag" | "vecka" | "manad" | "kvartal" | "ar";
-
-const VYER: { id: VyId; text: string }[] = [
-  { id: "dag", text: "Dag" },
-  { id: "vecka", text: "Vecka" },
-  { id: "manad", text: "Månad" },
-  { id: "kvartal", text: "Kvartal" },
-  { id: "ar", text: "År" },
-];
-
-const DEFAULT_VY: VyId = "manad";
+const VY_TEXT: Record<VyId, string> = {
+  dag: "Dag", vecka: "Vecka", manad: "Månad", kvartal: "Kvartal", ar: "År",
+};
 
 interface Props {
   scope: Scope;
@@ -36,25 +32,16 @@ export default function ReportShell({ scope, onBack }: Props) {
   const [chartKpi, setChartKpi] = useState<KpiData | null>(null);
 
   // Vilka vyer innehåller valt sakområde? ("alla" → samtliga vyer.)
-  const [tillgangligaVyer, setTillgangligaVyer] = useState<VyId[]>(VYER.map((v) => v.id));
+  const [tillgangligaVyer, setTillgangligaVyer] = useState<VyId[]>([...VY_ORDNING]);
 
-  // Bestäm giltiga vyer för scope och justera aktivVy om den saknar området.
+  // Bestäm giltiga vyer för scope och öppna rapporten i vyval.ts vy.
   useEffect(() => {
     let cancelled = false;
     loadManifest().then((manifest) => {
       if (cancelled) return;
-      const giltiga = VYER.map((v) => v.id).filter((vy) => {
-        const m = manifest[vy];
-        if (!m) return false;
-        return scope === "alla" || m.sektioner.some((s) => s.id === scope);
-      });
-      setTillgangligaVyer(giltiga);
-      // Om nuvarande vy inte rymmer området: byt till default om möjligt, annars första giltiga.
-      setAktivVy((nuvarande) =>
-        giltiga.includes(nuvarande)
-          ? nuvarande
-          : giltiga.includes(DEFAULT_VY) ? DEFAULT_VY : (giltiga[0] ?? nuvarande),
-      );
+      setTillgangligaVyer(giltigaVyer(manifest, scope));
+      const oppna = oppningsVy(manifest, scope);
+      if (oppna) setAktivVy(oppna);
     }).catch(() => { /* fel hanteras av loadView nedan */ });
     return () => { cancelled = true; };
   }, [scope]);
@@ -72,7 +59,7 @@ export default function ReportShell({ scope, onBack }: Props) {
 
   const bytVy = (vy: string) => { setAktivVy(vy as VyId); setVisaDagar(false); };
 
-  const vyItems = VYER.map((v) => ({ id: v.id, label: v.text, disabled: !tillgangligaVyer.includes(v.id) }));
+  const vyItems = VY_ORDNING.map((v) => ({ id: v, label: VY_TEXT[v], disabled: !tillgangligaVyer.includes(v) }));
 
   return (
     <>

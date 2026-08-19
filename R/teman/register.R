@@ -5,22 +5,26 @@
 #   1. source("R/teman/{namn}/config.R")
 #   2. Lägg till i alla_teman
 #   3. Klar.
+#
+# URVALSPRINCIP (2026-08-19): rapporten är SKR:s Hälso- och sjukvårdsrapport,
+# uppdelad så att vart och ett av dess sex kapitel är en egen rapport. Kolada
+# bär därmed hela den öppna delen. Akutflödet är kvar som ENDA exempel på ett
+# internt område, så att formatet för verksamhetsnära dygnsdata finns att se
+# och bygga vidare på, och ligger sist.
+#
+# Tidigare områden (befolkning, folkhälsa, ekonomi) och sedan länge vilande
+# teman (primärvård, slutenvård, personal, patientenkät) ligger i R/arkiv/.
+# Se R/arkiv/README.md för hur ett tema återinförs.
 
-source("R/teman/primarvard/config.R")
 source("R/teman/akutflode/config.R")
-source("R/teman/slutenvard/config.R")
-source("R/teman/personal/config.R")
 source("R/teman/kolada/config.R")
-source("R/teman/folkhalsa/config.R")
-source("R/teman/befolkning/config.R")
-source("R/teman/ekonomi/config.R")
 
 # Teman med daglig data (conformal prediction).
 # Ordningen här styr visningsordningen i rapporten.
-dagliga_teman <- list(primarvard, akutflode, slutenvard, personal)
+dagliga_teman <- list(akutflode)
 
-# Alla teman (inklusive specialfall som Kolada- och FoHM-årsindikatorerna)
-alla_teman <- c(dagliga_teman, list(kolada_tema, folkhalsa_tema, befolkning_tema, ekonomi_tema))
+# Alla teman (inklusive specialfall som Kolada-årsindikatorerna)
+alla_teman <- c(dagliga_teman, list(kolada_tema))
 
 # ── kpi_meta: en rad per KPI med sektion-info ──
 kpi_meta <- bind_rows(lapply(dagliga_teman, function(tema) {

@@ -1,5 +1,29 @@
 // ── Data ──
 
+/** Varifrån en indikator kommer, bortom leveranskanalen.
+ *  Byggs i R/teman/kolada/kallor.R. */
+export interface Kalla {
+  /** Nyckel i källregistret, t.ex. "riksstroke". "okand" = ej klassificerad. */
+  id: string;
+  /** Källans namn så som den ska stå i rapporten. */
+  namn: string;
+  /** Vem som ansvarar för källan. */
+  huvudman: string;
+  /** Sorts källa, t.ex. "Nationellt kvalitetsregister". */
+  typ: string;
+  /** Vad källan är och vad den innebär för tolkningen. */
+  om: string;
+  url?: string;
+  /** Koladas egen källformulering, ordagrant ur indikatorbeskrivningen. */
+  kolada_kalla?: string;
+}
+
+/** Källa i en rapports källförteckning: som Kalla, plus hur många
+ *  indikatorer i rapporten som vilar på den. */
+export interface KallaRef extends Omit<Kalla, "kolada_kalla"> {
+  n_indikatorer?: number;
+}
+
 export interface TidsseriePoint {
   period: string;
   etikett: string;
@@ -45,6 +69,8 @@ export interface KpiData {
   analys_rubrik?: string;
   /** Statistisk definition och beskrivning av indikatorn */
   beskrivning?: string;
+  /** Indikatorns primärkälla (register, enkät, inrapportering). */
+  kalla?: Kalla;
   /** Målnivå — ritas som horisontell referenslinje i grafen. */
   malniva?: number;
   /** Placering bland regionerna senaste året (ranking-indikatorer, t.ex. SKR). */
@@ -94,6 +120,13 @@ export interface Section {
   analys: string;
   /** Kort, status-härledd rubrik för sektionens AI-analys (se KpiData.analys_rubrik). */
   analys_rubrik?: string;
+  /** Redaktionell inledning, ett stycke per element. Sätter rapporten i
+   *  sitt sammanhang innan siffrorna kommer. */
+  inledning?: string[];
+  /** Rapportens primärkällor, en post per källa. */
+  kallor?: KallaRef[];
+  /** Leveranskedjan siffrorna passerar (Vården i siffror, Kolada). */
+  leverans?: KallaRef[];
   kpier: KpiData[];
   /** Tematiska delar med egen översikt (t.ex. SKR-rapportens indelning).
    *  kpi_ids refererar till kpier; KPI:er utan del renderas som vanligt. */

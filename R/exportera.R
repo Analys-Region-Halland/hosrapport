@@ -4,6 +4,11 @@
 #   app/public/data/index.json          — manifest: vy-metadata + sektionslista
 #   app/public/data/{vy}-{sektion}.json  — en sektions fulla innehåll
 # (app/public/ serveras av Vite i både dev och build.)
+#
+# Manifestets sektionsposter bär även en LÄTT SAMMANFATTNING per område
+# (antal indikatorer, statusfördelning, antal delar). Startsidan bygger sina
+# områdeskort på den, och slipper därmed ladda megabyte av sektionsdata bara
+# för att visa en översikt.
 source("paket.R")
 source("R/gemensam/kontrakt.R")
 
@@ -27,15 +32,32 @@ skriv_json <- function(obj, fil) {
   )
 }
 
+# ── Sammanfattning av en sektion, för manifestet ──
+# Håll den liten: bara det startsidans områdeskort faktiskt visar.
+sammanfatta_sektion <- function(s) {
+  status <- vapply(s$kpier, function(k) k$status, character(1))
+  list(
+    id       = s$id,
+    namn     = s$namn,
+    n_kpier  = length(s$kpier),
+    n_delar  = if (is.null(s$delar)) 0L else length(s$delar),
+    status   = list(
+      gron = sum(status == "gron"),
+      gul  = sum(status == "gul"),
+      rod  = sum(status == "rod")
+    )
+  )
+}
+
 vyer <- c("dag", "vecka", "manad", "kvartal", "ar")
 manifest <- list()
 n_filer <- 0L
 
 for (vyn in vyer) {
   v <- resultat[[vyn]]
-  # Vy-metadata = allt utom sektioner; sektionslista (id+namn) för manifestet
+  # Vy-metadata = allt utom sektioner; sektionslista (id+namn+summering)
   meta <- v[setdiff(names(v), "sektioner")]
-  meta$sektioner <- lapply(v$sektioner, function(s) list(id = s$id, namn = s$namn))
+  meta$sektioner <- lapply(v$sektioner, sammanfatta_sektion)
   manifest[[vyn]] <- meta
 
   # En fil per sektion

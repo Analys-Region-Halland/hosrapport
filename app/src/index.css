@@ -110,20 +110,268 @@
 }
 
 /* ════════════════════════════════════════════
-   StartScreen — områdeskort
+   StartScreen — omslag, hero och områdeskort
+
+   Editoriellt, inte dashboard: sylvassa hörn, ingen skugga, grön spine
+   som enda strukturlinje. Hover ger färg och rörelse, aldrig lyft.
    ════════════════════════════════════════════ */
-.start-card {
-  transition: box-shadow .18s, border-color .18s, transform .18s;
+
+/* ── Kolofon: sifferraden under masthead ── */
+.start-colophon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 44px;
+  border-top: 2px solid var(--brand-700);
+  padding-top: 16px;
 }
-.start-card:hover {
-  box-shadow: var(--sh-hover);
-  transform: translateY(-2px);
+.start-colophon__num {
+  font-family: var(--font-mono);
+  font-size: 25px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1.1;
 }
-.start-card:not(.start-card--hero):hover {
-  border-color: #c4c4be;
+.start-colophon__lbl {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .13em;
+  color: var(--muted);
+  margin-top: 4px;
 }
-.start-card:hover .start-arrow {
-  transform: translateX(4px);
+
+/* ── Hero: hela rapporten ── */
+.start-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: var(--brand-700);
+  border: none;
+  border-radius: 0;
+  padding: 26px 28px;
+  color: #fff;
+  font-family: var(--font-sans);
+  transition: background .18s;
+}
+.start-hero:hover { background: #005741; }
+.start-hero:hover .start-arrow { transform: translateX(5px); }
+.start-hero:focus-visible,
+.start-area:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+/* ── Avdelning: kategorirubrik + dess kort ──
+   Avgränsaren mellan rapportgrupper. Grön topplinje + kicker + serif-titel,
+   samma editoriella språk som delrubrikerna inne i rapporten (.del-plate).
+   Generöst vitrum ovanför gruppen gör gränsen, inte ett kortomslag. */
+.start-group { margin-top: 46px; }
+.start-group:first-of-type { margin-top: 40px; }
+
+.start-group__head {
+  border-top: 2px solid var(--brand-700);
+  padding-top: 14px;
+  margin-bottom: 18px;
+}
+.start-group__rad {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.start-group__kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  color: var(--brand-700);
+}
+.start-group__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: #a9ada8;
+  white-space: nowrap;
+}
+.start-group__namn {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -.018em;
+  line-height: 1.18;
+  color: var(--ink);
+}
+.start-group__text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #5c6360;
+  max-width: 62ch;
+}
+
+/* ── Områdeskort ── */
+.start-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 216px 26px;
+  gap: 0 32px;
+  align-items: start;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--brand-700);
+  border-radius: 0;
+  padding: 22px 24px 20px 25px;
+  transition: border-color .18s, background .18s;
+}
+.start-area + .start-area { margin-top: -1px; }
+/* Sifferspalten börjar i höjd med den stora titeln, inte med folioraden. */
+.start-area__status { padding-top: 30px; }
+.start-area:hover {
+  border-color: #b9bdb6;
+  border-left-color: var(--brand-500);
+  background: #fcfdfc;
+}
+.start-area:hover .start-area__namn { color: var(--brand-700); }
+.start-area:hover .start-arrow { transform: translateX(5px); }
+
+.start-area__folio {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4c4be;
+}
+/* Serieuppgift: vilket kapitel i vilken publikation kortet är. Mono, så att
+   den läses som en katalogbeteckning och inte konkurrerar med titeln. */
+.start-area__serie {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--brand-700);
+}
+.start-area__namn {
+  font-family: var(--font-serif);
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+  color: var(--ink);
+  transition: color .18s;
+}
+.start-area__text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #5c6360;
+  max-width: 60ch;
+}
+
+/* Datatypsmärke — öppen källa vs regionens egna system */
+.start-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 3px 7px;
+  border: 1px solid var(--hairline);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.start-tag[data-typ="intern"] {
+  border-color: rgba(0,102,77,.28);
+  color: var(--brand-700);
+  background: rgba(227,244,226,.45);
+}
+
+/* Notis när datan ännu inte är skarp */
+.start-notis {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #8A5E12;
+  border-left: 2px solid var(--sig-gul);
+  padding-left: 9px;
+}
+
+/* Faktarad: källa / takt / jämförelse */
+.start-fakta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 26px;
+  border-top: 1px solid #f0f0ec;
+  padding-top: 12px;
+}
+.start-fakta__lbl {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: #a8ada7;
+  margin-bottom: 3px;
+}
+.start-fakta__val {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #444;
+}
+
+/* ── Statuspanel: mätare + legend ── */
+.start-meter {
+  display: flex;
+  height: 5px;
+  background: #ececea;
+  overflow: hidden;
+}
+.start-meter > span { display: block; height: 100%; }
+.start-meter--hero { background: rgba(255,255,255,.18); }
+.start-status__tal {
+  font-family: var(--font-mono);
+  font-size: 27px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1;
+}
+.start-status__enhet {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.start-status__rad {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.start-arrow {
+  flex-shrink: 0;
+  display: inline-flex;
+  transition: transform .18s;
+}
+
+@media (max-width: 780px) {
+  .start-area {
+    grid-template-columns: minmax(0, 1fr) 26px;
+    gap: 0 16px;
+  }
+  .start-area__status { grid-column: 1 / -1; margin-top: 18px; padding-top: 0; }
+  .start-hero { flex-direction: column; align-items: flex-start; gap: 20px; }
 }
 
 /* ════════════════════════════════════════════
@@ -230,6 +478,121 @@
   box-shadow: none;
 }
 .indicator-card:last-child { margin-bottom: 0; }
+
+/* ── Inledning — redaktionell kontext före siffrorna.
+   Sätts som brödtext på pappret: serif, generös radhöjd, smal spaltbredd.
+   Ingen ram och ingen platta; en grön hårlinje under blocket avgränsar mot
+   översikten, i samma språk som resten av rapporten. */
+/* Vitrum avgränsar mot översikten — ingen grå linje, i linje med rapportens
+   övriga språk där bara grönt bär struktur. */
+.report-lead {
+  margin: 0 0 44px;
+  max-width: 660px;
+}
+.report-lead__label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--brand-700);
+  margin-bottom: 12px;
+}
+.report-lead__ingress {
+  margin: 0 0 14px;
+  font-size: 18px;
+  line-height: 1.62;
+  color: #33383a;
+}
+.report-lead__text {
+  margin: 0 0 13px;
+  font-size: 16px;
+  line-height: 1.72;
+  color: #4a4f50;
+}
+.report-lead__text:last-child { margin-bottom: 0; }
+
+/* ── Källrad i indikatorkortet — ursprunget, inte leveranskanalen ── */
+.indicator-kalla {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 16px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.indicator-kalla__lbl {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: #b4b8b2;
+}
+.indicator-kalla__val { color: #4a4f50; }
+.indicator-kalla__val a { color: var(--brand-700); text-decoration: none; }
+.indicator-kalla__val a:hover { text-decoration: underline; }
+.indicator-kalla__typ { color: #9aa09b; }
+.indicator-kalla__kolada {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: #a9ada8;
+}
+
+/* ── Källförteckning sist i rapporten ── */
+.report-sources { margin-top: 56px; }
+.report-sources__label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--brand-700);
+  margin-bottom: 14px;
+}
+/* Källposterna avgränsas av vitrum och sin egen rubrik, inte av linjer. */
+.report-source {
+  max-width: 680px;
+  margin-bottom: 26px;
+}
+.report-source:last-child { margin-bottom: 0; }
+.report-source__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.report-source__namn {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.008em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.report-source__namn a { color: inherit; text-decoration: none; }
+.report-source__namn a:hover { color: var(--brand-700); text-decoration: underline; }
+.report-source__antal {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: #b4b8b2;
+  white-space: nowrap;
+}
+.report-source__meta {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: #8f948f;
+  margin: 3px 0 7px;
+}
+.report-source__om {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #4a4f50;
+}
 
 /* ════════════════════════════════════════════
    Rapport: textblock (AI + anteckning) + infogningsrad

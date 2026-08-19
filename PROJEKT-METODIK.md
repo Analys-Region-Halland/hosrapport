@@ -21,29 +21,16 @@ R/
 │   └── demo-data.R              # Syntetisk demodata (ersätts med API i produktion)
 ├── teman/                       # En mapp per sektion — här läggs nya sektioner till
 │   ├── register.R               # Samlar alla configs → kpi_meta, dept_config
-│   ├── primarvard/
-│   │   └── config.R             # KPI-definitioner: pv_besok, digital_kontakt, telefon_svar
 │   ├── akutflode/
 │   │   └── config.R             # KPI-definitioner: beläggning, akutbesök, väntetid, ambulans
-│   ├── slutenvard/
-│   │   └── config.R             # KPI-definitioner: inläggningar, utskrivningsklara
-│   ├── personal/
-│   │   └── config.R             # KPI-definitioner: sjukfrånvaro, övertid, inhyrd
-│   ├── patientenkat/            # (urkopplad — ersatt av kolada/)
-│   │   ├── config.R             # NPE-dimensioner (helhetsintryck, respekt, etc.)
-│   │   └── bearbeta.R           # Läser Excel, beräknar ranking-signaler
-│   ├── kolada/
-│   │   ├── config.R             # Koladas HoS-rapport: sektioner (Koladas indelning), riktning per KPI
-│   │   └── bearbeta.R           # Läser data/kolada-hos.rds, kvartilranking med Halland i fokus
-│   ├── folkhalsa/
-│   │   ├── config.R             # FoHM: delar = folkhälsopolitikens 8 målområden + hälsoutfall
-│   │   └── bearbeta.R           # Wrapper över gemensam/ranking-tema.R
-│   ├── befolkning/
-│   │   ├── config.R             # SCB/FK/Kolada: demografi, behovsindex, ohälsa
-│   │   └── bearbeta.R           # Wrapper över gemensam/ranking-tema.R
-│   └── ekonomi/
-│       ├── config.R             # Kolada: nettokostnad, behovsjusterad avvikelse, DRG
-│       └── bearbeta.R           # Wrapper över gemensam/ranking-tema.R
+│   └── kolada/                  # SKR:s HoS-rapport — SEX sektioner, ett kapitel var
+│       ├── config.R             # Kapitel, avsnitt, inledningstexter, riktning per KPI
+│       ├── kallor.R             # Källregister: primärkälla per indikator + leveranskedja
+│       └── bearbeta.R           # Läser data/kolada-hos.rds, rankingsignaler med Halland i fokus
+├── arkiv/                       # Temporärt urkopplat — sourcas inte, syns inte
+│   ├── README.md                # Vad som ligger här och hur ett tema återinförs
+│   ├── teman/{befolkning,folkhalsa,ekonomi,patientenkat,personal,primarvard,slutenvard}/
+│   └── hamta/{befolkning-vardbehov,fohm-folkhalsa,kolada-ekonomi}.R
 ├── gemensam/                    # Delade moduler (inget beroende sinsemellan)
 │   ├── helgdagar.R              # Svensk kalender (röda dagar, klämdagar, skollov)
 │   ├── signal-modell.R          # GLM + conformal: kor_kpi_signal (produktion), kor_signal (diagnostik)
@@ -60,17 +47,24 @@ R/
 
 1. Skapa `R/teman/{namn}/config.R` med id, namn, kpier (tibble), avdelningar (lista)
 2. Lägg till `source("R/teman/{namn}/config.R")` i `R/teman/register.R`
-3. Lägg till temat i `dagliga_teman` (eller som specialfall likt patientenkäten)
-4. Lägg in området i taxonomin: `app/src/taxonomy.ts` (kategori + beskrivning;
-   områden utan data ligger kvar som `planerad: true` tills pipelinen levererar)
+3. Lägg till temat i `dagliga_teman` (eller som specialfall likt Kolada-temat)
+4. Lägg in området i taxonomin: `app/src/taxonomy.ts`, under rätt kategori
 5. Klar — bearbeta.R plockar upp nya KPI:er automatiskt via kpi_meta
+
+Att återinföra ett arkiverat tema är samma sak baklänges: se `R/arkiv/README.md`.
 
 ### Områdesindelning (taxonomi)
 
-Rapportens kategorier och områden (aktiva + planerade) definieras i
-`app/src/taxonomy.ts` — startsidans kategoriboxar, rapportens kategorietiketter
-och TOC-grupperingen läser alla därifrån. Researchunderlag och motivering:
-`docs/omradesindelning.md`.
+Rapportens kategorier och områden definieras i `app/src/taxonomy.ts` —
+startsidans avdelningsrubriker, rapportens kategorietiketter och
+TOC-grupperingen läser alla därifrån. **Taxonomin innehåller bara områden med
+faktisk data:** ett område i taxonomin som saknas i manifestet visas inte, och
+ett område i manifestet utan taxonomipost hamnar under "Övrigt" (säkerhetsnät i
+`StartScreen.tsx`). Sedan 2026-08-19 är indelningen fyra kategorier: Patienten
+och tillgängligheten, Vårdens kvalitet och säkerhet, Resultat och resurser samt
+Interna uppföljningsexempel. De tre första rymmer SKR-rapportens sex kapitel
+parvis, den fjärde akutflödet. Researchunderlag till den tidigare, bredare
+indelningen: `docs/omradesindelning.md`.
 
 ### Pipeline-flöde
 
@@ -222,27 +216,43 @@ Dag-vyn (standalone) visar referenslinje från föregående år (streckad grå) 
 
 ### Särskilda årsindikatorer
 
-Vissa indikatorer har bara årsdata och saknar dygnsunderlag. Sedan 2026-06 är det **Koladas Hälso- och sjukvårdsrapport** (KPI-grupp `G2KPI138906`, 76 indikatorer) som utgör helårsdelen — den ersatte den tidigare Patientenkät-sektionen (`R/teman/patientenkat/` finns kvar urkopplad). Dessa indikatorer:
+Vissa indikatorer har bara årsdata och saknar dygnsunderlag. Sedan 2026-06 är det **Koladas Hälso- och sjukvårdsrapport** (KPI-grupp `G2KPI138906`, 76 indikatorer) som utgör helårsdelen. **Sedan 2026-08-19 ÄR den rapporten:** dess sex kapitel är uppdelade i sex egna sektioner som ersatte de tidigare områdena (befolkning, folkhälsa, ekonomi → `R/arkiv/`). Dessa indikatorer:
 
-- Finns bara i **årsvyn** (`ar`), som **EN sektion** `skr` ("Hälso- och
-  sjukvårdsrapporten (SKR)" — ett kort på huvudsidan) med **sex tematiska
-  delar** via sektionsfältet `delar` (samma indelning som SKR-rapporten i
-  Jämföraren): Patienters och befolkningens syn på vården, Tillgänglighet och
-  väntetider, Säker vård, Kunskapsbaserad vård och måluppfyllelse,
-  Sjukdomsförekomst och resultat, Kostnader och produktivitet
-- Varje del har **egen översiktsanalys** (`delar[].analys`); frontend renderar
-  delrubrik (`.del-plate`) + ett integrerat översiktskort (räknare: antal/inom
-  förväntat/utanför + AI-analys + delens egen signalöversikt) + indikatorkort
-  per del, och nästlar TOC:n (`delSektioner()` i `ReportView.tsx`). Den stora
-  heatmapen överst i rapporten utelämnar sektioner med delar.
+- Finns bara i **årsvyn** (`ar`), som **SEX sektioner** (ett kort var på
+  startsidan): `skr-syn-pa-varden`, `skr-tillganglighet`, `skr-saker-vard`,
+  `skr-kunskapsbaserad`, `skr-sjukdomsforekomst`, `skr-kostnader`. Akutflödet
+  ligger sist i sektionsordningen som enda interna område.
+- Varje kapitel har **tematiska avsnitt** via sektionsfältet `delar` (2–5 per
+  kapitel: stroke, hjärta, diabetes, cancer och så vidare), var och en med egen
+  bedömning (`delar[].analys`).
+- Varje kapitel har dessutom tre redaktionella fält som kontraktet validerar:
+  - `inledning` — array av stycken. Byggs i `bearbeta.R` som
+    `SKR_RAM` + kapitlets egna stycken + `SKR_LASANVISNING` (de två gemensamma
+    ligger i `config.R`). Renderas som `.report-lead` **bara i den fristående
+    rapporten**; i helhetsvyn skulle sex inledningar upprepa samma ram.
+  - `kallor` — primärkällorna kapitlet vilar på, en post per källa med antal
+    indikatorer, från `kallforteckning()` i `kallor.R`.
+  - `leverans` — leveranskedjan (Vården i siffror, Kolada), samma form.
+- Varje indikator har `kalla`: primärkälla (namn, huvudman, typ, `om`, url) plus
+  `kolada_kalla`, Koladas egen källformulering **ordagrant**. Attributionen går
+  därmed alltid att granska mot ursprungstexten. Tilldelningarna finns i
+  `SKR_KPI_KALLA` (`R/teman/kolada/kallor.R`), där de som går utöver Koladas
+  text är märkta `TOLKAD`.
+- Frontend renderar per kapitel: inledning → **en** signalöversikt på
+  kapitelnivå (räknare + bedömning + remsa grupperad per avsnitt,
+  `KapitelOversikt`) → avsnitt (`.del-plate` + bedömning + indikatorkort) →
+  källförteckning. Signalremsan bor på kapitelnivå och **inte** per avsnitt,
+  annars upprepas samma remsa fyra gånger i rad. TOC:n nästlas via
+  `delSektioner()` i `ReportView.tsx`; den stora heatmapen överst utelämnar
+  sektioner med delar.
 - Indikatornamn förkortas för visning (enhets-/årssuffix trimmas i
   `kort_namn()`, manuella undantag i config `kortnamn`); fullständig
   Kolada-titel + definition ligger i `beskrivning` (infoknappen)
 - Jämförarens grupperingsträd är **inte** åtkomligt via öppna API:t (403) —
-  tilldelningen KPI → del underhålls manuellt i `R/teman/kolada/config.R`;
-  oklassade KPI:er hamnar i en automatisk "Övrigt"-del i stället för att tyst
-  försvinna, och kontraktet validerar att `delar[].kpi_ids` refererar
-  befintliga KPI:er
+  tilldelningen indikator → kapitel och avsnitt underhålls manuellt i
+  `R/teman/kolada/config.R`; oklassade indikatorer hamnar i ett automatiskt
+  kapitel `skr-ovrigt` i stället för att tyst försvinna, och kontraktet
+  validerar att `delar[].kpi_ids` refererar befintliga KPI:er
 - Har **ingen** conformal prediction — signalen baseras på Hallands ranking
   bland regionerna per år: **i fas = topp 3**, bevaka = plats 4–7, avvikelse =
   plats 8 eller lägre (trösklar i config `ranking$grans_gron`/`grans_gul`)
@@ -467,7 +477,7 @@ source("R/test-signal.R")         # fristående signaltest → data/signal-test-
 - ✅ **Åtgärdat (Fas 2):** ~~Två signalpipelines~~ — `kor_kpi_signal()` (produktion) och `kor_signal()` (diagnostik) är nu tydligt avgränsade och dokumenterade i `signal-modell.R`; delar samma kärna.
 - ✅ **Åtgärdat (Fas 2):** ~~`bearbeta.R`-monolit~~ — generisk bygg-logik utbruten till `R/gemensam/bygg-sektion.R` (ctx-mönster, inga closure-beroenden).
 - ✅ **Åtgärdat (Fas 2):** ~~NPE-ranking hårdkodad för 21 regioner~~ — antal regioner härleds från datan; trösklar i `patientenkat`-config (`signal_typ="ranking"`).
-- **NPE-ranking hårdkodad** för 21 regioner (grön ≤3, gul ≤7, röd >7) i `R/teman/patientenkat/bearbeta.R`. Ingen felhantering om Excel-strukturen (rad 4 = år, 5–25 = regioner, 26 = Riket) ändras — då kraschar inläsningen.
+- **NPE-ranking hårdkodad** för 21 regioner (grön ≤3, gul ≤7, röd >7) i `R/arkiv/teman/patientenkat/bearbeta.R`. Temat är arkiverat och sourcas inte; gäller igen om det återinförs.
 - **Patientenkäten faller tyst bort** om `data/npe_primarvard.xlsx` saknas (returnerar `NULL`, ingen markering i JSON).
 - **Ingen modell-persistens**: alla GLM:er tränas om från grunden varje körning. För produktion med riktigt API behövs omträningsstrategi och ev. sparade modeller.
 - **Demodata är syntetisk** (`R/hamta/demo-data.R`) — ska ersättas med riktig API-/datakälla i produktion. Injicerade anomalier (se `SIGNAL-METODIK.md` §6.3) finns för att validera signalsystemet.

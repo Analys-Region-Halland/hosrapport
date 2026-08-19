@@ -18,9 +18,6 @@ source("R/gemensam/analystext.R")
 source("R/gemensam/bygg-sektion.R")
 source("R/teman/kolada/bearbeta.R")
 source("R/gemensam/ranking-tema.R")
-source("R/teman/folkhalsa/bearbeta.R")
-source("R/teman/befolkning/bearbeta.R")
-source("R/teman/ekonomi/bearbeta.R")
 
 # ══════════════════════════════════════════════
 #  LADDA DATA
@@ -35,6 +32,12 @@ source("R/teman/ekonomi/bearbeta.R")
 
 radata <- readRDS("data/radata-hos.rds")
 dept_radata <- readRDS("data/radata-dept.rds")
+
+# Rådatafilerna kan innehålla fler KPI:er än de teman som är registrerade
+# (register.R styr urvalet). Skär ner till de registrerade så att vilande
+# teman inte läcker in i aggregeringen.
+radata <- radata |> select(datum, any_of(kpi_meta$id))
+dept_radata <- dept_radata |> filter(kpi_id %in% kpi_meta$id)
 
 rapport_datum <- max(radata$datum)
 start_datum   <- min(radata$datum)
@@ -243,40 +246,18 @@ for (si in seq_along(resultat$dag$sektioner)) {
 }
 
 # ══════════════════════════════════════════════
-#  BEFOLKNING & FOLKHÄLSA — Enbart i årsvyn, FÖRST i sektionsordningen
-#  (kategorin Behov & befolkning inleder rapporten i taxonomin;
-#  befolkning före folkhälsa, samma ordning som taxonomin)
-# ══════════════════════════════════════════════
-
-folkhalsa_sektioner <- bearbeta_folkhalsa()
-if (length(folkhalsa_sektioner) > 0) {
-  resultat$ar$sektioner <- c(folkhalsa_sektioner, resultat$ar$sektioner)
-}
-
-befolkning_sektioner <- bearbeta_befolkning()
-if (length(befolkning_sektioner) > 0) {
-  resultat$ar$sektioner <- c(befolkning_sektioner, resultat$ar$sektioner)
-}
-
-# ══════════════════════════════════════════════
-#  EKONOMI — Enbart i årsvyn, efter de dagliga sektionerna
-#  (kategorin Resurser & förutsättningar, före Externa rapporter)
-# ══════════════════════════════════════════════
-
-ekonomi_sektioner <- bearbeta_ekonomi()
-if (length(ekonomi_sektioner) > 0) {
-  resultat$ar$sektioner <- c(resultat$ar$sektioner, ekonomi_sektioner)
-}
-
-# ══════════════════════════════════════════════
-#  KOLADA: HÄLSO- OCH SJUKVÅRDSRAPPORTEN — Enbart i årsvyn
+#  HÄLSO- OCH SJUKVÅRDSRAPPORTEN (SKR) — Enbart i årsvyn, FÖRST
+#
+#  Rapportens sex kapitel läggs in som sex egna sektioner, i den ordning
+#  config.R anger. De inleder årsvyn; akutflödet (det enda interna området)
+#  ligger kvar sist som exempel på verksamhetsnära dygnsdata.
 # ══════════════════════════════════════════════
 
 kolada_sektioner <- bearbeta_kolada()
 if (length(kolada_sektioner) > 0) {
-  resultat$ar$sektioner <- c(resultat$ar$sektioner, kolada_sektioner)
+  resultat$ar$sektioner <- c(kolada_sektioner, resultat$ar$sektioner)
 
-  # Uppdatera global analys f\u00f6r \u00e5rsvyn med NPE
+  # Uppdatera \u00e5rsvyns globala sammanfattning nu n\u00e4r alla sektioner finns
   alla_kpier_ar <- unlist(lapply(resultat$ar$sektioner, \(s) lapply(s$kpier, \(k) k$status)), use.names = FALSE)
   n_rod_total <- sum(alla_kpier_ar == "rod")
   n_gul_total <- sum(alla_kpier_ar == "gul")

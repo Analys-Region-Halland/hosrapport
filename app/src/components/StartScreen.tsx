@@ -1,36 +1,51 @@
 import { useState, useEffect } from "react";
-import { loadManifest } from "../data/load";
-import { TAXONOMI, type OmradeDef } from "../taxonomy";
+import { loadManifest, type SektionSummering } from "../data/load";
+import { TAXONOMI, type OmradeDef, type KategoriDef } from "../taxonomy";
+import { SIGNAL_COLORS, SIGNAL_LABELS } from "../charts/constants";
+import { VY_ORDNING, oppningsVy } from "../utils/vyval";
 import type { Scope } from "../types";
 
 // ════════════════════════════════════════════════════════════
-//  StartScreen — redaktionellt "magasinsomslag".
+//  StartScreen — rapportens omslag och innehållsförteckning.
 //
-//  Områdena visas grupperade i taxonomins kategorier (taxonomy.ts):
-//  varje kategori är en inramad "box" med folio, kicker och beskrivning.
-//  Aktiva områden (finns i manifestet) är klickbara; planerade områden
-//  visas nedtonade med "Planerat"-märke och tänkt innehåll — så att
-//  helhetsbilden över möjliga områden syns redan nu.
+//  Ett kort per rapport, grupperat i taxonomins kategorier. Sedan omtaget
+//  2026-08-19 är varje kapitel i SKR:s Hälso- och sjukvårdsrapport en egen
+//  rapport, vilket gör grupperingen till bärande struktur och inte bara till
+//  en etikett: kategorin får en egen rubrik med grön topplinje, kicker,
+//  beskrivning och omfattning, och korten under den läses som en avdelning.
 //
-//  Tidsperiod väljs INTE här — den bor inne i rapporten. Manifestet
-//  (billigt, cachat) avgör vilka områden som faktiskt har data.
+//  Kortet är avsett att kunna läsas fristående: vad rapporten innehåller,
+//  vilket kapitel den är, varifrån datan kommer, hur ofta den uppdateras,
+//  vad den jämförs mot och hur indikatorerna står just nu.
+//
+//  Siffrorna kommer från manifestet (index.json), som R-exporten fyller
+//  med en lätt sammanfattning per sektion. Ingen sektionsdata laddas här:
+//  hela startsidan bygger på en enda liten fil.
+//
+//  Taxonomin (taxonomy.ts) innehåller bara områden med faktisk data.
+//  Ett område som finns i taxonomin men saknas i manifestet visas inte;
+//  ett område i manifestet utan taxonomi-post hamnar under "Övrigt".
+//
+//  Tidsperiod väljs INTE här — den bor inne i rapporten.
 // ════════════════════════════════════════════════════════════
 
 const FONT_SERIF = "'Source Serif 4', Georgia, serif";
 const FONT_SANS = "'IBM Plex Sans', sans-serif";
-const FONT_MONO = "'IBM Plex Mono', monospace";
 
-/** Ett område så som startsidan visar det: taxonomi + manifest-status. */
+type StatusN = { gron: number; gul: number; rod: number };
+
+/** Ett område så som startsidan visar det: taxonomi + siffror ur manifestet. */
 interface AreaVy extends OmradeDef {
-  /** Finns i datamanifestet → klickbart. */
-  aktiv: boolean;
+  n_kpier: number;
+  n_delar: number;
+  status: StatusN;
+  /** Vilka tidsvyer området finns i, t.ex. ["Dag", "Vecka"]. */
+  vyer: string[];
 }
 
-interface KategoriVy {
-  id: string;
-  namn: string;
-  kicker: string;
-  beskrivning: string;
+/** En kategori med sina rapporter, i visningsordning. */
+interface GruppVy {
+  kategori: KategoriDef;
   omraden: AreaVy[];
 }
 
@@ -38,65 +53,133 @@ interface Props {
   onPick: (scope: Scope) => void;
 }
 
+const VY_NAMN: Record<string, string> = {
+  dag: "Dag", vecka: "Vecka", manad: "Månad", kvartal: "Kvartal", ar: "År",
+};
+
+const TOM_STATUS: StatusN = { gron: 0, gul: 0, rod: 0 };
+
+/** Kategorin oklassade manifest-sektioner hamnar i (säkerhetsnät). */
+const OVRIGT_KATEGORI: KategoriDef = {
+  id: "ovrigt",
+  namn: "Övrigt",
+  kicker: "Ännu inte placerat",
+  beskrivning:
+    "Områden som finns i datakällan men ännu inte har någon plats i rapportens indelning.",
+  omraden: [],
+};
+
 export default function StartScreen({ onPick }: Props) {
-  const [kategorier, setKategorier] = useState<KategoriVy[] | null>(null);
+  const [grupper, setGrupper] = useState<GruppVy[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [meta, setMeta] = useState<{ etikett: string; uppdaterad: string } | null>(null);
+  /** Sista datum som finns i datan (ISO) — kolofonens datering. */
+  const [tomDatum, setTomDatum] = useState<string | null>(null);
+  /** Helhetsrapportens omfattning, räknad i den vy "alla" öppnas i. */
+  const [helhet, setHelhet] = useState<{ n_omraden: number; status: StatusN } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     loadManifest()
       .then((manifest) => {
         if (cancelled) return;
-        // Unionen av sektioner över alla vyer (så t.ex. SKR-rapporten,
-        // som bara finns i årsvyn, ändå erbjuds). Manifestets namn vinner.
-        const iManifest = new Map<string, string>();
-        for (const vy of Object.values(manifest)) {
-          for (const s of vy.sektioner) {
-            if (!iManifest.has(s.id)) iManifest.set(s.id, s.namn);
+
+        // Vilka tidsvyer varje område finns i (i kronologisk ordning).
+        const vyerFor = new Map<string, string[]>();
+        for (const vyId of VY_ORDNING) {
+          for (const s of manifest[vyId]?.sektioner ?? []) {
+            vyerFor.set(s.id, [...(vyerFor.get(s.id) ?? []), VY_NAMN[vyId] ?? vyId]);
           }
         }
 
-        // Taxonomi + manifest → kategorivyer. Ett område är aktivt bara
-        // om det finns i manifestet (oavsett vad taxonomin påstår).
-        const kats: KategoriVy[] = TAXONOMI.map((k) => ({
-          id: k.id,
-          namn: k.namn,
-          kicker: k.kicker,
-          beskrivning: k.beskrivning,
-          omraden: k.omraden.map((o) => ({
-            ...o,
-            namn: iManifest.get(o.id) ?? o.namn,
-            aktiv: iManifest.has(o.id),
-          })),
-        }));
+        // Kortets siffror hämtas ur DEN VY KORTET LEDER TILL (vyval.ts), inte
+        // ur en godtycklig vy. Annars visar omslaget en statusfördelning som
+        // inte återfinns i rapporten bakom kortet.
+        const iManifest = new Map<string, SektionSummering>();
+        for (const vy of Object.values(manifest)) {
+          for (const s of vy.sektioner) {
+            if (!iManifest.has(s.id)) iManifest.set(s.id, s);
+          }
+        }
+        const summeringFor = (id: string): SektionSummering | undefined => {
+          const vy = oppningsVy(manifest, id);
+          const iVy = vy ? manifest[vy]?.sektioner.find((s) => s.id === id) : undefined;
+          return iVy ?? iManifest.get(id);
+        };
 
-        // Säkerhetsnät: manifest-sektioner utan taxonomi-post → "Övrigt".
+        const bygg = (o: OmradeDef): AreaVy | null => {
+          const s = summeringFor(o.id);
+          if (!s) return null; // taxonomipost utan data visas inte
+          return {
+            ...o,
+            namn: s.namn || o.namn,
+            n_kpier: s.n_kpier,
+            n_delar: s.n_delar,
+            status: s.status ?? TOM_STATUS,
+            vyer: vyerFor.get(o.id) ?? [],
+          };
+        };
+
+        const lista: GruppVy[] = TAXONOMI
+          .map((k) => ({
+            kategori: k,
+            omraden: k.omraden.map(bygg).filter((a): a is AreaVy => a !== null),
+          }))
+          .filter((g) => g.omraden.length > 0);
+
+        // Säkerhetsnät: manifest-sektioner utan taxonomi-post tappas inte bort.
         const klassade = new Set(TAXONOMI.flatMap((k) => k.omraden.map((o) => o.id)));
-        const oklassade = [...iManifest.entries()].filter(([id]) => !klassade.has(id));
-        if (oklassade.length > 0) {
-          kats.push({
-            id: "ovrigt",
-            namn: "Övrigt",
-            kicker: "Oklassade områden",
-            beskrivning: "Områden i datakällan som ännu inte placerats i en kategori.",
-            omraden: oklassade.map(([id, namn]) => ({
-              id, namn, beskrivning: "", aktiv: true,
-            })),
+        const ovriga: AreaVy[] = [];
+        for (const [id] of iManifest) {
+          if (klassade.has(id)) continue;
+          const s = summeringFor(id)!;
+          ovriga.push({
+            id, namn: s.namn,
+            beskrivning: "Området finns i datakällan men är ännu inte placerat i rapportens indelning.",
+            datatyp: "intern", kalla: "Okänd", takt: "Okänd", jamforelse: "Okänd",
+            n_kpier: s.n_kpier, n_delar: s.n_delar, status: s.status ?? TOM_STATUS,
+            vyer: vyerFor.get(id) ?? [],
           });
         }
+        if (ovriga.length > 0) lista.push({ kategori: OVRIGT_KATEGORI, omraden: ovriga });
 
-        setKategorier(kats);
-        const forsta = Object.values(manifest)[0];
-        if (forsta) setMeta({ etikett: forsta.etikett, uppdaterad: forsta.uppdaterad });
+        setGrupper(lista);
+
+        // Hero och kolofon beskriver HELHETSRAPPORTEN, och räknas därför i den
+        // vy "Alla områden" öppnas i. Summan av korten duger inte: ett område
+        // kan öppnas i en annan vy och ha en annan statusfördelning där.
+        const helhetsVy = oppningsVy(manifest, "alla");
+        const sektioner = helhetsVy ? manifest[helhetsVy]?.sektioner ?? [] : [];
+        setHelhet({
+          n_omraden: sektioner.length,
+          status: sektioner.reduce(
+            (a, s) => ({
+              gron: a.gron + (s.status?.gron ?? 0),
+              gul: a.gul + (s.status?.gul ?? 0),
+              rod: a.rod + (s.status?.rod ?? 0),
+            }),
+            TOM_STATUS,
+          ),
+        });
+
+        // Alla vyer delar rapportdatum; ta det senaste som finns.
+        const datum = Object.values(manifest).map((v) => v.datum).filter(Boolean).sort();
+        if (datum.length > 0) setTomDatum(datum[datum.length - 1]);
       })
       .catch((e: unknown) => { if (!cancelled) setError(e instanceof Error ? e.message : String(e)); });
     return () => { cancelled = true; };
   }, []);
 
-  const antalAktiva = kategorier
-    ? kategorier.reduce((n, k) => n + k.omraden.filter((o) => o.aktiv).length, 0)
-    : 0;
+  const totalt: StatusN = helhet?.status ?? TOM_STATUS;
+  const antalIndikatorer = totalt.gron + totalt.gul + totalt.rod;
+  const alla = (grupper ?? []).flatMap((g) => g.omraden);
+  const antalOmraden = helhet?.n_omraden ?? alla.length;
+  const antalKategorier = (grupper ?? []).length;
+
+  // Folio löper obrutet över kategorierna, så att korten numreras 01…07 och
+  // inte börjar om i varje avdelning. Startnumret per grupp räknas ut i
+  // förväg; en räknare som skrivs under renderingen är inte tillåten.
+  const folioStart: number[] = [];
+  (grupper ?? []).reduce((n, g) => { folioStart.push(n); return n + g.omraden.length; }, 1);
 
   return (
     <div style={{ minHeight: "100vh", background: "#fbfbf9", fontFamily: FONT_SANS, display: "flex", flexDirection: "column" }}>
@@ -113,52 +196,79 @@ export default function StartScreen({ onPick }: Props) {
         </span>
       </nav>
 
-      <main style={{ flex: 1, maxWidth: 1020, width: "100%", margin: "0 auto", padding: "64px 24px 80px" }}>
+      <main style={{ flex: 1, maxWidth: 1020, width: "100%", margin: "0 auto", padding: "68px 24px 88px" }}>
 
-        {/* ── Redaktionellt anslag ── */}
-        <header style={{ marginBottom: 48, maxWidth: 680 }}>
+        {/* ── Masthead ── */}
+        <header style={{ marginBottom: 40 }}>
           <div style={{
             fontSize: 11, fontWeight: 600, textTransform: "uppercase",
-            letterSpacing: "0.14em", color: "#00AB60", marginBottom: 14, fontFamily: FONT_SANS,
+            letterSpacing: "0.14em", color: "#00AB60", marginBottom: 14,
           }}>
             Region Halland &middot; Uppföljning
           </div>
           <h1 style={{
-            fontFamily: FONT_SERIF, fontWeight: 600, fontSize: 46, color: "#1a1a1a",
-            letterSpacing: "-0.025em", lineHeight: 1.08, margin: "0 0 18px",
+            fontFamily: FONT_SERIF, fontWeight: 600, fontSize: 48, color: "#1a1a1a",
+            letterSpacing: "-0.028em", lineHeight: 1.05, margin: "0 0 18px", maxWidth: 680,
           }}>
             Hälso- och sjukvården<br />i Halland
           </h1>
-          <p style={{ fontFamily: FONT_SERIF, fontSize: 18, lineHeight: 1.6, color: "#555", margin: 0 }}>
-            Rapporten är indelad i kategorier som följer vårdens logik, från
-            befolkningens behov till vårdens resurser. Välj ett sakområde,
-            eller sammanställ samtliga områden i en gemensam rapport.
+          <p style={{ fontFamily: FONT_SERIF, fontSize: 18.5, lineHeight: 1.6, color: "#555", margin: "0 0 34px", maxWidth: 660 }}>
+            SKR:s Hälso- och sjukvårdsrapport, uppdelad så att vart och ett av
+            dess sex kapitel är en egen rapport. Varje rapport inleds med sitt
+            sammanhang, redovisar sina källor indikator för indikator och kan
+            läsas för sig eller som en del av helheten.
           </p>
+
+          {/* Kolofon: rapportens omfattning i siffror */}
+          {grupper && (
+            <div className="start-colophon">
+              <Kolofon tal={antalOmraden} etikett="Rapporter" />
+              <Kolofon tal={antalIndikatorer} etikett="Indikatorer" />
+              <Kolofon tal={antalKategorier} etikett="Avdelningar" />
+              {tomDatum && <Kolofon tal={tomDatum} etikett="Data t.o.m." />}
+            </div>
+          )}
         </header>
 
         {error ? (
           <div role="status" style={{ padding: "32px 0", color: "#D55E00", fontSize: 14 }}>
             Kunde inte ladda områden: {error}
           </div>
-        ) : !kategorier ? (
+        ) : !grupper ? (
           <div role="status" style={{ padding: "32px 0", color: "#83888A", fontSize: 14 }}>
             Laddar…
           </div>
         ) : (
           <>
-            {/* ── Hero: Alla områden ── */}
-            <AllaOmradenCard onClick={() => onPick("alla")} antal={antalAktiva} uppdaterad={meta?.uppdaterad} />
+            <HeroKort
+              onClick={() => onPick("alla")}
+              antalOmraden={antalOmraden}
+              antalIndikatorer={antalIndikatorer}
+              status={totalt}
+            />
 
-            {/* ── Kategoriboxar ── */}
-            {kategorier.map((k, i) => (
-              <KategoriBox key={k.id} kategori={k} index={i + 1} onPick={onPick} />
+            {grupper.map((g, gi) => (
+              <section key={g.kategori.id} className="start-group">
+                <KategoriRubrik
+                  kategori={g.kategori}
+                  antalOmraden={g.omraden.length}
+                  antalIndikatorer={g.omraden.reduce((a, o) => a + o.n_kpier, 0)}
+                />
+                {g.omraden.map((o, oi) => (
+                  <OmradeKort
+                    key={o.id}
+                    omrade={o}
+                    folio={folioStart[gi] + oi}
+                    onClick={() => onPick(o.id)}
+                  />
+                ))}
+              </section>
             ))}
 
-            <p style={{ fontSize: 12.5, color: "#a0a49f", lineHeight: 1.6, marginTop: 28, maxWidth: 640 }}>
-              Nedtonade områden är planerade men saknar ännu data. Indelningen
-              bygger på etablerade ramverk för uppföljning av hälso- och
-              sjukvård samt förvaltningens egna dimensioner, och utvecklas
-              löpande tillsammans med verksamheten.
+            <p style={{ fontSize: 12.5, color: "#a0a49f", lineHeight: 1.65, marginTop: 30, maxWidth: 660 }}>
+              Rapporten visar bara områden med inhämtad data. Tidigare områden
+              för befolkning, folkhälsa och ekonomi är arkiverade och kan
+              återinföras när de ska ingå igen.
             </p>
           </>
         )}
@@ -174,150 +284,173 @@ export default function StartScreen({ onPick }: Props) {
   );
 }
 
-// ── Hero-kort "Alla områden" (fylld grön, distinkt) ──
-function AllaOmradenCard({ onClick, antal, uppdaterad }: { onClick: () => void; antal: number; uppdaterad?: string }) {
+// ── Kolofonpost: stor mono-siffra + versal etikett ──
+function Kolofon({ tal, etikett }: { tal: number | string; etikett: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="start-card start-card--hero"
-      style={{
-        width: "100%", textAlign: "left", cursor: "pointer",
-        background: "#00664D", border: "none", borderRadius: 12,
-        padding: "26px 28px", color: "#fff", fontFamily: FONT_SANS,
-        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20,
-        marginBottom: 40,
-      }}
-    >
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: "#9fe0c4", marginBottom: 8 }}>
-          Hela rapporten
-        </div>
-        <div style={{ fontFamily: FONT_SERIF, fontSize: 27, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 6 }}>
-          Alla områden
-        </div>
-        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", lineHeight: 1.5 }}>
-          Samtliga {antal} aktiva sakområden i en gemensam rapport med översikt och signalkarta.
-          {uppdaterad && <span style={{ fontFamily: FONT_MONO, fontSize: 12, marginLeft: 10, color: "rgba(255,255,255,0.55)" }}>Uppdaterad {uppdaterad}</span>}
-        </div>
-      </div>
-      <Arrow color="#fff" />
-    </button>
-  );
-}
-
-// ── Kategoribox: inramad grupp med folio, kicker och områdeskort ──
-function KategoriBox({ kategori, index, onPick }: { kategori: KategoriVy; index: number; onPick: (scope: Scope) => void }) {
-  return (
-    <section
-      aria-labelledby={`kat-${kategori.id}`}
-      style={{
-        border: "1px solid #e0e0dc", borderRadius: 12, background: "#fff",
-        padding: "24px 26px 26px", marginBottom: 20,
-      }}
-    >
-      {/* Kategorihuvud: grön spine + folio + kicker + namn */}
-      <div style={{ display: "flex", gap: 18, alignItems: "flex-start", marginBottom: 20, borderLeft: "4px solid #00664D", paddingLeft: 18 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
-            <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 600, color: "#c4c4be" }}>
-              {String(index).padStart(2, "0")}
-            </span>
-            <span style={{ fontSize: 10.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", color: "#00AB60" }}>
-              {kategori.kicker}
-            </span>
-          </div>
-          <h2 id={`kat-${kategori.id}`} style={{
-            fontFamily: FONT_SERIF, fontSize: 24, fontWeight: 600, color: "#1a1a1a",
-            letterSpacing: "-0.02em", margin: "0 0 5px", lineHeight: 1.15,
-          }}>
-            {kategori.namn}
-          </h2>
-          <p style={{ fontSize: 13.5, color: "#83888A", lineHeight: 1.5, margin: 0, maxWidth: 560 }}>
-            {kategori.beskrivning}
-          </p>
-        </div>
-      </div>
-
-      {/* Områdeskort */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(236px, 1fr))", gap: 12,
-      }}>
-        {kategori.omraden.map((o) =>
-          o.aktiv
-            ? <OmradeCard key={o.id} omrade={o} onClick={() => onPick(o.id)} />
-            : <PlaneradCard key={o.id} omrade={o} />,
-        )}
-      </div>
-    </section>
-  );
-}
-
-// ── Aktivt områdeskort (klickbart) ──
-function OmradeCard({ omrade, onClick }: { omrade: AreaVy; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="start-card"
-      style={{
-        textAlign: "left", cursor: "pointer", background: "#fbfbf9",
-        border: "1px solid #e0e0dc", borderRadius: 10, padding: "16px 16px 14px",
-        fontFamily: FONT_SANS, display: "flex", flexDirection: "column", minHeight: 118,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: 17.5, fontWeight: 600, color: "#1a1a1a", letterSpacing: "-0.01em", lineHeight: 1.25 }}>
-          {omrade.namn}
-        </span>
-        <Arrow color="#00664D" small />
-      </div>
-      {omrade.beskrivning && (
-        <span style={{ fontSize: 12.5, color: "#83888A", lineHeight: 1.5 }}>
-          {omrade.beskrivning}
-        </span>
-      )}
-    </button>
-  );
-}
-
-// ── Planerat område (placeholder, ej klickbart) ──
-function PlaneradCard({ omrade }: { omrade: AreaVy }) {
-  const [visaExempel, setVisaExempel] = useState(false);
-  return (
-    <div
-      onMouseEnter={() => setVisaExempel(true)}
-      onMouseLeave={() => setVisaExempel(false)}
-      style={{
-        textAlign: "left", background: "transparent",
-        border: "1px dashed #d6d6d0", borderRadius: 10, padding: "16px 16px 14px",
-        fontFamily: FONT_SANS, display: "flex", flexDirection: "column", minHeight: 118,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: 17.5, fontWeight: 600, color: "#9a9e99", letterSpacing: "-0.01em", lineHeight: 1.25 }}>
-          {omrade.namn}
-        </span>
-        <span style={{
-          flexShrink: 0, fontSize: 9.5, fontWeight: 600, textTransform: "uppercase",
-          letterSpacing: "0.1em", color: "#a0a49f", border: "1px solid #dcdcd6",
-          borderRadius: 4, padding: "2px 6px", marginTop: 2,
-        }}>
-          Planerat
-        </span>
-      </div>
-      <span style={{ fontSize: 12.5, color: "#a0a49f", lineHeight: 1.5 }}>
-        {visaExempel && omrade.exempel ? omrade.exempel : omrade.beskrivning}
-      </span>
+    <div>
+      <div className="start-colophon__num">{tal}</div>
+      <div className="start-colophon__lbl">{etikett}</div>
     </div>
   );
 }
 
-function Arrow({ color, small = false }: { color: string; small?: boolean }) {
-  const s = small ? 18 : 26;
+// ── Kategorirubrik: avdelaren mellan rapportgrupperna ──
+// Grön topplinje + kicker + serif-titel + kort beskrivning, samma editoriella
+// språk som delrubrikerna inne i rapporten (.del-plate).
+function KategoriRubrik({ kategori, antalOmraden, antalIndikatorer }: {
+  kategori: KategoriDef;
+  antalOmraden: number;
+  antalIndikatorer: number;
+}) {
   return (
-    <span className="start-arrow" aria-hidden="true" style={{ flexShrink: 0, display: "inline-flex", color, transition: "transform 0.18s" }}>
-      <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <div className="start-group__head">
+      <div className="start-group__rad">
+        <span className="start-group__kicker">{kategori.kicker}</span>
+        <span className="start-group__meta">
+          {antalOmraden} {antalOmraden === 1 ? "rapport" : "rapporter"} &middot; {antalIndikatorer} indikatorer
+        </span>
+      </div>
+      <h2 className="start-group__namn" style={{ fontFamily: FONT_SERIF }}>{kategori.namn}</h2>
+      <p className="start-group__text">{kategori.beskrivning}</p>
+    </div>
+  );
+}
+
+// ── Hero: hela rapporten i ett svep ──
+function HeroKort({ onClick, antalOmraden, antalIndikatorer, status }: {
+  onClick: () => void;
+  antalOmraden: number;
+  antalIndikatorer: number;
+  status: StatusN;
+}) {
+  return (
+    <button type="button" onClick={onClick} className="start-hero">
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 10.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9fe0c4", marginBottom: 9 }}>
+          Hela rapporten
+        </div>
+        <div style={{ fontFamily: FONT_SERIF, fontSize: 29, fontWeight: 600, letterSpacing: "-0.022em", lineHeight: 1.1, marginBottom: 7 }}>
+          Samtliga rapporter
+        </div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.55, maxWidth: 470 }}>
+          Alla {antalOmraden} rapporter och {antalIndikatorer} indikatorer i ett
+          dokument, med gemensam signalöversikt och sammanfattning.
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 26, flexShrink: 0 }}>
+        <div style={{ width: 236 }}>
+          <Matare status={status} hero />
+          <div className="start-status__rad" style={{ marginTop: 9, color: "rgba(255,255,255,0.82)" }}>
+            <span>{status.gron} i fas</span>
+            <span>{status.gul} bevaka</span>
+            <span>{status.rod} avvikelse</span>
+          </div>
+        </div>
+        <Pil color="#fff" />
+      </div>
+    </button>
+  );
+}
+
+// ── Områdeskort ──
+function OmradeKort({ omrade, folio, onClick }: { omrade: AreaVy; folio: number; onClick: () => void }) {
+  const o = omrade;
+  const vyText = o.vyer.length >= 5 ? "Alla tidsvyer" : o.vyer.join(" · ");
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="start-area"
+      aria-label={`${o.namn}. ${o.n_kpier} indikatorer. ${o.beskrivning}`}
+    >
+      {/* Huvudspalt: det redaktionella */}
+      <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span className="start-area__folio">{String(folio).padStart(2, "0")}</span>
+          {o.serie && <span className="start-area__serie">{o.serie}</span>}
+          <span className="start-tag" data-typ={o.datatyp}>
+            {o.datatyp === "intern" ? "Intern källa" : "Öppen data"}
+          </span>
+        </div>
+
+        <div className="start-area__namn">{o.namn}</div>
+        <div className="start-area__text">{o.beskrivning}</div>
+        {o.notis && <div className="start-notis">{o.notis}</div>}
+
+        <div className="start-fakta">
+          <Fakta etikett="Källa" varde={o.kalla} />
+          <Fakta etikett="Uppdateras" varde={o.takt} />
+          <Fakta etikett="Jämförs mot" varde={o.jamforelse} />
+          {vyText && <Fakta etikett="Tidsvyer" varde={vyText} />}
+        </div>
+      </div>
+
+      {/* Statusspalt: enbart siffror, optiskt i linje med titeln */}
+      <div className="start-area__status">
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span className="start-status__tal">{o.n_kpier}</span>
+          <span className="start-status__enhet">
+            {o.n_delar > 0 ? `indikatorer · ${o.n_delar} avsnitt` : "indikatorer"}
+          </span>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <Matare status={o.status} />
+          <div className="start-status__rad" style={{ marginTop: 8 }}>
+            <StatusTal n={o.status.gron} status="gron" />
+            <StatusTal n={o.status.gul} status="gul" />
+            <StatusTal n={o.status.rod} status="rod" />
+          </div>
+        </div>
+      </div>
+
+      {/* Pil */}
+      <div style={{ alignSelf: "center" }}>
+        <Pil color="#00664D" small />
+      </div>
+    </button>
+  );
+}
+
+function Fakta({ etikett, varde }: { etikett: string; varde: string }) {
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div className="start-fakta__lbl">{etikett}</div>
+      <div className="start-fakta__val">{varde}</div>
+    </div>
+  );
+}
+
+// ── Mätare: indikatorernas statusfördelning som en remsa ──
+// Färg är aldrig ensam bärare: siffrorna under remsan har textetikett.
+function Matare({ status, hero = false }: { status: StatusN; hero?: boolean }) {
+  const total = status.gron + status.gul + status.rod;
+  const andel = (n: number) => (total > 0 ? (n / total) * 100 : 0);
+  const titel = `${status.gron} i fas, ${status.gul} att bevaka, ${status.rod} i avvikelse`;
+  return (
+    <div className={`start-meter${hero ? " start-meter--hero" : ""}`} role="img" aria-label={titel} title={titel}>
+      {(["gron", "gul", "rod"] as const).map((s) => (
+        <span key={s} style={{ width: `${andel(status[s])}%`, background: SIGNAL_COLORS[s] }} />
+      ))}
+    </div>
+  );
+}
+
+function StatusTal({ n, status }: { n: number; status: "gron" | "gul" | "rod" }) {
+  return (
+    <span style={{ color: n > 0 ? SIGNAL_COLORS[status] : "#c4c4be" }}>
+      {n} <span style={{ fontFamily: FONT_SANS, fontSize: 10.5 }}>{SIGNAL_LABELS[status].toLowerCase()}</span>
+    </span>
+  );
+}
+
+function Pil({ color, small = false }: { color: string; small?: boolean }) {
+  const s = small ? 22 : 26;
+  return (
+    <span className="start-arrow" aria-hidden="true" style={{ color }}>
+      <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12h14M13 6l6 6-6 6" />
       </svg>
     </span>

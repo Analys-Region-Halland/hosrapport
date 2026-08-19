@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import type {
   VyData,
   KpiData,
+  Kalla,
+  KallaRef,
   Section,
   ContentBlock,
 } from "../types";
@@ -244,7 +246,10 @@ export default function ReportView({
               />
             )}
 
-            {/* ── Sektioner ── */}
+            {/* ── Sektioner ──
+                Inledning och källförteckning hör till den ENSKILDA rapporten.
+                I helhetsvyn skulle sex inledningar i rad upprepa samma ram och
+                skjuta siffrorna långt ner, så där visas bara bedömningarna. */}
             {visadeSektioner.map((sek, i) => (
               <SectionBlock
                 key={sek.id}
@@ -253,6 +258,7 @@ export default function ReportView({
                 vyLabel={vyLabel}
                 vy={data.vy}
                 onOpenChart={onOpenChart}
+                fristaende={Boolean(sectionId)}
               />
             ))}
 
@@ -397,12 +403,14 @@ function ChapterPlate({ index, namn, kicker }: { index?: number; namn: string; k
 // ════════════════════════════════════════
 
 function SectionBlock({
-  section, index, vyLabel, vy, onOpenChart,
+  section, index, vyLabel, vy, onOpenChart, fristaende = false,
 }: {
   section: Section; index?: number; vyLabel: string; vy: string;
   onOpenChart?: (kpi: KpiData) => void;
+  /** Rapporten läses för sig — då hör inledning och källförteckning hit. */
+  fristaende?: boolean;
 }) {
-  const harDelar = !!section.delar && section.delar.length > 0;
+  const delar = section.delar && section.delar.length > 0 ? delSektioner(section) : null;
   return (
     <section
       id={`rapport-${section.id}`}
@@ -417,10 +425,26 @@ function SectionBlock({
         />
       )}
 
-      {harDelar ? (
-        /* Tematiska delar (t.ex. SKR-rapporten) — egen rubrik + översikt per del */
-        delSektioner(section).map((del, di) => (
-          <DelBlock key={del.id} del={del} nr={di + 1} vyLabel={vyLabel} vy={vy} onOpenChart={onOpenChart} />
+      {fristaende && section.inledning && section.inledning.length > 0 && (
+        <Inledning stycken={section.inledning} />
+      )}
+
+      {/* Kapitlets översikt: räknare + bedömning + signalöversikt över samtliga
+          indikatorer, grupperade per avsnitt. Ligger på kapitelnivå och inte
+          per avsnitt — annars upprepas samma remsa fyra gånger i rad. */}
+      {delar && (
+        <KapitelOversikt
+          section={section}
+          grupper={delar}
+          vy={vy}
+          onOpenChart={onOpenChart}
+        />
+      )}
+
+      {delar ? (
+        /* Tematiska avsnitt (SKR-kapitlets indelning) — rubrik + bedömning */
+        delar.map((del, di) => (
+          <DelBlock key={del.id} del={del} nr={di + 1} vyLabel={vyLabel} vy={vy} />
         ))
       ) : (
         /* Indikatorer — varje som ett distinkt kort (analys + egna texter bor här) */
@@ -428,74 +452,188 @@ function SectionBlock({
           <IndicatorBlock key={kpi.id} kpi={kpi} vyLabel={vyLabel} vy={vy} />
         ))
       )}
+
+      {fristaende && <Kallforteckning kallor={section.kallor} leverans={section.leverans} />}
     </section>
   );
 }
 
 // ════════════════════════════════════════
-//  DelBlock — tematisk del: rubrik + egen översikt + signalöversikt + indikatorer
+//  Inledning — redaktionell kontext före siffrorna
+// ════════════════════════════════════════
+
+function Inledning({ stycken }: { stycken: string[] }) {
+  const [ingress, ...brod] = stycken;
+  return (
+    <section className="report-lead" aria-label="Om rapporten">
+      <div className="report-lead__label">Om den här rapporten</div>
+      <p className="report-lead__ingress" style={{ fontFamily: FONT_RUBRIK }}>{ingress}</p>
+      {brod.map((p, i) => (
+        <p key={i} className="report-lead__text" style={{ fontFamily: FONT_RUBRIK }}>{p}</p>
+      ))}
+    </section>
+  );
+}
+
+// ════════════════════════════════════════
+//  KapitelOversikt — räknare + bedömning + signalöversikt per avsnitt
+// ════════════════════════════════════════
+
+function KapitelOversikt({
+  section, grupper, vy, onOpenChart,
+}: {
+  section: Section; grupper: Section[]; vy: string;
+  onOpenChart?: (kpi: KpiData) => void;
+}) {
+  const inom = section.kpier.filter((k) => k.status === "gron").length;
+  const utanfor = section.kpier.length - inom;
+
+  return (
+    <figure className="report-indicator indicator-card report-figure" style={{ margin: "0 0 40px" }}>
+      <div style={{
+        fontFamily: FONT, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
+        letterSpacing: "0.13em", color: "#00664D", margin: "0 0 12px",
+      }}>
+        Signalöversikt
+      </div>
+
+      <div style={{ display: "flex", gap: 24, alignItems: "baseline", marginBottom: 16 }}>
+        <MiniStat value={section.kpier.length} label="indikatorer" />
+        <MiniStat value={inom} label="inom förväntat" signal="gron" />
+        {utanfor > 0 && <MiniStat value={utanfor} label="utanför" signal="rod" />}
+      </div>
+
+      <div style={{ maxWidth: 680, marginBottom: 18 }}>
+        <BlocksEditor
+          targetId={section.id}
+          aiText={section.analys}
+          aiRubrik={section.analys_rubrik || "Bedömning"}
+          vy={vy}
+        />
+      </div>
+
+      <SignalTimeline sektioner={grupper} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
+      <div style={{ marginTop: 16 }}>
+        <SignalLegend note="Peka på en lane för värde och trend, klicka för större graf" />
+      </div>
+    </figure>
+  );
+}
+
+// ════════════════════════════════════════
+//  DelBlock — tematiskt avsnitt: rubrik + bedömning + indikatorer
+//  (signalremsan bor på kapitelnivå, se KapitelOversikt)
 // ════════════════════════════════════════
 
 function DelBlock({
-  del, nr, vyLabel, vy, onOpenChart,
+  del, nr, vyLabel, vy,
 }: {
   del: Section; nr: number; vyLabel: string; vy: string;
-  onOpenChart?: (kpi: KpiData) => void;
 }) {
-  const inom = del.kpier.filter((k) => k.status === "gron").length;
-  const utanfor = del.kpier.length - inom;
-
   return (
     <section
       id={`rapport-${del.id}`}
       style={{ marginTop: nr > 1 ? 56 : 0, scrollMarginTop: 60 }}
     >
       <div className="del-plate">
-        <span className="del-plate__nr" style={mono}>Del {nr}</span>
+        <span className="del-plate__nr" style={mono}>Avsnitt {nr}</span>
         <h3 className="del-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
           {del.namn}
         </h3>
       </div>
 
-      {/* Delens översikt — räknare + AI-analys + signalöversikt. Vitrum avgränsar
-          mot första indikatorn. Sidmarginal 0 dödar <figure>-elementets default. */}
-      <figure className="report-indicator indicator-card report-figure" style={{ margin: "0 0 32px" }}>
-        <div style={{
-          fontFamily: FONT, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
-          letterSpacing: "0.13em", color: "#00664D", margin: "0 0 12px",
-        }}>
-          Översikt
-        </div>
-
-        {/* Räknare — samma mönster som rapportens topp */}
-        <div style={{
-          display: "flex", gap: 24, alignItems: "baseline", marginBottom: 16,
-        }}>
-          <MiniStat value={del.kpier.length} label="indikatorer" />
-          <MiniStat value={inom} label="inom förväntat" signal="gron" />
-          {utanfor > 0 && <MiniStat value={utanfor} label="utanför" signal="rod" />}
-        </div>
-
-        {/* AI-analys (delens egen översikt) + egna anteckningar */}
-        <div style={{ maxWidth: 680, marginBottom: 18 }}>
-          <BlocksEditor
-            targetId={del.id}
-            aiText={del.analys}
-            aiRubrik="Bedömning"
-            vy={vy}
-          />
-        </div>
-
-        <SignalTimeline sektioner={[del]} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
-        <div style={{ marginTop: 16 }}>
-          <SignalLegend note="Peka på en lane för värde och trend, klicka för större graf" />
-        </div>
-      </figure>
+      {/* Avsnittets bedömning + egna anteckningar. Vitrum avgränsar mot
+          första indikatorn; ingen egen ram behövs. */}
+      <div style={{ maxWidth: 680, margin: "0 0 32px" }}>
+        <BlocksEditor
+          targetId={del.id}
+          aiText={del.analys}
+          aiRubrik="Bedömning"
+          vy={vy}
+        />
+      </div>
 
       {del.kpier.map((kpi) => (
         <IndicatorBlock key={kpi.id} kpi={kpi} vyLabel={vyLabel} vy={vy} />
       ))}
     </section>
+  );
+}
+
+// ════════════════════════════════════════
+//  Källförteckning — varifrån rapportens siffror faktiskt kommer
+// ════════════════════════════════════════
+
+function Kallforteckning({ kallor, leverans }: { kallor?: KallaRef[]; leverans?: KallaRef[] }) {
+  if (!kallor?.length && !leverans?.length) return null;
+  return (
+    <section id="rapport-kallor" className="report-sources" style={{ scrollMarginTop: 60 }}>
+      <div className="del-plate">
+        <span className="del-plate__nr" style={mono}>Källor</span>
+        <h3 className="del-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
+          Varifrån siffrorna kommer
+        </h3>
+      </div>
+
+      {kallor && kallor.length > 0 && (
+        <>
+          <div className="report-sources__label">Primärkällor</div>
+          {kallor.map((k) => <KallaPost key={k.id} kalla={k} />)}
+        </>
+      )}
+
+      {leverans && leverans.length > 0 && (
+        <>
+          <div className="report-sources__label" style={{ marginTop: 28 }}>Leveranskedja</div>
+          {leverans.map((k) => <KallaPost key={k.namn} kalla={k} />)}
+        </>
+      )}
+    </section>
+  );
+}
+
+function KallaPost({ kalla }: { kalla: KallaRef }) {
+  return (
+    <div className="report-source">
+      <div className="report-source__head">
+        <h4 className="report-source__namn" style={{ fontFamily: FONT_RUBRIK }}>
+          {kalla.url ? (
+            <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
+          ) : kalla.namn}
+        </h4>
+        {kalla.n_indikatorer != null && (
+          <span className="report-source__antal" style={mono}>
+            {kalla.n_indikatorer} {kalla.n_indikatorer === 1 ? "indikator" : "indikatorer"}
+          </span>
+        )}
+      </div>
+      <div className="report-source__meta">{kalla.typ} &middot; {kalla.huvudman}</div>
+      <p className="report-source__om" style={{ fontFamily: FONT_RUBRIK }}>{kalla.om}</p>
+    </div>
+  );
+}
+
+// ── Källrad i indikatorkortet: ursprunget, inte leveranskanalen ──
+function KallRad({ kalla }: { kalla: Kalla }) {
+  // Koladas egen formulering visas bara när den tillför något utöver namnet,
+  // så att raden inte upprepar sig själv.
+  const koladaText = kalla.kolada_kalla?.replace(/\.$/, "").trim();
+  const visaKolada = Boolean(
+    koladaText && koladaText.toLowerCase() !== kalla.namn.toLowerCase(),
+  );
+  return (
+    <div className="indicator-kalla">
+      <span className="indicator-kalla__lbl">Källa</span>
+      <span className="indicator-kalla__val" title={kalla.om}>
+        {kalla.url ? (
+          <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
+        ) : kalla.namn}
+        <span className="indicator-kalla__typ"> &middot; {kalla.typ}</span>
+      </span>
+      {visaKolada && (
+        <span className="indicator-kalla__kolada">Kolada anger: {koladaText}</span>
+      )}
+    </div>
   );
 }
 
@@ -549,7 +687,8 @@ function IndicatorBlock({
       {/* ── Readout: Hallands nivå + placering. Siffror i mono (tabulära). ── */}
       <div style={{
         display: "flex", alignItems: "baseline", gap: 18, flexWrap: "wrap",
-        fontFamily: FONT, fontSize: 12.5, color: "#5b615e", marginBottom: 16,
+        fontFamily: FONT, fontSize: 12.5, color: "#5b615e",
+        marginBottom: kpi.kalla ? 9 : 16,
       }}>
         <span>Halland{" "}
           <strong style={{ ...mono, fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
@@ -563,6 +702,9 @@ function IndicatorBlock({
           </span>
         )}
       </div>
+
+      {/* ── Källrad: indikatorns ursprung, inte den kanal den levereras genom ── */}
+      {kpi.kalla && <KallRad kalla={kpi.kalla} />}
 
       {/* ── Analystext (rubrik + text + byline) ── */}
       <div style={{ maxWidth: 680, marginBottom: 18 }}>
@@ -847,6 +989,22 @@ function SidebarToc({
           </div>
         );
       })}
+
+      {/* Källförteckningen finns bara i den fristående rapporten. */}
+      {sections.length === 1 && (sections[0].kallor?.length || sections[0].leverans?.length) ? (
+        <a href="#rapport-kallor"
+          style={{
+            display: "block", padding: "3px 0", marginTop: 4,
+            fontSize: 12, fontWeight: activeId === "kallor" ? 600 : 500,
+            color: activeId === "kallor" ? "#00664D" : "#777",
+            textDecoration: "none", lineHeight: 1.4,
+            borderLeft: activeId === "kallor" ? "2px solid #00664D" : "2px solid transparent",
+            paddingLeft: 10, marginLeft: -1, transition: "color 0.1s",
+          }}
+        >
+          Källor
+        </a>
+      ) : null}
     </nav>
   );
 }
