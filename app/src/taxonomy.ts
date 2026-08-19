@@ -1,11 +1,16 @@
 // ════════════════════════════════════════════════════════════
 //  taxonomy.ts — Rapportens områdesindelning (enda sanningskällan)
 //
-//  OMTAG 2026-08-19: rapporten ÄR numera SKR:s Hälso- och sjukvårdsrapport,
-//  uppdelad så att vart och ett av dess sex kapitel är en egen rapport med
-//  eget kort på startsidan. Tidigare områden (befolkning, folkhälsa, ekonomi)
-//  är arkiverade, se R/arkiv/README.md. Akutflödet är kvar sist som enda
-//  exempel på ett INTERNT område med verksamhetsnära dygnsdata.
+//  OMTAG 2026-08-19: rapporten byggs av fristående kapitel. Innehållet är i
+//  dag SKR:s Hälso- och sjukvårdsrapport, uppdelad så att vart och ett av dess
+//  sex kapitel är en egen rapport med eget kort på startsidan, plus akutflödet
+//  som enda INTERNA område. Tidigare områden (befolkning, folkhälsa, ekonomi)
+//  är arkiverade, se R/arkiv/README.md.
+//
+//  Startsidans ingress säger MEDVETET inte att rapporten är SKR:s underlag:
+//  fler källor ska in, även interna, och ramen får inte låsa fast rapporten
+//  vid en enda avsändare. Härkomsten står i stället på varje kort, i fälten
+//  `serie` och `kalla`, där den hör hemma.
 //
 //  Kategorierna följer kapitlens egen logik och grupperar dem parvis, så att
 //  startsidan får tydliga avgränsningar i stället för en lång rad kort:
@@ -155,7 +160,7 @@ export const TAXONOMI: KategoriDef[] = [
     namn: "Interna uppföljningsexempel",
     kicker: "Regionens egna system",
     beskrivning:
-      "Ligger utanför SKR-rapporten och följer en annan takt: dygnsdata ur regionens vårddatalager med statistiska signalgränser. Kvar som mall för kommande interna områden.",
+      "Regionens egna system, med en annan takt och en annan metod: dygnsdata med statistiska signalgränser i stället för placering bland regionerna. Mallen för de interna områden som tillkommer.",
     omraden: [
       {
         id: "akutflode",

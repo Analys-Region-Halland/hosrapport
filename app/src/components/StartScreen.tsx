@@ -208,10 +208,12 @@ export default function StartScreen({ onPick }: Props) {
             Hälso- och sjukvården<br />i Halland
           </h1>
           <p style={{ fontFamily: FONT_SERIF, fontSize: 18.5, lineHeight: 1.6, color: "#555", margin: "0 0 34px", maxWidth: 660 }}>
-            SKR:s Hälso- och sjukvårdsrapport, uppdelad så att vart och ett av
-            dess sex kapitel är en egen rapport. Varje rapport inleds med sitt
-            sammanhang, redovisar sina källor indikator för indikator och kan
-            läsas för sig eller som en del av helheten.
+            En samlad uppföljning av hälso- och sjukvården i Halland, byggd av
+            fristående kapitel. Varje kapitel inleds med sitt sammanhang,
+            redovisar sina källor indikator för indikator och kan läsas för sig
+            eller som en del av helheten. Innehållet byggs ut allteftersom fler
+            källor kopplas in, både öppna jämförelser och regionens egen
+            uppföljning.
           </p>
 
           {/* Kolofon: rapportens omfattning i siffror */}
