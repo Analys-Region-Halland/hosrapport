@@ -2,7 +2,7 @@
 
 ## Syfte
 
-Hälso- och sjukvårdens (HoS) uppföljningsrapport för Region Halland. En React-dashboard som visualiserar nyckeltal (KPI:er) med statistisk anomalidetektering (conformal prediction) i realtid. Verktyget ger beslutsfattare snabb överblick av läget och möjlighet att generera strukturerade rapporter.
+Hälso- och sjukvårdens (HoS) analysrapport för Region Halland. En React-dashboard som visualiserar nyckeltal (KPI:er) med statistisk anomalidetektering (conformal prediction) i realtid. Verktyget ger beslutsfattare snabb överblick av läget och möjlighet att generera strukturerade rapporter.
 
 ## Projekttyp
 
@@ -62,7 +62,7 @@ faktisk data:** ett område i taxonomin som saknas i manifestet visas inte, och
 ett område i manifestet utan taxonomipost hamnar under "Övrigt" (säkerhetsnät i
 `StartScreen.tsx`). Sedan 2026-08-19 är indelningen fyra kategorier: Patienten
 och tillgängligheten, Vårdens kvalitet och säkerhet, Resultat och resurser samt
-Interna uppföljningsexempel. De tre första rymmer SKR-rapportens sex kapitel
+Interna analysexempel. De tre första rymmer SKR-rapportens sex kapitel
 parvis, den fjärde akutflödet. Researchunderlag till den tidigare, bredare
 indelningen: `docs/omradesindelning.md`.
 
@@ -359,7 +359,7 @@ Redigeringar delas via samma `localStorage`-nycklar (`${vy}:${targetId}`).
 
 ```
 Logo (Region Halland)
-VY-ETIKETT (Daglig uppföljning)
+VY-ETIKETT (Daglig analys)
 Hälso- och sjukvården / Sektionsnamn     ← h1, Source Serif 4, 36px
 Dagsöversikt — 31 mars 2026              ← undertitel
 ──── (accentlinje 48px)

@@ -182,7 +182,7 @@ function titelBild(pptx: pptxgen, u: PptxUnderlag, antalIndikatorer: number) {
   const s = pptx.addSlide();
   s.background = { color: BRAND };
 
-  s.addText("REGION HALLAND · UPPFÖLJNING", {
+  s.addText("REGION HALLAND · ANALYS", {
     x: 0.7, y: 1.35, w: W - 1.4, h: 0.28,
     fontFace: SANS, fontSize: 10, bold: true, charSpacing: 2, color: "9FE0C4",
   });

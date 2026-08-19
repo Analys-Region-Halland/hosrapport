@@ -18,7 +18,7 @@
 //    01 Patienten och tillgängligheten  — hur vården uppfattas, och vägen in
 //    02 Vårdens kvalitet och säkerhet   — hur vården utförs
 //    03 Resultat och resurser           — vad den leder till och vad den kostar
-//    04 Interna uppföljningsexempel     — regionens egna system
+//    04 Interna analysexempel          — regionens egna system
 //
 //  Områdena matchas mot datamanifestet (index.json) via id — manifestets
 //  namn och siffror vinner. Områden i manifestet utan taxonomi-post hamnar
@@ -83,7 +83,7 @@ export const TAXONOMI: KategoriDef[] = [
         id: "skr-tillganglighet",
         namn: "Tillgänglighet och väntetider",
         beskrivning:
-          "Vårdgarantins tre dagar i primärvården och nittio dagar i den specialiserade vården, plus psykiatri och cancervårdens vårdförlopp. Området med tätast uppföljning i hela rapporten.",
+          "Vårdgarantins tre dagar i primärvården och nittio dagar i den specialiserade vården, plus psykiatri och cancervårdens vårdförlopp. Kapitlet vars underlag mäts tätast av alla i rapporten.",
         datatyp: "oppen",
         kalla: "Nationella väntetidsdatabasen, Regionala cancercentrum",
         takt: "Årsvis (källan månadsvis)",
@@ -157,7 +157,7 @@ export const TAXONOMI: KategoriDef[] = [
   },
   {
     id: "internt",
-    namn: "Interna uppföljningsexempel",
+    namn: "Interna analysexempel",
     kicker: "Regionens egna system",
     beskrivning:
       "Regionens egna system, med en annan takt och en annan metod: dygnsdata med statistiska signalgränser i stället för placering bland regionerna. Mallen för de interna områden som tillkommer.",

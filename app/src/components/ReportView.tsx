@@ -33,11 +33,11 @@ const FONT = "'IBM Plex Sans', sans-serif";
 const FONT_RUBRIK = "'Source Serif 4', Georgia, serif";
 
 const VY_LABELS: Record<string, string> = {
-  dag: "Daglig uppföljning",
-  vecka: "Veckouppföljning",
-  manad: "Månadsuppföljning",
-  kvartal: "Kvartalsuppföljning",
-  ar: "Årsuppföljning",
+  dag: "Daglig analys",
+  vecka: "Veckoanalys",
+  manad: "Månadsanalys",
+  kvartal: "Kvartalsanalys",
+  ar: "Årsanalys",
 };
 
 export interface VyItem { id: string; label: string; disabled?: boolean }

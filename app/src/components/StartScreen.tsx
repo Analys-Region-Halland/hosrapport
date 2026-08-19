@@ -199,7 +199,7 @@ export default function StartScreen({ onPick }: Props) {
             fontSize: 11, fontWeight: 600, textTransform: "uppercase",
             letterSpacing: "0.14em", color: "#00AB60", marginBottom: 14,
           }}>
-            Region Halland &middot; Uppföljning
+            Region Halland &middot; Analys
           </div>
           <h1 style={{
             fontFamily: FONT_SERIF, fontWeight: 600, fontSize: 48, color: "#1a1a1a",
@@ -208,12 +208,11 @@ export default function StartScreen({ onPick }: Props) {
             Hälso- och sjukvården<br />i Halland
           </h1>
           <p style={{ fontFamily: FONT_SERIF, fontSize: 18.5, lineHeight: 1.6, color: "#555", margin: "0 0 34px", maxWidth: 660 }}>
-            En samlad uppföljning av hälso- och sjukvården i Halland, byggd av
+            En samlad analys av hälso- och sjukvården i Halland, byggd av
             fristående kapitel. Varje kapitel inleds med sitt sammanhang,
             redovisar sina källor indikator för indikator och kan läsas för sig
             eller som en del av helheten. Innehållet byggs ut allteftersom fler
-            källor kopplas in, både öppna jämförelser och regionens egen
-            uppföljning.
+            källor kopplas in, både öppna jämförelser och regionens egna data.
           </p>
 
           {/* Kolofon: rapportens omfattning i siffror */}
