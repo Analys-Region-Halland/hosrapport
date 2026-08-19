@@ -512,6 +512,30 @@
 }
 .report-lead__text:last-child { margin-bottom: 0; }
 
+/* ── Nedladdningsknapp i verktygsfältet ── */
+.report-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 10px;
+  border: 1px solid var(--brand-700);
+  border-radius: 5px;
+  background: var(--brand-700);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s;
+}
+.report-export:hover:not(:disabled) { background: #005741; border-color: #005741; }
+.report-export:disabled { opacity: .5; cursor: default; }
+.report-export:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
 /* ── Källrad i indikatorkortet — ursprunget, inte leveranskanalen ── */
 .indicator-kalla {
   display: flex;

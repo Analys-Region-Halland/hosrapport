@@ -72,8 +72,6 @@ const OVRIGT_KATEGORI: KategoriDef = {
 export default function StartScreen({ onPick }: Props) {
   const [grupper, setGrupper] = useState<GruppVy[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  /** Sista datum som finns i datan (ISO) — kolofonens datering. */
-  const [tomDatum, setTomDatum] = useState<string | null>(null);
   /** Helhetsrapportens omfattning, räknad i den vy "alla" öppnas i. */
   const [helhet, setHelhet] = useState<{ n_omraden: number; status: StatusN } | null>(null);
 
@@ -161,9 +159,6 @@ export default function StartScreen({ onPick }: Props) {
           ),
         });
 
-        // Alla vyer delar rapportdatum; ta det senaste som finns.
-        const datum = Object.values(manifest).map((v) => v.datum).filter(Boolean).sort();
-        if (datum.length > 0) setTomDatum(datum[datum.length - 1]);
       })
       .catch((e: unknown) => { if (!cancelled) setError(e instanceof Error ? e.message : String(e)); });
     return () => { cancelled = true; };
@@ -225,7 +220,7 @@ export default function StartScreen({ onPick }: Props) {
               <Kolofon tal={antalOmraden} etikett="Rapporter" />
               <Kolofon tal={antalIndikatorer} etikett="Indikatorer" />
               <Kolofon tal={antalKategorier} etikett="Avdelningar" />
-              {tomDatum && <Kolofon tal={tomDatum} etikett="Data t.o.m." />}
+              <Kolofon tal={__BUILD_DATE__} etikett="Senast uppdaterad" />
             </div>
           )}
         </header>

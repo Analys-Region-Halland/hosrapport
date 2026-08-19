@@ -14,6 +14,13 @@ export default defineConfig(({ command }) => ({
   // låter deploy-workflowet härleda basen från repo-namnet, så samma kodbas
   // kan publiceras även som t.ex. /hosrapport-utkast/.
   base: command === "serve" ? "/" : (process.env.BASE_PATH ?? "/hosrapport/"),
+  // Byggdatum bakas in. Startsidans "Senast uppdaterad" ska visa när rapporten
+  // publicerades, inte när läsaren öppnar sidan — ett `new Date()` i klienten
+  // hade påstått att rapporten uppdaterades i dag oavsett hur gammal den är.
+  // Deploy-workflowet bygger vid varje push, så datumet följer publiceringen.
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+  },
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

@@ -264,6 +264,27 @@ Vissa indikatorer har bara årsdata och saknar dygnsunderlag. Sedan 2026-06 är 
 - Datakälla: `data/kolada-hos.rds`, hämtas med `R/hamta/kolada-hos.R`
   (rKolada 0.3.1 mot Kolada API v3 — v2-API:t är nedstängt)
 
+### PowerPoint-export
+
+Knappen i rapportens verktygsfält laddar ner det som visas som en `.pptx`:
+titelbild, kapitelöversikt (räknare + bedömning), ett blad per avsnitt med
+indikatortabell, en bild per indikator (utfall, placering, bedömning, graf) och
+en källförteckning. Egna anteckningar från localStorage följer med.
+
+- Kod: `app/src/utils/pptx.ts`, byggd på `pptxgenjs`. Modulen **dynamiskt
+  importeras** vid klick (`await import(...)`) så att de ~375 KB hamnar i en
+  egen chunk i stället för i huvudbunten.
+- **Nativa PowerPoint-diagram, inte skärmbilder.** Ett underlag som klistras in
+  i andras presentationer måste gå att redigera och skala om. Priset är att de
+  tjugo gråa kontextlinjerna utelämnas (tjugotre serier i en legend blir
+  oläsligt); i stället ritas gränsen till topp 3 som en egen serie, så att
+  målet syns. Hela regionfältet finns kvar i webbrapporten, och sidfoten säger
+  det.
+- Röktest: `npm run test:pptx` bygger ett deck per kapitel ur den exporterade
+  JSON:en och failar om något kapitel inte går igenom. Körs med `jiti` (läser
+  TypeScript direkt); `localStorage` saknas i Node men fångas av try/catch i
+  `stores/blocks.ts`. Utdata i `app/.pptx-smoke/` (gitignorerad).
+
 ### Grafarkitektur — charts/
 
 All D3-ritlogik ligger i `app/src/charts/` som rena funktioner utan React-beroende. Komponenterna i `components/` är tunna wrappers (ResizeObserver + ref → anropa chart-funktion → returnera cleanup).

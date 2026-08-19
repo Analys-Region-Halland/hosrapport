@@ -140,6 +140,30 @@ export default function ReportView({
   const showSidebar = (!sectionId && visadeSektioner.length > 1) ||
     Boolean(sectionId && visadeSektioner[0]?.delar?.length);
 
+  // ── Ladda ner som PowerPoint ──
+  // pptxgenjs är tungt och behövs bara vid klick, så modulen laddas dynamiskt.
+  // Då hamnar den i en egen chunk i stället för i huvudbunten.
+  const [exporterar, setExporterar] = useState(false);
+  const [exportFel, setExportFel] = useState<string | null>(null);
+  const handleExport = useCallback(async () => {
+    if (!data || visadeSektioner.length === 0) return;
+    setExporterar(true);
+    setExportFel(null);
+    try {
+      const { exporteraPptx } = await import("../utils/pptx");
+      await exporteraPptx({
+        sektioner: visadeSektioner,
+        vyData: data,
+        titel: sectionTitle ?? "Hälso- och sjukvården i Halland",
+        kicker: sectionId ? kategoriForOmrade(sectionId)?.namn : undefined,
+      });
+    } catch (e: unknown) {
+      setExportFel(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExporterar(false);
+    }
+  }, [data, visadeSektioner, sectionTitle, sectionId]);
+
   return (
     <div
       style={{
@@ -153,6 +177,10 @@ export default function ReportView({
         <Toolbar
           onBack={onBack}
           aktivVy={aktivVy} vyItems={vyItems} onChangeVy={onChangeVy}
+          onExport={handleExport}
+          exporterar={exporterar}
+          exportAktiv={Boolean(data) && visadeSektioner.length > 0}
+          exportFel={exportFel}
         />
 
         {error ? (
@@ -848,9 +876,14 @@ function InsertLine({ onClick }: { onClick: () => void }) {
 
 function Toolbar({
   onBack, aktivVy, vyItems, onChangeVy,
+  onExport, exporterar = false, exportAktiv = false, exportFel = null,
 }: {
   onBack: () => void;
   aktivVy: string; vyItems: VyItem[]; onChangeVy: (id: string) => void;
+  onExport?: () => void;
+  exporterar?: boolean;
+  exportAktiv?: boolean;
+  exportFel?: string | null;
 }) {
   return (
     <div className="report-toolbar" style={{
@@ -884,6 +917,29 @@ function Toolbar({
           onChange={onChangeVy}
         />
       </div>
+
+      {/* ── Ladda ner: rapportens grafer, bedömningar och källor som PowerPoint ── */}
+      {onExport && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          {exportFel && (
+            <span role="alert" style={{ fontFamily: FONT, fontSize: 11, color: "#B23A2E" }}>
+              Nedladdningen misslyckades
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onExport}
+            disabled={!exportAktiv || exporterar}
+            className="report-export"
+            title="Ladda ner kapitlets grafer, bedömningar och källor som PowerPoint"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M8 2v8M4.5 7L8 10.5 11.5 7M2.5 13h11" />
+            </svg>
+            {exporterar ? "Skapar…" : "PowerPoint"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

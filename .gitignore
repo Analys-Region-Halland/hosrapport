@@ -31,3 +31,6 @@ _tmp_*
 
 /.quarto/
 **/*.quarto_ipynb
+
+# Utdata från PowerPoint-röktestet (npm run test:pptx)
+app/.pptx-smoke/
