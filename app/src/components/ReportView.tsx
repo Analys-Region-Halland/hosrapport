@@ -350,8 +350,8 @@ function OversiktBlock({
 
       {/* ETT kort med egen titel + AI-analys + heatmap — exakt som indikatorkorten. */}
       <figure className="report-indicator ind report-figure" style={{ margin: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div className="ind-etikett" style={{ flex: "1 1 auto", marginBottom: 14 }}>Signalöversikt</div>
+        <div className="ind-etikett">
+          <span>Signalöversikt</span>
           {harDagar && onChangeVisaDagar && (
             <SegmentedControl
               size="sm"
@@ -506,7 +506,7 @@ function KapitelOversikt({
 }) {
   return (
     <figure className="report-indicator ind report-figure" style={{ margin: "0 0 26px" }}>
-      <div className="ind-etikett">Signalöversikt</div>
+      <div className="ind-etikett"><span>Signalöversikt</span></div>
 
       <div style={{ maxWidth: 680, marginBottom: 18 }}>
         <BlocksEditor
@@ -698,8 +698,8 @@ function IndicatorBlock({
 
       {/* ── 3. Diagram: beviset kommer före förklaringen ── */}
       <figure className="ind__sektion report-figure" style={{ margin: 0 }}>
-        <div className="ind__figurhead">
-          <h4 className="ind-etikett" style={{ flex: "1 1 auto", marginBottom: 0 }}>Utfall</h4>
+        <div className="ind-etikett">
+          <span>Utfall</span>
           {harDagar && (
             <SegmentedControl
               size="sm"
@@ -725,7 +725,7 @@ function IndicatorBlock({
 
       {/* ── 5. Verksamhetens kommentar ── */}
       <section className="ind__sektion ind__kommentar">
-        <h4 className="ind-etikett">Verksamhetens kommentar</h4>
+        <h4 className="ind-etikett"><span>Verksamhetens kommentar</span></h4>
         <Anteckningar targetId={kpi.id} vy={vy} />
       </section>
     </article>

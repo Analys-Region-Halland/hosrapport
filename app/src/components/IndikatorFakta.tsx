@@ -6,19 +6,19 @@ import { periodRangeLabel } from "../utils/format";
 // ════════════════════════════════════════════════════════════
 //  IndikatorFakta — "Om indikatorn", sektionen efter diagrammet.
 //
-//  OMTAG 2026-08-20: blocket låg tidigare i en egen tonad ruta och läste sig
-//  som en tabell inklämd i uppslaget. Nu är det en sektion bland de andra,
-//  med samma gröna etikettlinje som Bedömning, Utfall och Verksamhetens
-//  kommentar, och etiketten är samtidigt fällknappen.
+//  OMTAG 2026-08-20 (andra vändan): innehållet låg i etikett-och-värde-rader
+//  och läste sig som en tabell, oavsett om rutan runt fanns kvar eller inte.
+//  Greppet är nu i stället att låta varje sorts innehåll få sin egen form:
 //
-//  Innehållet står i två spalter, åtskilda av en hårlinje:
-//    DEFINITION                  vad måttet räknar, åt vilket håll det ska gå,
-//                                vad det inte fångar, enhet, period, källa.
-//    PÅVERKANSFAKTORER OCH TEORI mekanismen bakom talet, följd av de konkreta
-//                                sakerna som drar i det.
+//    definitionen   ett stycke satt med tyngd, för det ÄR sektionens svar
+//    riktning/avgränsning  löpande stycken med inledande etikett
+//    enhet, period, källa  en kolofon, alltså metadata satt som metadata
+//    teorin         ett resonerande stycke i serif, som rapportens brödtext
+//    påverkansfaktorerna  en numrerad lista med mono-siffror i grönt, samma
+//                   språk som kapitelfolion
 //
-//  Raderna linjerar men saknar linjer: alignment ger skanbarheten, medan
-//  frånvaron av rutnät håller det borta från tabellkänslan.
+//  Typografiskt gäller genomgående: serif är prosa, sans är etiketter och
+//  metadata, mono är siffror. Inget rutnät, inga radlinjer.
 //
 //  Underlaget kommer från R (kpi.fakta, se R/teman/kolada/indikatorfakta.R).
 //  Saknas det renderas vänsterspalten ändå, härledd ur indikatorns egna fält,
@@ -44,13 +44,13 @@ function harleddRiktning(kpi: KpiData): string {
   return bas;
 }
 
-function Rad({ etikett, children }: { etikett: string; children: React.ReactNode }) {
-  if (!children) return null;
+/** Löpande stycke med inledande etikett, i stället för en tabellrad. */
+function Stycke({ etikett, children }: { etikett: string; children: React.ReactNode }) {
   return (
-    <div className="fakta-rad">
-      <dt className="fakta-rad__lbl">{etikett}</dt>
-      <dd className="fakta-rad__val">{children}</dd>
-    </div>
+    <p className="fakta-stycke">
+      <span className="fakta-stycke__lbl">{etikett}</span>
+      {children}
+    </p>
   );
 }
 
@@ -90,41 +90,55 @@ export default function IndikatorFakta({ kpi, vy }: { kpi: KpiData; vy: string }
 
       {oppen && (
         <div id={panelId} className={`ind-fakta${fakta ? " ind-fakta--tva" : ""}`}>
-          <section className="ind-fakta__spalt">
-            {fakta && <h5 className="fakta-spaltrubrik">Definition</h5>}
-            <dl className="fakta-lista">
-              <Rad etikett="Vad som mäts">{matt}</Rad>
-              <Rad etikett="Önskvärd riktning">{riktning}</Rad>
-              {fakta?.avgransning && <Rad etikett="Avgränsning">{fakta.avgransning}</Rad>}
-              <Rad etikett="Enhet och period">
+          <section className="fakta-spalt">
+            {fakta && <h5 className="fakta-spalt__rubrik">Definition</h5>}
+
+            {/* Definitionen står som sektionens svar, inte som en tabellrad. */}
+            <p className="fakta-lead">{matt}</p>
+
+            <Stycke etikett="Önskvärd riktning">{riktning}</Stycke>
+            {fakta?.avgransning && (
+              <Stycke etikett="Avgränsning">{fakta.avgransning}</Stycke>
+            )}
+
+            {/* Kolofon: enhet, period och härkomst satt som metadata. */}
+            <div className="fakta-kolofon">
+              <p>
                 {enhetsText(kpi)}
-                {period ? `, ${period}` : ""}
-              </Rad>
+                {period && <> <span className="fakta-kolofon__sep">·</span> {period}</>}
+              </p>
               {kalla && (
-                <Rad etikett="Källa">
+                <p>
+                  Källa:{" "}
                   {kalla.url ? (
                     <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
-                  ) : kalla.namn}
-                  <span className="fakta-rad__svag"> · {kalla.typ}</span>
-                  {/* Koladas egen formulering, men bara när den tillför något
-                      utöver källans namn. Annars upprepar raden sig själv. */}
-                  {koladaText && (
-                    <span className="fakta-rad__kolada">Kolada anger: {koladaText}</span>
-                  )}
-                </Rad>
+                  ) : kalla.namn}{" "}
+                  <span className="fakta-kolofon__sep">·</span> {kalla.typ}
+                </p>
               )}
-            </dl>
+              {/* Koladas egen formulering, men bara när den tillför något
+                  utöver källans namn. Annars upprepar raden sig själv. */}
+              {koladaText && <p>Kolada anger: {koladaText}</p>}
+            </div>
           </section>
 
           {fakta && (
-            <section className="ind-fakta__spalt ind-fakta__spalt--delad">
-              <h5 className="fakta-spaltrubrik">Påverkansfaktorer och teori</h5>
+            <section className="fakta-spalt fakta-spalt--delad">
+              <h5 className="fakta-spalt__rubrik">Påverkansfaktorer och teori</h5>
               <p className="fakta-teori">{fakta.teori}</p>
-              <dl className="fakta-lista fakta-lista--faktorer">
-                {fakta.faktorer.map((f) => (
-                  <Rad key={f.rubrik} etikett={f.rubrik}>{f.text}</Rad>
+              <ol className="fakta-faktorer">
+                {fakta.faktorer.map((f, i) => (
+                  <li key={f.rubrik} className="fakta-faktor">
+                    <span className="fakta-faktor__nr" aria-hidden="true">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <p className="fakta-faktor__text">
+                      <span className="fakta-faktor__rubrik">{f.rubrik}</span>
+                      {f.text}
+                    </p>
+                  </li>
                 ))}
-              </dl>
+              </ol>
             </section>
           )}
         </div>
