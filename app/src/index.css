@@ -860,7 +860,9 @@
   justify-content: space-between;
   gap: 16px;
   margin: 0 0 15px;
-  padding-top: 10px;
+  padding: 10px 0 0;
+  /* Nollställs explicit: etiketten är ibland en <button>. */
+  border: 0;
   border-top: 1px solid rgba(0, 102, 77, .32);
   font-family: var(--font-sans);
   font-size: 11.5px;
@@ -958,50 +960,40 @@
    skanbarheten utan tabellkänslan.
    ════════════════════════════════════════════ */
 
-/* ── Fällknappen: bär sektionsetiketten och sitter i samma rytm som
-   .ind-etikett, men med linjen som eget element så att pilen kan stå
-   längst ut till höger. ── */
-.ind-fold {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* ── Fällkontrollen är en VARIANT av sektionsetiketten, inte en egen
+   rubrikform: samma storlek, versaler, färg och topplinje. Det enda som
+   skiljer är kontrollen längst ut till höger. ── */
+.ind-etikett--knapp {
   width: 100%;
-  padding: 10px 0 0;
-  border: 0;
-  border-top: 1px solid rgba(0, 102, 77, .32);
   background: none;
   cursor: pointer;
-  color: var(--brand-700);
   text-align: left;
   transition: border-color .15s;
 }
-.ind-fold:hover { border-top-color: rgba(0, 102, 77, .6); }
-.ind-fold__lbl {
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .15em;
-  white-space: nowrap;
+.ind-etikett--knapp:hover { border-top-color: rgba(0, 102, 77, .6); }
+.ind-etikett--knapp:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 3px; }
+.ind-etikett__kontroll {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
 }
-.ind-fold__linje { flex: 1 1 auto; }
-.ind-fold__hint {
+.ind-etikett__hint {
   font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: .06em;
+  text-transform: none;
   color: #a2aaa6;
   transition: color .15s;
 }
-.ind-fold__pil {
-  flex-shrink: 0;
+.ind-etikett__pil {
   color: #a2aaa6;
   transition: transform .18s ease, color .15s;
 }
-.ind-fold[aria-expanded="true"] .ind-fold__pil { transform: rotate(180deg); }
-.ind-fold:hover .ind-fold__hint,
-.ind-fold:hover .ind-fold__pil { color: var(--brand-700); }
-.ind-fold:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 3px; }
+.ind-etikett--knapp[aria-expanded="true"] .ind-etikett__pil { transform: rotate(180deg); }
+.ind-etikett--knapp:hover .ind-etikett__hint,
+.ind-etikett--knapp:hover .ind-etikett__pil { color: var(--brand-700); }
 
 /* ── Innehållet: ETT flöde, en spaltbredd. Tvåspaltigheten bröt läsningen
    mitt i en text som hänger ihop, och sektionen är ändå inte längre än att
@@ -1031,16 +1023,18 @@
   line-height: 1.68;
   color: #454b48;
 }
-.fakta-stycke__lbl {
+/* EN form för poster inne i en sektion, delad av de inledande etiketterna
+   och av påverkansfaktorernas rubriker. Tidigare var de två skilda former,
+   varav den ena grå versal, vilket gjorde blocket rörigt. */
+.fakta-lbl {
   font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .09em;
-  color: #8b938e;
-  margin-right: 9px;
-  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .005em;
+  color: var(--ink);
 }
+.fakta-stycke .fakta-lbl { margin-right: 8px; }
+.fakta-lbl--rad { display: block; margin: 0 0 3px; }
 
 /* Kolofon: enhet, period och härkomst satt som metadata, inte som innehåll. */
 .fakta-kolofon {
@@ -1056,18 +1050,6 @@
 .fakta-kolofon a { color: #6d7a74; text-decoration: none; }
 .fakta-kolofon a:hover { color: var(--brand-700); text-decoration: underline; }
 .fakta-kolofon__sep { color: #c8ccc9; }
-
-/* Underrubrik inne i sektionen — dämpad, utan linje, så att den inte
-   konkurrerar med sektionsetiketten ovanför. */
-.fakta-underrubrik {
-  margin: 26px 0 12px;
-  font-family: var(--font-sans);
-  font-size: 9.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  color: #9aa39e;
-}
 
 /* Teoristycket: resonerande text, samma röst som rapportens brödtext. */
 .fakta-teori {
@@ -1109,14 +1091,6 @@
   color: var(--brand-500);
 }
 .fakta-faktor__kropp { min-width: 0; }
-.fakta-faktor__rubrik {
-  margin: 0 0 3px;
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: .005em;
-  color: var(--ink);
-}
 .fakta-faktor__text {
   margin: 0;
   font-family: var(--font-serif);
@@ -1126,7 +1100,7 @@
 }
 
 /* Källhänvisningen: diskret men klickbar, med utgående pil. */
-.fakta-faktor__kalla {
+.fakta-kalla {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1138,8 +1112,8 @@
   text-decoration: none;
   transition: color .15s;
 }
-a.fakta-faktor__kalla:hover { color: var(--brand-700); text-decoration: underline; }
-.fakta-faktor__kalla--tom { color: #a9ada8; }
+a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
+.fakta-kalla--tom { color: #a9ada8; }
 
 @media (max-width: 620px) {
   .ind { padding: 22px 18px 20px; }
@@ -1151,5 +1125,5 @@ a.fakta-faktor__kalla:hover { color: var(--brand-700); text-decoration: underlin
   .ind-fakta { break-inside: avoid; }
   /* Fäll-affordansen är meningslös på papper. En sektion som lämnats
      hopfälld på skärmen följer däremot inte med till utskriften. */
-  .ind-fold__hint, .ind-fold__pil { display: none; }
+  .ind-etikett__kontroll { display: none; }
 }

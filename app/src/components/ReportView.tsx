@@ -718,10 +718,9 @@ function IndicatorBlock({
         </figcaption>
       </figure>
 
-      {/* ── 4. Faktablock: vad måttet är och vad som drar i det ── */}
-      <section className="ind__sektion">
-        <IndikatorFakta kpi={kpi} vy={vy} />
-      </section>
+      {/* ── 4. Två jämbördiga referenssektioner: vad måttet är, och vad som
+             drar i det. Renderar sina egna <section>, se IndikatorFakta. ── */}
+      <IndikatorFakta kpi={kpi} vy={vy} />
 
       {/* ── 5. Verksamhetens kommentar ── */}
       <section className="ind__sektion ind__kommentar">
