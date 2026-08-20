@@ -16,7 +16,7 @@ import { hasDirty } from "../stores/dirty";
 import { fullEtikett, fmtVarde, fmtSuffix } from "../utils/format";
 import { ANALYS_RUBRIK_GLOBAL, analysRubrikForStatus } from "../utils/analys";
 import SegmentedControl from "./SegmentedControl";
-import SignalBadge from "./SignalBadge";
+import { SIGNAL_COLORS, SIGNAL_TEXT } from "../charts/constants";
 import { kategoriForOmrade } from "../taxonomy";
 
 // ════════════════════════════════════════════════════════
@@ -129,12 +129,6 @@ export default function ReportView({
     () => visadeSektioner.filter((s) => !s.delar || s.delar.length === 0),
     [visadeSektioner],
   );
-  const allKpier = visadeSektioner.flatMap((s) => s.kpier);
-  const within = allKpier.filter((k) => {
-    const last = k.tidsserie[k.tidsserie.length - 1];
-    return last?.signal === "gron";
-  }).length;
-  const outside = allKpier.length - within;
   const vyLabel = data ? (VY_LABELS[data.vy] || "") : "";
   const sectionTitle = sectionId ? visadeSektioner[0]?.namn : null;
   const showSidebar = (!sectionId && visadeSektioner.length > 1) ||
@@ -250,17 +244,6 @@ export default function ReportView({
               </div>
             </header>
 
-            {/* ── Nyckeltal-sammanfattning ── */}
-            <div style={{
-              display: "flex", gap: 24, alignItems: "baseline",
-              marginBottom: 28, paddingBottom: 20,
-              borderBottom: "1px solid #e0e0dc",
-            }}>
-              <MiniStat value={allKpier.length} label="indikatorer" />
-              <MiniStat value={within} label="inom förväntat" signal="gron" />
-              {outside > 0 && <MiniStat value={outside} label="utanför" signal="rod" />}
-            </div>
-
             {/* ── Översikt: titel i platta + AI-analys + heatmap (samma mönster som övriga kapitel).
                    Döljs när alla visade sektioner har delar (delarnas heatmaps bor i kapitlet). ── */}
             {(heatmapSektioner.length > 0 || !sectionId) && (
@@ -348,24 +331,15 @@ function OversiktBlock({
       {/* Titel i platta — exakt samma utseende som övriga kapitel (folio 00). */}
       <ChapterPlate index={0} namn="Översikt" />
 
-      {/* ETT kort med egen titel + AI-analys + heatmap — exakt som indikatorkorten. */}
-      <figure className="report-indicator ind report-figure" style={{ margin: 0 }}>
-        <div className="ind-etikett">
-          <span>Signalöversikt</span>
-          {harDagar && onChangeVisaDagar && (
-            <SegmentedControl
-              size="sm"
-              ariaLabel="Aggregerat eller dagsnivå"
-              items={[{ id: "aggregerat", label: "Aggregerat" }, { id: "dag", label: "Dag" }]}
-              value={visaDagar ? "dag" : "aggregerat"}
-              onChange={(id) => onChangeVisaDagar(id === "dag")}
-            />
-          )}
-        </div>
-
-        {/* AI-analys INOM samma box, precis som indikatorernas analys */}
+      {/* Samma oinramade form som kapitlens och avsnittens sammanfattningar:
+          fördelningen i siffror, bedömningen i ord, sedan tabellen. */}
+      <div className="sammanfattning">
+        <StatusFordelning
+          kpier={sektioner.flatMap((s) => s.kpier)}
+          etikett="Rapporten omfattar"
+        />
         {showGlobal && (
-          <div style={{ maxWidth: 680, marginBottom: 18 }}>
+          <div className="ind__sektion">
             <BlocksEditor
               targetId="global"
               aiText={vyData.analys}
@@ -374,15 +348,22 @@ function OversiktBlock({
             />
           </div>
         )}
-
-        <SignalTimeline sektioner={sektioner} vy={vyData.vy} visaDagar={visaDagar} onCellClick={onOpenChart} />
-        <figcaption style={{
-          fontFamily: FONT_RUBRIK, fontStyle: "italic", fontSize: 13, color: "#888",
-          marginTop: 14, lineHeight: 1.5,
-        }}>
-          En rad per indikator, en ruta per period. Peka för värde och trend, klicka på raden för större graf.
-        </figcaption>
-      </figure>
+        <section className="ind__sektion">
+          <div className="ind-etikett">
+            <span>Signalöversikt</span>
+            {harDagar && onChangeVisaDagar && (
+              <SegmentedControl
+                size="sm"
+                ariaLabel="Aggregerat eller dagsnivå"
+                items={[{ id: "aggregerat", label: "Aggregerat" }, { id: "dag", label: "Dag" }]}
+                value={visaDagar ? "dag" : "aggregerat"}
+                onChange={(id) => onChangeVisaDagar(id === "dag")}
+              />
+            )}
+          </div>
+          <SignalTimeline sektioner={sektioner} vy={vyData.vy} visaDagar={visaDagar} onCellClick={onOpenChart} />
+        </section>
+      </div>
     </section>
   );
 }
@@ -452,18 +433,13 @@ function SectionBlock({
           indikatorer, grupperade per avsnitt. Ligger på kapitelnivå och inte
           per avsnitt — annars upprepas samma remsa fyra gånger i rad. */}
       {delar && (
-        <KapitelOversikt
-          section={section}
-          grupper={delar}
-          vy={vy}
-          onOpenChart={onOpenChart}
-        />
+        <KapitelSammanfattning section={section} vy={vy} />
       )}
 
       {delar ? (
         /* Tematiska avsnitt (SKR-kapitlets indelning) — rubrik + bedömning */
         delar.map((del, di) => (
-          <DelBlock key={del.id} del={del} nr={di + 1} vyLabel={vyLabel} vy={vy} />
+          <DelBlock key={del.id} del={del} nr={di + 1} vyLabel={vyLabel} vy={vy} onOpenChart={onOpenChart} />
         ))
       ) : (
         /* Indikatorer — varje som ett distinkt kort (analys + egna texter bor här) */
@@ -495,48 +471,90 @@ function Inledning({ stycken }: { stycken: string[] }) {
 }
 
 // ════════════════════════════════════════
-//  KapitelOversikt — räknare + bedömning + signalöversikt per avsnitt
+//  Statusfördelning — hur många indikatorer som ligger var
+//
+//  Kapitlets sammanfattning behöver en siffermässig sammanfattning, inte hela
+//  signaltabellen: den bor numera hos respektive avsnitt. Remsan visar
+//  fördelningen som ett proportionerligt band plus räknare, i samma
+//  trafikljusspråk som chippen.
 // ════════════════════════════════════════
 
-function KapitelOversikt({
-  section, grupper, vy, onOpenChart,
-}: {
-  section: Section; grupper: Section[]; vy: string;
-  onOpenChart?: (kpi: KpiData) => void;
-}) {
+function StatusFordelning({ kpier, etikett }: { kpier: KpiData[]; etikett: string }) {
+  const nyckel = (k: KpiData) => (k.utan_mal ? "neutral" : k.status);
+  const ordning: { id: string; etikett: string; farg: string; text: string }[] = [
+    { id: "rod", etikett: "avvikelse", farg: SIGNAL_COLORS.rod, text: SIGNAL_TEXT.rod },
+    { id: "gul", etikett: "bevaka", farg: SIGNAL_COLORS.gul, text: SIGNAL_TEXT.gul },
+    { id: "gron", etikett: "i fas", farg: SIGNAL_COLORS.gron, text: SIGNAL_TEXT.gron },
+    { id: "neutral", etikett: "utan mål", farg: "#dcdcd7", text: "#6B7270" },
+  ];
+  const antal = Object.fromEntries(
+    ordning.map((o) => [o.id, kpier.filter((k) => nyckel(k) === o.id).length]),
+  );
+  const totalt = kpier.length;
+  if (totalt === 0) return null;
+
   return (
-    <figure className="report-indicator ind report-figure" style={{ margin: "0 0 26px" }}>
-      <div className="ind-etikett"><span>Signalöversikt</span></div>
-
-      <div style={{ maxWidth: 680, marginBottom: 18 }}>
-        <BlocksEditor
-          targetId={section.id}
-          aiText={section.analys}
-          aiRubrik={section.analys_rubrik || "Bedömning"}
-          vy={vy}
-        />
+    <div className="statusfordelning">
+      <div
+        className="statusfordelning__band"
+        role="img"
+        aria-label={`${totalt} indikatorer: ` +
+          ordning.filter((o) => antal[o.id]).map((o) => `${antal[o.id]} ${o.etikett}`).join(", ")}
+      >
+        {ordning.filter((o) => antal[o.id] > 0).map((o) => (
+          <span key={o.id} style={{ flex: antal[o.id], background: o.farg }} />
+        ))}
       </div>
-
-      <SignalTimeline sektioner={grupper} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
-      <figcaption style={{
-        fontFamily: FONT_RUBRIK, fontStyle: "italic", fontSize: 13, color: "#888",
-        marginTop: 14, lineHeight: 1.5,
-      }}>
-        En rad per indikator, en ruta per år. Peka för värde och trend, klicka på raden för större graf.
-      </figcaption>
-    </figure>
+      <div className="statusfordelning__rad" aria-hidden="true">
+        <span className="statusfordelning__totalt">
+          {etikett} <strong style={mono}>{totalt}</strong> indikatorer
+        </span>
+        {ordning.filter((o) => antal[o.id] > 0).map((o) => (
+          <span key={o.id} className="statusfordelning__post" style={{ color: o.text }}>
+            <strong style={mono}>{antal[o.id]}</strong> {o.etikett}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
 // ════════════════════════════════════════
-//  DelBlock — tematiskt avsnitt: rubrik + bedömning + indikatorer
-//  (signalremsan bor på kapitelnivå, se KapitelOversikt)
+//  KapitelSammanfattning — kapitlets ingång
+//
+//  Tidigare låg hela kapitlets signaltabell här och avsnitten hade bara en
+//  textbedömning, vilket gjorde att tabellen aldrig stod nära de indikatorer
+//  den beskrev. Nu är detta en renodlad SAMMANFATTNING: bedömningen i ord
+//  plus statusfördelningen i siffror. Signaltabellen bor hos avsnittet.
+// ════════════════════════════════════════
+
+function KapitelSammanfattning({ section, vy }: { section: Section; vy: string }) {
+  return (
+    <section className="sammanfattning">
+      <StatusFordelning kpier={section.kpier} etikett="Kapitlet omfattar" />
+      <div className="ind__sektion">
+        <BlocksEditor
+          targetId={section.id}
+          aiText={section.analys}
+          aiRubrik={section.analys_rubrik || "Sammanfattande bedömning"}
+          vy={vy}
+        />
+      </div>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════
+//  DelBlock — tematiskt avsnitt: rubrik + bedömning + signalöversikt
+//  + indikatorer. Bedömningen och avsnittets egen signaltabell står nu
+//  tillsammans i ett block, så att orden och siffrorna kan läsas mot varandra.
 // ════════════════════════════════════════
 
 function DelBlock({
-  del, nr, vyLabel, vy,
+  del, nr, vyLabel, vy, onOpenChart,
 }: {
   del: Section; nr: number; vyLabel: string; vy: string;
+  onOpenChart?: (kpi: KpiData) => void;
 }) {
   return (
     <section
@@ -550,15 +568,18 @@ function DelBlock({
         </h3>
       </div>
 
-      {/* Avsnittets bedömning + egna anteckningar. Vitrum avgränsar mot
-          första indikatorn; ingen egen ram behövs. */}
-      <div style={{ maxWidth: 680, margin: "0 0 32px" }}>
-        <BlocksEditor
-          targetId={del.id}
-          aiText={del.analys}
-          aiRubrik="Bedömning"
-          vy={vy}
-        />
+      {/* Avsnittets sammanfattning står OINRAMAD på pappret. Kontrasten mot de
+          inramade indikatorbladen nedan är det som säger att detta är en
+          sammanfattning och inte ännu en indikator. */}
+      <div className="sammanfattning">
+        <StatusFordelning kpier={del.kpier} etikett="Avsnittet omfattar" />
+        <div className="ind__sektion">
+          <BlocksEditor targetId={del.id} aiText={del.analys} aiRubrik="Bedömning av avsnittet" vy={vy} />
+        </div>
+        <section className="ind__sektion">
+          <div className="ind-etikett"><span>Signalöversikt</span></div>
+          <SignalTimeline sektioner={[del]} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
+        </section>
       </div>
 
       {del.kpier.map((kpi) => (
@@ -1146,15 +1167,3 @@ function TocGrupp({
   );
 }
 
-function MiniStat({ value, label, signal }: { value: number; label: string; signal?: string }) {
-  return (
-    <span
-      style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
-      {...(signal ? { role: "img", "aria-label": `${value} ${label}` } : {})}
-    >
-      {signal && <SignalBadge signal={signal} size={8} />}
-      <span style={{ ...mono, fontSize: 18, fontWeight: 600, color: "#0a0a0a" }}>{value}</span>
-      <span style={{ fontSize: 13, color: "#888", fontFamily: FONT }}>{label}</span>
-    </span>
-  );
-}

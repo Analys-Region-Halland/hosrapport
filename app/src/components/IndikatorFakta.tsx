@@ -136,10 +136,10 @@ export function OmIndikatorn({ kpi, vy }: { kpi: KpiData; vy: string }) {
 
   return (
       <FallbarSektion rubrik="Om indikatorn" panelId={`fakta-om-${kpi.id}`}>
-        {/* Definitionen svarar direkt på sektionsrubriken och står därför
-            utan egen etikett, satt med tyngd. */}
-        <p className="fakta-lead">{matt}</p>
-
+        {/* Tre parallella poster i EN form. Tidigare stod definitionen som en
+            större, mörkare ingress utan etikett medan de två andra hade
+            etikett och egen färg, vilket gjorde sektionen brokig. */}
+        <Post etikett="Vad måttet räknar">{matt}</Post>
         <Post etikett="Riktning och mål">{riktning}</Post>
         {fakta?.avgransning && (
           <Post etikett="Vad måttet inte fångar">{fakta.avgransning}</Post>

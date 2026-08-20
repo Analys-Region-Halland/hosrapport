@@ -745,7 +745,9 @@
 /* ── Kolumnhuvud + årsaxel ── */
 .sig__head {
   display: grid; align-items: end; column-gap: 12px;
-  padding-bottom: 7px; border-bottom: 1px solid rgba(0, 102, 77, .3);
+  /* Neutral, inte grön: grönt är reserverat för sektionsetiketterna, och
+     tabellhuvudet är en kolumnlinje och inte en sektionsstart. */
+  padding-bottom: 7px; border-bottom: 1px solid var(--hairline);
 }
 .sig__head-lbl {
   font-size: 9.5px; font-weight: 700; text-transform: uppercase;
@@ -859,7 +861,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 0 0 15px;
+  margin: 0 0 16px;
   padding: 10px 0 0;
   /* Nollställs explicit: etiketten är ibland en <button>. */
   border: 0;
@@ -875,6 +877,42 @@
 /* Överst i en ram behövs ingen linje: ramkanten gör redan avgränsningen,
    och två linjer nära varandra läser sig som ett misstag. */
 .ind > .ind-etikett:first-child { border-top: 0; padding-top: 0; }
+
+/* ── Sammanfattning: kapitlets och avsnittets ingång.
+   Den står OINRAMAD på pappret medan indikatorerna är inramade blad.
+   Kontrasten är det som säger att detta är en sammanfattning, utan att
+   någon extra linje eller etikett behöver läggas till. ── */
+.sammanfattning {
+  margin: 0 0 44px;
+}
+.sammanfattning .ind__sektion:last-child { margin-bottom: 0; }
+
+/* ── Statusfördelning: bandet + räknarna i kapitlets och avsnittets
+   sammanfattning. Proportionerligt band i trafikljusfärgerna, följt av
+   räknare i samma toner. Inga ramar och ingen bakgrund. ── */
+.statusfordelning { margin-bottom: 28px; }
+.statusfordelning__band {
+  display: flex;
+  height: 8px;
+  gap: 2px;
+  margin-bottom: 11px;
+}
+.statusfordelning__rad {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+}
+.statusfordelning__totalt { color: #6d7a74; }
+.statusfordelning__post { font-weight: 500; }
+.statusfordelning strong {
+  font-size: 15px;
+  font-weight: 600;
+  margin-right: 2px;
+}
+.statusfordelning__totalt strong { color: var(--ink); }
 
 /* ── Huvud ── */
 .ind__head { margin-bottom: 22px; }
@@ -910,7 +948,7 @@
 .ind__readout-svag { color: #a2a8a4; }
 
 /* ── Sektioner inne i ramen ── */
-.ind__sektion { margin-bottom: 26px; }
+.ind__sektion { margin-bottom: 32px; }
 .ind__sektion:last-child { margin-bottom: 0; }
 .ind__sektion .ai-callout { margin-bottom: 0; }
 
@@ -1017,65 +1055,66 @@
   animation: fadeIn .14s ease;
 }
 
-/* ── Prosan. Serif genomgående: det här är rapporttext, inte datafält. ── */
+/* ── Typografin i sektionerna.
 
-/* Definitionen bär sektionen och sätts därför en snäpp större och mörkare. */
-.fakta-lead {
-  margin: 0 0 15px;
-  font-family: var(--font-serif);
-  font-size: 15.5px;
-  line-height: 1.62;
-  color: var(--ink);
-}
+   OMTAG 2026-08-20 (femte vändan): blocket hade nio typstorlekar och fyra
+   textfärger, vilket gjorde "Om indikatorn" brokig. Skalan är nedskuren till
+   fem steg och paletten till fyra toner. All prosa har SAMMA storlek och
+   färg; det är etiketterna som strukturerar, inte storleksskillnader.
 
-/* Riktning och avgränsning: löpande stycken med inledande etikett. */
+     20 serif    indikatornamn
+     16 serif    sektionsrubrik (diagramrubrik, analysrubrik)
+     14 serif    all prosa
+     12 sans     postetikett (fet, svart)
+     11 sans     sektionsetikett (versal grön) och metadata (dämpad)
+   ── */
+
+/* Post: löpande stycke med inledande etikett. Samma form för definitionens
+   tre delar och för påverkansfaktorernas rubriker. */
 .fakta-stycke {
-  margin: 0 0 11px;
+  margin: 0 0 12px;
   font-family: var(--font-serif);
-  font-size: 13.5px;
-  line-height: 1.68;
-  color: #454b48;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #3a403d;
 }
-/* EN form för poster inne i en sektion, delad av de inledande etiketterna
-   och av påverkansfaktorernas rubriker. Tidigare var de två skilda former,
-   varav den ena grå versal, vilket gjorde blocket rörigt. */
+.fakta-stycke:last-child { margin-bottom: 0; }
 .fakta-lbl {
   font-family: var(--font-sans);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .005em;
   color: var(--ink);
 }
-.fakta-stycke .fakta-lbl { margin-right: 8px; }
-.fakta-lbl--rad { display: block; margin: 0 0 3px; }
+.fakta-stycke .fakta-lbl { margin-right: 9px; }
+.fakta-lbl--rad { display: block; margin: 0 0 4px; }
 
-/* Kolofon: enhet, period och härkomst satt som metadata, inte som innehåll. */
+/* Kolofon: metadata. Ingen linje ovanför, luften räcker som avgränsare. */
 .fakta-kolofon {
-  margin-top: 16px;
-  padding-top: 11px;
-  border-top: 1px solid var(--hairline);
+  margin-top: 20px;
   font-family: var(--font-sans);
   font-size: 11px;
-  line-height: 1.62;
-  color: #9aa09b;
+  line-height: 1.65;
+  color: #8b938e;
 }
 .fakta-kolofon p { margin: 0; }
 .fakta-kolofon a { color: #6d7a74; text-decoration: none; }
 .fakta-kolofon a:hover { color: var(--brand-700); text-decoration: underline; }
 .fakta-kolofon__sep { color: #c8ccc9; }
 
-/* Teoristycket: resonerande text, samma röst som rapportens brödtext. */
+/* Teoristycket: samma prosa som posterna, bara utan etikett. */
 .fakta-teori {
-  font-family: var(--font-serif);
-  font-size: 14.5px;
-  line-height: 1.68;
-  color: #33393f;
   margin: 0 0 20px;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  color: #3a403d;
 }
 
 /* ── Påverkansfaktorerna: numrerad lista med mono-siffror i grönt, samma
-   språk som kapitelfolion. Rubriken står på egen rad nu när flödet har
-   full bredd, och källhänvisningen hänger under sin egen faktor. ── */
+   språk som kapitelfolion. Inga skiljelinjer mellan posterna; luften gör
+   grupperingen, i linje med att linjer bara ska användas där de tjänar
+   sitt uppehälle. ── */
 .fakta-faktorer {
   margin: 0;
   padding: 0;
@@ -1085,41 +1124,35 @@
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   gap: 0 14px;
-  padding-bottom: 15px;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #f1f1ec;
+  margin-bottom: 16px;
 }
-.fakta-faktor:last-child {
-  padding-bottom: 0;
-  margin-bottom: 0;
-  border-bottom: 0;
-}
+.fakta-faktor:last-child { margin-bottom: 0; }
 .fakta-faktor__nr {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
   font-size: 11px;
   font-weight: 600;
-  line-height: 1.55;
-  color: var(--brand-500);
+  line-height: 1.65;
+  color: var(--brand-700);
 }
 .fakta-faktor__kropp { min-width: 0; }
 .fakta-faktor__text {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 13.5px;
-  line-height: 1.66;
-  color: #454b48;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #3a403d;
 }
 
-/* Källhänvisningen: diskret men klickbar, med utgående pil. */
+/* Källhänvisningen: metadata, samma ton som kolofonen. */
 .fakta-kalla {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  margin-top: 5px;
+  margin-top: 6px;
   font-family: var(--font-sans);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
   color: #8b938e;
   text-decoration: none;

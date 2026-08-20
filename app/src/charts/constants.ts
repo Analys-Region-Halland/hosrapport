@@ -24,7 +24,7 @@ export const SIGNAL_TEXT: Record<string, string> = {
   rod:  "#9A2E22",
 };
 
-// Formredundans — för datapunkter (d3.symbol) och SignalBadge
+// Formredundans — för datapunkter (d3.symbol)
 export const SIGNAL_SHAPES: Record<string, "circle" | "triangle" | "diamond"> = {
   gron: "circle",
   gul: "triangle",
