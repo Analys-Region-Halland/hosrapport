@@ -734,3 +734,136 @@
   }
   @page { margin: 16mm; }
 }
+
+/* ════════════════════════════════════════════
+   Signalöversikt — indikatortabell med signal-lanes
+
+   Editoriell tabell, inte dashboard: raka hörn, ingen skugga, inga grå
+   avskiljare. Grönt bär strukturen (kolumnlinjen under huvudet, avsnitts-
+   etiketterna). Legenden ligger ÖVERST och är samtidigt filter; sorteringen
+   sitter i samma verktygsrad. Kolumnbredderna sätts i px från React så att
+   årsaxeln och alla lanes ligger i exakt samma rutnät.
+   ════════════════════════════════════════════ */
+.sig { font-family: var(--font-sans); overflow: hidden; }
+
+/* ── Verktygsrad: statuschip (= legend + filter) · sortering ── */
+.sig__toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 18px 24px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.sig__chips { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.sig__chip {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  border: 0; border-radius: 999px; padding: 4px 12px;
+  font-family: var(--font-sans); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .01em; white-space: nowrap; cursor: pointer;
+  transition: opacity .15s, box-shadow .15s;
+}
+.sig__chip[data-dim="true"] { opacity: .32; }
+.sig__chip:disabled { cursor: default; opacity: .3; }
+.sig__chip-n {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum'; font-size: 11px; font-weight: 600; opacity: .72;
+}
+.sig__chip:not(:disabled):hover { opacity: 1; }
+
+.sig__saknas { display: inline-flex; align-items: center; gap: 7px; margin-left: 4px; }
+.sig__saknas-yta {
+  width: 20px; height: 12px;
+  background: linear-gradient(#e3e3df, #e3e3df) center/100% 1px no-repeat;
+}
+.sig__meta { font-size: 11px; color: var(--faint); }
+.sig__lank {
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 600;
+  color: var(--brand-700); text-decoration: underline; text-underline-offset: 2px;
+}
+.sig__sort { display: inline-flex; align-items: center; gap: 10px; }
+.sig__sort-lbl {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .12em; color: #a5a5a0;
+}
+
+/* ── Kolumnhuvud + årsaxel ── */
+.sig__head {
+  display: grid; align-items: end; column-gap: 12px;
+  padding-bottom: 7px; border-bottom: 1px solid rgba(0, 102, 77, .3);
+}
+.sig__head-lbl {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .12em; color: #a5a5a0; white-space: nowrap;
+}
+.sig__head-lbl--num { text-align: right; }
+.sig__axis { display: flex; }
+.sig__axis-t {
+  flex: 1 1 0; min-width: 0; text-align: center; white-space: nowrap;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: 9.5px; color: #b2b2ac; transition: color .12s;
+}
+.sig__axis-t[data-on="true"] { color: var(--ink); font-weight: 600; }
+
+/* ── Rader ── */
+.sig__body { position: relative; }
+.sig__cross {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: rgba(26, 26, 26, .22); pointer-events: none;
+}
+.sig__grupp {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .14em; color: var(--brand-700); padding: 13px 0 6px;
+}
+/* Extra luft mellan avsnitt, men inte före det första. */
+.sig__grupp-wrap + .sig__grupp-wrap .sig__grupp { padding-top: 24px; }
+.sig__tom { padding: 22px 2px; font-size: 12.5px; color: var(--faint); }
+
+.sig-row {
+  display: grid; align-items: center; column-gap: 12px;
+  min-height: 40px; transition: background .12s;
+}
+.sig-row[data-klick="true"] { cursor: pointer; }
+.sig-row:hover { background: rgba(0, 102, 77, .05); }
+.sig-row__namn { min-width: 0; }
+.sig-row__btn {
+  width: 100%; text-align: left; border: 0; background: none;
+  padding: 4px 0 4px 2px; cursor: inherit;
+  font-family: var(--font-sans); font-size: 12px; line-height: 1.3; color: #2b2b2b;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.sig-row:hover .sig-row__btn { color: var(--brand-700); }
+.sig-row__btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.sig-row__num {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum'; font-size: 12px; color: var(--ink);
+  text-align: right; white-space: nowrap; line-height: 1.2;
+}
+.sig-row__num--svag { color: #5b615e; }
+.sig-row__ar { display: block; font-size: 9px; color: #b2b2ac; margin-top: 2px; }
+/* Lanen fyller radhöjden så att träffytan är hela raden, men rutorna
+   ritas 14 px höga och centrerade. */
+.sig-row__lane { display: flex; align-items: center; align-self: stretch; }
+.sig-row__seg { min-width: 0; height: 14px; }
+.sig-row__chip { display: flex; justify-content: flex-end; }
+
+/* ── Hover-kort (delad ram för värde-, namn- och statusruta) ── */
+.sig-kort {
+  position: fixed; z-index: var(--z-tooltip); pointer-events: none;
+  background: var(--surface); border: 1px solid var(--hairline); border-radius: 0;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .13); padding: 11px 14px 10px;
+  animation: fadeIn .1s ease;
+}
+.sig-kort__titel {
+  font-family: var(--font-serif); font-size: 14px; font-weight: 600;
+  color: var(--ink); line-height: 1.25;
+}
+.sig-kort__meta { font-family: var(--font-sans); font-size: 11px; color: var(--faint); }
+.sig-kort__rad {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-family: var(--font-sans); font-size: 11px; line-height: 1.55; color: var(--faint);
+}
+
+@media print {
+  .sig__sort, .sig__lank { display: none !important; }
+  .sig-row { break-inside: avoid; }
+  .sig__chip { opacity: 1 !important; }
+}

@@ -1,20 +1,13 @@
 import type { TidsseriePoint } from "../types";
-import { SIGNAL_COLORS, SIGNAL_BG, SIGNAL_LABELS, FONT, NEUTRAL, signalColor } from "../charts/constants";
+import { SIGNAL_BG, SIGNAL_TEXT, SIGNAL_LABELS, FONT, NEUTRAL, signalColor } from "../charts/constants";
 
 // ════════════════════════════════════════════════════════════
-//  Signalspråk — delas av signal-tidslinjen (SignalTimeline) och legenden.
-//  Färg + FORM (på avvikelser) + textlegend, så färg aldrig är enda
-//  informationsbäraren.
+//  Signalspråk — statuschippet som rapporten använder överallt
+//  (indikatorrubrik, graf-header, signalöversiktens rader).
 //
-//  Inga formsymboler — status bärs av trafikljusfärg + textetikett.
+//  Inga formsymboler: status bärs av trafikljusfärg + textetikett, så
+//  färgen aldrig är enda informationsbäraren.
 // ════════════════════════════════════════════════════════════
-
-// Mörkare textton per status för chip (god kontrast mot ljus tonbotten).
-const CHIP_TEXT: Record<string, string> = {
-  gron: "#1F6A43",
-  gul:  "#8A5E12",
-  rod:  "#9A2E22",
-};
 
 // Statuschip — lugn tonbotten i statusfärg + etikett, inga symboler.
 // neutral=true: mått utan målriktning (volym-/strukturmått) → grått "Utan mål".
@@ -38,7 +31,7 @@ export function StatusTag({ status, size = "md", neutral = false }: { status: st
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", padding: pad, borderRadius: 999,
-      background: SIGNAL_BG[status], color: CHIP_TEXT[status] || "#444", fontFamily: FONT,
+      background: SIGNAL_BG[status], color: SIGNAL_TEXT[status] || "#444", fontFamily: FONT,
       fontSize: fz, fontWeight: 600, letterSpacing: ".01em", whiteSpace: "nowrap",
       verticalAlign: "middle", flexShrink: 0,
     }}>
@@ -84,27 +77,6 @@ export default function SignalStrip({ serie, periods = 12, height = 16 }: StripP
           style={{ flex: 1, height, borderRadius: 2.5, background: signalColor(p.signal) }}
         />
       ))}
-    </div>
-  );
-}
-
-// ── Legend (delad) ──
-export function SignalLegend({ note }: { note?: string }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-      {(["gron", "gul", "rod"] as const).map((sig) => (
-        <span key={sig} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 12, height: 12, borderRadius: 3, background: SIGNAL_COLORS[sig] }} />
-          <span style={{ fontSize: 11.5, color: "#666", fontFamily: FONT }}>{SIGNAL_LABELS[sig]}</span>
-        </span>
-      ))}
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 12, height: 12, borderRadius: 3, background: NEUTRAL }} />
-        <span style={{ fontSize: 11.5, color: "#999", fontFamily: FONT }}>Ingen signal</span>
-      </span>
-      {note && (
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "#aaa", fontFamily: FONT }}>{note}</span>
-      )}
     </div>
   );
 }

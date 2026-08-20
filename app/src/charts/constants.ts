@@ -15,6 +15,15 @@ export const SIGNAL_BG: Record<string, string> = {
   rod:  "#F4E3DF",
 };
 
+// Mörkare textton per status — för chip och etiketter på ljus tonbotten
+// (SIGNAL_BG). Bor här så att både statuschippet och signalöversiktens
+// filterchip läser samma värden.
+export const SIGNAL_TEXT: Record<string, string> = {
+  gron: "#1F6A43",
+  gul:  "#8A5E12",
+  rod:  "#9A2E22",
+};
+
 // Formredundans — för datapunkter (d3.symbol) och SignalBadge
 export const SIGNAL_SHAPES: Record<string, "circle" | "triangle" | "diamond"> = {
   gron: "circle",

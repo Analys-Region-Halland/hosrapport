@@ -9,7 +9,7 @@ import type {
 } from "../types";
 import FacetedChart from "./FacetedChart";
 import SignalTimeline from "./SignalTimeline";
-import { SignalLegend, StatusTag } from "./SignalStrip";
+import { StatusTag } from "./SignalStrip";
 import EditableBlock, { type AnteckningData } from "./EditableBlock";
 import { getBlocks, setBlocks as persistBlocks, getForfattare, BLOCKS_KEY } from "../stores/blocks";
 import { hasDirty } from "../stores/dirty";
@@ -382,14 +382,11 @@ function OversiktBlock({
         )}
 
         <SignalTimeline sektioner={sektioner} vy={vyData.vy} visaDagar={visaDagar} onCellClick={onOpenChart} />
-        <div style={{ marginTop: 16 }}>
-          <SignalLegend note="Peka på en lane för värde och trend" />
-        </div>
         <figcaption style={{
           fontFamily: FONT_RUBRIK, fontStyle: "italic", fontSize: 13, color: "#888",
-          marginTop: 12, lineHeight: 1.5,
+          marginTop: 14, lineHeight: 1.5,
         }}>
-          Signalens utveckling per indikator över perioden. Intilliggande perioder med samma signal slås ihop; peka för exakt värde och trend, klicka på en rad för större graf.
+          En rad per indikator, en ruta per period. Peka för värde och trend, klicka på raden för större graf.
         </figcaption>
       </figure>
     </section>
@@ -513,9 +510,6 @@ function KapitelOversikt({
   section: Section; grupper: Section[]; vy: string;
   onOpenChart?: (kpi: KpiData) => void;
 }) {
-  const inom = section.kpier.filter((k) => k.status === "gron").length;
-  const utanfor = section.kpier.length - inom;
-
   return (
     <figure className="report-indicator indicator-card report-figure" style={{ margin: "0 0 40px" }}>
       <div style={{
@@ -523,12 +517,6 @@ function KapitelOversikt({
         letterSpacing: "0.13em", color: "#00664D", margin: "0 0 12px",
       }}>
         Signalöversikt
-      </div>
-
-      <div style={{ display: "flex", gap: 24, alignItems: "baseline", marginBottom: 16 }}>
-        <MiniStat value={section.kpier.length} label="indikatorer" />
-        <MiniStat value={inom} label="inom förväntat" signal="gron" />
-        {utanfor > 0 && <MiniStat value={utanfor} label="utanför" signal="rod" />}
       </div>
 
       <div style={{ maxWidth: 680, marginBottom: 18 }}>
@@ -541,9 +529,12 @@ function KapitelOversikt({
       </div>
 
       <SignalTimeline sektioner={grupper} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
-      <div style={{ marginTop: 16 }}>
-        <SignalLegend note="Peka på en lane för värde och trend, klicka för större graf" />
-      </div>
+      <figcaption style={{
+        fontFamily: FONT_RUBRIK, fontStyle: "italic", fontSize: 13, color: "#888",
+        marginTop: 14, lineHeight: 1.5,
+      }}>
+        En rad per indikator, en ruta per år. Peka för värde och trend, klicka på raden för större graf.
+      </figcaption>
     </figure>
   );
 }

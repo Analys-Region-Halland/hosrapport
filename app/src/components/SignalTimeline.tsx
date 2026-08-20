@@ -1,24 +1,54 @@
-import { useEffect, useRef, useState } from "react";
-import * as d3 from "d3";
+import { useMemo, useState } from "react";
 import type { Section, KpiData, TidsseriePoint } from "../types";
-import { SIGNAL_COLORS, SIGNAL_BG, SIGNAL_LABELS, FONT, FONT_MONO, NEUTRAL_LINE, signalColor } from "../charts/constants";
+import {
+  SIGNAL_COLORS, SIGNAL_BG, SIGNAL_TEXT, SIGNAL_LABELS, FONT, FONT_MONO, NEUTRAL_LINE,
+} from "../charts/constants";
 import { fmtVarde, fmtSuffix } from "../utils/format";
 import { kortBeskrivning } from "../utils/definitions";
 import { useResizeWidth } from "../hooks/useResizeWidth";
+import SegmentedControl from "./SegmentedControl";
+import { StatusTag } from "./SignalStrip";
 import MiniTrend from "./MiniTrend";
 
 // ════════════════════════════════════════════════════════════
-//  SignalTimeline — överblick som signal-lanes (state timeline).
+//  SignalTimeline — rapportens signalöversikt som en editoriell tabell.
 //
-//  En lane per indikator: vänster = namn · nuvärde · status; höger =
-//  en tidslinje där intilliggande perioder med SAMMA signal smälter ihop
-//  till proportionerliga fält. Skalar till vilken täthet som helst (31
-//  dagar eller 365) — allt i EN vy, inga tunna cellsträck, ingen scroll.
-//  Hover var som helst på lanen → exakt periodvärde + förväntat + föreg.
-//  år + MiniTrend. Hover på namnet → vad indikatorn mäter.
+//  En rad per indikator i ett gemensamt rutnät: namn · senaste värde ·
+//  placering · signal-lane · statuschip. Kolumnbredderna räknas i px här
+//  och delas av kolumnhuvudet, så årsaxeln står exakt över sina rutor och
+//  hela tabellen läses som en enhet.
+//
+//  Legenden ligger ÖVERST och är samtidigt filter: chipen visar hur många
+//  indikatorer som har varje status och filtrerar tabellen när man klickar.
+//  Sorteringen (avsnitt · status · plats) sitter i samma verktygsrad.
+//
+//  Lanen är rutor, en per period, utan symboler: fylld ruta = signal, tom
+//  ruta med hårlinje = saknar data, grå ruta = mått utan målriktning. Vid
+//  hög täthet (dagsvy) slås intilliggande perioder med samma signal ihop.
 // ════════════════════════════════════════════════════════════
 
-const parseDate = d3.timeParse("%Y-%m-%d");
+type SigNyckel = "rod" | "gul" | "gron" | "neutral";
+type SortId = "ordning" | "status" | "plats";
+
+const KEY_ORDNING: SigNyckel[] = ["rod", "gul", "gron", "neutral"];
+const KEY_RANG: Record<SigNyckel, number> = { rod: 0, gul: 1, gron: 2, neutral: 3 };
+const KEY_ETIKETT: Record<SigNyckel, string> = {
+  rod: SIGNAL_LABELS.rod, gul: SIGNAL_LABELS.gul, gron: SIGNAL_LABELS.gron, neutral: "Utan mål",
+};
+const NEUTRAL_BG = "#ececea";
+const NEUTRAL_TEXT = "#6B7270";
+/** Ruta för mått utan målriktning — grå, men tydligt en ruta. */
+const UTAN_MAL_FYLLNING = "#dcdcd7";
+/** Ruta för period utan data — tom yta med en hårlinje i mitten. */
+const SAKNAS_FYLLNING = "linear-gradient(#e3e3df, #e3e3df) center/100% 1px no-repeat";
+
+// Kolumngeometri (px). GAP speglar column-gap i .sig__head/.sig-row.
+const GAP = 12;
+const W_CHIP = 82;
+const W_VARDE = 74;
+const W_PLATS = 46;
+/** Över denna täthet slås perioder ihop till fält i stället för rutor. */
+const TATHETSGRANS = 26;
 
 interface Props {
   sektioner: Section[];
@@ -28,22 +58,42 @@ interface Props {
 }
 
 type Hover =
-  | { kind: "cell"; kpi: KpiData; serie: TidsseriePoint[]; refSerie?: TidsseriePoint[]; point?: TidsseriePoint; etikett: string; prevYear: number | null; x: number; yTop: number; yBot: number }
-  | { kind: "name"; kpi: KpiData; x: number; yTop: number; yBot: number }
+  | {
+      kind: "cell"; kpi: KpiData; serie: TidsseriePoint[]; refSerie?: TidsseriePoint[];
+      point?: TidsseriePoint; etikett: string; prevYear: number | null; idx: number;
+      x: number; yTop: number; yBot: number;
+    }
+  | { kind: "namn"; kpi: KpiData; avsnitt?: string; x: number; yTop: number; yBot: number }
   | { kind: "status"; kpi: KpiData; x: number; yTop: number; yBot: number };
+
+interface Kolumn { period: string; etikett: string }
+interface Grupp { id: string; namn: string | null; farg?: string; kpier: KpiData[] }
+interface Segment { nyckel: SigNyckel | "saknas"; len: number }
 
 function aktivSerie(kpi: KpiData, visaDagar: boolean): TidsseriePoint[] {
   return visaDagar && kpi.dagar && kpi.dagar.length > 0 ? kpi.dagar : kpi.tidsserie;
 }
 
+/** Statusnyckel för en indikator. Mått utan målriktning färgsätts aldrig:
+ *  de är "neutral" oavsett vad R råkar sätta i status-fältet. */
+function sigNyckel(kpi: KpiData): SigNyckel {
+  if (kpi.utan_mal) return "neutral";
+  return kpi.status === "rod" || kpi.status === "gul" || kpi.status === "gron" ? kpi.status : "neutral";
+}
+
+function toDate(iso: string): Date | null {
+  const [y, m, d] = iso.split("-").map(Number);
+  return Number.isFinite(y) ? new Date(y, (m || 1) - 1, d || 1) : null;
+}
+
 function prevYearValue(serie: TidsseriePoint[], period: string, effVy: string): number | null {
-  const cur = parseDate(period);
+  const cur = toDate(period);
   if (!cur) return null;
   const target = new Date(cur.getFullYear() - 1, cur.getMonth(), cur.getDate()).getTime();
   const tol = effVy === "dag" ? 4 : effVy === "vecka" ? 6 : effVy === "manad" ? 20 : effVy === "kvartal" ? 50 : 220;
   let best: number | null = null, bestDiff = Infinity;
   for (const p of serie) {
-    const d = parseDate(p.period);
+    const d = toDate(p.period);
     if (!d) continue;
     const diff = Math.abs(d.getTime() - target) / 86_400_000;
     if (diff < bestDiff) { bestDiff = diff; best = p.varde; }
@@ -51,336 +101,447 @@ function prevYearValue(serie: TidsseriePoint[], period: string, effVy: string): 
   return best != null && bestDiff <= tol ? best : null;
 }
 
-function appendGlyph(parent: d3.Selection<SVGGElement, unknown, null, undefined>, cx: number, cy: number, sig: "gul" | "rod") {
-  const d = sig === "gul"
-    ? `M${cx},${cy - 4.2} L${cx + 4.2},${cy + 3.6} L${cx - 4.2},${cy + 3.6} Z`
-    : `M${cx},${cy - 4.8} L${cx + 4.8},${cy} L${cx},${cy + 4.8} L${cx - 4.8},${cy} Z`;
-  parent.append("path").attr("d", d).attr("fill", "rgba(255,255,255,0.96)").attr("pointer-events", "none");
+/** Kolumnbredder i px. Smala vyer fäller bort plats- och värdekolumnen
+ *  innan lanen får ge upp utrymme — lanen är översiktens huvudsak. */
+function berakna(width: number, harPlats: boolean) {
+  const visaVarde = width >= 560;
+  const visaPlats = harPlats && width >= 720;
+  const antalKol = 3 + (visaVarde ? 1 : 0) + (visaPlats ? 1 : 0);
+  const fast = W_CHIP + (visaVarde ? W_VARDE : 0) + (visaPlats ? W_PLATS : 0) + (antalKol - 1) * GAP;
+  let namnW = Math.round(Math.min(400, Math.max(168, width * (visaPlats ? 0.33 : 0.38))));
+  let laneW = width - fast - namnW;
+  if (laneW < 104) {
+    namnW = Math.max(132, namnW - (104 - laneW));
+    laneW = Math.max(60, width - fast - namnW);
+  }
+  const laneX = namnW + GAP + (visaVarde ? W_VARDE + GAP : 0) + (visaPlats ? W_PLATS + GAP : 0);
+  const template = [
+    namnW + "px",
+    visaVarde ? W_VARDE + "px" : "",
+    visaPlats ? W_PLATS + "px" : "",
+    laneW + "px",
+    W_CHIP + "px",
+  ].filter(Boolean).join(" ");
+  return { visaVarde, visaPlats, laneW, laneX, template };
+}
+
+function segmentera(kpi: KpiData, kolumner: Kolumn[], visaDagar: boolean, tat: boolean): Segment[] {
+  const serie = aktivSerie(kpi, visaDagar);
+  const perPeriod = new Map(serie.map((p) => [p.period, p]));
+  const utanMal = Boolean(kpi.utan_mal);
+  const raa: (SigNyckel | "saknas")[] = kolumner.map((k) => {
+    const p = perPeriod.get(k.period);
+    if (!p) return "saknas";
+    if (utanMal) return "neutral";
+    return p.signal ?? "saknas";
+  });
+  if (!tat) return raa.map((nyckel) => ({ nyckel, len: 1 }));
+  const runs: Segment[] = [];
+  for (const nyckel of raa) {
+    const sista = runs[runs.length - 1];
+    if (sista && sista.nyckel === nyckel) sista.len++;
+    else runs.push({ nyckel, len: 1 });
+  }
+  return runs;
+}
+
+function fyllning(nyckel: SigNyckel | "saknas"): string {
+  if (nyckel === "saknas") return SAKNAS_FYLLNING;
+  if (nyckel === "neutral") return UTAN_MAL_FYLLNING;
+  return SIGNAL_COLORS[nyckel];
+}
+
+function laneSammanfattning(segment: Segment[], kolumner: Kolumn[]): string {
+  const antal: Record<string, number> = {};
+  for (const s of segment) antal[s.nyckel] = (antal[s.nyckel] || 0) + s.len;
+  const delar = KEY_ORDNING.filter((k) => antal[k]).map((k) => antal[k] + " " + KEY_ETIKETT[k].toLowerCase());
+  if (antal.saknas) delar.push(antal.saknas + " utan data");
+  const spann = kolumner.length
+    ? kolumner[0].etikett + "–" + kolumner[kolumner.length - 1].etikett : "";
+  return "Signalhistorik " + spann + ": " + (delar.join(", ") || "ingen signal");
 }
 
 export default function SignalTimeline({ sektioner, vy, visaDagar = false, onCellClick }: Props) {
   const [outerRef, width] = useResizeWidth();
-  const svgRef = useRef<HTMLDivElement>(null);
+  const [sort, setSort] = useState<SortId>("ordning");
+  const [filter, setFilter] = useState<SigNyckel | null>(null);
   const [hover, setHover] = useState<Hover | null>(null);
 
-  useEffect(() => {
-    const el = svgRef.current;
-    const allaKpier = sektioner.flatMap((s) => s.kpier);
-    if (!el || width === 0 || allaKpier.length === 0) return;
-    el.innerHTML = "";
+  const alla = useMemo(() => sektioner.flatMap((s) => s.kpier), [sektioner]);
+  const flera = sektioner.length > 1;
+  const effVy = visaDagar ? "dag" : vy;
 
-    const effVy = visaDagar ? "dag" : vy;
+  // Gemensam tidsaxel = unionen av alla periodnycklar, så en indikator som
+  // sträcker sig längre än den längsta serien inte tappar sina år.
+  const kolumner = useMemo<Kolumn[]>(() => {
+    const m = new Map<string, string>();
+    for (const k of alla) for (const p of aktivSerie(k, visaDagar)) m.set(p.period, p.etikett);
+    return [...m.entries()]
+      .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+      .map(([period, etikett]) => ({ period, etikett }));
+  }, [alla, visaDagar]);
 
-    // Gemensam tidsaxel = den längsta aktiva serien.
-    const langst = allaKpier.reduce<TidsseriePoint[]>((best, k) => {
-      const s = aktivSerie(k, visaDagar);
-      return s.length > best.length ? s : best;
-    }, []);
-    const kolumner = langst.map((p) => ({ period: p.period, etikett: p.etikett }));
-    const N = kolumner.length;
-    if (N === 0) return;
+  const antal = useMemo(() => {
+    const c: Record<SigNyckel, number> = { rod: 0, gul: 0, gron: 0, neutral: 0 };
+    for (const k of alla) c[sigNyckel(k)]++;
+    return c;
+  }, [alla]);
 
-    const flera = sektioner.length > 1;
-    const laneH = 18, topH = 34, sectionLabelH = 24;
-    // Generös namnkolumn — namnen ska få plats utan att kapas
-    const leftW = Math.min(364, Math.max(232, Math.round(width * 0.42)));
-    const rightPad = 10;
-    const x0 = leftW + 6;
-    const timelineW = Math.max(40, width - x0 - rightPad);
+  const harPlats = useMemo(() => alla.some((k) => k.rank != null && k.rank_av != null), [alla]);
+  const harSaknad = useMemo(
+    () => alla.some((k) => aktivSerie(k, visaDagar).length < kolumner.length),
+    [alla, visaDagar, kolumner.length],
+  );
+  const avsnittAv = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of sektioner) for (const k of s.kpier) m.set(k.id, s.namn);
+    return m;
+  }, [sektioner]);
 
-    const xAt = (i: number) => Math.round(x0 + (i / N) * timelineW);
-    const center = (i: number) => Math.round(x0 + ((i + 0.5) / N) * timelineW);
-
-    // Namnen radbryts (max 2 rader) i stället för att kapas — hela texten
-    // ska synas. Mindre typsnitt än tidigare; rader med 2 textrader blir högre.
-    const nameFont = 11.5;
-    const nameLineH = 12.5;
-    const wrapName = (namn: string, maxW: number): string[] => {
-      const maxChars = Math.max(8, Math.floor(maxW / (nameFont * 0.56)));
-      if (namn.length <= maxChars) return [namn];
-      const ord = namn.split(" ");
-      let rad1 = ""; let i = 0;
-      while (i < ord.length) {
-        const prov = rad1 ? rad1 + " " + ord[i] : ord[i];
-        if (prov.length <= maxChars || !rad1) { rad1 = prov; i++; } else break;
-      }
-      const rest = ord.slice(i).join(" ");
-      return rest ? [rad1, rest] : [rad1];
-    };
-
-    // Radlayout — lanes sorteras efter status (avvikelse → bevaka → i fas)
-    // inom varje grupp; variabel radhöjd för radbrutna namn.
-    const STATUS_ORDNING: Record<string, number> = { rod: 0, gul: 1, gron: 2 };
-    type Entry =
-      | { kind: "section"; namn: string; y: number }
-      | { kind: "row"; kpi: KpiData; y: number; h: number; lines: string[]; tagW: number; tagX: number };
-    const entries: Entry[] = [];
-    let yCur = topH;
-    for (const sek of sektioner) {
-      if (flera) { entries.push({ kind: "section", namn: sek.namn, y: yCur }); yCur += sectionLabelH; }
-      const sorterade = [...sek.kpier].sort(
-        (a, b) => (STATUS_ORDNING[a.status] ?? 3) - (STATUS_ORDNING[b.status] ?? 3),
-      );
-      for (const kpi of sorterade) {
-        const statusLabel = SIGNAL_LABELS[kpi.status] || "";
-        const tagW = Math.round(statusLabel.length * 9.5 * 0.6 + 14);
-        const tagX = leftW - 8 - tagW;
-        const lines = wrapName(kpi.namn, tagX - 18 - 8);
-        const h = lines.length > 1 ? 44 : 34;
-        entries.push({ kind: "row", kpi, y: yCur, h, lines, tagW, tagX });
-        yCur += h;
-      }
+  const grupper = useMemo<Grupp[]>(() => {
+    const slapp = (k: KpiData) => !filter || sigNyckel(k) === filter;
+    if (sort === "ordning") {
+      return sektioner
+        .map((s) => ({ id: s.id, namn: flera ? s.namn : null, kpier: s.kpier.filter(slapp) }))
+        .filter((g) => g.kpier.length > 0);
     }
-    const totalH = yCur + 6;
+    const plats = (k: KpiData) => k.rank ?? Number.POSITIVE_INFINITY;
+    const namn = (a: KpiData, b: KpiData) => a.namn.localeCompare(b.namn, "sv");
 
-    const svg = d3.select(el).append("svg")
-      .attr("width", width).attr("height", totalH).style("display", "block")
-      .style("shape-rendering", "geometricPrecision");
-    const root = svg.append("g");
-    const defs = svg.append("defs");
-
-    // ── Delad tidsaxel överst ──
-    root.append("line")
-      .attr("x1", x0).attr("x2", x0 + timelineW).attr("y1", topH - 8).attr("y2", topH - 8)
-      .attr("stroke", "#e8e8e4").attr("stroke-width", 1);
-    // Datumetiketter: jämnt fördelade i pixelrymden, snäppta till närmaste
-    // kolumn → bara så många som ryms, aldrig överlapp.
-    const axFontPx = 9.5;
-    const axLabels = kolumner.map((c) => c.etikett);
-    const axMaxW = Math.max(...axLabels.map((l) => l.length)) * axFontPx * 0.6;
-    const axPad = Math.min(axMaxW / 2, timelineW / 2);
-    const axCount = Math.max(2, Math.floor(timelineW / (axMaxW + 22)) + 1);
-    const axChosen = new Set<number>();
-    for (let k = 0; k < axCount; k++) {
-      const tx = x0 + axPad + (k / (axCount - 1)) * (timelineW - 2 * axPad);
-      let bi = 0, bd = Infinity;
-      for (let i = 0; i < N; i++) { const d = Math.abs(center(i) - tx); if (d < bd) { bd = d; bi = i; } }
-      axChosen.add(bi);
-    }
-    for (const i of axChosen) {
-      const cx = center(i);
-      root.append("line").attr("x1", cx).attr("x2", cx).attr("y1", topH - 8).attr("y2", topH - 5)
-        .attr("stroke", "#d8d8d4").attr("stroke-width", 0.8);
-      root.append("text")
-        .attr("x", Math.max(x0 + axPad, Math.min(x0 + timelineW - axPad, cx))).attr("y", topH - 13)
-        .attr("text-anchor", "middle").attr("fill", "#9a9a96")
-        .attr("font-family", FONT_MONO).attr("font-size", `${axFontPx}px`)
-        .text(axLabels[i]);
+    // Statussortering grupperar också: rubrikerna ger listan samma rytm som
+    // avsnittsvyn, i stället för sexton rader i en följd.
+    if (sort === "status") {
+      const kpier = alla.filter(slapp).sort((a, b) => plats(a) - plats(b) || namn(a, b));
+      return KEY_ORDNING.map((k) => ({
+        id: "status-" + k,
+        namn: KEY_ETIKETT[k],
+        farg: k === "neutral" ? NEUTRAL_TEXT : SIGNAL_TEXT[k],
+        kpier: kpier.filter((x) => sigNyckel(x) === k),
+      })).filter((g) => g.kpier.length > 0);
     }
 
-    // Gemensam markörlinje (visas vid hover)
-    const marker = root.append("line")
-      .attr("stroke", "#1a1a1a").attr("stroke-width", 1).attr("opacity", 0).attr("pointer-events", "none");
+    const kpier = alla.filter(slapp)
+      .sort((a, b) => plats(a) - plats(b) || KEY_RANG[sigNyckel(a)] - KEY_RANG[sigNyckel(b)] || namn(a, b));
+    return kpier.length ? [{ id: "plats", namn: null, kpier }] : [];
+  }, [sektioner, alla, flera, sort, filter]);
 
-    const fitText = (sel: d3.Selection<SVGTextElement, unknown, null, undefined>, maxW: number) => {
-      const node = sel.node();
-      if (!node || node.getComputedTextLength() <= maxW) return;
-      let t = node.textContent || "";
-      while (t.length > 1 && node.getComputedTextLength() > maxW) { t = t.slice(0, -1); node.textContent = t + "…"; }
-    };
+  const visade = grupper.reduce((n, g) => n + g.kpier.length, 0);
+  const N = kolumner.length;
+  const tat = N > TATHETSGRANS;
+  const { visaVarde, visaPlats, laneW, laneX, template } = berakna(width || 900, harPlats);
 
-    for (const e of entries) {
-      if (e.kind === "section") {
-        root.append("text")
-          .attr("x", 2).attr("y", e.y + sectionLabelH - 8)
-          .attr("fill", "#00664D").attr("font-family", FONT)
-          .attr("font-size", "10.5px").attr("font-weight", 600).attr("letter-spacing", "0.06em")
-          .text(e.namn.toUpperCase());
-        continue;
-      }
+  // Ett enda rutmått delas av årsaxeln, rutorna, hårkorset och träffytan, så
+  // att etiketten står exakt över sin ruta och hårkorset mitt i den.
+  const rutGap = tat ? 0 : 2;
+  const rutW = N > 0 ? Math.max(1, (laneW - rutGap * (N - 1)) / N) : 0;
+  const rutMitt = (i: number) => i * (rutW + rutGap) + rutW / 2;
 
-      const kpi = e.kpi;
-      const rowY = Math.round(e.y);
-      const rowH = e.h;
-      const laneY = rowY + (rowH - laneH) / 2;
-      const laneCy = laneY + laneH / 2;
-      const serie = aktivSerie(kpi, visaDagar);
-      const sigByPeriod = new Map<string, "gron" | "gul" | "rod" | undefined>();
-      for (const p of serie) sigByPeriod.set(p.period, p.signal);
+  // Årsetiketter: så många som ryms utan att krocka, alltid med den sista
+  // perioden märkt — det är den som ger status och senaste värde.
+  const markta = useMemo(() => {
+    const s = new Set<number>();
+    if (N === 0 || laneW <= 0) return s;
+    const behov = Math.max(...kolumner.map((k) => k.etikett.length)) * 5.8 + 6;
+    const steg = Math.max(1, Math.ceil(behov / (laneW / N)));
+    for (let i = N - 1; i >= 0; i -= steg) s.add(i);
+    return s;
+  }, [kolumner, N, laneW]);
 
-      // Statusprick + namn (radbrutet) + statustagg (jämte namnet)
-      const statusLabel = SIGNAL_LABELS[kpi.status] || "";
-      const statusColor = SIGNAL_COLORS[kpi.status] || "#888";
-      const statusBg = SIGNAL_BG[kpi.status] || "#f0f0ee";
-      const tagFont = 9.5, tagH = 15;
-      const { tagW, tagX, lines } = e;
+  const sortItems = [
+    { id: "ordning", label: flera ? "Avsnitt" : "Ordning" },
+    { id: "status", label: "Status" },
+    ...(harPlats ? [{ id: "plats", label: "Plats" }] : []),
+  ];
 
-      root.append("circle").attr("cx", 7).attr("cy", laneCy).attr("r", 3.5)
-        .attr("fill", statusColor);
-      const lineYs = lines.length > 1
-        ? [laneCy - nameLineH / 2 + 4, laneCy + nameLineH / 2 + 4]
-        : [laneCy + 4];
-      lines.forEach((rad, li) => {
-        const label = root.append("text")
-          .attr("x", 18).attr("y", lineYs[li])
-          .attr("fill", "#2b2b2b").attr("font-family", FONT).attr("font-size", `${nameFont}px`)
-          .text(rad);
-        fitText(label, tagX - 18 - 8);
-      });
-
-      // ── Lane-bakgrund + klippt segmentlager (rundade ändar) ──
-      const clipId = `lane-${kpi.id}-${rowY}`;
-      defs.append("clipPath").attr("id", clipId)
-        .append("rect").attr("x", x0).attr("y", laneY).attr("width", timelineW).attr("height", laneH).attr("rx", 4);
-      root.append("rect").attr("x", x0).attr("y", laneY).attr("width", timelineW).attr("height", laneH)
-        .attr("rx", 4).attr("fill", "#eeeeea");
-      const lane = root.append("g").attr("clip-path", `url(#${clipId})`);
-
-      // Slå ihop intilliggande perioder med samma signal → proportionerliga fält
-      type Run = { sig: "gron" | "gul" | "rod" | undefined; start: number; end: number };
-      const runs: Run[] = [];
-      for (let i = 0; i < N; i++) {
-        const sig = sigByPeriod.get(kolumner[i].period);
-        const last = runs[runs.length - 1];
-        if (last && last.sig === sig) last.end = i;
-        else runs.push({ sig, start: i, end: i });
-      }
-      for (const run of runs) {
-        const x = xAt(run.start);
-        const w = Math.max(1, xAt(run.end + 1) - x);
-        lane.append("rect").attr("x", x).attr("y", laneY).attr("width", w).attr("height", laneH)
-          .attr("fill", signalColor(run.sig));
-        if ((run.sig === "gul" || run.sig === "rod") && w >= 16) {
-          appendGlyph(lane, x + w / 2, laneCy, run.sig);
-        }
-      }
-
-      // ── Namn-hit (förklaring + klick) ──
-      root.append("rect")
-        .attr("x", 0).attr("y", rowY).attr("width", leftW - 2).attr("height", rowH)
-        .attr("fill", "transparent").style("cursor", onCellClick ? "pointer" : "help")
-        .attr("tabindex", 0).attr("role", "button")
-        .attr("aria-label", `${kpi.namn}. ${kortBeskrivning(kpi) || "Visa i graf"}`)
-        .on("mouseenter", (ev: MouseEvent) => {
-          const r = (ev.currentTarget as SVGRectElement).getBoundingClientRect();
-          setHover({ kind: "name", kpi, x: r.left + 20, yTop: r.top, yBot: r.bottom });
-        })
-        .on("mouseleave", () => setHover(null))
-        .on("click", () => onCellClick?.(kpi))
-        .on("keydown", (ev: KeyboardEvent) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onCellClick?.(kpi); } });
-
-      // ── Statustagg → hover förklarar hur status bedöms ──
-      const tagG = root.append("g").style("cursor", "help");
-      tagG.append("rect").attr("x", tagX).attr("y", laneCy - tagH / 2)
-        .attr("width", tagW).attr("height", tagH).attr("rx", tagH / 2).attr("fill", statusBg);
-      tagG.append("text").attr("x", tagX + tagW / 2).attr("y", laneCy + 3.3)
-        .attr("text-anchor", "middle").attr("fill", statusColor)
-        .attr("font-family", FONT).attr("font-size", `${tagFont}px`).attr("font-weight", 600)
-        .text(statusLabel);
-      tagG.append("rect").attr("x", tagX - 3).attr("y", laneCy - tagH / 2 - 3)
-        .attr("width", tagW + 6).attr("height", tagH + 6).attr("fill", "transparent")
-        .attr("tabindex", 0).attr("role", "img")
-        .attr("aria-label", `Status ${statusLabel}. Förklaring av hur status bedöms.`)
-        .on("mouseenter", (ev: MouseEvent) => {
-          const r = (ev.currentTarget as SVGRectElement).getBoundingClientRect();
-          setHover({ kind: "status", kpi, x: r.left + r.width / 2, yTop: r.top, yBot: r.bottom });
-        })
-        .on("mouseleave", () => setHover(null));
-
-      // ── Hover-overlay över lanen → exakt period under muspekaren ──
-      // referens_serie (samma period föregående år) finns t.ex. i dagvyn och
-      // är index-linjerad med tidsserien.
-      const refSerie = kpi.referens_serie && kpi.referens_serie.length === serie.length
-        ? kpi.referens_serie : undefined;
-      root.append("rect")
-        .attr("x", x0).attr("y", rowY).attr("width", timelineW).attr("height", rowH)
-        .attr("fill", "transparent").style("cursor", onCellClick ? "pointer" : "crosshair")
-        .on("mousemove", (ev: MouseEvent) => {
-          const [mx] = d3.pointer(ev);
-          const idx = Math.max(0, Math.min(N - 1, Math.floor(((mx - x0) / timelineW) * N)));
-          const cx = center(idx);
-          marker.attr("x1", cx).attr("x2", cx).attr("y1", laneY - 3).attr("y2", laneY + laneH + 3).attr("opacity", 0.55);
-          const { period, etikett } = kolumner[idx];
-          const point = serie.find((p) => p.period === period);
-          // Föreg. år: index-linjerad referensserie (dagvy) eller ~1 år bak i serien.
-          const prevYear = refSerie
-            ? (refSerie[idx]?.varde ?? null)
-            : prevYearValue(serie, period, effVy);
-          const rect = (ev.currentTarget as SVGRectElement).getBoundingClientRect();
-          setHover({
-            kind: "cell", kpi, serie, refSerie, point, etikett, prevYear,
-            x: ev.clientX, yTop: rect.top, yBot: rect.bottom,
-          });
-        })
-        .on("mouseleave", () => { marker.attr("opacity", 0); setHover(null); })
-        .on("click", () => onCellClick?.(kpi));
-    }
-
-    // Nollställ hovern när grafen ritas om (cleanup → ej synkron setState i kroppen).
-    return () => setHover(null);
-  }, [sektioner, vy, visaDagar, width, onCellClick]);
+  const hoverKol = hover?.kind === "cell" ? hover.idx : null;
 
   return (
-    <div ref={outerRef} style={{ width: "100%" }}>
-      <div ref={svgRef} style={{ width: "100%" }} />
-      {hover?.kind === "cell" && <CellCard hover={hover} />}
-      {hover?.kind === "name" && <NameCard hover={hover} />}
-      {hover?.kind === "status" && <StatusCard hover={hover} />}
+    <div className="sig" ref={outerRef}>
+      {/* ── Verktygsrad: legend/filter till vänster, sortering till höger ── */}
+      <div className="sig__toolbar">
+        <div className="sig__chips">
+          {KEY_ORDNING.filter((k) => antal[k] > 0).map((k) => {
+            const aktiv = filter === k;
+            return (
+              <button
+                key={k}
+                type="button"
+                className="sig__chip"
+                aria-pressed={aktiv}
+                data-dim={filter != null && !aktiv}
+                title={aktiv ? "Visa alla indikatorer" : "Visa bara " + KEY_ETIKETT[k].toLowerCase()}
+                onClick={() => setFilter(aktiv ? null : k)}
+                style={{
+                  background: k === "neutral" ? NEUTRAL_BG : SIGNAL_BG[k],
+                  color: k === "neutral" ? NEUTRAL_TEXT : SIGNAL_TEXT[k],
+                  boxShadow: aktiv
+                    ? "inset 0 0 0 1.5px " + (k === "neutral" ? NEUTRAL_TEXT : SIGNAL_COLORS[k])
+                    : "none",
+                }}
+              >
+                {KEY_ETIKETT[k]}
+                <span className="sig__chip-n">{antal[k]}</span>
+              </button>
+            );
+          })}
+          {harSaknad && (
+            <span className="sig__saknas">
+              <span className="sig__saknas-yta" aria-hidden="true" />
+              <span className="sig__meta">Saknar data</span>
+            </span>
+          )}
+          {filter && (
+            <span className="sig__meta">
+              {visade} av {alla.length} &middot;{" "}
+              <button type="button" className="sig__lank" onClick={() => setFilter(null)}>
+                Visa alla
+              </button>
+            </span>
+          )}
+        </div>
+
+        <div className="sig__sort">
+          <span className="sig__sort-lbl">Sortera</span>
+          <SegmentedControl
+            size="sm"
+            ariaLabel="Sortera signalöversikten"
+            items={sortItems}
+            value={sort}
+            onChange={(id) => setSort(id as SortId)}
+          />
+        </div>
+      </div>
+
+      {/* ── Kolumnhuvud med årsaxeln ── */}
+      <div className="sig__head" style={{ gridTemplateColumns: template }}>
+        <span className="sig__head-lbl">Indikator</span>
+        {visaVarde && <span className="sig__head-lbl sig__head-lbl--num">Senaste</span>}
+        {visaPlats && <span className="sig__head-lbl sig__head-lbl--num">Plats</span>}
+        <div className="sig__axis">
+          {kolumner.map((k, i) => (
+            <span
+              key={k.period}
+              className="sig__axis-t"
+              data-on={hoverKol === i}
+              style={{ marginRight: i === N - 1 ? 0 : rutGap }}
+            >
+              {markta.has(i) ? k.etikett : " "}
+            </span>
+          ))}
+        </div>
+        <span className="sig__head-lbl sig__head-lbl--num">Status</span>
+      </div>
+
+      {/* ── Rader ── */}
+      <div className="sig__body" onMouseLeave={() => setHover(null)}>
+        {hoverKol != null && N > 0 && (
+          <div className="sig__cross" style={{ left: laneX + rutMitt(hoverKol) }} />
+        )}
+
+        {grupper.length === 0 && (
+          <div className="sig__tom">Ingen indikator med den statusen i den här rapporten.</div>
+        )}
+
+        {grupper.map((grupp) => (
+          <div key={grupp.id} className="sig__grupp-wrap">
+            {grupp.namn && (
+              <div className="sig__grupp" style={grupp.farg ? { color: grupp.farg } : undefined}>
+                {grupp.namn}
+              </div>
+            )}
+            {grupp.kpier.map((kpi) => {
+              const serie = aktivSerie(kpi, visaDagar);
+              const segment = segmentera(kpi, kolumner, visaDagar, tat);
+              const sista = serie[serie.length - 1];
+              const efterslapning =
+                sista && N > 0 && sista.period !== kolumner[N - 1].period ? sista.etikett : null;
+              const visaNamnKort = (el: HTMLElement) => {
+                const r = el.getBoundingClientRect();
+                setHover({
+                  kind: "namn", kpi, avsnitt: flera ? avsnittAv.get(kpi.id) : undefined,
+                  x: r.left + Math.min(150, r.width / 2), yTop: r.top, yBot: r.bottom,
+                });
+              };
+              return (
+                <div
+                  key={kpi.id}
+                  className="sig-row"
+                  style={{ gridTemplateColumns: template }}
+                  data-klick={Boolean(onCellClick)}
+                  onClick={() => onCellClick?.(kpi)}
+                >
+                  <div className="sig-row__namn">
+                    <button
+                      type="button"
+                      className="sig-row__btn"
+                      aria-label={kpi.namn + ". " + (kortBeskrivning(kpi) || "Visa i graf")}
+                      onMouseEnter={(ev) => visaNamnKort(ev.currentTarget)}
+                      onMouseLeave={() => setHover(null)}
+                      onFocus={(ev) => visaNamnKort(ev.currentTarget)}
+                      onBlur={() => setHover(null)}
+                      onClick={(ev) => { ev.stopPropagation(); onCellClick?.(kpi); }}
+                    >
+                      {kpi.namn}
+                    </button>
+                  </div>
+
+                  {visaVarde && (
+                    <div className="sig-row__num">
+                      {fmtVarde(kpi.senaste, kpi.enhet)}
+                      <span style={{ color: "#a9a9a3" }}>{fmtSuffix(kpi.enhet)}</span>
+                      {efterslapning && <span className="sig-row__ar">{efterslapning}</span>}
+                    </div>
+                  )}
+
+                  {visaPlats && (
+                    <div className="sig-row__num sig-row__num--svag">
+                      {kpi.rank != null && kpi.rank_av != null
+                        ? kpi.rank + "/" + kpi.rank_av
+                        : "–"}
+                    </div>
+                  )}
+
+                  <div
+                    className="sig-row__lane"
+                    role="img"
+                    aria-label={kpi.namn + ". " + laneSammanfattning(segment, kolumner)}
+                    onMouseMove={(ev) => {
+                      const r = ev.currentTarget.getBoundingClientRect();
+                      if (r.width <= 0 || N === 0) return;
+                      const idx = Math.max(0, Math.min(N - 1, Math.floor((ev.clientX - r.left) / (rutW + rutGap))));
+                      const kol = kolumner[idx];
+                      const si = serie.findIndex((p) => p.period === kol.period);
+                      const point = si >= 0 ? serie[si] : undefined;
+                      const refSerie =
+                        kpi.referens_serie && kpi.referens_serie.length === serie.length
+                          ? kpi.referens_serie : undefined;
+                      const prevYear = refSerie
+                        ? (si >= 0 ? refSerie[si]?.varde ?? null : null)
+                        : prevYearValue(serie, kol.period, effVy);
+                      setHover({
+                        kind: "cell", kpi, serie, refSerie, point, etikett: kol.etikett,
+                        prevYear, idx, x: ev.clientX, yTop: r.top - 7, yBot: r.bottom + 7,
+                      });
+                    }}
+                    onMouseLeave={() => setHover(null)}
+                  >
+                    {segment.map((seg, i) => (
+                      <span
+                        key={i}
+                        className="sig-row__seg"
+                        style={{
+                          flex: seg.len + " 1 0",
+                          background: fyllning(seg.nyckel),
+                          marginRight: i === segment.length - 1 ? 0 : rutGap,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <div
+                    className="sig-row__chip"
+                    style={{ cursor: "help" }}
+                    onMouseEnter={(ev) => {
+                      const r = ev.currentTarget.getBoundingClientRect();
+                      setHover({ kind: "status", kpi, x: r.left + r.width / 2, yTop: r.top, yBot: r.bottom });
+                    }}
+                    onMouseLeave={() => setHover(null)}
+                  >
+                    <StatusTag status={kpi.status} size="sm" neutral={kpi.utan_mal} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {hover?.kind === "cell" && <CellKort hover={hover} />}
+      {hover?.kind === "namn" && <NamnKort hover={hover} />}
+      {hover?.kind === "status" && <StatusKort hover={hover} />}
     </div>
   );
 }
 
-// ── Cell-ruta: värde + förväntat + föreg. år + status + MiniTrend ──
-function CellCard({ hover }: { hover: Extract<Hover, { kind: "cell" }> }) {
+// ── Delad ram för hover-korten: skarpa hörn, hårlinje, accent i topp ──
+function Kort({
+  accent, x, yTop, yBot, bredd, children,
+}: {
+  accent: string; x: number; yTop: number; yBot: number; bredd: number; children: React.ReactNode;
+}) {
+  const under = yTop < 250;
+  const left = Math.max(bredd / 2 + 8, Math.min(window.innerWidth - bredd / 2 - 8, x));
+  return (
+    <div
+      className="sig-kort"
+      style={{
+        left, top: under ? yBot + 8 : yTop - 8,
+        transform: under ? "translate(-50%, 0)" : "translate(-50%, -100%)",
+        width: bredd, borderTop: "2px solid " + accent,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ── Värderuta: periodens värde + förväntat + föreg. år + minigraf ──
+function CellKort({ hover }: { hover: Extract<Hover, { kind: "cell" }> }) {
   const { kpi, serie, refSerie, point, etikett, prevYear, x, yTop, yBot } = hover;
   const dec = kpi.enhet === "procent" ? 1 : 0;
   const suffix = fmtSuffix(kpi.enhet);
-  const accent = SIGNAL_COLORS[kpi.status] || "#00664D";
-  const sig = point?.signal;
-  const TW = 252;
-
-  const below = yTop < 230;
-  const left = Math.max(TW / 2 + 8, Math.min(window.innerWidth - TW / 2 - 8, x));
+  const nyckel = sigNyckel(kpi);
+  const accent = nyckel === "neutral" ? NEUTRAL_TEXT : SIGNAL_COLORS[nyckel];
+  const sig = kpi.utan_mal ? undefined : point?.signal;
+  const BREDD = 252;
 
   let yoy: { text: string; color: string } | null = null;
   if (point && prevYear != null) {
     const diff = point.varde - prevYear;
-    const good = kpi.inverterad ? diff < 0 : diff > 0;
-    const bad = kpi.inverterad ? diff > 0 : diff < 0;
-    const arrow = diff > 0 ? "↑" : diff < 0 ? "↓" : "→";
-    const unit = kpi.enhet === "procent" ? " pp" : "";
+    const bra = kpi.inverterad ? diff < 0 : diff > 0;
+    const daligt = kpi.inverterad ? diff > 0 : diff < 0;
+    const pil = diff > 0 ? "↑" : diff < 0 ? "↓" : "→";
+    const enhet = kpi.enhet === "procent" ? " pp" : "";
     yoy = {
-      color: good ? SIGNAL_COLORS.gron : bad ? SIGNAL_COLORS.rod : "#9a9a96",
-      text: `${fmtVarde(prevYear, kpi.enhet, dec)}${suffix}  ${arrow}${fmtVarde(Math.abs(diff), kpi.enhet, dec)}${unit}`,
+      color: kpi.utan_mal ? "#9a9a96" : bra ? SIGNAL_COLORS.gron : daligt ? SIGNAL_COLORS.rod : "#9a9a96",
+      text: fmtVarde(prevYear, kpi.enhet, dec) + suffix + "  " + pil + fmtVarde(Math.abs(diff), kpi.enhet, dec) + enhet,
     };
   }
 
   return (
-    <div style={{
-      position: "fixed", left, top: below ? yBot + 10 : yTop - 10,
-      transform: below ? "translate(-50%, 0)" : "translate(-50%, -100%)",
-      width: TW, zIndex: 9999, pointerEvents: "none",
-      background: "#fff", border: "1px solid #e0e0dc", borderTop: `3px solid ${accent}`,
-      borderRadius: 8, boxShadow: "0 8px 30px rgba(0,0,0,0.13)", padding: "11px 13px 9px",
-      animation: "fadeIn 0.1s ease",
-    }}>
-      <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 14, fontWeight: 600, color: "#1a1a1a", lineHeight: 1.25 }}>
-        {kpi.namn}
-      </div>
-      <div style={{ fontFamily: FONT, fontSize: 11, color: "#999", marginBottom: 8 }}>{etikett}</div>
+    <Kort accent={accent} x={x} yTop={yTop} yBot={yBot} bredd={BREDD}>
+      <div className="sig-kort__titel">{kpi.namn}</div>
+      <div className="sig-kort__meta" style={{ marginBottom: 8 }}>{etikett}</div>
 
       <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-        <span style={{ fontFamily: FONT_MONO, fontFeatureSettings: "'tnum'", fontVariantNumeric: "tabular-nums", fontSize: 23, fontWeight: 700, color: "#0a0a0a", letterSpacing: "-0.02em", lineHeight: 1 }}>
+        <span style={{
+          fontFamily: FONT_MONO, fontFeatureSettings: "'tnum'", fontVariantNumeric: "tabular-nums",
+          fontSize: 23, fontWeight: 700, color: "#0a0a0a", letterSpacing: "-0.02em", lineHeight: 1,
+        }}>
           {point ? fmtVarde(point.varde, kpi.enhet, dec) : "–"}
         </span>
         <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#aaa", fontWeight: 500 }}>{suffix}</span>
         {sig && (
-          <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontFamily: FONT, fontSize: 11, fontWeight: 600, color: SIGNAL_COLORS[sig] }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: SIGNAL_COLORS[sig] }} />
+          <span style={{
+            marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5,
+            fontFamily: FONT, fontSize: 11, fontWeight: 600, color: SIGNAL_TEXT[sig],
+          }}>
+            <span style={{ width: 7, height: 7, background: SIGNAL_COLORS[sig] }} />
             {SIGNAL_LABELS[sig]}
           </span>
         )}
+        {!point && <span className="sig-kort__meta" style={{ marginLeft: "auto" }}>Saknar data</span>}
       </div>
 
-      <div style={{ marginTop: 6, fontFamily: FONT, fontSize: 11, lineHeight: 1.5 }}>
+      <div style={{ marginTop: 6 }}>
         {point?.yhat != null && (
-          <div style={{ display: "flex", justifyContent: "space-between", color: "#999" }}>
+          <div className="sig-kort__rad">
             <span>förväntat</span>
             <span style={{ fontFamily: FONT_MONO }}>{fmtVarde(point.yhat, kpi.enhet, dec)}{suffix}</span>
           </div>
         )}
         {yoy && (
-          <div style={{ display: "flex", justifyContent: "space-between", color: "#999" }}>
+          <div className="sig-kort__rad">
             <span>föreg. år</span>
             <span style={{ fontFamily: FONT_MONO, color: yoy.color, fontWeight: 600 }}>{yoy.text}</span>
           </div>
@@ -388,63 +549,72 @@ function CellCard({ hover }: { hover: Extract<Hover, { kind: "cell" }> }) {
       </div>
 
       <div style={{ marginTop: 8, borderTop: "1px solid #f0efeb", paddingTop: 6 }}>
-        <MiniTrend serie={serie} refSerie={refSerie} accent={NEUTRAL_LINE} highlightPeriod={point?.period} width={TW - 26} height={92} />
+        <MiniTrend
+          serie={serie} refSerie={refSerie} accent={NEUTRAL_LINE}
+          highlightPeriod={point?.period} width={BREDD - 28} height={92}
+        />
       </div>
 
-      {/* Klick-indikation: raden öppnar en större graf */}
-      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 5, fontFamily: FONT, fontSize: 10.5, color: "#aaa", fontWeight: 500 }}>
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <div style={{
+        marginTop: 8, display: "flex", alignItems: "center", gap: 5,
+        fontFamily: FONT, fontSize: 10.5, color: "#aaa", fontWeight: 500,
+      }}>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+             strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9.5 2.5H13.5V6.5" /><path d="M13.5 2.5L9 7" />
           <path d="M6.5 13.5H2.5V9.5" /><path d="M2.5 13.5L7 9" />
         </svg>
         Klicka för större graf
       </div>
-    </div>
+    </Kort>
   );
 }
 
-// ── Namn-ruta: vad indikatorn mäter ──
-function NameCard({ hover }: { hover: Extract<Hover, { kind: "name" }> }) {
-  const { kpi, x, yTop, yBot } = hover;
+// ── Namnruta: vad indikatorn mäter ──
+function NamnKort({ hover }: { hover: Extract<Hover, { kind: "namn" }> }) {
+  const { kpi, avsnitt, x, yTop, yBot } = hover;
   const beskrivning = kortBeskrivning(kpi);
-  const TW = 290;
-  const below = yTop < 200;
-  const left = Math.max(TW / 2 + 8, Math.min(window.innerWidth - TW / 2 - 8, x + TW / 2 - 20));
   const enhetText = kpi.enhet === "procent" ? "Procent" : kpi.enhet === "minuter" ? "Minuter" : "Antal";
-
   return (
-    <div style={{
-      position: "fixed", left, top: below ? yBot + 8 : yTop - 8,
-      transform: below ? "translate(-50%, 0)" : "translate(-50%, -100%)",
-      width: TW, zIndex: 9999, pointerEvents: "none",
-      background: "#fff", border: "1px solid #e0e0dc", borderLeft: "3px solid #00664D",
-      borderRadius: 8, boxShadow: "0 8px 30px rgba(0,0,0,0.13)", padding: "11px 14px",
-      animation: "fadeIn 0.1s ease",
-    }}>
-      <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 14, fontWeight: 600, color: "#1a1a1a", lineHeight: 1.25, marginBottom: beskrivning ? 6 : 8 }}>
-        {kpi.namn}
-      </div>
-      {beskrivning && (
-        <div style={{ fontFamily: FONT, fontSize: 12, lineHeight: 1.55, color: "#555", marginBottom: 8 }}>{beskrivning}</div>
+    <Kort accent="#00664D" x={x} yTop={yTop} yBot={yBot} bredd={290}>
+      {avsnitt && (
+        <div style={{
+          fontFamily: FONT, fontSize: 9.5, fontWeight: 700, textTransform: "uppercase",
+          letterSpacing: "0.12em", color: "#00664D", marginBottom: 4,
+        }}>
+          {avsnitt}
+        </div>
       )}
-      <div style={{ display: "flex", gap: 14, fontFamily: FONT, fontSize: 10.5, color: "#999", borderTop: "1px solid #f0efeb", paddingTop: 7 }}>
+      <div className="sig-kort__titel" style={{ marginBottom: beskrivning ? 6 : 8 }}>{kpi.namn}</div>
+      {beskrivning && (
+        <div style={{ fontFamily: FONT, fontSize: 12, lineHeight: 1.55, color: "#555", marginBottom: 8 }}>
+          {beskrivning}
+        </div>
+      )}
+      <div style={{
+        display: "flex", gap: 14, fontFamily: FONT, fontSize: 10.5, color: "#999",
+        borderTop: "1px solid #f0efeb", paddingTop: 7,
+      }}>
         <span>Enhet: <strong style={{ color: "#666", fontWeight: 600 }}>{enhetText}</strong></span>
-        <span><strong style={{ color: "#666", fontWeight: 600 }}>{kpi.utan_mal ? "Utan målriktning" : kpi.inverterad ? "Lägre är bättre" : "Högre är bättre"}</strong></span>
+        <span>
+          <strong style={{ color: "#666", fontWeight: 600 }}>
+            {kpi.utan_mal ? "Utan målriktning" : kpi.inverterad ? "Lägre är bättre" : "Högre är bättre"}
+          </strong>
+        </span>
       </div>
-    </div>
+    </Kort>
   );
 }
 
-// ── Status-ruta: hur "i fas / bevaka / avvikelse" bedöms ──
-// Två varianter: ranking mot andra regioner (indikatorer med kontext_serier,
-// t.ex. SKR-rapporten) respektive statistiskt förväntat intervall (conformal).
-function StatusCard({ hover }: { hover: Extract<Hover, { kind: "status" }> }) {
+// ── Statusruta: hur "i fas / bevaka / avvikelse" bedöms ──
+// Tre varianter: mått utan målriktning, ranking mot andra regioner
+// (kontext_serier, t.ex. SKR) och statistiskt förväntat intervall (conformal).
+function StatusKort({ hover }: { hover: Extract<Hover, { kind: "status" }> }) {
   const { kpi, x, yTop, yBot } = hover;
-  const TW = 300;
-  const below = yTop < 230;
-  const left = Math.max(TW / 2 + 8, Math.min(window.innerWidth - TW / 2 - 8, x));
-  const ranking = !!kpi.kontext_serier && kpi.kontext_serier.length > 0;
-  const levels: { sig: "gron" | "gul" | "rod"; txt: string }[] = ranking
+  const utanMal = Boolean(kpi.utan_mal);
+  const ranking = Boolean(kpi.kontext_serier && kpi.kontext_serier.length > 0);
+  const accent = utanMal ? NEUTRAL_TEXT : SIGNAL_COLORS[kpi.status] || "#00664D";
+  const nivaer: { sig: "gron" | "gul" | "rod"; txt: string }[] = ranking
     ? [
         { sig: "gron", txt: "Topp 3 bland regionerna" },
         { sig: "gul", txt: "Plats 4–7" },
@@ -452,45 +622,45 @@ function StatusCard({ hover }: { hover: Extract<Hover, { kind: "status" }> }) {
       ]
     : [
         { sig: "gron", txt: "Inom det förväntade intervallet (80 %)" },
-        { sig: "gul", txt: "I ytterkanten — mellan 80 och 95 %" },
+        { sig: "gul", txt: "I ytterkanten, mellan 80 och 95 %" },
         { sig: "rod", txt: "Utanför det förväntade (över 95 %)" },
       ];
 
   return (
-    <div style={{
-      position: "fixed", left, top: below ? yBot + 8 : yTop - 8,
-      transform: below ? "translate(-50%, 0)" : "translate(-50%, -100%)",
-      width: TW, zIndex: 9999, pointerEvents: "none",
-      background: "#fff", border: "1px solid #e0e0dc", borderTop: `3px solid ${SIGNAL_COLORS[kpi.status] || "#00664D"}`,
-      borderRadius: 8, boxShadow: "0 8px 30px rgba(0,0,0,0.13)", padding: "11px 14px",
-      animation: "fadeIn 0.1s ease",
-    }}>
-      <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 14, fontWeight: 600, color: "#1a1a1a", lineHeight: 1.25, marginBottom: 6 }}>
-        Så bedöms status
+    <Kort accent={accent} x={x} yTop={yTop} yBot={yBot} bredd={300}>
+      <div className="sig-kort__titel" style={{ marginBottom: 6 }}>Så bedöms status</div>
+      <div style={{
+        fontFamily: FONT, fontSize: 12, lineHeight: 1.55, color: "#555",
+        marginBottom: utanMal ? 0 : 9,
+      }}>
+        {utanMal
+          ? "Måttet beskriver volym eller struktur och saknar målriktning. Det färgsätts därför inte, utan visas i grått."
+          : ranking
+            ? "Senaste årets värde rankas mot övriga regioner (hänsyn tas till om högre eller lägre är bättre). Halland är i fas när regionen ligger bland de tre bästa."
+            : "Senaste värdet jämförs mot ett statistiskt förväntat intervall. Modellen väger in säsong, veckodag och trend (GLM + conformal prediction)."}
       </div>
-      <div style={{ fontFamily: FONT, fontSize: 12, lineHeight: 1.55, color: "#555", marginBottom: 9 }}>
-        {ranking
-          ? "Senaste årets värde rankas mot övriga regioner (hänsyn tas till om högre eller lägre är bättre). Halland är i fas när regionen ligger bland de tre bästa."
-          : "Senaste värdet jämförs mot ett statistiskt förväntat intervall — modellen väger in säsong, veckodag och trend (GLM + conformal prediction)."}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-        {levels.map((l) => {
-          const aktiv = l.sig === kpi.status;
-          return (
-            <div key={l.sig} style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "3px 6px", borderRadius: 5,
-              background: aktiv ? SIGNAL_BG[l.sig] : "transparent",
-            }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: SIGNAL_COLORS[l.sig], flexShrink: 0 }} />
-              <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: SIGNAL_COLORS[l.sig], width: 62, flexShrink: 0 }}>
-                {SIGNAL_LABELS[l.sig]}
-              </span>
-              <span style={{ fontFamily: FONT, fontSize: 11, color: "#666", lineHeight: 1.4 }}>{l.txt}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      {!utanMal && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {nivaer.map((n) => {
+            const aktiv = n.sig === kpi.status;
+            return (
+              <div key={n.sig} style={{
+                display: "flex", alignItems: "center", gap: 8, padding: "3px 6px",
+                background: aktiv ? SIGNAL_BG[n.sig] : "transparent",
+              }}>
+                <span style={{ width: 8, height: 8, background: SIGNAL_COLORS[n.sig], flexShrink: 0 }} />
+                <span style={{
+                  fontFamily: FONT, fontSize: 11, fontWeight: 600,
+                  color: SIGNAL_TEXT[n.sig], width: 62, flexShrink: 0,
+                }}>
+                  {SIGNAL_LABELS[n.sig]}
+                </span>
+                <span style={{ fontFamily: FONT, fontSize: 11, color: "#666", lineHeight: 1.4 }}>{n.txt}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Kort>
   );
 }
