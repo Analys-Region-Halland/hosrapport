@@ -54,10 +54,13 @@ export interface Referens {
   forandring: number;
 }
 
-/** En påverkansfaktor: kort etikett + förklaring. */
+/** En påverkansfaktor: kort etikett + förklaring, och där påståendet vilar på
+ *  ett regelverk, en mätmetod eller ett nationellt måltal även en hänvisning.
+ *  Faktorer som är ren analys saknar medvetet källa. */
 export interface Paverkansfaktor {
   rubrik: string;
   text: string;
+  kalla?: { namn: string; url?: string };
 }
 
 /** Redaktionellt faktaunderlag per indikator, byggt i

@@ -138,6 +138,10 @@ validera_kontrakt <- function(res) {
               ff <- k$fakta$faktorer[[fi]]
               for (f in c("rubrik", "text"))
                 if (!.kontrakt_skalar(ff[[f]])) lagg(fp, ".faktorer[", fi, "].", f, " saknas/NA")
+              # kalla (valfritt): hänvisning per faktor. Finns den måste den
+              # bära ett namn; url är frivillig (alla källor har inte en sida).
+              if (!is.null(ff$kalla) && !.kontrakt_skalar(ff$kalla$namn))
+                lagg(fp, ".faktorer[", fi, "].kalla.namn saknas/NA")
             }
           }
         }

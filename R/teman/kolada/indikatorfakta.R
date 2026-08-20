@@ -33,6 +33,49 @@
 #   Standardiserade vårdförlopp, Regionala cancercentrum i samverkan
 #   Förstärkt vårdgaranti BUP, överenskommelse staten och SKR
 
+# ── Källor som faktorerna hänvisar till ────────────────────────────────────
+# Endast källor som faktiskt DOKUMENTERAR påståendet får hänvisas till. En
+# faktor som är analys och inte regelverk, mätmetod eller nationellt måltal
+# lämnas medvetet utan hänvisning: hellre ett tomrum än en källa som inte
+# bär det som står. Samtliga URL:er kontrollerade 2026-08-20.
+
+K_VARDGARANTI <- list(
+  namn = "Om vårdgarantin, SKR",
+  url  = "https://extra.skr.se/vantetiderivarden/omvantetider/omvardgaranti.43558.html")
+K_VANTETIDER <- list(
+  namn = "Väntetidsstatistik, Väntetider i vården",
+  url  = "https://extra.skr.se/vantetiderivarden/vantetidsstatistik.63530.html")
+K_ORDLISTA <- list(
+  namn = "Begreppsförklaringar, Väntetider i vården",
+  url  = "https://extra.skr.se/vantetiderivarden/omvantetider/begreppsforklaringatillo.43531.html")
+K_TELEFONI <- list(
+  namn = "Telefoni- och chattillgänglighet, Väntetider i vården",
+  url  = "https://extra.skr.se/vantetiderivarden/vantetidsstatistik/telefoniochchattillganglighet.84210.html")
+K_BUP <- list(
+  namn = "Barn- och ungdomspsykiatri, Väntetider i vården",
+  url  = "https://extra.skr.se/vantetiderivarden/vantetidsstatistik/barnochungdomspsykiatribup.54393.html")
+K_OVERENSK <- list(
+  namn = "Överenskommelser om ökad tillgänglighet, SKR",
+  url  = "https://extra.skr.se/vantetiderivarden/omvantetider/overenskommelseomokadtillganglighet.43562.html")
+K_SOS_3DAGAR <- list(
+  namn = "Medicinsk bedömning inom tre dagar, Socialstyrelsen",
+  url  = "https://www.socialstyrelsen.se/statistik-och-data/indikatorer/indikatorbibliotek/medicinsk-bedomning-inom-tre-dagar/")
+K_BAROMETERN <- list(
+  namn = "Hälso- och sjukvårdsbarometern, SKR",
+  url  = "https://skr.se/skr/halsasjukvard/patientinflytande/halsoochsjukvardsbarometern.758.html")
+K_NPE <- list(
+  namn = "Nationell patientenkät, SKR",
+  url  = "https://patientenkat.se/")
+K_SVF <- list(
+  namn = "Standardiserade vårdförlopp, RCC i samverkan",
+  url  = "https://cancercentrum.se/samverkan/vara-uppdrag/kunskapsstyrning/vardforlopp/")
+K_CANCERREG <- list(
+  namn = "Cancerregistret, Socialstyrelsen",
+  url  = "https://www.socialstyrelsen.se/statistik-och-data/register/cancerregistret/")
+K_1177 <- list(
+  namn = "1177 Vårdguiden",
+  url  = "https://www.1177.se/")
+
 INDIKATORFAKTA <- list(
 
   # ══════════════════════════════════════════════════════════════════
@@ -62,7 +105,8 @@ INDIKATORFAKTA <- list(
       list(rubrik = "Nationell mediebild", text = paste0(
         "Frågan besvaras även av dem som saknar egen vårderfarenhet. En ",
         "nyhetshändelse med nationellt genomslag syns därför i samtliga ",
-        "regioner samma år, oberoende av den egna verksamheten.")),
+        "regioner samma år, oberoende av den egna verksamheten."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Upplevd tillgänglighet", text = paste0(
         "Väntetider är den faktor som starkast samvarierar med förtroende. En ",
         "förbättring i kötiderna syns här först året efter att den märkts i ",
@@ -70,11 +114,13 @@ INDIKATORFAKTA <- list(
       list(rubrik = "Egen vårdkontakt", text = paste0(
         "De som varit i vården under året svarar systematiskt annorlunda än ",
         "övriga. Andelen med vårdkontakt varierar med befolkningens ålder och ",
-        "sjuklighet.")),
+        "sjuklighet."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Urval och osäkerhet", text = paste0(
         "Drygt 50 000 svar samlas in nationellt och fördelas över 21 regioner. ",
         "Skillnader på någon enstaka procentenhet mellan år, eller mellan ",
-        "närliggande regioner, ligger inom felmarginalen."))
+        "närliggande regioner, ligger inom felmarginalen."),
+        kalla = K_BAROMETERN)
     )
   ),
 
@@ -101,14 +147,16 @@ INDIKATORFAKTA <- list(
         "verksamhet påverkar svaren snabbt.")),
       list(rubrik = "Väntetider till sjukhusvård", text = paste0(
         "Sjukhusförtroendet följer tillgängligheten i den specialiserade ",
-        "vården närmare än primärvårdsmåtten gör.")),
+        "vården närmare än primärvårdsmåtten gör."),
+        kalla = K_VANTETIDER),
       list(rubrik = "Vårdplatsläget", text = paste0(
         "Rapportering om stängda vårdplatser, överbeläggning och inhyrd ",
         "personal får stort genomslag i bilden av sjukhuset.")),
       list(rubrik = "Liten spridning", text = paste0(
         "Nivån är hög i alla regioner, vanligen mellan 70 och 80 procent. Att ",
         "spridningen är liten gör att placeringen kan flytta sig flera steg ",
-        "vid små förändringar i utfallet."))
+        "vid små förändringar i utfallet."),
+        kalla = K_BAROMETERN)
     )
   ),
 
@@ -130,7 +178,8 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Att komma fram", text = paste0(
         "Möjligheten att nå mottagningen och få en tid formar bilden av ",
-        "vårdcentralen tydligare än vad som sker under själva besöket.")),
+        "vårdcentralen tydligare än vad som sker under själva besöket."),
+        kalla = K_TELEFONI),
       list(rubrik = "Kontinuitet", text = paste0(
         "Att få träffa samma läkare återkommande höjer omdömet påtagligt. Hög ",
         "andel inhyrda läkare drar därför ner måttet även när den medicinska ",
@@ -165,16 +214,19 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Takeffekt", text = paste0(
         "Eftersom nivån ligger nära 90 procent finns litet utrymme uppåt. ",
-        "Placeringen bland regionerna kan skifta på tiondelar.")),
+        "Placeringen bland regionerna kan skifta på tiondelar."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Egen sjuklighet", text = paste0(
         "Personer med kroniska sjukdomar och täta vårdkontakter svarar mer ",
-        "negativt. Regioner med äldre befolkning möter en tyngre svarsgrupp.")),
+        "negativt. Regioner med äldre befolkning möter en tyngre svarsgrupp."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Geografisk tillgång", text = paste0(
         "Avstånd till vård och tillgången till digitala alternativ påverkar ",
         "upplevelsen av att vården finns att tillgå.")),
       list(rubrik = "Samband med väntetidsfrågorna", text = paste0(
         "Måttet fångar delvis samma sak som frågorna om rimlig väntetid, men ",
-        "på en mer principiell nivå. De tre ska läsas tillsammans."))
+        "på en mer principiell nivå. De tre ska läsas tillsammans."),
+        kalla = K_BAROMETERN)
     )
   ),
 
@@ -196,17 +248,20 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Faktiska väntetider", text = paste0(
         "Sambandet med vårdgarantimåtten finns, men med både fördröjning och ",
-        "dämpning. Kön måste förbättras under flera år innan omdömet följer efter.")),
+        "dämpning. Kön måste förbättras under flera år innan omdömet följer efter."),
+        kalla = K_VANTETIDER),
       list(rubrik = "Förväntansbildning", text = paste0(
         "Nationell rapportering om vårdköer sätter en referenspunkt som är ",
         "gemensam för alla regioner och som ligger utanför den enskilda ",
         "regionens kontroll.")),
       list(rubrik = "Vem som svarar", text = paste0(
         "De flesta svarande har ingen egen aktuell väntan. Omdömet bygger då på ",
-        "andrahandsuppgifter snarare än på erfarenhet.")),
+        "andrahandsuppgifter snarare än på erfarenhet."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Efterdyningar av pandemin", text = paste0(
         "Köer som byggdes upp från 2020 sänkte nivån i hela landet, och ",
-        "återhämtningen har varit ojämn mellan regionerna."))
+        "återhämtningen har varit ojämn mellan regionerna."),
+        kalla = K_VANTETIDER)
     )
   ),
 
@@ -230,17 +285,20 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Telefontillgänglighet", text = paste0(
         "Att inte komma fram räknas i praktiken som väntetid av den som ringer, ",
-        "även om ingen väntetid registrerats någonstans.")),
+        "även om ingen väntetid registrerats någonstans."),
+        kalla = K_TELEFONI),
       list(rubrik = "Vårdgarantins tre dagar", text = paste0(
         "Sedan 2022 gäller medicinsk bedömning inom tre dagar. Arbetssätt som ",
         "byggts för den tidigare sjudagarsgarantin ger sämre utfall i både det ",
-        "här måttet och i vårdgarantimåttet.")),
+        "här måttet och i vårdgarantimåttet."),
+        kalla = K_VARDGARANTI),
       list(rubrik = "Bemanning och kontinuitet", text = paste0(
         "Vakanser och hög andel inhyrda läkare förlänger tiden till en fast tid ",
         "och märks direkt i omdömet.")),
       list(rubrik = "Digitala ingångar", text = paste0(
         "Chatt och digitala vårdmöten kortar upplevd väntan för den som ",
-        "använder dem, men kan öka avståndet för dem som inte gör det."))
+        "använder dem, men kan öka avståndet för dem som inte gör det."),
+        kalla = K_TELEFONI)
     )
   ),
 
@@ -265,17 +323,21 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Selektionen i urvalet", text = paste0(
         "Bara den som fått ett besök kan svara. En lång kö kan därför höja ",
-        "måttet, eftersom de mest missnöjda aldrig kommer med i urvalet.")),
+        "måttet, eftersom de mest missnöjda aldrig kommer med i urvalet."),
+        kalla = K_NPE),
       list(rubrik = "Mätcykeln", text = paste0(
         "Nationellt gemensamma mätningar görs vartannat år per vårdform. Ett år ",
         "utan ny mätning ser ut som en oförändrad nivå men saknar i själva ",
-        "verket data.")),
+        "verket data."),
+        kalla = K_NPE),
       list(rubrik = "Kontinuitet och bemötande", text = paste0(
         "Att träffa samma vårdgivare och att bli lyssnad på väger tyngst av de ",
-        "ingående dimensionerna.")),
+        "ingående dimensionerna."),
+        kalla = K_NPE),
       list(rubrik = "Bortfallets sammansättning", text = paste0(
         "Svarsfrekvensen ligger kring hälften och är lägre bland yngre och i ",
-        "grupper med annat modersmål. Bortfallet är alltså inte slumpmässigt."))
+        "grupper med annat modersmål. Bortfallet är alltså inte slumpmässigt."),
+        kalla = K_NPE)
     )
   ),
 
@@ -301,13 +363,16 @@ INDIKATORFAKTA <- list(
         "har därmed ett tak som ligger nära hundra procent.")),
       list(rubrik = "Information före besöket", text = paste0(
         "Kallelserutiner och besked om vad som ska hända påverkar ",
-        "helhetsintrycket mer än besökets längd.")),
+        "helhetsintrycket mer än besökets längd."),
+        kalla = K_NPE),
       list(rubrik = "Liten spridning mellan regioner", text = paste0(
         "Eftersom alla ligger högt kan placeringen ändras kraftigt av mycket ",
-        "små skillnader i utfallet.")),
+        "små skillnader i utfallet."),
+        kalla = K_NPE),
       list(rubrik = "Mätningen är avslutad", text = paste0(
         "Indikatorn upphörde i sin nationella form efter 2023. Serien fylls ",
-        "inte på och ska läsas som historik, inte som nuläge."))
+        "inte på och ska läsas som historik, inte som nuläge."),
+        kalla = K_NPE)
     )
   ),
 
@@ -332,13 +397,16 @@ INDIKATORFAKTA <- list(
         "trygghet, och slår igenom i helhetsintrycket.")),
       list(rubrik = "Bemanningskontinuitet", text = paste0(
         "Många olika personal under ett vårdtillfälle sänker omdömet, särskilt ",
-        "i frågorna om information och delaktighet.")),
+        "i frågorna om information och delaktighet."),
+        kalla = K_NPE),
       list(rubrik = "Utskrivningsprocessen", text = paste0(
         "Besked om vad som händer efter utskrivning är en av de frågor som ",
-        "väger tyngst och samtidigt en av dem som oftast får låga betyg.")),
+        "väger tyngst och samtidigt en av dem som oftast får låga betyg."),
+        kalla = K_NPE),
       list(rubrik = "Bortfall bland de sjukaste", text = paste0(
         "De svårast sjuka svarar i lägre grad, vilket sannolikt gör måttet mer ",
-        "positivt än den faktiska upplevelsen i hela gruppen."))
+        "positivt än den faktiska upplevelsen i hela gruppen."),
+        kalla = K_NPE)
     )
   ),
 
@@ -364,13 +432,15 @@ INDIKATORFAKTA <- list(
         "omdömet. Den styrs i sin tur av tillgången på vårdplatser på avdelning.")),
       list(rubrik = "Information under väntan", text = paste0(
         "Att få veta varför man väntar höjer omdömet påtagligt även när väntan ",
-        "är precis lika lång.")),
+        "är precis lika lång."),
+        kalla = K_NPE),
       list(rubrik = "Prioritering efter allvar", text = paste0(
         "Att andra tas före upplevs som orättvist om prioriteringsprincipen ",
         "inte förklarats.")),
       list(rubrik = "Säsong och belastning", text = paste0(
         "Mätningen görs under en avgränsad period. Infektionssäsong eller en ",
-        "enstaka hårt belastad vecka kan påverka utfallet."))
+        "enstaka hårt belastad vecka kan påverka utfallet."),
+        kalla = K_NPE)
     )
   ),
 
@@ -393,16 +463,20 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Kontaktsjuksköterska", text = paste0(
         "En namngiven fast kontakt är den åtgärd som starkast höjer omdömet i ",
-        "cancervården.")),
+        "cancervården."),
+        kalla = K_SVF),
       list(rubrik = "Besked i utlovad tid", text = paste0(
         "Fördröjda provsvar och uppskjutna besked slår hårdare mot upplevelsen ",
-        "än en längre men förutsägbar utredning.")),
+        "än en längre men förutsägbar utredning."),
+        kalla = K_SVF),
       list(rubrik = "Diagnosblandning", text = paste0(
         "Förloppen skiljer sig kraftigt åt mellan diagnoser. Regioner med annan ",
-        "diagnosfördelning i mätningen har delvis andra förutsättningar.")),
+        "diagnosfördelning i mätningen har delvis andra förutsättningar."),
+        kalla = K_SVF),
       list(rubrik = "Litet urval", text = paste0(
         "Antalet svarande per region är begränsat, vilket ger stora ",
-        "slumpmässiga utslag mellan mätningar."))
+        "slumpmässiga utslag mellan mätningar."),
+        kalla = K_NPE)
     )
   ),
 
@@ -426,16 +500,20 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Egen användning", text = paste0(
         "Den som loggat in och uträttat ett ärende är mer positiv. Måttet följer ",
-        "därför spridningen av tjänsterna i befolkningen.")),
+        "därför spridningen av tjänsterna i befolkningen."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Gemensam plattform", text = paste0(
         "1177 är nationellt. Skillnader mellan regioner beror på vad respektive ",
-        "region valt att lägga in i tjänsten, inte på plattformen i sig.")),
+        "region valt att lägga in i tjänsten, inte på plattformen i sig."),
+        kalla = K_1177),
       list(rubrik = "Tjänsteutbudet", text = paste0(
         "Möjligheten att boka om tid, förnya recept och läsa sin journal ",
-        "påverkar nyttan mer än gränssnittet gör.")),
+        "påverkar nyttan mer än gränssnittet gör."),
+        kalla = K_1177),
       list(rubrik = "Kännedom som filter", text = paste0(
         "Låg kännedom lyfter talet, eftersom nämnaren krymper. Nivån ska därför ",
-        "inte läsas som täckningsgrad."))
+        "inte läsas som täckningsgrad."),
+        kalla = K_BAROMETERN)
     )
   ),
 
@@ -459,7 +537,8 @@ INDIKATORFAKTA <- list(
       list(rubrik = "Ålder", text = paste0(
         "Yngre svarande är genomgående mer positiva. Regioner med äldre ",
         "befolkning har ett lägre utgångsläge som inte handlar om den egna ",
-        "verksamheten.")),
+        "verksamheten."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Egen erfarenhet", text = paste0(
         "Den som provat ett digitalt vårdmöte är mer positiv än den som inte ",
         "har det, vilket kopplar måttet till utbudet i regionen.")),
@@ -468,7 +547,8 @@ INDIKATORFAKTA <- list(
         "deras kostnader, inte av regionens eget erbjudande.")),
       list(rubrik = "Frågans bredd", text = paste0(
         "Frågan gäller vård, konsultation och behandling samlat. Ett lågt tal ",
-        "betyder inte att alla former av digital kontakt avvisas."))
+        "betyder inte att alla former av digital kontakt avvisas."),
+        kalla = K_BAROMETERN)
     )
   ),
 
@@ -491,7 +571,8 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Det fysiska besöket", text = paste0(
         "Att en människa kommer hem är det som gör tekniken acceptabel. Talet ",
-        "ligger därför omkring tjugo procentenheter över rent digital vård.")),
+        "ligger därför omkring tjugo procentenheter över rent digital vård."),
+        kalla = K_BAROMETERN),
       list(rubrik = "Erfarenhet av hemsjukvård", text = paste0(
         "Den som har egen eller närståendes erfarenhet av vård i hemmet svarar ",
         "mer positivt.")),
@@ -531,19 +612,24 @@ INDIKATORFAKTA <- list(
       list(rubrik = "Källbyte 2024", text = paste0(
         "Från och med 2024 mäts telefontillgängligheten på ett nytt sätt, med ",
         "månadsvis rapportering till den nationella väntetidsdatabasen. ",
-        "Jämförelser bakåt över det skiftet ska göras med försiktighet.")),
+        "Jämförelser bakåt över det skiftet ska göras med försiktighet."),
+        kalla = K_TELEFONI),
       list(rubrik = "Teknisk lösning", text = paste0(
         "Återuppringningsfunktion och kösystem påverkar talet direkt. Hur ett ",
-        "samtal räknas beror på hur telefonisystemet är satt upp.")),
+        "samtal räknas beror på hur telefonisystemet är satt upp."),
+        kalla = K_TELEFONI),
       list(rubrik = "Digitala ingångar", text = paste0(
         "Chatt och e-tjänster avlastar telefonen. Regioner som styrt om flöden ",
-        "får färre men ofta mer komplexa samtal kvar i telefonen.")),
+        "får färre men ofta mer komplexa samtal kvar i telefonen."),
+        kalla = K_TELEFONI),
       list(rubrik = "Bemanning i slussen", text = paste0(
         "Mätningen avser samma arbetsdag, minst mellan klockan åtta och sjutton. ",
-        "Bemanningen i telefonslussen är därför avgörande för utfallet.")),
+        "Bemanningen i telefonslussen är därför avgörande för utfallet."),
+        kalla = K_TELEFONI),
       list(rubrik = "Årsvärdet är ett medelvärde", text = paste0(
         "Talet är ett genomsnitt av tolv månader och kräver data för minst tio. ",
-        "Enstaka bortfallsmånader kan påverka årets värde."))
+        "Enstaka bortfallsmånader kan påverka årets värde."),
+        kalla = K_TELEFONI)
     )
   ),
 
@@ -571,20 +657,24 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Regelskiftet 2022", text = paste0(
         "Tre dagar ersatte sju. Verksamheter som planerats för den gamla ",
-        "garantin når inte den nya utan att lägga om triagering och tidbok.")),
+        "garantin når inte den nya utan att lägga om triagering och tidbok."),
+        kalla = K_VARDGARANTI),
       list(rubrik = "Vem som bedömer", text = paste0(
         "Sjuksköterska, fysioterapeut och psykolog kan göra den medicinska ",
         "bedömningen. Regioner som använt hela bredden av professioner når ",
-        "högre tal.")),
+        "högre tal."),
+        kalla = K_SOS_3DAGAR),
       list(rubrik = "Uppdragets omfattning", text = paste0(
         "Vad som ligger i primärvården skiljer sig mellan regioner. Ett brett ",
-        "uppdrag ger fler och tyngre bedömningar i nämnaren.")),
+        "uppdrag ger fler och tyngre bedömningar i nämnaren."),
+        kalla = K_SOS_3DAGAR),
       list(rubrik = "Bemanning och kontinuitet", text = paste0(
         "Vakanser och beroende av inhyrda läkare minskar antalet tillgängliga ",
         "bedömningstider.")),
       list(rubrik = "Registreringspraxis", text = paste0(
         "Måttet utgår från när beslut om vård registrerats. Skillnader i hur den ",
-        "tidpunkten sätts påverkar jämförbarheten mellan regioner."))
+        "tidpunkten sätts påverkar jämförbarheten mellan regioner."),
+        kalla = K_SOS_3DAGAR)
     )
   ),
 
@@ -612,17 +702,21 @@ INDIKATORFAKTA <- list(
       list(rubrik = "Remissflödets storlek", text = paste0(
         "Antalet remisser som släpps in styr kölängden lika mycket som ",
         "produktionen gör. Striktare remissbedömning förbättrar måttet utan att ",
-        "vården blivit mer tillgänglig.")),
+        "vården blivit mer tillgänglig."),
+        kalla = K_VARDGARANTI),
       list(rubrik = "Kösammansättning", text = paste0(
         "Ögonsjukvård och ortopedi dominerar volymmässigt i de flesta regioner. ",
-        "Totalen är därför känslig för hur några få specialiteter går.")),
+        "Totalen är därför känslig för hur några få specialiteter går."),
+        kalla = K_VANTETIDER),
       list(rubrik = "Journalsystembyten", text = paste0(
         "Flera regioner har bytt vårdinformationssystem från 2024, vilket ",
         "påverkar rapportering och datakvalitet. Berörda regioner streckas i ",
-        "Kolada, vilket samtidigt minskar antalet jämförbara regioner.")),
+        "Kolada, vilket samtidigt minskar antalet jämförbara regioner."),
+        kalla = K_VANTETIDER),
       list(rubrik = "Kösanering", text = paste0(
         "Rensning av inaktuella väntelistor ger språng i serien som handlar om ",
-        "administration och inte om vård."))
+        "administration och inte om vård."),
+        kalla = K_ORDLISTA)
     )
   ),
 
@@ -650,10 +744,12 @@ INDIKATORFAKTA <- list(
         "sätter taket för hur många som ryms inom gränsen.")),
       list(rubrik = "Distanskontakter", text = paste0(
         "Telefon- och distanskontakter räknas som första kontakt. Regioner som ",
-        "använder dem aktivt når gränsen lättare.")),
+        "använder dem aktivt når gränsen lättare."),
+        kalla = K_ORDLISTA),
       list(rubrik = "Journalsystembyten", text = paste0(
         "Samma datakvalitetsproblem som för väntandemåttet gäller här, med ",
-        "streckade regioner från 2024."))
+        "streckade regioner från 2024."),
+        kalla = K_VANTETIDER)
     )
   ),
 
@@ -686,7 +782,8 @@ INDIKATORFAKTA <- list(
         "planerade kön utan att något beslut fattats om det.")),
       list(rubrik = "Kösammansättning", text = paste0(
         "Höft- och knäplastiker samt kataraktoperationer utgör stora volymer och ",
-        "påverkar totalen kraftigt."))
+        "påverkar totalen kraftigt."),
+        kalla = K_VANTETIDER)
     )
   ),
 
@@ -717,7 +814,8 @@ INDIKATORFAKTA <- list(
         "avgör hur många som ryms inom gränsen.")),
       list(rubrik = "Journalsystembyten", text = paste0(
         "Rapporteringen påverkas från 2024 i flera regioner, vilket minskar ",
-        "antalet jämförbara regioner i rankingen."))
+        "antalet jämförbara regioner i rankingen."),
+        kalla = K_VANTETIDER)
     )
   ),
 
@@ -752,7 +850,8 @@ INDIKATORFAKTA <- list(
         "regioner och avgör vilka ärenden som hamnar i psykiatrins nämnare.")),
       list(rubrik = "Bara första besöket", text = paste0(
         "Väntan på utredning och behandling efter det första besöket fångas inte ",
-        "av indikatorn."))
+        "av indikatorn."),
+        kalla = K_VARDGARANTI)
     )
   ),
 
@@ -779,7 +878,8 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Strängare gräns", text = paste0(
         "30 dagar mot vårdgarantins 90 gör måttet svårare per definition. Nivån ",
-        "ska inte jämföras rakt av med övriga tillgänglighetsmått.")),
+        "ska inte jämföras rakt av med övriga tillgänglighetsmått."),
+        kalla = K_BUP),
       list(rubrik = "Neuropsykiatriska utredningar", text = paste0(
         "Utredningarna kräver läkare, psykolog och ofta fler professioner ",
         "samtidigt. Kapaciteten begränsas av den knappaste av dem.")),
@@ -789,10 +889,12 @@ INDIKATORFAKTA <- list(
         "totalt sett.")),
       list(rubrik = "Efterfrågeökning", text = paste0(
         "Antalet remisser till BUP har ökat kraftigt. Resurstillskott har på ",
-        "många håll ätits upp av ökad tillströmning.")),
+        "många håll ätits upp av ökad tillströmning."),
+        kalla = K_BUP),
       list(rubrik = "Nationella satsningar", text = paste0(
         "Staten och SKR har återkommande överenskommelser med riktade medel till ",
-        "BUP. Effekterna syns med fördröjning och ojämnt mellan regioner."))
+        "BUP. Effekterna syns med fördröjning och ojämnt mellan regioner."),
+        kalla = K_OVERENSK)
     )
   ),
 
@@ -820,16 +922,20 @@ INDIKATORFAKTA <- list(
     faktorer = list(
       list(rubrik = "Skattad nämnare", text = paste0(
         "Nämnaren bygger på tre års historik ur cancerregistret. Ett år med ",
-        "avvikande insjuknande ger utslag som inte handlar om vården.")),
+        "avvikande insjuknande ger utslag som inte handlar om vården."),
+        kalla = K_CANCERREG),
       list(rubrik = "Ingången till förloppet", text = paste0(
         "Välgrundad misstanke ställs oftast i primärvården. Kunskapen där avgör ",
-        "hur många som kommer in i ett förlopp.")),
+        "hur många som kommer in i ett förlopp."),
+        kalla = K_SVF),
       list(rubrik = "Diagnosbredd", text = paste0(
         "Antalet vårdförlopp har byggts ut successivt. Vilka diagnoser som ",
-        "omfattas påverkar hur stor del av cancerfallen som alls kan inkluderas.")),
+        "omfattas påverkar hur stor del av cancerfallen som alls kan inkluderas."),
+        kalla = K_SVF),
       list(rubrik = "Takeffekt", text = paste0(
         "Med de flesta regioner över målet är spridningen liten, och placeringen ",
-        "kan flytta sig mycket vid små skillnader."))
+        "kan flytta sig mycket vid små skillnader."),
+        kalla = K_SVF)
     )
   ),
 
@@ -857,13 +963,16 @@ INDIKATORFAKTA <- list(
         "ledtiden överskrids. Bemanningen där är nationellt ansträngd.")),
       list(rubrik = "Multidisciplinär konferens", text = paste0(
         "Konferensen ska hållas innan behandlingsbeslut fattas. Hur ofta den går ",
-        "att sammankalla styr en stor del av ledtiden.")),
+        "att sammankalla styr en stor del av ledtiden."),
+        kalla = K_SVF),
       list(rubrik = "Diagnosblandning", text = paste0(
         "Ledtidsmålen skiljer sig mellan förlopp. En region med annan ",
-        "diagnosfördelning har delvis andra förutsättningar.")),
+        "diagnosfördelning har delvis andra förutsättningar."),
+        kalla = K_SVF),
       list(rubrik = "Målets nivå", text = paste0(
         "Ingen region når 80-procentsmålet. En hög placering betyder att ",
-        "regionen ligger nära de bästa, inte att målet är uppfyllt."))
+        "regionen ligger nära de bästa, inte att målet är uppfyllt."),
+        kalla = K_SVF)
     )
   )
 )
