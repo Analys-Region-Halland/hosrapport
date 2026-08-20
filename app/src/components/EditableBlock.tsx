@@ -1,14 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { markDirty, markClean } from "../stores/dirty";
 import { getForfattare, setForfattare } from "../stores/blocks";
-import { SIGNAL_COLORS } from "../charts/constants";
-
-// AI-rutans vänster-accent färgsätts efter fas (signalstatus). I den
-// editoriella designen finns ingen bakgrundston — bara en tunn linje, så
-// texten står direkt på pappret. Ingen fas → neutral grön.
-function calloutAccent(signal?: string): string {
-  return (signal && SIGNAL_COLORS[signal]) || "#00AB60";
-}
 
 // ════════════════════════════════════════
 //  EditableBlock — ett textblock i rapporten. Två sorter, samma mönster:
@@ -39,8 +31,6 @@ interface Props {
   author?: string;
   /** Tidsstämpel för bylinen (type="anteckning"). */
   timestamp?: string;
-  /** Fas/signalstatus (type="ai") — färgsätter AI-rutan efter status. */
-  signal?: string;
   onSave?: (data: AnteckningData) => void;
   onDelete?: () => void;
 }
@@ -52,7 +42,7 @@ function fmtDatum(iso?: string): string {
   return d.toLocaleDateString("sv-SE", { day: "numeric", month: "short" });
 }
 
-export default function EditableBlock({ id, type, text, rubrik, author, timestamp, signal, onSave, onDelete }: Props) {
+export default function EditableBlock({ id, type, text, rubrik, author, timestamp, onSave, onDelete }: Props) {
   const editable = type === "anteckning";
   const tom = !rubrik?.trim() && !text.trim();
   const [editing, setEditing] = useState(editable && tom);
@@ -192,13 +182,13 @@ export default function EditableBlock({ id, type, text, rubrik, author, timestam
 
   // ═══════════════════════════════ VISNINGSLÄGE ═══════════════════════════════
 
-  // AI-analys — skrivskyddad, inramad som AI och färgsatt efter fas (status)
+  // AI-analys — skrivskyddad. Ingen panel och ingen statusfärg: etiketten är
+  // sektionsmarkören, statusfärgen bärs av chippet i indikatorhuvudet.
   if (type === "ai") {
     if (!text.trim()) return null;
-    const accent = calloutAccent(signal);
     return (
-      <div className="ai-callout" style={{ borderLeftColor: accent }}>
-        <div className="ai-callout__label" style={{ color: accent }}>
+      <div className="ai-callout">
+        <div className="ai-callout__label">
           <DiamondIcon /> AI-analys
         </div>
         {rubrik?.trim() && <NoteTitle>{rubrik}</NoteTitle>}

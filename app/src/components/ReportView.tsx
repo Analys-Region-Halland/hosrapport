@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import type {
   VyData,
   KpiData,
-  Kalla,
   KallaRef,
   Section,
   ContentBlock,
 } from "../types";
 import FacetedChart from "./FacetedChart";
+import IndikatorFakta from "./IndikatorFakta";
 import SignalTimeline from "./SignalTimeline";
 import { StatusTag } from "./SignalStrip";
 import EditableBlock, { type AnteckningData } from "./EditableBlock";
@@ -349,15 +349,9 @@ function OversiktBlock({
       <ChapterPlate index={0} namn="Översikt" />
 
       {/* ETT kort med egen titel + AI-analys + heatmap — exakt som indikatorkorten. */}
-      <figure className="report-indicator indicator-card report-figure" style={{ margin: 0 }}>
-        {/* Egen titel (H3, som indikatorernas) + ev. toggle */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-          <div style={{
-            fontFamily: FONT, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
-            letterSpacing: "0.13em", color: "#00664D", margin: 0,
-          }}>
-            Signalöversikt
-          </div>
+      <figure className="report-indicator ind report-figure" style={{ margin: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div className="ind-etikett" style={{ flex: "1 1 auto", marginBottom: 14 }}>Signalöversikt</div>
           {harDagar && onChangeVisaDagar && (
             <SegmentedControl
               size="sm"
@@ -511,13 +505,8 @@ function KapitelOversikt({
   onOpenChart?: (kpi: KpiData) => void;
 }) {
   return (
-    <figure className="report-indicator indicator-card report-figure" style={{ margin: "0 0 40px" }}>
-      <div style={{
-        fontFamily: FONT, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
-        letterSpacing: "0.13em", color: "#00664D", margin: "0 0 12px",
-      }}>
-        Signalöversikt
-      </div>
+    <figure className="report-indicator ind report-figure" style={{ margin: "0 0 26px" }}>
+      <div className="ind-etikett">Signalöversikt</div>
 
       <div style={{ maxWidth: 680, marginBottom: 18 }}>
         <BlocksEditor
@@ -632,32 +621,20 @@ function KallaPost({ kalla }: { kalla: KallaRef }) {
   );
 }
 
-// ── Källrad i indikatorkortet: ursprunget, inte leveranskanalen ──
-function KallRad({ kalla }: { kalla: Kalla }) {
-  // Koladas egen formulering visas bara när den tillför något utöver namnet,
-  // så att raden inte upprepar sig själv.
-  const koladaText = kalla.kolada_kalla?.replace(/\.$/, "").trim();
-  const visaKolada = Boolean(
-    koladaText && koladaText.toLowerCase() !== kalla.namn.toLowerCase(),
-  );
-  return (
-    <div className="indicator-kalla">
-      <span className="indicator-kalla__lbl">Källa</span>
-      <span className="indicator-kalla__val" title={kalla.om}>
-        {kalla.url ? (
-          <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
-        ) : kalla.namn}
-        <span className="indicator-kalla__typ"> &middot; {kalla.typ}</span>
-      </span>
-      {visaKolada && (
-        <span className="indicator-kalla__kolada">Kolada anger: {koladaText}</span>
-      )}
-    </div>
-  );
-}
-
 // ════════════════════════════════════════
-//  IndicatorBlock — distinkt kort: titel + analys + graf
+//  IndicatorBlock — indikatorn som ett eget, inramat uppslag.
+//
+//  Läsordning (omtag 2026-08-20): bedömningen först, sedan beviset, sedan
+//  förklaringen, sist verksamhetens egna ord.
+//
+//    1. Huvud            namn, statuschip, Hallands nivå och placering
+//    2. Bedömning        AI-analysen
+//    3. Diagram          utfallet mot regionerna
+//    4. Faktablock       om indikatorn + påverkansfaktorer och teori
+//    5. Verksamhetens kommentar  egna anteckningar
+//
+//  Sektionerna bärs av gröna etikettlinjer, inte av färgade paneler. Enda
+//  färgen utöver grönt är statuschippet i huvudet.
 // ════════════════════════════════════════
 
 function IndicatorBlock({
@@ -689,57 +666,41 @@ function IndicatorBlock({
     : kpi;
 
   return (
-    <div id={`rapport-${kpi.id}`} className="report-indicator indicator-card" style={{ scrollMarginTop: 60 }}>
+    <article id={`rapport-${kpi.id}`} className="report-indicator ind" style={{ scrollMarginTop: 60 }}>
 
-      {/* ── Titelrad: indikatornamn + status ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 7 }}>
-        <h3 style={{
-          fontFamily: FONT_RUBRIK,
-          fontSize: 20, fontWeight: 600, color: "#1a1a1a",
-          margin: 0, letterSpacing: "-0.01em", lineHeight: 1.28,
-        }}>
-          {kpi.namn}
-        </h3>
-        <StatusTag status={kpi.status} neutral={kpi.utan_mal} />
-      </div>
-
-      {/* ── Readout: Hallands nivå + placering. Siffror i mono (tabulära). ── */}
-      <div style={{
-        display: "flex", alignItems: "baseline", gap: 18, flexWrap: "wrap",
-        fontFamily: FONT, fontSize: 12.5, color: "#5b615e",
-        marginBottom: kpi.kalla ? 9 : 16,
-      }}>
-        <span>Halland{" "}
-          <strong style={{ ...mono, fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
-            {fmtVarde(kpi.senaste, kpi.enhet)}{fmtSuffix(kpi.enhet)}
-          </strong>
-        </span>
-        {kpi.rank != null && kpi.rank_av != null && (
-          <span>Plats{" "}
-            <strong style={{ ...mono, fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>{kpi.rank}/{kpi.rank_av}</strong>
-            {" "}bland regionerna
+      {/* ── 1. Huvud: namn, status, readout ── */}
+      <header className="ind__head">
+        <div className="ind__titelrad">
+          <h3 className="ind__titel" style={{ fontFamily: FONT_RUBRIK }}>{kpi.namn}</h3>
+          <StatusTag status={kpi.status} neutral={kpi.utan_mal} />
+        </div>
+        <div className="ind__readout">
+          <span>Halland{" "}
+            <strong style={mono}>{fmtVarde(kpi.senaste, kpi.enhet)}{fmtSuffix(kpi.enhet)}</strong>
           </span>
-        )}
-      </div>
+          {kpi.rank != null && kpi.rank_av != null && (
+            <span>Plats{" "}
+              <strong style={mono}>{kpi.rank}/{kpi.rank_av}</strong>{" "}bland regionerna
+            </span>
+          )}
+          {last && <span className="ind__readout-svag">Avser {lastLabel}</span>}
+        </div>
+      </header>
 
-      {/* ── Källrad: indikatorns ursprung, inte den kanal den levereras genom ── */}
-      {kpi.kalla && <KallRad kalla={kpi.kalla} />}
-
-      {/* ── Analystext (rubrik + text + byline) ── */}
-      <div style={{ maxWidth: 680, marginBottom: 18 }}>
-        <BlocksEditor
+      {/* ── 2. Bedömning: AI-analysen, utan panel ── */}
+      <section className="ind__sektion">
+        <AiAnalys
           targetId={kpi.id}
           aiText={kpi.analystext}
           aiRubrik={kpi.analys_rubrik || analysRubrikForStatus(kpi.status)}
-          aiSignal={kpi.status}
-          vy={vy}
         />
-      </div>
+      </section>
 
-      {/* ── Grafområde (fyller kortets bredd) ── */}
-      <figure className="report-figure" style={{ margin: 0 }}>
-        {harDagar && (
-          <div style={{ marginBottom: 10, display: "flex", justifyContent: "flex-end" }}>
+      {/* ── 3. Diagram: beviset kommer före förklaringen ── */}
+      <figure className="ind__sektion report-figure" style={{ margin: 0 }}>
+        <div className="ind__figurhead">
+          <h4 className="ind-etikett" style={{ flex: "1 1 auto", marginBottom: 0 }}>Utfall</h4>
+          {harDagar && (
             <SegmentedControl
               size="sm"
               ariaLabel="Aggregerat eller dagsnivå"
@@ -747,37 +708,70 @@ function IndicatorBlock({
               value={visaDagar ? "dag" : "aggregerat"}
               onChange={(id) => setVisaDagar(id === "dag")}
             />
-          </div>
-        )}
-        <FacetedChart kpi={chartKpi} vy={aktivVy} />
-        {/* Kort undertext — bara det väsentliga om vad grafen visar.
-            Definition och teknik bor i infoknappen (indikatornamnets hover). */}
-        <figcaption style={{
-          fontFamily: FONT_RUBRIK, fontStyle: "italic", fontSize: 13, color: "#888",
-          marginTop: 10, lineHeight: 1.5,
-        }}>
+          )}
+        </div>
+        <FacetedChart kpi={chartKpi} vy={aktivVy} visaRubrik={false} />
+        <figcaption className="ind__figcaption" style={{ fontFamily: FONT_RUBRIK }}>
           {kpi.kontext_serier && kpi.kontext_serier.length > 0
             ? <>Halland mot övriga regioner (grå) och riket (streckad) &middot; {firstLabel}&ndash;{lastLabel}.</>
             : <>Utfall mot förväntat läge &middot; {firstLabel}&ndash;{lastLabel}.</>}
         </figcaption>
       </figure>
-    </div>
+
+      {/* ── 4. Faktablock: vad måttet är och vad som drar i det ── */}
+      <section className="ind__sektion">
+        <IndikatorFakta kpi={kpi} vy={vy} />
+      </section>
+
+      {/* ── 5. Verksamhetens kommentar ── */}
+      <section className="ind__sektion ind__kommentar">
+        <h4 className="ind-etikett">Verksamhetens kommentar</h4>
+        <Anteckningar targetId={kpi.id} vy={vy} />
+      </section>
+    </article>
   );
 }
 
+
 // ════════════════════════════════════════
-//  BlocksEditor — AI-analys (rubrik+text+byline) + egna anteckningar
+//  Textblock — AI-analys respektive verksamhetens egna anteckningar
+//
+//  De två är åtskilda komponenter sedan indikatorblocket lade diagrammet
+//  mellan dem: bedömningen står överst, kommentaren längst ner. BlocksEditor
+//  sätter ihop dem igen där de fortfarande hör ihop (kapitel- och
+//  avsnittsnivå).
 // ════════════════════════════════════════
 
 function genId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function BlocksEditor({
-  targetId, aiText, aiRubrik, aiSignal, vy,
+/** AI-analysen: alltid aktuell R-text, skrivskyddad, lagras aldrig. */
+function AiAnalys({
+  targetId, aiText, aiRubrik,
 }: {
-  targetId: string; aiText: string; aiRubrik?: string; aiSignal?: string; vy?: string;
+  targetId: string; aiText: string; aiRubrik?: string;
 }) {
+  return (
+    <EditableBlock id={`ai-${targetId}`} type="ai" rubrik={aiRubrik} text={aiText} />
+  );
+}
+
+function BlocksEditor({
+  targetId, aiText, aiRubrik, vy,
+}: {
+  targetId: string; aiText: string; aiRubrik?: string; vy?: string;
+}) {
+  return (
+    <div>
+      <AiAnalys targetId={targetId} aiText={aiText} aiRubrik={aiRubrik} />
+      <Anteckningar targetId={targetId} vy={vy} />
+    </div>
+  );
+}
+
+/** Verksamhetens kommentar: användarens egna block, lagrade lokalt. */
+function Anteckningar({ targetId, vy }: { targetId: string; vy?: string }) {
   const storeKey = vy ? `${vy}:${targetId}` : targetId;
 
   // Lagret innehåller ENDAST användarens egna anteckningar. AI-analysen
@@ -825,10 +819,7 @@ function BlocksEditor({
 
   return (
     <div>
-      {/* AI-analys — alltid aktuell R-text, skrivskyddad, färgsatt efter fas */}
-      <EditableBlock id={`ai-${targetId}`} type="ai" rubrik={aiRubrik} text={aiText} signal={aiSignal} />
-
-      {/* Infoga överst (efter AI-analysen) */}
+      {/* Infoga överst */}
       <InsertLine onClick={() => addBlock(0)} />
 
       {userBlocks.map((block, i) => (

@@ -121,6 +121,27 @@ validera_kontrakt <- function(res) {
         if (!is.null(k$forandringar) && !is.list(k$forandringar))
           lagg(kp, ".forandringar är inte en array (auto_unbox-risk)")
 
+        # fakta (valfritt): redaktionellt faktablock per indikator
+        # (R/teman/kolada/indikatorfakta.R). Textfälten är obligatoriska när
+        # blocket finns, och faktorer måste vara en array-av-objekt så att
+        # auto_unbox inte kollapsar en ensam faktor till en sträng.
+        if (!is.null(k$fakta)) {
+          fp <- paste0(kp, ".fakta")
+          for (f in c("matt", "riktning", "avgransning", "teori"))
+            if (!.kontrakt_skalar(k$fakta[[f]])) lagg(fp, ".", f, " saknas/NA")
+          if (!is.list(k$fakta$faktorer)) {
+            lagg(fp, ".faktorer är inte en lista (auto_unbox-risk)")
+          } else if (length(k$fakta$faktorer) == 0) {
+            lagg(fp, ".faktorer är tom")
+          } else {
+            for (fi in seq_along(k$fakta$faktorer)) {
+              ff <- k$fakta$faktorer[[fi]]
+              for (f in c("rubrik", "text"))
+                if (!.kontrakt_skalar(ff[[f]])) lagg(fp, ".faktorer[", fi, "].", f, " saknas/NA")
+            }
+          }
+        }
+
         # undernivaer (valfritt): list av sub-KPI:er
         if (!is.null(k$undernivaer)) {
           if (!is.list(k$undernivaer)) {

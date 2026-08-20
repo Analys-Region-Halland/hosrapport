@@ -54,6 +54,28 @@ export interface Referens {
   forandring: number;
 }
 
+/** En påverkansfaktor: kort etikett + förklaring. */
+export interface Paverkansfaktor {
+  rubrik: string;
+  text: string;
+}
+
+/** Redaktionellt faktaunderlag per indikator, byggt i
+ *  R/teman/kolada/indikatorfakta.R. Finns i dag för kapitel 1 och 2;
+ *  indikatorer utan post renderas med enbart härledd beskrivning. */
+export interface Fakta {
+  /** Vad indikatorn räknar, i klartext (täljare och nämnare). */
+  matt: string;
+  /** Önskvärd riktning, inklusive målnivå där en sådan finns. */
+  riktning: string;
+  /** Vad måttet INTE fångar, och vem som ingår i underlaget. */
+  avgransning: string;
+  /** Mekanismen: varför talet ligger där det ligger och rör sig som det gör. */
+  teori: string;
+  /** Det som drar i talet, verksamhetens eget såväl som yttre förutsättningar. */
+  faktorer: Paverkansfaktor[];
+}
+
 export interface KpiData {
   id: string;
   namn: string;
@@ -67,6 +89,8 @@ export interface KpiData {
   /** Kort, status-härledd rubrik för AI-analysen (genereras i R; faller
    *  tillbaka på analysRubrik() i frontend om fältet saknas). */
   analys_rubrik?: string;
+  /** Redaktionellt faktaunderlag: vad måttet är och vad som påverkar det. */
+  fakta?: Fakta;
   /** Statistisk definition och beskrivning av indikatorn */
   beskrivning?: string;
   /** Indikatorns primärkälla (register, enkät, inrapportering). */

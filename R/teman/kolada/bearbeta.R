@@ -15,6 +15,7 @@
 # Kräver: kolada_tema (config.R), källregistret (kallor.R), dplyr
 
 source("R/teman/kolada/kallor.R")
+source("R/teman/kolada/indikatorfakta.R")
 
 bearbeta_kolada <- function() {
   fil <- kolada_tema$datakalla
@@ -265,6 +266,9 @@ bearbeta_kolada <- function() {
       # Varifrån siffran faktiskt kommer: primärkälla + Koladas egen
       # formulering ordagrant. Se R/teman/kolada/kallor.R.
       kalla       = kalla_for_kpi(kpi_id, meta$description),
+      # Redaktionellt faktaunderlag: vad måttet är, åt vilket håll det ska gå
+      # och vad som drar i det. Sätts bara för indikatorer som har en post i
+      # R/teman/kolada/indikatorfakta.R (i dag kapitel 1 och 2).
       tidsserie   = tidsserie,
       kontext_serier = kontext_serier
     )
@@ -278,6 +282,9 @@ bearbeta_kolada <- function() {
     }
     # Volym-/strukturmått utan målriktning visas med neutralt chip i frontend.
     if (riktning == "neutral") kpi_obj$utan_mal <- TRUE
+    # Faktablocket (om indikatorn + påverkansfaktorer), när det finns.
+    fakta <- indikatorfakta_for(kpi_id)
+    if (!is.null(fakta)) kpi_obj$fakta <- fakta
     kpi_obj
   }
 

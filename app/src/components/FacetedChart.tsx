@@ -34,9 +34,16 @@ interface InternalSeries {
 //  FacetedChart
 // ════════════════════════════════════════
 
-interface Props { kpi: KpiData; vy?: string }
+interface Props {
+  kpi: KpiData;
+  vy?: string;
+  /** Rubrikblocket över grafen (namn + undertext). Stängs av i rapportens
+   *  indikatorblock, där namnet står i indikatorhuvudet och beskrivningen i
+   *  faktablocket under grafen. Kvar i ChartModal, där grafen står ensam. */
+  visaRubrik?: boolean;
+}
 
-export default function FacetedChart({ kpi, vy }: Props) {
+export default function FacetedChart({ kpi, vy, visaRubrik = true }: Props) {
   const [outerRef, containerWidth] = useResizeWidth();
   const [showInfo, setShowInfo] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -208,9 +215,11 @@ export default function FacetedChart({ kpi, vy }: Props) {
               }}>
                 Nedbrytning per avdelning
               </h4>
-              <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
-                {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
-              </div>
+              {visaRubrik && (
+                <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
+                  {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+                </div>
+              )}
             </div>
             <div style={{ position: "relative", flexShrink: 0 }}>
               <button
@@ -288,19 +297,21 @@ export default function FacetedChart({ kpi, vy }: Props) {
             display: "flex", alignItems: "flex-start", justifyContent: "space-between",
             marginBottom: 12, gap: 8,
           }}>
-            <div>
-              <h4 style={{
-                fontFamily: "'Source Serif 4', Georgia, serif",
-                fontSize: 16, fontWeight: 600, color: "#1a1a1a",
-                letterSpacing: "-0.01em", lineHeight: 1.3, margin: "0 0 3px",
-              }}>
-                <span style={{ color: "#9a9a95", fontWeight: 500 }}>Diagram: </span>
-                {kpi.namn}
-              </h4>
-              <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
-                {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+            {visaRubrik ? (
+              <div>
+                <h4 style={{
+                  fontFamily: "'Source Serif 4', Georgia, serif",
+                  fontSize: 16, fontWeight: 600, color: "#1a1a1a",
+                  letterSpacing: "-0.01em", lineHeight: 1.3, margin: "0 0 3px",
+                }}>
+                  <span style={{ color: "#9a9a95", fontWeight: 500 }}>Diagram: </span>
+                  {kpi.namn}
+                </h4>
+                <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
+                  {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+                </div>
               </div>
-            </div>
+            ) : <div />}
             <div style={{ position: "relative", flexShrink: 0 }}>
               <button
                 onClick={() => setShowInfo(!showInfo)}
