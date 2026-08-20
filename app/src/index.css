@@ -878,42 +878,6 @@
    och två linjer nära varandra läser sig som ett misstag. */
 .ind > .ind-etikett:first-child { border-top: 0; padding-top: 0; }
 
-/* ── Sammanfattning: kapitlets och avsnittets ingång.
-   Den står OINRAMAD på pappret medan indikatorerna är inramade blad.
-   Kontrasten är det som säger att detta är en sammanfattning, utan att
-   någon extra linje eller etikett behöver läggas till. ── */
-.sammanfattning {
-  margin: 0 0 44px;
-}
-.sammanfattning .ind__sektion:last-child { margin-bottom: 0; }
-
-/* ── Statusfördelning: bandet + räknarna i kapitlets och avsnittets
-   sammanfattning. Proportionerligt band i trafikljusfärgerna, följt av
-   räknare i samma toner. Inga ramar och ingen bakgrund. ── */
-.statusfordelning { margin-bottom: 28px; }
-.statusfordelning__band {
-  display: flex;
-  height: 8px;
-  gap: 2px;
-  margin-bottom: 11px;
-}
-.statusfordelning__rad {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 18px;
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-}
-.statusfordelning__totalt { color: #6d7a74; }
-.statusfordelning__post { font-weight: 500; }
-.statusfordelning strong {
-  font-size: 15px;
-  font-weight: 600;
-  margin-right: 2px;
-}
-.statusfordelning__totalt strong { color: var(--ink); }
-
 /* ── Huvud ── */
 .ind__head { margin-bottom: 22px; }
 .ind__titelrad {

@@ -16,7 +16,6 @@ import { hasDirty } from "../stores/dirty";
 import { fullEtikett, fmtVarde, fmtSuffix } from "../utils/format";
 import { ANALYS_RUBRIK_GLOBAL, analysRubrikForStatus } from "../utils/analys";
 import SegmentedControl from "./SegmentedControl";
-import { SIGNAL_COLORS, SIGNAL_TEXT } from "../charts/constants";
 import { kategoriForOmrade } from "../taxonomy";
 
 // ════════════════════════════════════════════════════════
@@ -331,13 +330,9 @@ function OversiktBlock({
       {/* Titel i platta — exakt samma utseende som övriga kapitel (folio 00). */}
       <ChapterPlate index={0} namn="Översikt" />
 
-      {/* Samma oinramade form som kapitlens och avsnittens sammanfattningar:
-          fördelningen i siffror, bedömningen i ord, sedan tabellen. */}
-      <div className="sammanfattning">
-        <StatusFordelning
-          kpier={sektioner.flatMap((s) => s.kpier)}
-          etikett="Rapporten omfattar"
-        />
+      {/* Samma form som kapitlens och avsnittens ingång: bedömningen i ord,
+          därefter signalöversikten. */}
+      <div className="report-indicator ind">
         {showGlobal && (
           <div className="ind__sektion">
             <BlocksEditor
@@ -433,7 +428,12 @@ function SectionBlock({
           indikatorer, grupperade per avsnitt. Ligger på kapitelnivå och inte
           per avsnitt — annars upprepas samma remsa fyra gånger i rad. */}
       {delar && (
-        <KapitelSammanfattning section={section} vy={vy} />
+        <KapitelSammanfattning
+          section={section}
+          grupper={delar}
+          vy={vy}
+          onOpenChart={onOpenChart}
+        />
       )}
 
       {delar ? (
@@ -471,76 +471,38 @@ function Inledning({ stycken }: { stycken: string[] }) {
 }
 
 // ════════════════════════════════════════
-//  Statusfördelning — hur många indikatorer som ligger var
-//
-//  Kapitlets sammanfattning behöver en siffermässig sammanfattning, inte hela
-//  signaltabellen: den bor numera hos respektive avsnitt. Remsan visar
-//  fördelningen som ett proportionerligt band plus räknare, i samma
-//  trafikljusspråk som chippen.
-// ════════════════════════════════════════
-
-function StatusFordelning({ kpier, etikett }: { kpier: KpiData[]; etikett: string }) {
-  const nyckel = (k: KpiData) => (k.utan_mal ? "neutral" : k.status);
-  const ordning: { id: string; etikett: string; farg: string; text: string }[] = [
-    { id: "rod", etikett: "avvikelse", farg: SIGNAL_COLORS.rod, text: SIGNAL_TEXT.rod },
-    { id: "gul", etikett: "bevaka", farg: SIGNAL_COLORS.gul, text: SIGNAL_TEXT.gul },
-    { id: "gron", etikett: "i fas", farg: SIGNAL_COLORS.gron, text: SIGNAL_TEXT.gron },
-    { id: "neutral", etikett: "utan mål", farg: "#dcdcd7", text: "#6B7270" },
-  ];
-  const antal = Object.fromEntries(
-    ordning.map((o) => [o.id, kpier.filter((k) => nyckel(k) === o.id).length]),
-  );
-  const totalt = kpier.length;
-  if (totalt === 0) return null;
-
-  return (
-    <div className="statusfordelning">
-      <div
-        className="statusfordelning__band"
-        role="img"
-        aria-label={`${totalt} indikatorer: ` +
-          ordning.filter((o) => antal[o.id]).map((o) => `${antal[o.id]} ${o.etikett}`).join(", ")}
-      >
-        {ordning.filter((o) => antal[o.id] > 0).map((o) => (
-          <span key={o.id} style={{ flex: antal[o.id], background: o.farg }} />
-        ))}
-      </div>
-      <div className="statusfordelning__rad" aria-hidden="true">
-        <span className="statusfordelning__totalt">
-          {etikett} <strong style={mono}>{totalt}</strong> indikatorer
-        </span>
-        {ordning.filter((o) => antal[o.id] > 0).map((o) => (
-          <span key={o.id} className="statusfordelning__post" style={{ color: o.text }}>
-            <strong style={mono}>{antal[o.id]}</strong> {o.etikett}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ════════════════════════════════════════
 //  KapitelSammanfattning — kapitlets ingång
 //
-//  Tidigare låg hela kapitlets signaltabell här och avsnitten hade bara en
-//  textbedömning, vilket gjorde att tabellen aldrig stod nära de indikatorer
-//  den beskrev. Nu är detta en renodlad SAMMANFATTNING: bedömningen i ord
-//  plus statusfördelningen i siffror. Signaltabellen bor hos avsnittet.
+//  Bedömningen av hela kapitlet plus signalöversikten över SAMTLIGA
+//  indikatorer, grupperade per avsnitt. Den stora översikten med filter och
+//  sortering hör hemma just här: det är rapportens karta. Varje avsnitt har
+//  därtill en egen översikt över sina egna indikatorer, se DelBlock.
+//
+//  Att detta är en sammanfattning sägs av analysrubriken i serif, inte av en
+//  extra etikett eller en till statusremsa.
 // ════════════════════════════════════════
 
-function KapitelSammanfattning({ section, vy }: { section: Section; vy: string }) {
+function KapitelSammanfattning({
+  section, grupper, vy, onOpenChart,
+}: {
+  section: Section; grupper: Section[]; vy: string;
+  onOpenChart?: (kpi: KpiData) => void;
+}) {
   return (
-    <section className="sammanfattning">
-      <StatusFordelning kpier={section.kpier} etikett="Kapitlet omfattar" />
+    <div className="report-indicator ind" style={{ marginBottom: 34 }}>
       <div className="ind__sektion">
         <BlocksEditor
           targetId={section.id}
           aiText={section.analys}
-          aiRubrik={section.analys_rubrik || "Sammanfattande bedömning"}
+          aiRubrik={section.analys_rubrik || "Sammanfattande bedömning av kapitlet"}
           vy={vy}
         />
       </div>
-    </section>
+      <section className="ind__sektion">
+        <div className="ind-etikett"><span>Signalöversikt</span></div>
+        <SignalTimeline sektioner={grupper} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
+      </section>
+    </div>
   );
 }
 
@@ -568,11 +530,9 @@ function DelBlock({
         </h3>
       </div>
 
-      {/* Avsnittets sammanfattning står OINRAMAD på pappret. Kontrasten mot de
-          inramade indikatorbladen nedan är det som säger att detta är en
-          sammanfattning och inte ännu en indikator. */}
-      <div className="sammanfattning">
-        <StatusFordelning kpier={del.kpier} etikett="Avsnittet omfattar" />
+      {/* Avsnittets bedömning och avsnittets EGEN signalöversikt står
+          tillsammans, så att orden och siffrorna kan läsas mot varandra. */}
+      <div className="report-indicator ind" style={{ marginBottom: 34 }}>
         <div className="ind__sektion">
           <BlocksEditor targetId={del.id} aiText={del.analys} aiRubrik="Bedömning av avsnittet" vy={vy} />
         </div>

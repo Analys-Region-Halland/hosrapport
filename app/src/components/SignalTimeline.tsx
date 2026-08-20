@@ -246,9 +246,6 @@ export default function SignalTimeline({ sektioner, vy, visaDagar = false, onCel
     { id: "ordning", label: flera ? "Avsnitt" : "Ordning" },
     { id: "status", label: "Status" },
   ];
-  // Sorteringen gör ingen nytta i en kort tabell. Avsnittens egna översikter
-  // har ofta bara två till fyra rader; där är kontrollen bara brus.
-  const visaSortering = alla.length >= 5;
 
   const hoverKol = hover?.kind === "cell" ? hover.idx : null;
 
@@ -297,18 +294,16 @@ export default function SignalTimeline({ sektioner, vy, visaDagar = false, onCel
           )}
         </div>
 
-        {visaSortering && (
-          <div className="sig__sort">
-            <span className="sig__sort-lbl">Sortera</span>
-            <SegmentedControl
-              size="sm"
-              ariaLabel="Sortera signalöversikten"
-              items={sortItems}
-              value={sort}
-              onChange={(id) => setSort(id as SortId)}
-            />
-          </div>
-        )}
+        <div className="sig__sort">
+          <span className="sig__sort-lbl">Sortera</span>
+          <SegmentedControl
+            size="sm"
+            ariaLabel="Sortera signalöversikten"
+            items={sortItems}
+            value={sort}
+            onChange={(id) => setSort(id as SortId)}
+          />
+        </div>
       </div>
 
       {/* ── Kolumnhuvud med årsaxeln ── */}
