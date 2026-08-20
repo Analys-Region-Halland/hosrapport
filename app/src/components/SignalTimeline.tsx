@@ -20,7 +20,7 @@ import MiniTrend from "./MiniTrend";
 //
 //  Legenden ligger ÖVERST och är samtidigt filter: chipen visar hur många
 //  indikatorer som har varje status och filtrerar tabellen när man klickar.
-//  Sorteringen (avsnitt · status · plats) sitter i samma verktygsrad.
+//  Sorteringen (avsnitt · status) sitter i samma verktygsrad.
 //
 //  Lanen är rutor, en per period, utan symboler: fylld ruta = signal, tom
 //  ruta med hårlinje = saknar data, grå ruta = mått utan målriktning. Vid
@@ -28,10 +28,11 @@ import MiniTrend from "./MiniTrend";
 // ════════════════════════════════════════════════════════════
 
 type SigNyckel = "rod" | "gul" | "gron" | "neutral";
-type SortId = "ordning" | "status" | "plats";
+type SortId = "ordning" | "status";
 
+// Ordningen är samtidigt allvarlighetsordning: den styr både chipen i
+// verktygsraden och grupperna vid statussortering.
 const KEY_ORDNING: SigNyckel[] = ["rod", "gul", "gron", "neutral"];
-const KEY_RANG: Record<SigNyckel, number> = { rod: 0, gul: 1, gron: 2, neutral: 3 };
 const KEY_ETIKETT: Record<SigNyckel, string> = {
   rod: SIGNAL_LABELS.rod, gul: SIGNAL_LABELS.gul, gron: SIGNAL_LABELS.gron, neutral: "Utan mål",
 };
@@ -205,24 +206,18 @@ export default function SignalTimeline({ sektioner, vy, visaDagar = false, onCel
         .map((s) => ({ id: s.id, namn: flera ? s.namn : null, kpier: s.kpier.filter(slapp) }))
         .filter((g) => g.kpier.length > 0);
     }
-    const plats = (k: KpiData) => k.rank ?? Number.POSITIVE_INFINITY;
-    const namn = (a: KpiData, b: KpiData) => a.namn.localeCompare(b.namn, "sv");
-
     // Statussortering grupperar också: rubrikerna ger listan samma rytm som
-    // avsnittsvyn, i stället för sexton rader i en följd.
-    if (sort === "status") {
-      const kpier = alla.filter(slapp).sort((a, b) => plats(a) - plats(b) || namn(a, b));
-      return KEY_ORDNING.map((k) => ({
-        id: "status-" + k,
-        namn: KEY_ETIKETT[k],
-        farg: k === "neutral" ? NEUTRAL_TEXT : SIGNAL_TEXT[k],
-        kpier: kpier.filter((x) => sigNyckel(x) === k),
-      })).filter((g) => g.kpier.length > 0);
-    }
-
+    // avsnittsvyn, i stället för sexton rader i en följd. Inom en grupp går
+    // bästa placering först, därefter bokstavsordning.
+    const plats = (k: KpiData) => k.rank ?? Number.POSITIVE_INFINITY;
     const kpier = alla.filter(slapp)
-      .sort((a, b) => plats(a) - plats(b) || KEY_RANG[sigNyckel(a)] - KEY_RANG[sigNyckel(b)] || namn(a, b));
-    return kpier.length ? [{ id: "plats", namn: null, kpier }] : [];
+      .sort((a, b) => plats(a) - plats(b) || a.namn.localeCompare(b.namn, "sv"));
+    return KEY_ORDNING.map((k) => ({
+      id: "status-" + k,
+      namn: KEY_ETIKETT[k],
+      farg: k === "neutral" ? NEUTRAL_TEXT : SIGNAL_TEXT[k],
+      kpier: kpier.filter((x) => sigNyckel(x) === k),
+    })).filter((g) => g.kpier.length > 0);
   }, [sektioner, alla, flera, sort, filter]);
 
   const visade = grupper.reduce((n, g) => n + g.kpier.length, 0);
@@ -250,7 +245,6 @@ export default function SignalTimeline({ sektioner, vy, visaDagar = false, onCel
   const sortItems = [
     { id: "ordning", label: flera ? "Avsnitt" : "Ordning" },
     { id: "status", label: "Status" },
-    ...(harPlats ? [{ id: "plats", label: "Plats" }] : []),
   ];
 
   const hoverKol = hover?.kind === "cell" ? hover.idx : null;
