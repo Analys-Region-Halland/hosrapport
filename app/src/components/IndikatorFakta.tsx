@@ -1,15 +1,24 @@
+import { useState } from "react";
 import type { KpiData } from "../types";
 import { kortBeskrivning } from "../utils/definitions";
 import { periodRangeLabel } from "../utils/format";
 
 // ════════════════════════════════════════════════════════════
-//  IndikatorFakta — referensblocket under diagrammet.
+//  IndikatorFakta — "Om indikatorn", sektionen efter diagrammet.
 //
-//  Två spalter som besvarar var sin fråga:
-//    OM INDIKATORN               vad måttet räknar, åt vilket håll det ska
-//                                gå, vad det inte fångar, enhet, period, källa.
+//  OMTAG 2026-08-20: blocket låg tidigare i en egen tonad ruta och läste sig
+//  som en tabell inklämd i uppslaget. Nu är det en sektion bland de andra,
+//  med samma gröna etikettlinje som Bedömning, Utfall och Verksamhetens
+//  kommentar, och etiketten är samtidigt fällknappen.
+//
+//  Innehållet står i två spalter, åtskilda av en hårlinje:
+//    DEFINITION                  vad måttet räknar, åt vilket håll det ska gå,
+//                                vad det inte fångar, enhet, period, källa.
 //    PÅVERKANSFAKTORER OCH TEORI mekanismen bakom talet, följd av de konkreta
 //                                sakerna som drar i det.
+//
+//  Raderna linjerar men saknar linjer: alignment ger skanbarheten, medan
+//  frånvaron av rutnät håller det borta från tabellkänslan.
 //
 //  Underlaget kommer från R (kpi.fakta, se R/teman/kolada/indikatorfakta.R).
 //  Saknas det renderas vänsterspalten ändå, härledd ur indikatorns egna fält,
@@ -46,6 +55,8 @@ function Rad({ etikett, children }: { etikett: string; children: React.ReactNode
 }
 
 export default function IndikatorFakta({ kpi, vy }: { kpi: KpiData; vy: string }) {
+  const [oppen, setOppen] = useState(true);
+
   const fakta = kpi.fakta;
   const matt = fakta?.matt || kortBeskrivning(kpi);
   const riktning = fakta?.riktning || harleddRiktning(kpi);
@@ -54,46 +65,70 @@ export default function IndikatorFakta({ kpi, vy }: { kpi: KpiData; vy: string }
   const koladaRa = kalla?.kolada_kalla?.replace(/\.$/, "").trim();
   const koladaText = koladaRa && koladaRa.toLowerCase() !== kalla?.namn.toLowerCase()
     ? koladaRa : null;
+  const panelId = `fakta-${kpi.id}`;
 
   return (
-    <div className={`ind-fakta${fakta ? " ind-fakta--tva" : ""}`}>
-      <section className="ind-fakta__spalt">
-        <h4 className="ind-etikett ind-etikett--svag">Om indikatorn</h4>
-        <dl className="fakta-lista">
-          <Rad etikett="Vad som mäts">{matt}</Rad>
-          <Rad etikett="Önskvärd riktning">{riktning}</Rad>
-          {fakta?.avgransning && <Rad etikett="Avgränsning">{fakta.avgransning}</Rad>}
-          <Rad etikett="Enhet och period">
-            {enhetsText(kpi)}
-            {period ? `, ${period}` : ""}
-          </Rad>
-          {kalla && (
-            <Rad etikett="Källa">
-              {kalla.url ? (
-                <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
-              ) : kalla.namn}
-              <span className="fakta-rad__svag"> · {kalla.typ}</span>
-              {/* Koladas egen formulering, men bara när den tillför något
-                  utöver källans namn. Annars upprepar raden sig själv. */}
-              {koladaText && (
-                <span className="fakta-rad__kolada">Kolada anger: {koladaText}</span>
-              )}
-            </Rad>
-          )}
-        </dl>
-      </section>
+    <>
+      <button
+        type="button"
+        className="ind-fold"
+        aria-expanded={oppen}
+        aria-controls={panelId}
+        onClick={() => setOppen((v) => !v)}
+      >
+        <span className="ind-fold__lbl">Om indikatorn</span>
+        <span className="ind-fold__linje" aria-hidden="true" />
+        <span className="ind-fold__hint">{oppen ? "Dölj" : "Visa"}</span>
+        <svg
+          className="ind-fold__pil" width="11" height="11" viewBox="0 0 16 16"
+          fill="none" stroke="currentColor" strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+        >
+          <path d="M3 6l5 5 5-5" />
+        </svg>
+      </button>
 
-      {fakta && (
-        <section className="ind-fakta__spalt">
-          <h4 className="ind-etikett ind-etikett--svag">Påverkansfaktorer och teori</h4>
-          <p className="fakta-teori">{fakta.teori}</p>
-          <dl className="fakta-lista fakta-lista--faktorer">
-            {fakta.faktorer.map((f) => (
-              <Rad key={f.rubrik} etikett={f.rubrik}>{f.text}</Rad>
-            ))}
-          </dl>
-        </section>
+      {oppen && (
+        <div id={panelId} className={`ind-fakta${fakta ? " ind-fakta--tva" : ""}`}>
+          <section className="ind-fakta__spalt">
+            {fakta && <h5 className="fakta-spaltrubrik">Definition</h5>}
+            <dl className="fakta-lista">
+              <Rad etikett="Vad som mäts">{matt}</Rad>
+              <Rad etikett="Önskvärd riktning">{riktning}</Rad>
+              {fakta?.avgransning && <Rad etikett="Avgränsning">{fakta.avgransning}</Rad>}
+              <Rad etikett="Enhet och period">
+                {enhetsText(kpi)}
+                {period ? `, ${period}` : ""}
+              </Rad>
+              {kalla && (
+                <Rad etikett="Källa">
+                  {kalla.url ? (
+                    <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
+                  ) : kalla.namn}
+                  <span className="fakta-rad__svag"> · {kalla.typ}</span>
+                  {/* Koladas egen formulering, men bara när den tillför något
+                      utöver källans namn. Annars upprepar raden sig själv. */}
+                  {koladaText && (
+                    <span className="fakta-rad__kolada">Kolada anger: {koladaText}</span>
+                  )}
+                </Rad>
+              )}
+            </dl>
+          </section>
+
+          {fakta && (
+            <section className="ind-fakta__spalt ind-fakta__spalt--delad">
+              <h5 className="fakta-spaltrubrik">Påverkansfaktorer och teori</h5>
+              <p className="fakta-teori">{fakta.teori}</p>
+              <dl className="fakta-lista fakta-lista--faktorer">
+                {fakta.faktorer.map((f) => (
+                  <Rad key={f.rubrik} etikett={f.rubrik}>{f.text}</Rad>
+                ))}
+              </dl>
+            </section>
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 }
