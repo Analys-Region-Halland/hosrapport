@@ -37,13 +37,21 @@ interface InternalSeries {
 interface Props {
   kpi: KpiData;
   vy?: string;
-  /** Rubrikblocket över grafen (namn + undertext). Stängs av i rapportens
-   *  indikatorblock, där namnet står i indikatorhuvudet och beskrivningen i
-   *  faktablocket under grafen. Kvar i ChartModal, där grafen står ensam. */
+  /** Rubrikblocket över grafen. Kan stängas av helt, men normalt vill man
+   *  i stället skriva om det med `rubrik`/`underrubrik` nedan. */
   visaRubrik?: boolean;
+  /** Egen diagramrubrik. Utan den används indikatornamnet, vilket är rätt
+   *  när grafen står ensam (ChartModal) men en upprepning i rapporten, där
+   *  namnet redan står i indikatorhuvudet. Skriv i stället vad grafen VISAR,
+   *  t.ex. "Halland mot samtliga regioner". */
+  rubrik?: string;
+  /** Egen undertext: enhet, period och hur serierna ska läsas. */
+  underrubrik?: string;
 }
 
-export default function FacetedChart({ kpi, vy, visaRubrik = true }: Props) {
+export default function FacetedChart({
+  kpi, vy, visaRubrik = true, rubrik, underrubrik,
+}: Props) {
   const [outerRef, containerWidth] = useResizeWidth();
   const [showInfo, setShowInfo] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -215,11 +223,11 @@ export default function FacetedChart({ kpi, vy, visaRubrik = true }: Props) {
               }}>
                 Nedbrytning per avdelning
               </h4>
-              {visaRubrik && (
-                <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
-                  {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
-                </div>
-              )}
+              <div className="graf-underrubrik">
+                {underrubrik
+                  || kortBeskrivning(kpi)
+                  || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+              </div>
             </div>
             <div style={{ position: "relative", flexShrink: 0 }}>
               <button
@@ -299,16 +307,18 @@ export default function FacetedChart({ kpi, vy, visaRubrik = true }: Props) {
           }}>
             {visaRubrik ? (
               <div>
-                <h4 style={{
-                  fontFamily: "'Source Serif 4', Georgia, serif",
-                  fontSize: 16, fontWeight: 600, color: "#1a1a1a",
-                  letterSpacing: "-0.01em", lineHeight: 1.3, margin: "0 0 3px",
-                }}>
-                  <span style={{ color: "#9a9a95", fontWeight: 500 }}>Diagram: </span>
-                  {kpi.namn}
+                <h4 className="graf-rubrik">
+                  {rubrik ?? (
+                    <>
+                      <span style={{ color: "#9a9a95", fontWeight: 500 }}>Diagram: </span>
+                      {kpi.namn}
+                    </>
+                  )}
                 </h4>
-                <div style={{ fontFamily: FONT, fontSize: 12.5, color: "#666", lineHeight: 1.4 }}>
-                  {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
+                <div className="graf-underrubrik">
+                  {underrubrik
+                    || kortBeskrivning(kpi)
+                    || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
                 </div>
               </div>
             ) : <div />}

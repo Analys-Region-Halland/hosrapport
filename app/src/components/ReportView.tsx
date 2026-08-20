@@ -7,7 +7,7 @@ import type {
   ContentBlock,
 } from "../types";
 import FacetedChart from "./FacetedChart";
-import IndikatorFakta from "./IndikatorFakta";
+import { OmIndikatorn, Paverkansfaktorer } from "./IndikatorFakta";
 import SignalTimeline from "./SignalTimeline";
 import { StatusTag } from "./SignalStrip";
 import EditableBlock, { type AnteckningData } from "./EditableBlock";
@@ -637,6 +637,37 @@ function KallaPost({ kalla }: { kalla: KallaRef }) {
 //  färgen utöver grönt är statuschippet i huvudet.
 // ════════════════════════════════════════
 
+// ── Diagramrubrik: vad grafen visar, inte vad indikatorn heter ──
+// Indikatornamnet står i uppslagets huvud. Rubriken här ska i stället svara
+// på vad läsaren tittar på, och undertexten på hur serierna ska läsas.
+function grafRubrik(kpi: KpiData): string {
+  if (kpi.kontext_serier && kpi.kontext_serier.length > 0) {
+    return "Halland mot samtliga regioner";
+  }
+  const harBand = kpi.tidsserie.some((p) => p.yhat_lower != null);
+  return harBand ? "Utfall mot förväntat läge" : "Utveckling över tid";
+}
+
+function grafUnderrubrik(kpi: KpiData, forsta: string, sista: string): string {
+  // Enheten skrivs ut bara när den faktiskt är känd. Kolada märker allt som
+  // inte är andel som "antal", även kronbelopp, så ordet "Antal" hade varit
+  // direkt fel för kostnadsindikatorerna.
+  const enhet = kpi.enhet === "procent" ? "Andel i procent"
+    : kpi.enhet === "minuter" ? "Minuter" : "";
+  const spann = forsta && sista && forsta !== sista ? `${forsta}–${sista}` : (sista || forsta);
+  const las: string[] = [];
+  if (kpi.kontext_serier && kpi.kontext_serier.length > 0) {
+    las.push("Halland i mörk linje", "övriga regioner grå");
+    if (kpi.riket_serie && kpi.riket_serie.length > 0) las.push("riket streckat");
+    if (kpi.topp3_band && kpi.topp3_band.length > 0) las.push("topp 3-zonen grön");
+  } else if (kpi.tidsserie.some((p) => p.yhat_lower != null)) {
+    las.push("bandet visar det statistiskt förväntade intervallet");
+  }
+  if (kpi.malniva != null) las.push("målnivån som vågrät linje");
+  const bas = [enhet, spann].filter(Boolean).join(", ");
+  return [bas, las.join(", ")].filter(Boolean).join(". ") + ".";
+}
+
 function IndicatorBlock({
   kpi, vyLabel: _vyLabel, vy,
 }: {
@@ -687,7 +718,10 @@ function IndicatorBlock({
         </div>
       </header>
 
-      {/* ── 2. Bedömning: AI-analysen, utan panel ── */}
+      {/* ── 2. Om indikatorn: vad måttet är, innan siffran tolkas ── */}
+      <OmIndikatorn kpi={kpi} vy={vy} />
+
+      {/* ── 3. Den maskinella analysen av utfallet ── */}
       <section className="ind__sektion">
         <AiAnalys
           targetId={kpi.id}
@@ -696,7 +730,8 @@ function IndicatorBlock({
         />
       </section>
 
-      {/* ── 3. Diagram: beviset kommer före förklaringen ── */}
+      {/* ── 4. Diagram. Rubriken säger vad grafen VISAR; indikatornamnet står
+             redan i huvudet och ska inte upprepas här. ── */}
       <figure className="ind__sektion report-figure" style={{ margin: 0 }}>
         <div className="ind-etikett">
           <span>Utfall</span>
@@ -710,19 +745,18 @@ function IndicatorBlock({
             />
           )}
         </div>
-        <FacetedChart kpi={chartKpi} vy={aktivVy} visaRubrik={false} />
-        <figcaption className="ind__figcaption" style={{ fontFamily: FONT_RUBRIK }}>
-          {kpi.kontext_serier && kpi.kontext_serier.length > 0
-            ? <>Halland mot övriga regioner (grå) och riket (streckad) &middot; {firstLabel}&ndash;{lastLabel}.</>
-            : <>Utfall mot förväntat läge &middot; {firstLabel}&ndash;{lastLabel}.</>}
-        </figcaption>
+        <FacetedChart
+          kpi={chartKpi}
+          vy={aktivVy}
+          rubrik={grafRubrik(kpi)}
+          underrubrik={grafUnderrubrik(kpi, firstLabel, lastLabel)}
+        />
       </figure>
 
-      {/* ── 4. Två jämbördiga referenssektioner: vad måttet är, och vad som
-             drar i det. Renderar sina egna <section>, se IndikatorFakta. ── */}
-      <IndikatorFakta kpi={kpi} vy={vy} />
+      {/* ── 5. Påverkansfaktorer: vad som drar i talet, efter att det visats ── */}
+      <Paverkansfaktorer kpi={kpi} />
 
-      {/* ── 5. Verksamhetens kommentar ── */}
+      {/* ── 6. Verksamhetens kommentar ── */}
       <section className="ind__sektion ind__kommentar">
         <h4 className="ind-etikett"><span>Verksamhetens kommentar</span></h4>
         <Anteckningar targetId={kpi.id} vy={vy} />

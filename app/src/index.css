@@ -933,13 +933,26 @@
 .ind__sektion .ai-callout h4,
 .ind__sektion .report-note { max-width: 660px; }
 
-.ind__figcaption {
-  font-style: italic;
-  font-size: 13px;
-  color: #888;
-  margin-top: 10px;
-  line-height: 1.5;
+/* ── Diagramrubrik. Samma nivå som AI-sektionens serif-rubrik: en
+   sektionsrubrik i serif under den gröna etiketten. Undertexten ligger på
+   metadatanivå och säger enhet, period och hur serierna ska läsas. ── */
+.graf-rubrik {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  line-height: 1.3;
+  color: var(--ink);
 }
+.graf-underrubrik {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8b938e;
+  max-width: 620px;
+}
+
 
 /* Verksamhetens kommentar. Etikettlinjen räcker som avgränsare, men avsnittet
    får extra luft ovanför eftersom det byter röst från maskin till människa.

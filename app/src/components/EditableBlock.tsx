@@ -189,7 +189,7 @@ export default function EditableBlock({ id, type, text, rubrik, author, timestam
     return (
       <div className="ai-callout">
         <div className="ai-callout__label">
-          <DiamondIcon /> AI-analys
+          <DiamondIcon /> Statistisk analys (AI)
         </div>
         {rubrik?.trim() && <NoteTitle>{rubrik}</NoteTitle>}
         <NoteBody text={text} />

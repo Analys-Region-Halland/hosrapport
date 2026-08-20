@@ -4,7 +4,9 @@ import { kortBeskrivning } from "../utils/definitions";
 import { periodRangeLabel } from "../utils/format";
 
 // ════════════════════════════════════════════════════════════
-//  IndikatorFakta — indikatorns två referenssektioner.
+//  Indikatorns två referenssektioner. De exporteras var för sig eftersom de
+//  inte längre står bredvid varandra: "Om indikatorn" inleder uppslaget, och
+//  "Påverkansfaktorer och teori" kommer efter diagrammet.
 //
 //  OMTAG 2026-08-20 (fjärde vändan): "Påverkansfaktorer och teori" låg som en
 //  underrubrik INNE i "Om indikatorn" och bar därför en egen, svagare
@@ -121,7 +123,8 @@ function PilIkon() {
   );
 }
 
-export default function IndikatorFakta({ kpi, vy }: { kpi: KpiData; vy: string }) {
+/** Sektion 1 i uppslaget: vad måttet är, innan siffran tolkas. */
+export function OmIndikatorn({ kpi, vy }: { kpi: KpiData; vy: string }) {
   const fakta = kpi.fakta;
   const matt = fakta?.matt || kortBeskrivning(kpi);
   const riktning = fakta?.riktning || harleddRiktning(kpi);
@@ -132,7 +135,6 @@ export default function IndikatorFakta({ kpi, vy }: { kpi: KpiData; vy: string }
     ? koladaRa : null;
 
   return (
-    <>
       <FallbarSektion rubrik="Om indikatorn" panelId={`fakta-om-${kpi.id}`}>
         {/* Definitionen svarar direkt på sektionsrubriken och står därför
             utan egen etikett, satt med tyngd. */}
@@ -163,17 +165,22 @@ export default function IndikatorFakta({ kpi, vy }: { kpi: KpiData; vy: string }
           {koladaText && <p>Kolada anger: {koladaText}</p>}
         </div>
       </FallbarSektion>
+  );
+}
 
-      {fakta && (
-        <FallbarSektion rubrik="Påverkansfaktorer och teori" panelId={`fakta-pav-${kpi.id}`}>
-          <p className="fakta-teori">{fakta.teori}</p>
-          <ol className="fakta-faktorer">
-            {fakta.faktorer.map((f, i) => (
-              <Faktor key={f.rubrik} faktor={f} nr={i + 1} />
-            ))}
-          </ol>
-        </FallbarSektion>
-      )}
-    </>
+/** Sektion 4 i uppslaget: vad som drar i talet, efter att det visats.
+ *  Renderar ingenting för indikatorer utan faktaunderlag i R. */
+export function Paverkansfaktorer({ kpi }: { kpi: KpiData }) {
+  const fakta = kpi.fakta;
+  if (!fakta) return null;
+  return (
+    <FallbarSektion rubrik="Påverkansfaktorer och teori" panelId={`fakta-pav-${kpi.id}`}>
+      <p className="fakta-teori">{fakta.teori}</p>
+      <ol className="fakta-faktorer">
+        {fakta.faktorer.map((f, i) => (
+          <Faktor key={f.rubrik} faktor={f} nr={i + 1} />
+        ))}
+      </ol>
+    </FallbarSektion>
   );
 }
