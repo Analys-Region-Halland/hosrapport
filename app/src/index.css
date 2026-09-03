@@ -845,7 +845,100 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
 }
 .sidfot__text { font-size: 11px; color: #bbb; }
 
+/* ── Verktygsfält med positionsrad ──
+   Rad ett: tillbaka, tidsvy, export. Rad två: var i rapporten läsaren är.
+   Raden har fast höjd, så att inget hoppar när spåret byts. Linjen längs
+   underkanten fylls i takt med att blocket läses. */
+.report-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(251, 251, 249, .92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--hairline);
+  padding: 8px 32px 0;
+}
+.report-toolbar__rad {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.posrad {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 34px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: #5b615e;
+}
+.posrad__spar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.posrad__spar[data-knapp="true"] { cursor: pointer; }
+.posrad__spar[data-knapp="true"]:hover { color: var(--brand-700); }
+.posrad__del {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Det sista ledet är det som läses: svart och halvfett, får inte klippas. */
+.posrad__del:last-child { color: var(--ink); font-weight: 600; flex-shrink: 0; }
+.posrad__sep { color: #b8bcb7; font-weight: 400; }
+.posrad__nr {
+  color: var(--brand-700);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.posrad__linje {
+  position: absolute;
+  left: -32px;
+  right: -32px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--brand-700);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform .12s linear;
+  pointer-events: none;
+}
+
+/* ── Fokusläge: blocket som läses är svart, övriga tonas ned.
+   Höjden ändras aldrig, så inget hoppar. Klassen sätts av scrollhanteraren. ── */
+.fokusbar { transition: opacity .35s ease; }
+.fokusbar--dimmad { opacity: .48; }
+.fokusbar--dimmad:hover { opacity: .8; }
+
 /* ── Innehållsförteckning ── */
+.report-toc {
+  position: sticky;
+  top: 88px;
+  align-self: flex-start;
+  width: 196px;
+  flex-shrink: 0;
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 24px 16px 28px 20px;
+}
 .toc__rubrik {
   font-size: 12px;
   font-weight: 600;
@@ -859,6 +952,73 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
   color: #b8bcb7;
   margin-right: 5px;
 }
+/* Indikatorposten: statusprick, nummer, namn, och för den aktiva en
+   fyllnadslinje som visar hur långt läsaren kommit i den. */
+.toc__kpi {
+  position: relative;
+  display: block;
+  padding: 3px 0 3px 22px;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #9a9f9c;
+  text-decoration: none;
+  transition: color .1s;
+}
+.toc__kpi:hover { color: var(--ink); }
+.toc__kpi[data-aktiv="true"] {
+  color: var(--brand-700);
+  font-weight: 600;
+  border-left-color: var(--brand-700);
+}
+.toc__prick {
+  position: absolute;
+  left: 10px;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.toc__fyll {
+  position: absolute;
+  left: 22px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  background: rgba(0, 102, 77, .35);
+  transform-origin: left;
+  transition: transform .12s linear;
+}
+
+/* ── Innehållet som ark på smal skärm ── */
+.toc-ark { position: fixed; inset: 0; z-index: 30; }
+.toc-ark__bakgrund {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 26, 26, .35);
+  animation: fadeIn .15s ease;
+}
+.toc-ark__panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(320px, 86vw);
+  background: var(--surface);
+  box-shadow: 0 0 40px rgba(0, 0, 0, .18);
+  overflow: hidden;
+  animation: slideIn .18s ease;
+}
+.toc-ark .report-toc {
+  display: block;
+  position: static;
+  width: 100%;
+  max-height: 100vh;
+  padding: 24px 20px 40px;
+}
+@keyframes slideIn { from { transform: translateX(-24px); opacity: 0 } to { transform: none; opacity: 1 } }
 
 @media (max-width: 620px) {
   .fakta-faktor { grid-template-columns: 24px minmax(0, 1fr); gap: 0 10px; }
@@ -869,8 +1029,9 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
 
 @media print {
   .indikator__huvud, .figur, .rub, .rub-avs, .rub-kap { break-after: avoid; }
-  .figur, .fakta, .ingang__signal { break-inside: avoid; }
+  .figur, .fakta { break-inside: avoid; }
   .rub__kontroll { display: none; }
+  .fokusbar--dimmad { opacity: 1; }
 }
 
 /* ════════════════════════════════════════════
@@ -966,8 +1127,6 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
 /* ════════════════════════════════════════════
    Rapport: utskrift/PDF + responsivt
    ════════════════════════════════════════════ */
-/* Sidebar-TOC fälls ihop på smala skärmar (annars krockar den fasta 196px-kolumnen) */
-@media (max-width: 900px) { .report-toc { display: none; } }
 
 /* Facet-paneler: klickbara → storformat. Hover lyfter panelen + visar expand-ikon. */
 .facet-panel { transition: background .15s; }

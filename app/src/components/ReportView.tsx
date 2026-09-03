@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { usePosition, setPosition, resetPosition } from "../stores/position";
+import { SIGNAL_COLORS } from "../charts/constants";
 import type {
   VyData,
   KpiData,
@@ -74,15 +76,73 @@ interface Props {
   onBack: () => void;
 }
 
+// ── Blockindex: id → var i rapporten blocket hör hemma ──
+// Används av positionsraden för att skriva ut "1 Avsnitt › 1.2 Indikator".
+// Numreringen speglar exakt den i SectionBlock/DelBlock.
+interface BlockInfo {
+  typ: "oversikt" | "kapitel" | "avsnitt" | "indikator" | "kallor";
+  nr?: string;
+  namn: string;
+  kapitel?: { nr?: string; namn: string };
+  avsnitt?: { nr: string; namn: string };
+  kpi?: KpiData;
+}
+
+function byggBlockIndex(sektioner: Section[], enskild: boolean): Map<string, BlockInfo> {
+  const m = new Map<string, BlockInfo>();
+  m.set("oversikt", { typ: "oversikt", namn: "Översikt" });
+  sektioner.forEach((sek, i) => {
+    const kapNr = enskild ? undefined : String(i + 1);
+    const kap = { nr: kapNr, namn: sek.namn };
+    m.set(sek.id, { typ: "kapitel", nr: kapNr, namn: sek.namn, kapitel: kap });
+    const under = (n: number) => (kapNr ? `${kapNr}.${n}` : String(n));
+    const delar = sek.delar && sek.delar.length > 0 ? delSektioner(sek) : null;
+    if (delar) {
+      delar.forEach((del, di) => {
+        const avs = { nr: under(di + 1), namn: del.namn };
+        m.set(del.id, { typ: "avsnitt", nr: avs.nr, namn: del.namn, kapitel: kap, avsnitt: avs });
+        del.kpier.forEach((kpi, ki) => {
+          m.set(kpi.id, { typ: "indikator", nr: `${avs.nr}.${ki + 1}`, namn: kpi.namn, kapitel: kap, avsnitt: avs, kpi });
+        });
+      });
+    } else {
+      sek.kpier.forEach((kpi, ki) => {
+        m.set(kpi.id, { typ: "indikator", nr: under(ki + 1), namn: kpi.namn, kapitel: kap, kpi });
+      });
+    }
+  });
+  m.set("kallor", { typ: "kallor", namn: "Källor" });
+  return m;
+}
+
+/** Sant när skärmen är smalare än sidomenyns brytpunkt. */
+function useSmalSkarm(maxBredd = 900): boolean {
+  const [smal, setSmal] = useState(() => window.matchMedia(`(max-width: ${maxBredd}px)`).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${maxBredd}px)`);
+    const h = () => setSmal(mq.matches);
+    mq.addEventListener("change", h);
+    return () => mq.removeEventListener("change", h);
+  }, [maxBredd]);
+  return smal;
+}
+
 export default function ReportView({
   data, error, sectionId, aktivVy, vyItems, onChangeVy,
   visaDagar = false, onChangeVisaDagar, onOpenChart, onBack,
 }: Props) {
-  const [activeId, setActiveId] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const smal = useSmalSkarm();
+  const [tocOppen, setTocOppen] = useState(false);
+  const tocOppenRef = useRef(false);
+  tocOppenRef.current = tocOppen;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onBack();
+      if (e.key !== "Escape") return;
+      // Escape stänger innehållsarket först, rapporten därefter.
+      if (tocOppenRef.current) setTocOppen(false);
+      else onBack();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -98,21 +158,49 @@ export default function ReportView({
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-  // Scroll spy — markerar aktiv sektion i sidebar-TOC
+  // ── Läsposition ──
+  // Läslinjen ligger en bit ned i fönstret. Det sista blocket vars överkant
+  // passerat linjen är det som läses; progressen är hur långt in i blocket
+  // linjen ligger. Resultatet går till positionslagret (positionsrad och
+  // innehållsförteckning prenumererar), och fokusklassen sätts direkt på
+  // DOM:en så att artikelträdet med alla diagram inte ritas om vid scroll.
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          setActiveId(entry.target.id.replace("rapport-", ""));
-        }
+    const el = scrollRef.current;
+    if (!el) return;
+    let raf = 0;
+    const mat = () => {
+      raf = 0;
+      const tb = el.querySelector<HTMLElement>(".report-toolbar");
+      const lasLinje = (tb?.offsetHeight ?? 60) + el.clientHeight * 0.28;
+      const block = Array.from(el.querySelectorAll<HTMLElement>("[data-block]"));
+      let aktiv: HTMLElement | null = null;
+      for (const b of block) {
+        if (b.getBoundingClientRect().top <= lasLinje) aktiv = b;
+        else break;
       }
-    }, { rootMargin: "-72px 0px -55% 0px" });
-
-    requestAnimationFrame(() => {
-      const targets = document.querySelectorAll("[id^='rapport-']");
-      targets.forEach(t => observer.observe(t));
-    });
-    return () => observer.disconnect();
+      const id = aktiv?.dataset.block ?? "";
+      let progress = 0;
+      if (aktiv) {
+        const r = aktiv.getBoundingClientRect();
+        progress = Math.min(1, Math.max(0, (lasLinje - r.top) / Math.max(1, r.height)));
+      }
+      el.querySelectorAll<HTMLElement>(".fokusbar").forEach((b) => {
+        b.classList.toggle("fokusbar--dimmad", id !== "" && b.dataset.block !== id);
+      });
+      setPosition({ id, progress });
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(mat); };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    // Första mätningen efter att diagrammen fått sina mått.
+    const t = setTimeout(mat, 50);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      clearTimeout(t);
+      if (raf) cancelAnimationFrame(raf);
+      resetPosition();
+    };
   }, [data, sectionId]);
 
   // Memoiseras så att t.ex. scroll-spy-omritningar inte bygger om heatmapen.
@@ -131,6 +219,12 @@ export default function ReportView({
   const sectionTitle = sectionId ? visadeSektioner[0]?.namn : null;
   const showSidebar = (!sectionId && visadeSektioner.length > 1) ||
     Boolean(sectionId && visadeSektioner[0]?.delar?.length);
+  const blockIndex = useMemo(
+    () => byggBlockIndex(visadeSektioner, Boolean(sectionId)),
+    [visadeSektioner, sectionId],
+  );
+  // På smal skärm finns sidomenyn bara som ark, öppnat från positionsraden.
+  const menyIArk = showSidebar && smal;
 
   // ── Ladda ner som PowerPoint ──
   // pptxgenjs är tungt och behövs bara vid klick, så modulen laddas dynamiskt.
@@ -158,6 +252,7 @@ export default function ReportView({
 
   return (
     <div
+      ref={scrollRef}
       style={{
         position: "fixed", inset: 0, background: "#fbfbf9",
         zIndex: 200, overflowY: "auto", animation: "fadeIn 0.2s ease",
@@ -165,7 +260,7 @@ export default function ReportView({
     >
       <div style={{ maxWidth: 1320, margin: "0 auto", position: "relative" }}>
 
-        {/* ── Verktygsfält ── */}
+        {/* ── Verktygsfält + positionsrad ── */}
         <Toolbar
           onBack={onBack}
           aktivVy={aktivVy} vyItems={vyItems} onChangeVy={onChangeVy}
@@ -173,7 +268,24 @@ export default function ReportView({
           exporterar={exporterar}
           exportAktiv={Boolean(data) && visadeSektioner.length > 0}
           exportFel={exportFel}
+          titel={sectionTitle || "Hälso- och sjukvården"}
+          blockIndex={blockIndex}
+          onOpenToc={menyIArk ? () => setTocOppen(true) : undefined}
         />
+
+        {/* ── Innehållet som ark på smal skärm ── */}
+        {menyIArk && tocOppen && (
+          <div className="toc-ark" role="dialog" aria-label="Innehåll">
+            <div className="toc-ark__bakgrund" onClick={() => setTocOppen(false)} />
+            <div className="toc-ark__panel">
+              <SidebarToc
+                sections={visadeSektioner}
+                visaOversikt={heatmapSektioner.length > 0}
+                onNavigera={() => setTocOppen(false)}
+              />
+            </div>
+          </div>
+        )}
 
         {error ? (
           <ReportStatus tone="error" text={`Kunde inte ladda data: ${error}`} />
@@ -186,17 +298,18 @@ export default function ReportView({
         <div style={{ display: "flex", alignItems: "flex-start" }}>
 
           {/* ── Sidebar-TOC ── */}
-          {showSidebar && (
+          {showSidebar && !smal && (
             <SidebarToc
               sections={visadeSektioner}
-              activeId={activeId}
               visaOversikt={heatmapSektioner.length > 0}
             />
           )}
 
           {/* ── Dokument ── */}
           <article className="rapport" style={{
-            flex: 1, maxWidth: 880, padding: "40px 32px 64px",
+            /* minWidth 0: annars vägrar flex-barnet krympa under innehållets
+               min-bredd och rapporten sticker ut till höger på smal skärm. */
+            flex: 1, minWidth: 0, width: "100%", maxWidth: 880, padding: "40px 32px 64px",
             marginLeft: showSidebar ? 0 : "auto",
             marginRight: showSidebar ? 0 : "auto",
           }}>
@@ -301,7 +414,7 @@ function OversiktBlock({
     sektioner.some((s) => s.kpier.some((k) => k.dagar && k.dagar.length > 0));
 
   return (
-    <section id="rapport-oversikt" className="ingang" style={{ scrollMarginTop: 60 }}>
+    <section id="rapport-oversikt" className="ingang fokusbar" data-block="oversikt" style={{ scrollMarginTop: 90 }}>
       {showGlobal && (
         <section>
           <Rubrik marke={AI_MARKE}>{ANALYS_RUBRIK_GLOBAL}</Rubrik>
@@ -389,14 +502,14 @@ function SectionBlock({
   const delar = section.delar && section.delar.length > 0 ? delSektioner(section) : null;
   const under = (i: number) => (nr ? `${nr}.${i}` : String(i));
   return (
-    <section id={`rapport-${section.id}`} style={{ scrollMarginTop: 60 }}>
+    <section id={`rapport-${section.id}`} style={{ scrollMarginTop: 90 }}>
       {/* Rubriken utelämnas för enskilt sakområde — namnet står redan i mastheadet. */}
       {nr != null && (
         <KapitelRubrik nr={nr} namn={section.namn} kicker={kategoriForOmrade(section.id)?.namn} />
       )}
 
       {fristaende && section.inledning && section.inledning.length > 0 && (
-        <Inledning stycken={section.inledning} />
+        <Inledning stycken={section.inledning} blockId={section.id} />
       )}
 
       {/* Kapitlets ingång: bedömning + signalöversikt över samtliga
@@ -431,10 +544,10 @@ function SectionBlock({
 //  ingressen direkt under mastheadet säger själv vad den är.
 // ════════════════════════════════════════
 
-function Inledning({ stycken }: { stycken: string[] }) {
+function Inledning({ stycken, blockId }: { stycken: string[]; blockId: string }) {
   const [ingress, ...brod] = stycken;
   return (
-    <section className="inledning" aria-label="Om rapporten">
+    <section className="inledning fokusbar" data-block={blockId} aria-label="Om rapporten">
       <p className="ingress">{ingress}</p>
       <div className="prosa">
         {brod.map((p, i) => <p key={i}>{p}</p>)}
@@ -459,7 +572,7 @@ function KapitelSammanfattning({
   onOpenChart?: (kpi: KpiData) => void;
 }) {
   return (
-    <div className="ingang">
+    <div className="ingang fokusbar" data-block={section.id}>
       <section>
         <Rubrik marke={AI_MARKE}>Sammanfattande bedömning</Rubrik>
         <BlocksEditor targetId={section.id} aiText={section.analys} vy={vy} />
@@ -473,12 +586,13 @@ function KapitelSammanfattning({
 }
 
 // ════════════════════════════════════════
-//  DelBlock — avsnitt: numrerad rubrik, bedömning + egen signalöversikt,
-//  därefter indikatorerna.
+//  DelBlock — avsnitt: numrerad rubrik och bedömning, därefter
+//  indikatorerna. Avsnittets egen signalöversikt utgick 2026-09-03:
+//  kapitlets översikt i början av rapporten täcker redan alla avsnitt.
 // ════════════════════════════════════════
 
 function DelBlock({
-  del, nr, vyLabel, vy, sectionId, leverans, onOpenChart,
+  del, nr, vyLabel, vy, sectionId, leverans,
 }: {
   del: Section; nr: string; vyLabel: string; vy: string;
   /** Kapitlet delen hör till: styr källuppgifterna i indikatorerna. */
@@ -486,21 +600,15 @@ function DelBlock({
   onOpenChart?: (kpi: KpiData) => void;
 }) {
   return (
-    <section id={`rapport-${del.id}`} style={{ scrollMarginTop: 60 }}>
+    <section id={`rapport-${del.id}`} style={{ scrollMarginTop: 90 }}>
       <h2 className="rub-avs">
         <span className="rub-nr">{nr}</span>{del.namn}
       </h2>
 
-      {/* Avsnittets bedömning och avsnittets EGEN signalöversikt står
-          tillsammans, så att orden och siffrorna kan läsas mot varandra. */}
-      <div className="ingang">
+      <div className="ingang fokusbar" data-block={del.id}>
         <section>
           <Rubrik marke={AI_MARKE}>Bedömning av avsnittet</Rubrik>
           <BlocksEditor targetId={del.id} aiText={del.analys} vy={vy} />
-        </section>
-        <section>
-          <Rubrik>Signalöversikt</Rubrik>
-          <SignalTimeline sektioner={[del]} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
         </section>
       </div>
 
@@ -521,7 +629,7 @@ function DelBlock({
 function Kallforteckning({ kallor, leverans }: { kallor?: KallaRef[]; leverans?: KallaRef[] }) {
   if (!kallor?.length && !leverans?.length) return null;
   return (
-    <section id="rapport-kallor" className="kallor" style={{ scrollMarginTop: 60 }}>
+    <section id="rapport-kallor" className="kallor fokusbar" data-block="kallor" style={{ scrollMarginTop: 90 }}>
       <h2 className="rub-avs" style={{ marginTop: 0 }}>Källor</h2>
 
       {kallor && kallor.length > 0 && (
@@ -661,7 +769,7 @@ function IndicatorBlock({
     : kpi;
 
   return (
-    <article id={`rapport-${kpi.id}`} className="indikator" style={{ scrollMarginTop: 60 }}>
+    <article id={`rapport-${kpi.id}`} className="indikator fokusbar" data-block={kpi.id} style={{ scrollMarginTop: 90 }}>
 
       {/* ── 1. Huvud: nummer, namn, status, readout ── */}
       <header className="indikator__huvud">
@@ -851,6 +959,7 @@ function InsertLine({ onClick }: { onClick: () => void }) {
 function Toolbar({
   onBack, aktivVy, vyItems, onChangeVy,
   onExport, exporterar = false, exportAktiv = false, exportFel = null,
+  titel, blockIndex, onOpenToc,
 }: {
   onBack: () => void;
   aktivVy: string; vyItems: VyItem[]; onChangeVy: (id: string) => void;
@@ -858,14 +967,15 @@ function Toolbar({
   exporterar?: boolean;
   exportAktiv?: boolean;
   exportFel?: string | null;
+  /** Rapportens titel, visas i positionsraden innan läsningen börjat. */
+  titel: string;
+  blockIndex: Map<string, BlockInfo>;
+  /** Finns bara när sidomenyn ligger som ark: raden blir då en knapp. */
+  onOpenToc?: () => void;
 }) {
   return (
-    <div className="report-toolbar" style={{
-      position: "sticky", top: 0, zIndex: 10,
-      background: "rgba(251,251,249,0.92)", backdropFilter: "blur(12px)",
-      borderBottom: "1px solid #e0e0dc", padding: "10px 32px",
-      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16,
-    }}>
+    <div className="report-toolbar">
+      <div className="report-toolbar__rad">
       <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
         <button
           onClick={onBack}
@@ -914,7 +1024,74 @@ function Toolbar({
           </button>
         </div>
       )}
+      </div>
+      <Positionsrad titel={titel} blockIndex={blockIndex} onOpenToc={onOpenToc} />
     </div>
+  );
+}
+
+// ════════════════════════════════════════
+//  Positionsrad — var i rapporten läsaren är, alltid synlig.
+//
+//  Rad två i verktygsfältet. Innan läsningen börjat står rapportens titel;
+//  därefter spåret "1 Avsnitt › 1.2 Indikator" med statuschip, och en linje
+//  längs underkanten som fylls i takt med att blocket läses. Raden har fast
+//  höjd så att innehållet aldrig hoppar när texten byts.
+//  Ett tryck på raden öppnar innehållet som ark när sidomenyn inte får plats.
+// ════════════════════════════════════════
+
+function Positionsrad({
+  titel, blockIndex, onOpenToc,
+}: {
+  titel: string; blockIndex: Map<string, BlockInfo>; onOpenToc?: () => void;
+}) {
+  const pos = usePosition();
+  const info = pos.id ? blockIndex.get(pos.id) : undefined;
+
+  const spar: { nr?: string; namn: string }[] = [];
+  if (info) {
+    if (info.kapitel?.nr) spar.push({ nr: info.kapitel.nr, namn: info.kapitel.namn });
+    else if (info.typ === "kapitel") spar.push({ namn: "Sammanfattning" });
+    if (info.avsnitt) spar.push({ nr: info.avsnitt.nr, namn: info.avsnitt.namn });
+    if (info.typ === "indikator") spar.push({ nr: info.nr, namn: info.namn });
+    if (info.typ === "oversikt" || info.typ === "kallor") spar.push({ namn: info.namn });
+  }
+  if (spar.length === 0) spar.push({ namn: titel });
+
+  const inner = spar.map((s, i) => (
+    <span key={i} className="posrad__del">
+      {i > 0 && <span className="posrad__sep" aria-hidden="true">›</span>}
+      {s.nr && <span className="posrad__nr">{s.nr}</span>}
+      {s.namn}
+    </span>
+  ));
+
+  return (
+    <div className="posrad" aria-live="polite">
+      {onOpenToc ? (
+        <button type="button" className="posrad__spar" data-knapp="true" onClick={onOpenToc} title="Öppna innehåll">
+          <MenyIkon />
+          {inner}
+        </button>
+      ) : (
+        <span className="posrad__spar">{inner}</span>
+      )}
+      {info?.kpi && <StatusTag size="sm" status={info.kpi.status} neutral={info.kpi.utan_mal} />}
+      <span
+        className="posrad__linje"
+        aria-hidden="true"
+        style={{ transform: `scaleX(${info ? pos.progress : 0})` }}
+      />
+    </div>
+  );
+}
+
+function MenyIkon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.7" strokeLinecap="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path d="M2.5 4h11M2.5 8h11M2.5 12h7" />
+    </svg>
   );
 }
 
@@ -923,21 +1100,42 @@ function Toolbar({
 // ════════════════════════════════════════
 
 function SidebarToc({
-  sections, activeId, visaOversikt = true,
+  sections, visaOversikt = true, onNavigera,
 }: {
-  sections: Section[]; activeId: string; visaOversikt?: boolean;
+  sections: Section[]; visaOversikt?: boolean;
+  /** Anropas när en länk klickas (arket stängs). */
+  onNavigera?: () => void;
 }) {
+  const { id: activeId, progress } = usePosition();
+  const navRef = useRef<HTMLElement>(null);
   // Manuellt öppnade/stängda grupper. Odefinierat = följ scrollen
   // (gruppen som innehåller aktiv rubrik visas utfälld).
   const [oppna, setOppna] = useState<Record<string, boolean>>({});
+
+  // Den aktiva posten hålls i synfältet i menyns egen rullyta. Menyn
+  // rullas för sig, aldrig dokumentet, så scrollIntoView används inte.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav || !activeId) return;
+    const a = nav.querySelector<HTMLElement>(`a[href="#rapport-${CSS.escape(activeId)}"]`);
+    if (!a) return;
+    const topp = a.offsetTop;
+    const synligTopp = nav.scrollTop + 40;
+    const synligBotten = nav.scrollTop + nav.clientHeight - 40;
+    if (topp < synligTopp || topp + a.offsetHeight > synligBotten) {
+      nav.scrollTo({ top: Math.max(0, topp - nav.clientHeight * 0.4), behavior: "smooth" });
+    }
+  }, [activeId]);
+
   return (
-    <nav className="report-toc" style={{
-      position: "sticky", top: 52,
-      alignSelf: "flex-start",
-      width: 196, flexShrink: 0,
-      padding: "28px 16px 28px 20px",
-      fontFamily: FONT,
-    }}>
+    <nav
+      ref={navRef}
+      className="report-toc"
+      style={{ fontFamily: FONT }}
+      onClick={(e) => {
+        if (onNavigera && (e.target as HTMLElement).closest("a")) onNavigera();
+      }}
+    >
       <div className="toc__rubrik">Innehåll</div>
       {visaOversikt && (
         <a href="#rapport-oversikt"
@@ -1007,6 +1205,7 @@ function SidebarToc({
                 visaRubrik={!!delar}
                 indent={sections.length > 1 ? 18 : 10}
                 activeId={activeId}
+                progress={progress}
                 open={oppna[grupp.id]}
                 onToggle={(o) => setOppna((s) => ({ ...s, [grupp.id]: o }))}
               />
@@ -1036,12 +1235,12 @@ function SidebarToc({
 
 // ── TocGrupp — hopfällbar grupp i innehållsförteckningen ──
 function TocGrupp({
-  grupp, nr, visaRubrik, indent, activeId, open, onToggle,
+  grupp, nr, visaRubrik, indent, activeId, progress, open, onToggle,
 }: {
   grupp: Section;
   /** Gruppens nummer i dokumentet ("1.2"); tomt = onumrerad grupp. */
   nr: string; visaRubrik: boolean; indent: number;
-  activeId: string; open?: boolean; onToggle: (open: boolean) => void;
+  activeId: string; progress: number; open?: boolean; onToggle: (open: boolean) => void;
 }) {
   const innehallerAktiv = activeId === grupp.id || grupp.kpier.some((k) => k.id === activeId);
   // Manuellt val vinner; annars följer gruppen scrollen
@@ -1083,21 +1282,26 @@ function TocGrupp({
           </a>
         </div>
       )}
-      {(arOppen || !visaRubrik) && grupp.kpier.map((kpi, ki) => (
-        <a key={kpi.id} href={`#rapport-${kpi.id}`}
-          style={{
-            display: "block", padding: "2px 0 2px 22px",
-            fontSize: 11, fontWeight: activeId === kpi.id ? 600 : 400,
-            color: activeId === kpi.id ? "#00664D" : "#aaa",
-            textDecoration: "none", lineHeight: 1.45,
-            borderLeft: activeId === kpi.id ? "2px solid #00664D" : "2px solid transparent",
-            marginLeft: -1,
-            transition: "color 0.1s",
-          }}
-        >
-          <span className="toc__nr">{nr ? `${nr}.${ki + 1}` : ki + 1}</span>{kpi.namn}
-        </a>
-      ))}
+      {(arOppen || !visaRubrik) && grupp.kpier.map((kpi, ki) => {
+        const aktiv = activeId === kpi.id;
+        // Statusprick: menyn är samtidigt en signalkarta över rapporten.
+        const prick = kpi.utan_mal ? "#c4c4be" : (SIGNAL_COLORS[kpi.status] ?? "#c4c4be");
+        return (
+          <a
+            key={kpi.id}
+            href={`#rapport-${kpi.id}`}
+            className="toc__kpi"
+            data-aktiv={aktiv}
+            title={kpi.namn}
+          >
+            <span className="toc__prick" style={{ background: prick }} aria-hidden="true" />
+            <span className="toc__nr">{nr ? `${nr}.${ki + 1}` : ki + 1}</span>{kpi.namn}
+            {aktiv && (
+              <span className="toc__fyll" aria-hidden="true" style={{ transform: `scaleX(${progress})` }} />
+            )}
+          </a>
+        );
+      })}
     </div>
   );
 }
