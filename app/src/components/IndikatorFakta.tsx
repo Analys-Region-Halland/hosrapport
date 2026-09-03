@@ -16,7 +16,7 @@ import { periodRangeLabel } from "../utils/format";
 //  indikatorblocket:
 //
 //    indikatornamn      serif 20
-//    sektion            versal grön etikett + grön topplinje   (.ind-etikett)
+//    sektion            innehållsrubrik, sans halvfet i gemener  (.rub)
 //    post i sektion     sans halvfet i svart                   (.fakta-lbl)
 //    prosa              serif
 //    metadata/källa     sans liten och dämpad
@@ -46,8 +46,8 @@ function harleddRiktning(kpi: KpiData): string {
   return bas;
 }
 
-/** Sektionsrubrik med fällkontroll. Samma form som rapportens övriga
- *  sektionsetiketter; kontrollen är ett tillägg, inte en annan rubrik. */
+/** Innehållsrubrik med fällkontroll. Samma form som rapportens övriga
+ *  innehållsrubriker (.rub); kontrollen är ett tillägg, inte en annan rubrik. */
 function FallbarSektion({
   rubrik, panelId, children,
 }: {
@@ -55,19 +55,19 @@ function FallbarSektion({
 }) {
   const [oppen, setOppen] = useState(true);
   return (
-    <section className="ind__sektion">
+    <section>
       <button
         type="button"
-        className="ind-etikett ind-etikett--knapp"
+        className="rub"
         aria-expanded={oppen}
         aria-controls={panelId}
         onClick={() => setOppen((v) => !v)}
       >
         <span>{rubrik}</span>
-        <span className="ind-etikett__kontroll">
-          <span className="ind-etikett__hint">{oppen ? "Dölj" : "Visa"}</span>
+        <span className="rub__kontroll">
+          <span className="rub__hint">{oppen ? "Dölj" : "Visa"}</span>
           <svg
-            className="ind-etikett__pil" width="11" height="11" viewBox="0 0 16 16"
+            className="rub__pil" width="11" height="11" viewBox="0 0 16 16"
             fill="none" stroke="currentColor" strokeWidth="2"
             strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
           >
@@ -75,7 +75,7 @@ function FallbarSektion({
           </svg>
         </span>
       </button>
-      {oppen && <div id={panelId} className="ind-fakta">{children}</div>}
+      {oppen && <div id={panelId} className="fakta prosa">{children}</div>}
     </section>
   );
 }
@@ -146,10 +146,10 @@ export function OmIndikatorn({ kpi, vy }: { kpi: KpiData; vy: string }) {
         )}
 
         {/* Kolofon: enhet, period och härkomst satt som metadata. */}
-        <div className="fakta-kolofon">
+        <div className="meta fakta-kolofon">
           <p>
             {enhetsText(kpi)}
-            {period && <> <span className="fakta-kolofon__sep">·</span> {period}</>}
+            {period && <> <span className="meta__sep">·</span> {period}</>}
           </p>
           {kalla && (
             <p>
@@ -157,7 +157,7 @@ export function OmIndikatorn({ kpi, vy }: { kpi: KpiData; vy: string }) {
               {kalla.url ? (
                 <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
               ) : kalla.namn}{" "}
-              <span className="fakta-kolofon__sep">·</span> {kalla.typ}
+              <span className="meta__sep">·</span> {kalla.typ}
             </p>
           )}
           {/* Koladas egen formulering, men bara när den tillför något utöver

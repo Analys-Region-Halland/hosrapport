@@ -375,130 +375,386 @@
 }
 
 /* ════════════════════════════════════════════
-   Rapport: kapitelplatta + indikatorkort
+   Rapportens typografi och flöde
+
+   OMTAG 2026-09-03. Rapporten bars tidigare av avgränsare: ramar runt varje
+   indikator, gröna linjer i tre styrkor och versala etiketter i fem varianter.
+   Det gav ett flöde där allt såg lika viktigt ut och där en etikett på 11 px
+   fick bära rubrikens roll. Nu gäller i stället:
+
+   1. STRUKTUREN har tre numrerade serif-nivåer och inget annat:
+        kapitel   32 serif   "1  Patienters och befolkningens syn på vården"
+        avsnitt   26 serif   "1.1  Förtroende för vården"
+        indikator 20 serif   "1.1.1  Förtroende för sjukhus"
+      Numret i grönt är det enda vägvisningsgreppet. Läsaren ser av numrets
+      längd var i dokumentet hen står.
+
+   2. INNEHÅLLSTYPERNA (bedömning, signalöversikt, om indikatorn, diagram,
+      påverkansfaktorer, kommentar) har EN rubrikform, sans 14 halvfet i
+      gemener, utan linje och utan färg. Serif = var är jag, sans = vad är det.
+
+   3. Avstånd gör grupperingen. Mer luft före en rubrik än efter, så att
+      rubriken hänger vid sitt innehåll och inte vid det föregående. Inga
+      ramar, inga avgränsningslinjer i flödet. Enda linjen är mastheadets
+      streck under titeln.
+
+   4. En prosastorlek (16 serif) för all löpande text, en ingress (18,5) och
+      en metastorlek (12 sans). Siffror i mono.
+
+   Signalöversikten och diagrammen har sin egen formgivning och är orörda.
    ════════════════════════════════════════════ */
-/* Kapitelrubrik — editoriell: grön vänster-spine + hairline, ingen fylld platta.
-   Folio i mono, titel i serif på pappret. Lugn men tydlig avgränsare. */
-.chapter-plate {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  background: transparent;
-  border: 0;
-  border-left: 4px solid var(--brand-700, #00664D);
-  border-radius: 0;
-  padding: 2px 0 2px 18px;
-  margin-bottom: 30px;
-  box-shadow: none;
-}
-.chapter-plate__folio {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--brand-700, #00664D);
-  letter-spacing: .04em;
-  line-height: 1.4;
-  flex-shrink: 0;
-}
-.chapter-plate__divider { display: none; }
-.chapter-plate__namn {
-  margin: 0;
-  min-width: 0;
-  font-size: 30px;
-  font-weight: 600;
-  color: var(--ink, #1a1a1a);
-  letter-spacing: -.02em;
-  line-height: 1.16;
+:root {
+  --t-h1: 40px;
+  --t-kap: 32px;
+  --t-avs: 26px;
+  --t-ind: 20px;
+  --t-rub: 14px;
+  --t-ingress: 18.5px;
+  --t-brod: 16px;
+  --t-meta: 12px;
+
+  --prosa-bredd: 660px;
+  --brod-farg: #2b2b2b;
+  --meta-farg: #83888A;
 }
 
-/* Delrubrik — tematisk del inom ett kapitel (t.ex. SKR-rapportens delar).
-   Samma editoriella språk som kapitlet, en snäpp lättare: tunnare spine. */
-.del-plate {
-  display: block;
-  background: transparent;
-  border: 0;
-  border-top: 2px solid var(--brand-700, #00664D);
-  border-radius: 0;
-  padding: 15px 0 0;
-  margin-bottom: 22px;
+.rapport {
+  font-family: var(--font-sans);
+  color: var(--ink);
 }
-.del-plate__nr {
-  display: block;
-  font-family: var(--font-mono);
+
+/* ── Masthead: kicker, titel, streck, datelinje ── */
+.masthead { margin-bottom: 40px; }
+.masthead__logo { display: block; height: 32px; margin-bottom: 28px; }
+.masthead__kicker {
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .16em;
-  color: var(--brand-700, #00664D);
-  margin-bottom: 5px;
-  white-space: nowrap;
-}
-.del-plate__namn {
-  display: block;
-  margin: 0;
-  min-width: 0;
-  font-size: 26px;
-  font-weight: 600;
-  color: var(--ink, #1a1a1a);
-  letter-spacing: -.018em;
-  line-height: 1.18;
-}
-
-/* AI-analys — ingen panel och ingen färgad kantlinje. Statusfärgen bärs av
-   chippet i indikatorhuvudet; här står texten direkt på pappret under sin
-   sektionsetikett. Kvar finns bara etiketten som identitetsmarkör. */
-.ai-callout {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-  margin-bottom: 14px;
-}
-.ai-callout__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  color: var(--brand-700, #00664D);
-  margin-bottom: 7px;
-}
-
-/* ── Inledning — redaktionell kontext före siffrorna.
-   Sätts som brödtext på pappret: serif, generös radhöjd, smal spaltbredd.
-   Ingen ram och ingen platta; en grön hårlinje under blocket avgränsar mot
-   översikten, i samma språk som resten av rapporten. */
-/* Vitrum avgränsar mot översikten — ingen grå linje, i linje med rapportens
-   övriga språk där bara grönt bär struktur. */
-.report-lead {
-  margin: 0 0 44px;
-  max-width: 660px;
-}
-.report-lead__label {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .12em;
   color: var(--brand-700);
   margin-bottom: 12px;
 }
-.report-lead__ingress {
+.masthead__titel {
+  margin: 0 0 18px;
+  font-family: var(--font-serif);
+  font-size: var(--t-h1);
+  font-weight: 700;
+  letter-spacing: -.022em;
+  line-height: 1.08;
+  color: var(--ink);
+}
+.masthead__datelinje {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 2px solid var(--brand-700);
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+}
+.masthead__uppdaterad {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #aaa;
+}
+
+/* ── Strukturrubriker: numrerade, serif ── */
+.rub-nr {
+  color: var(--brand-700);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-right: .55em;
+}
+
+.rub-kap {
+  margin: 96px 0 24px;
+}
+.rub-kap__kicker {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--brand-700);
+  margin-bottom: 10px;
+}
+.rub-kap__titel {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-kap);
+  font-weight: 600;
+  letter-spacing: -.02em;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.rub-avs {
+  margin: 80px 0 20px;
+  font-family: var(--font-serif);
+  font-size: var(--t-avs);
+  font-weight: 600;
+  letter-spacing: -.018em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+/* Första avsnittet följer direkt på kapitlets sammanfattning. */
+.rub-kap + .rub-avs { margin-top: 48px; }
+
+/* ── Innehållsrubrik: sans, gemener, ingen linje ── */
+.rub {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 40px 0 12px;
+  font-family: var(--font-sans);
+  font-size: var(--t-rub);
+  font-weight: 600;
+  letter-spacing: -.005em;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.rub > span:first-child { min-width: 0; }
+/* Kontroll till höger i rubrikraden (fällknapp, växlare) */
+.rub__kontroll {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+/* Fällbar variant: hela raden är knappen. Utseendet är rubrikens. */
+button.rub {
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+button.rub:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 3px; }
+.rub__hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: #a2aaa6;
+  transition: color .15s;
+}
+.rub__pil { color: #a2aaa6; transition: transform .18s ease, color .15s; }
+button.rub[aria-expanded="true"] .rub__pil { transform: rotate(180deg); }
+button.rub:hover .rub__hint,
+button.rub:hover .rub__pil { color: var(--brand-700); }
+
+/* ── Prosa, ingress, meta ── */
+.prosa {
+  max-width: var(--prosa-bredd);
+  font-family: var(--font-serif);
+  font-size: var(--t-brod);
+  line-height: 1.65;
+  color: var(--brod-farg);
+}
+.prosa p { margin: 0; }
+.prosa p + p { margin-top: 12px; }
+
+.ingress {
+  max-width: var(--prosa-bredd);
   margin: 0 0 14px;
-  font-size: 18px;
-  line-height: 1.62;
-  color: #33383a;
+  font-family: var(--font-serif);
+  font-size: var(--t-ingress);
+  line-height: 1.6;
+  color: var(--ink);
 }
-.report-lead__text {
-  margin: 0 0 13px;
-  font-size: 16px;
-  line-height: 1.72;
-  color: #4a4f50;
+
+.meta {
+  font-family: var(--font-sans);
+  font-size: var(--t-meta);
+  line-height: 1.6;
+  color: var(--meta-farg);
 }
-.report-lead__text:last-child { margin-bottom: 0; }
+.meta a { color: inherit; text-decoration: none; }
+.meta a:hover { color: var(--brand-700); text-decoration: underline; }
+.meta__sep { color: #c8ccc9; }
+
+/* Byline under ett textblock: vem eller vad som skrivit det. */
+.byline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: #9a9f9c;
+}
+
+/* ── Inledning: ingress + brödtext direkt under mastheadet ── */
+.inledning { margin: 0 0 8px; }
+
+/* ── Kapitlets och avsnittets ingång: bedömning + signalöversikt.
+   Ingen ram. Rubrikerna är innehållsrubriker (.rub) och avståndet
+   till första indikatorn markerar att ingången är slut. ── */
+.ingang { margin-bottom: 64px; }
+/* Efter inledningens brödtext behövs mer luft: här byter texten röst. */
+.inledning + .ingang > section:first-child > .rub { margin-top: 56px; }
+.rub-avs + .ingang > section:first-child > .rub,
+.rub-kap + .ingang > section:first-child > .rub { margin-top: 0; }
+
+/* ── Indikatorn ──
+   Ingen ram. Uppslaget börjar med numrerad serif-rubrik, statuschip och
+   avläsningsrad, och avgränsas mot nästa indikator av luft. ── */
+.indikator { margin-top: 72px; }
+.ingang + .indikator,
+.rub-kap + .indikator { margin-top: 0; }
+.inledning + .indikator { margin-top: 48px; }
+.indikator__huvud { margin-bottom: 4px; }
+.indikator__titelrad {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.indikator__titel {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-ind);
+  font-weight: 600;
+  letter-spacing: -.012em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.indikator__readout {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: #5b615e;
+}
+.indikator__readout strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.indikator__readout-svag { color: #a2a8a4; }
+/* Första sektionen ligger nära huvudet; den hör till det. */
+.indikator__huvud + * .rub:first-child,
+.indikator__huvud + .rub { margin-top: 24px; }
+
+/* Diagrammet: rubriken sätts av FacetedChart (.graf-rubrik) i samma form
+   som övriga innehållsrubriker. */
+.figur { margin: 40px 0 0; }
+.graf-rubrik {
+  margin: 0 0 4px;
+  font-family: var(--font-sans);
+  font-size: var(--t-rub);
+  font-weight: 600;
+  letter-spacing: -.005em;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.graf-underrubrik {
+  font-family: var(--font-sans);
+  font-size: var(--t-meta);
+  line-height: 1.5;
+  color: var(--meta-farg);
+  max-width: 620px;
+}
+
+/* Verksamhetens kommentar: infogningsraden är svagt synlig, annars ser ett
+   tomt kommentarsavsnitt ut som en bugg. */
+.kommentar .report-insert__btn { opacity: .5; }
+.kommentar .report-insert:hover .report-insert__btn,
+.kommentar .report-insert__btn:focus-visible { opacity: 1; }
+
+/* ── Faktasektionerna: poster med inledande etikett, kolofon, faktorlista ── */
+.fakta { margin-top: 0; animation: fadeIn .14s ease; }
+
+.fakta-stycke { margin: 0 0 12px; }
+.fakta-stycke:last-child { margin-bottom: 0; }
+.fakta-lbl {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+.fakta-stycke .fakta-lbl { margin-right: 9px; }
+.fakta-lbl--rad { display: block; margin: 0 0 3px; }
+
+.fakta-kolofon { margin-top: 16px; }
+.fakta-kolofon p { margin: 0; }
+
+/* Prosans p-regel nollar marginaler; listan får därför sin luft ovanför själv. */
+.fakta-faktorer {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  max-width: var(--prosa-bredd);
+}
+.fakta-faktor {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 0 12px;
+  margin-bottom: 16px;
+}
+.fakta-faktor:last-child { margin-bottom: 0; }
+.fakta-faktor__nr {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.75;
+  color: var(--brand-700);
+}
+.fakta-faktor__kropp { min-width: 0; }
+.fakta-faktor__text { margin: 0; }
+.fakta-kalla {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-family: var(--font-sans);
+  font-size: var(--t-meta);
+  font-weight: 500;
+  color: var(--meta-farg);
+  text-decoration: none;
+  transition: color .15s;
+}
+a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
+.fakta-kalla--tom { color: #a9ada8; }
+
+/* ── Källförteckning ── */
+.kallor { margin-top: 96px; }
+.kalla-post { max-width: var(--prosa-bredd); margin-bottom: 24px; }
+.kalla-post:last-child { margin-bottom: 0; }
+.kalla-post__huvud {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.kalla-post__namn {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-brod);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.kalla-post__namn a { color: inherit; text-decoration: none; }
+.kalla-post__namn a:hover { color: var(--brand-700); text-decoration: underline; }
+.kalla-post__antal {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: #b4b8b2;
+  white-space: nowrap;
+}
+.kalla-post__meta { margin: 2px 0 6px; }
 
 /* ── Nedladdningsknapp i verktygsfältet ── */
 .report-export {
@@ -524,57 +780,38 @@
   outline-offset: 2px;
 }
 
-/* ── Källförteckning sist i rapporten ── */
-.report-sources { margin-top: 56px; }
-.report-sources__label {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  color: var(--brand-700);
-  margin-bottom: 14px;
-}
-/* Källposterna avgränsas av vitrum och sin egen rubrik, inte av linjer. */
-.report-source {
-  max-width: 680px;
-  margin-bottom: 26px;
-}
-.report-source:last-child { margin-bottom: 0; }
-.report-source__head {
+/* ── Sidfot ── */
+.sidfot {
+  margin-top: 96px;
   display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
+  align-items: center;
 }
-.report-source__namn {
-  margin: 0;
-  font-size: 17px;
+.sidfot__text { font-size: 11px; color: #bbb; }
+
+/* ── Innehållsförteckning ── */
+.toc__rubrik {
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: -.008em;
-  line-height: 1.3;
-  color: var(--ink);
+  color: #a9ada8;
+  margin-bottom: 12px;
 }
-.report-source__namn a { color: inherit; text-decoration: none; }
-.report-source__namn a:hover { color: var(--brand-700); text-decoration: underline; }
-.report-source__antal {
-  font-size: 11px;
+.toc__nr {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  color: #b4b8b2;
-  white-space: nowrap;
+  font-size: 10px;
+  color: #b8bcb7;
+  margin-right: 5px;
 }
-.report-source__meta {
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  color: #8f948f;
-  margin: 3px 0 7px;
+
+@media (max-width: 620px) {
+  .fakta-faktor { grid-template-columns: 24px minmax(0, 1fr); gap: 0 10px; }
 }
-.report-source__om {
-  margin: 0;
-  font-size: 14.5px;
-  line-height: 1.65;
-  color: #4a4f50;
+
+@media print {
+  .indikator__huvud, .figur, .rub, .rub-avs, .rub-kap { break-after: avoid; }
+  .figur, .fakta, .ingang__signal { break-inside: avoid; }
+  .rub__kontroll { display: none; }
 }
 
 /* ════════════════════════════════════════════
@@ -684,7 +921,7 @@
   /* Redigerings-affordanser hör inte hemma i utskriften */
   .report-insert { display: none !important; }
   /* Bryt inte sönder ett indikatorkort (rubrik+analys+graf) eller en figur över sidor */
-  .report-indicator, .report-figure, .chapter-plate, .del-plate, .ai-callout { break-inside: avoid; }
+  .figur { break-inside: avoid; }
   body {
     background: #fff !important;
     -webkit-print-color-adjust: exact;
@@ -828,312 +1065,3 @@
   .sig__chip { opacity: 1 !important; }
 }
 
-/* ════════════════════════════════════════════
-   Indikatorn som eget uppslag — inramad, fokuserad, sammanhållen
-
-   OMTAG 2026-08-20. Tidigare låg indikatorn löst på pappret och avgränsades
-   bara av vitrum, medan varje textblock bar sin egen färgade kantlinje. Det
-   blev många små färgpaneler och otydliga gränser mellan analys, diagram och
-   referens. Nu gäller det omvända: EN lugn ram om hela indikatorn, och inne i
-   den bärs sektionerna av gröna etikettlinjer i stället för av paneler.
-   Statusfärg förekommer på ett enda ställe, statuschippet i huvudet.
-   ════════════════════════════════════════════ */
-.ind {
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: 0;
-  box-shadow: none;
-  padding: 28px 30px 24px;
-  margin-bottom: 26px;
-}
-.ind:last-child { margin-bottom: 0; }
-
-/* ── Sektionsetikett — samma grepp som kapitel och avsnitt, en nivå lättare.
-   Hierarkin blir därmed en enda idé i tre styrkor:
-     kapitel  4px grön vänsterspine
-     avsnitt  2px grön topplinje
-     sektion  1px grön topplinje  (här)
-   Linjen går över hela bredden och etiketten står under den, vilket läser
-   sig som en sektionsstart på ett helt annat sätt än en etikett med en
-   hårlinje bredvid sig. Raden är flex, så en kontroll kan ligga till höger. ── */
-.ind-etikett {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 0 0 16px;
-  padding: 10px 0 0;
-  /* Nollställs explicit: etiketten är ibland en <button>. */
-  border: 0;
-  border-top: 1px solid rgba(0, 102, 77, .32);
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .15em;
-  color: var(--brand-700);
-  white-space: nowrap;
-}
-/* Överst i en ram behövs ingen linje: ramkanten gör redan avgränsningen,
-   och två linjer nära varandra läser sig som ett misstag. */
-.ind > .ind-etikett:first-child { border-top: 0; padding-top: 0; }
-
-/* ── Huvud ── */
-.ind__head { margin-bottom: 22px; }
-.ind__titelrad {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-.ind__titel {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--ink);
-  letter-spacing: -.01em;
-  line-height: 1.28;
-}
-.ind__readout {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-  flex-wrap: wrap;
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-  color: #5b615e;
-}
-.ind__readout strong {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-}
-.ind__readout-svag { color: #a2a8a4; }
-
-/* ── Sektioner inne i ramen ── */
-.ind__sektion { margin-bottom: 32px; }
-.ind__sektion:last-child { margin-bottom: 0; }
-.ind__sektion .ai-callout { margin-bottom: 0; }
-
-/* AI-analysens etikett bär samma linje som övriga sektionsetiketter, så att
-   bedömning, utfall, fakta och kommentar får identiska rubriker. Linjen går
-   ut till ramen medan brödtexten hålls på läsbar spaltbredd. */
-.ind__sektion .ai-callout__label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 15px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 102, 77, .32);
-  font-size: 11.5px;
-  letter-spacing: .15em;
-  color: var(--brand-700);
-  white-space: nowrap;
-}
-.ind__sektion .ai-callout p,
-.ind__sektion .ai-callout h4,
-.ind__sektion .report-note { max-width: 660px; }
-
-/* ── Diagramrubrik. Samma nivå som AI-sektionens serif-rubrik: en
-   sektionsrubrik i serif under den gröna etiketten. Undertexten ligger på
-   metadatanivå och säger enhet, period och hur serierna ska läsas. ── */
-.graf-rubrik {
-  margin: 0 0 4px;
-  font-family: var(--font-serif);
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -.01em;
-  line-height: 1.3;
-  color: var(--ink);
-}
-.graf-underrubrik {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  line-height: 1.5;
-  color: #8b938e;
-  max-width: 620px;
-}
-
-
-/* Verksamhetens kommentar. Etikettlinjen räcker som avgränsare, men avsnittet
-   får extra luft ovanför eftersom det byter röst från maskin till människa.
-   Infogningsraden är dessutom svagt synlig här, inte helt osynlig: annars ser
-   ett tomt kommentarsavsnitt ut som en bugg. */
-.ind__kommentar { margin-top: 30px; }
-.ind__kommentar .report-insert__btn { opacity: .5; }
-.ind__kommentar .report-insert:hover .report-insert__btn,
-.ind__kommentar .report-insert__btn:focus-visible { opacity: 1; }
-
-/* ════════════════════════════════════════════
-   "Om indikatorn" — sektion, inte tonad ruta
-
-   OMTAG 2026-08-20. Blocket låg i en egen tonad box och läste sig som en
-   tabell inklämd i uppslaget. Nu är det en sektion bland de andra: samma
-   gröna etikettlinje, ingen egen bakgrund och inga radlinjer. Etiketten är
-   samtidigt fällknapp. Raderna LINJERAR men saknar LINJER, vilket ger
-   skanbarheten utan tabellkänslan.
-   ════════════════════════════════════════════ */
-
-/* ── Fällkontrollen är en VARIANT av sektionsetiketten, inte en egen
-   rubrikform: samma storlek, versaler, färg och topplinje. Det enda som
-   skiljer är kontrollen längst ut till höger. ── */
-.ind-etikett--knapp {
-  width: 100%;
-  background: none;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color .15s;
-}
-.ind-etikett--knapp:hover { border-top-color: rgba(0, 102, 77, .6); }
-.ind-etikett--knapp:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 3px; }
-.ind-etikett__kontroll {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  flex-shrink: 0;
-}
-.ind-etikett__hint {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .06em;
-  text-transform: none;
-  color: #a2aaa6;
-  transition: color .15s;
-}
-.ind-etikett__pil {
-  color: #a2aaa6;
-  transition: transform .18s ease, color .15s;
-}
-.ind-etikett--knapp[aria-expanded="true"] .ind-etikett__pil { transform: rotate(180deg); }
-.ind-etikett--knapp:hover .ind-etikett__hint,
-.ind-etikett--knapp:hover .ind-etikett__pil { color: var(--brand-700); }
-
-/* ── Innehållet: ETT flöde, en spaltbredd. Tvåspaltigheten bröt läsningen
-   mitt i en text som hänger ihop, och sektionen är ändå inte längre än att
-   den bär att läsas rakt igenom. ── */
-.ind-fakta {
-  max-width: 660px;
-  margin-top: 18px;
-  animation: fadeIn .14s ease;
-}
-
-/* ── Typografin i sektionerna.
-
-   OMTAG 2026-08-20 (femte vändan): blocket hade nio typstorlekar och fyra
-   textfärger, vilket gjorde "Om indikatorn" brokig. Skalan är nedskuren till
-   fem steg och paletten till fyra toner. All prosa har SAMMA storlek och
-   färg; det är etiketterna som strukturerar, inte storleksskillnader.
-
-     20 serif    indikatornamn
-     16 serif    sektionsrubrik (diagramrubrik, analysrubrik)
-     14 serif    all prosa
-     12 sans     postetikett (fet, svart)
-     11 sans     sektionsetikett (versal grön) och metadata (dämpad)
-   ── */
-
-/* Post: löpande stycke med inledande etikett. Samma form för definitionens
-   tre delar och för påverkansfaktorernas rubriker. */
-.fakta-stycke {
-  margin: 0 0 12px;
-  font-family: var(--font-serif);
-  font-size: 14px;
-  line-height: 1.7;
-  color: #3a403d;
-}
-.fakta-stycke:last-child { margin-bottom: 0; }
-.fakta-lbl {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .005em;
-  color: var(--ink);
-}
-.fakta-stycke .fakta-lbl { margin-right: 9px; }
-.fakta-lbl--rad { display: block; margin: 0 0 4px; }
-
-/* Kolofon: metadata. Ingen linje ovanför, luften räcker som avgränsare. */
-.fakta-kolofon {
-  margin-top: 20px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 1.65;
-  color: #8b938e;
-}
-.fakta-kolofon p { margin: 0; }
-.fakta-kolofon a { color: #6d7a74; text-decoration: none; }
-.fakta-kolofon a:hover { color: var(--brand-700); text-decoration: underline; }
-.fakta-kolofon__sep { color: #c8ccc9; }
-
-/* Teoristycket: samma prosa som posterna, bara utan etikett. */
-.fakta-teori {
-  margin: 0 0 20px;
-  font-family: var(--font-serif);
-  font-size: 14px;
-  line-height: 1.7;
-  color: #3a403d;
-}
-
-/* ── Påverkansfaktorerna: numrerad lista med mono-siffror i grönt, samma
-   språk som kapitelfolion. Inga skiljelinjer mellan posterna; luften gör
-   grupperingen, i linje med att linjer bara ska användas där de tjänar
-   sitt uppehälle. ── */
-.fakta-faktorer {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.fakta-faktor {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
-  gap: 0 14px;
-  margin-bottom: 16px;
-}
-.fakta-faktor:last-child { margin-bottom: 0; }
-.fakta-faktor__nr {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum';
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.65;
-  color: var(--brand-700);
-}
-.fakta-faktor__kropp { min-width: 0; }
-.fakta-faktor__text {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 14px;
-  line-height: 1.7;
-  color: #3a403d;
-}
-
-/* Källhänvisningen: metadata, samma ton som kolofonen. */
-.fakta-kalla {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 6px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  color: #8b938e;
-  text-decoration: none;
-  transition: color .15s;
-}
-a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
-.fakta-kalla--tom { color: #a9ada8; }
-
-@media (max-width: 620px) {
-  .ind { padding: 22px 18px 20px; }
-  .fakta-faktor { grid-template-columns: 24px minmax(0, 1fr); gap: 0 10px; }
-}
-
-@media print {
-  .ind { break-inside: avoid; border-color: #ddd; }
-  .ind-fakta { break-inside: avoid; }
-  /* Fäll-affordansen är meningslös på papper. En sektion som lämnats
-     hopfälld på skärmen följer däremot inte med till utskriften. */
-  .ind-etikett__kontroll { display: none; }
-}

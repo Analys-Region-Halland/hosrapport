@@ -182,17 +182,18 @@ export default function EditableBlock({ id, type, text, rubrik, author, timestam
 
   // ═══════════════════════════════ VISNINGSLÄGE ═══════════════════════════════
 
-  // AI-analys — skrivskyddad. Ingen panel och ingen statusfärg: etiketten är
-  // sektionsmarkören, statusfärgen bärs av chippet i indikatorhuvudet.
+  // AI-analys — skrivskyddad. Rubriken sätts av anroparen; här står texten
+  // direkt på pappret med en byline som säger varifrån den kommer, i samma
+  // form som anteckningarnas byline.
   if (type === "ai") {
     if (!text.trim()) return null;
     return (
-      <div className="ai-callout">
-        <div className="ai-callout__label">
-          <DiamondIcon /> Statistisk analys (AI)
-        </div>
-        {rubrik?.trim() && <NoteTitle>{rubrik}</NoteTitle>}
+      <div className="report-note">
         <NoteBody text={text} />
+        <div className="byline">
+          <DiamondIcon />
+          <span>Statistisk analys, genererad ur rapportens data</span>
+        </div>
       </div>
     );
   }
@@ -221,30 +222,17 @@ export default function EditableBlock({ id, type, text, rubrik, author, timestam
 //  Delkomponenter
 // ════════════════════════════════════════
 
+/** Anteckningens rubrik: postetikett i sans, samma form som faktaposterna. */
 function NoteTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h4 style={{
-      fontFamily: FONT_SERIF, fontWeight: 600, fontSize: 17, color: "#1a1a1a",
-      letterSpacing: "-0.01em", lineHeight: 1.3, margin: "0 0 6px",
-    }}>
-      {children}
-    </h4>
-  );
+  return <h5 className="fakta-lbl fakta-lbl--rad">{children}</h5>;
 }
 
 function NoteBody({ text }: { text: string }) {
   const paragraphs = text.split("\n\n").filter(Boolean);
   if (paragraphs.length === 0) return null;
   return (
-    <div style={{ fontFamily: FONT_SERIF }}>
-      {paragraphs.map((p, i) => (
-        <p key={i} style={{
-          fontSize: 17, fontWeight: 400, lineHeight: 1.7, color: "#2b2b2b",
-          margin: `0 0 ${i < paragraphs.length - 1 ? "0.7em" : "0"}`,
-        }}>
-          {p}
-        </p>
-      ))}
+    <div className="prosa">
+      {paragraphs.map((p, i) => <p key={i}>{p}</p>)}
     </div>
   );
 }
@@ -253,11 +241,7 @@ function NoteBody({ text }: { text: string }) {
 function Byline({ author, datum }: { author?: string; datum?: string }) {
   const namn = author?.trim();
   return (
-    <div style={{
-      display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10,
-      fontFamily: FONT_SANS, fontSize: 11, fontWeight: 600,
-      letterSpacing: "0.02em", color: "#9a9a96",
-    }}>
+    <div className="byline">
       <PenIcon />
       <span>{namn || "Egen kommentar"}{datum ? ` · ${datum}` : ""}</span>
     </div>

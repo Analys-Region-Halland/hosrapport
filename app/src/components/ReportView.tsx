@@ -14,7 +14,7 @@ import EditableBlock, { type AnteckningData } from "./EditableBlock";
 import { getBlocks, setBlocks as persistBlocks, getForfattare, BLOCKS_KEY } from "../stores/blocks";
 import { hasDirty } from "../stores/dirty";
 import { fullEtikett, fmtVarde, fmtSuffix } from "../utils/format";
-import { ANALYS_RUBRIK_GLOBAL, analysRubrikForStatus } from "../utils/analys";
+import { ANALYS_RUBRIK_GLOBAL } from "../utils/analys";
 import SegmentedControl from "./SegmentedControl";
 import { kategoriForOmrade } from "../taxonomy";
 
@@ -29,7 +29,6 @@ const mono: React.CSSProperties = {
 };
 
 const FONT = "'IBM Plex Sans', sans-serif";
-const FONT_RUBRIK = "'Source Serif 4', Georgia, serif";
 
 const VY_LABELS: Record<string, string> = {
   dag: "Daglig analys",
@@ -196,55 +195,36 @@ export default function ReportView({
           )}
 
           {/* ── Dokument ── */}
-          <article style={{
+          <article className="rapport" style={{
             flex: 1, maxWidth: 880, padding: "40px 32px 64px",
-            fontFamily: FONT,
             marginLeft: showSidebar ? 0 : "auto",
             marginRight: showSidebar ? 0 : "auto",
           }}>
-            {/* ── Rapportens rubrik (masthead) ── */}
-            <header style={{ marginBottom: 36 }}>
-              <div style={{ marginBottom: 24 }}>
-                <img
-                  src={`${import.meta.env.BASE_URL}logo_farg.svg`}
-                  alt="Region Halland"
-                  style={{ height: 32 }}
-                />
-              </div>
+            {/* ── Masthead: kicker, titel, streck, datelinje ── */}
+            <header className="masthead">
+              <img
+                className="masthead__logo"
+                src={`${import.meta.env.BASE_URL}logo_farg.svg`}
+                alt="Region Halland"
+              />
 
-              {/* Kategorietikett (eyebrow) — visar var i taxonomin området hör hemma */}
+              {/* Kicker: var i taxonomin området hör hemma. Enda versala
+                  etiketten i flödet, i rollen av caption ovanför titeln. */}
               {sectionId && kategoriForOmrade(sectionId) && (
-                <div style={{
-                  fontSize: 11, fontWeight: 600, textTransform: "uppercase",
-                  letterSpacing: "0.14em", color: "#00AB60", marginBottom: 10,
-                }}>
-                  {kategoriForOmrade(sectionId)!.namn}
-                </div>
+                <div className="masthead__kicker">{kategoriForOmrade(sectionId)!.namn}</div>
               )}
-              <h1 style={{
-                fontFamily: FONT_RUBRIK,
-                fontWeight: 700, fontSize: 42, color: "#1a1a1a",
-                letterSpacing: "-0.025em", lineHeight: 1.06, margin: "0 0 16px",
-              }}>
+              <h1 className="masthead__titel">
                 {sectionTitle || "Hälso- och sjukvården"}
               </h1>
 
-              {/* Datelinje: vy + period till vänster, uppdaterad (mono) till höger */}
-              <div style={{
-                display: "flex", alignItems: "baseline", justifyContent: "space-between",
-                gap: 16, paddingTop: 14, borderTop: "3px solid #00664D",
-              }}>
-                <span style={{ fontFamily: FONT, fontSize: 14, color: "#555", fontWeight: 500 }}>
-                  {vyLabel} &middot; {data.etikett} &middot; {data.period}
-                </span>
-                <span style={{ ...mono, fontSize: 11.5, color: "#aaa" }}>
-                  Uppdaterad {data.uppdaterad}
-                </span>
+              <div className="masthead__datelinje">
+                <span>{vyLabel} &middot; {data.etikett} &middot; {data.period}</span>
+                <span className="masthead__uppdaterad">Uppdaterad {data.uppdaterad}</span>
               </div>
             </header>
 
-            {/* ── Översikt: titel i platta + AI-analys + heatmap (samma mönster som övriga kapitel).
-                   Döljs när alla visade sektioner har delar (delarnas heatmaps bor i kapitlet). ── */}
+            {/* ── Översikt: sammanfattning + signalöversikt över sektioner utan delar.
+                   Döljs när alla visade sektioner har delar (delarnas översikter bor i kapitlet). ── */}
             {(heatmapSektioner.length > 0 || !sectionId) && (
               <OversiktBlock
                 sektioner={heatmapSektioner}
@@ -258,13 +238,13 @@ export default function ReportView({
 
             {/* ── Sektioner ──
                 Inledning och källförteckning hör till den ENSKILDA rapporten.
-                I helhetsvyn skulle sex inledningar i rad upprepa samma ram och
-                skjuta siffrorna långt ner, så där visas bara bedömningarna. */}
+                I helhetsvyn skulle sex inledningar i rad skjuta siffrorna långt
+                ner, så där visas bara bedömningarna. */}
             {visadeSektioner.map((sek, i) => (
               <SectionBlock
                 key={sek.id}
                 section={sek}
-                index={sectionId ? undefined : i + 1}
+                nr={sectionId ? undefined : String(i + 1)}
                 vyLabel={vyLabel}
                 vy={data.vy}
                 onOpenChart={onOpenChart}
@@ -272,18 +252,13 @@ export default function ReportView({
               />
             ))}
 
-            {/* ── Footer ── */}
-            <footer style={{
-              marginTop: 56, paddingTop: 20,
-              borderTop: "1px solid #e0e0dc",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-            }}>
+            <footer className="sidfot">
               <img
                 src={`${import.meta.env.BASE_URL}logo_farg.svg`}
                 alt="Region Halland"
                 style={{ height: 20, opacity: 0.5 }}
               />
-              <span style={{ fontSize: 11, color: "#bbb", fontFamily: FONT }}>
+              <span className="sidfot__text">
                 HoS-rapport &middot; {new Date().toLocaleDateString("sv-SE")}
               </span>
             </footer>
@@ -326,125 +301,104 @@ function OversiktBlock({
     sektioner.some((s) => s.kpier.some((k) => k.dagar && k.dagar.length > 0));
 
   return (
-    <section id="rapport-oversikt" style={{ scrollMarginTop: 60, marginBottom: 48 }}>
-      {/* Titel i platta — exakt samma utseende som övriga kapitel (folio 00). */}
-      <ChapterPlate index={0} namn="Översikt" />
-
-      {/* Samma form som kapitlens och avsnittens ingång: bedömningen i ord,
-          därefter signalöversikten. */}
-      <div className="report-indicator ind">
-        {showGlobal && (
-          <div className="ind__sektion">
-            <BlocksEditor
-              targetId="global"
-              aiText={vyData.analys}
-              aiRubrik={vyData.analys_rubrik || ANALYS_RUBRIK_GLOBAL}
-              vy={vyData.vy}
-            />
-          </div>
-        )}
-        <section className="ind__sektion">
-          <div className="ind-etikett">
-            <span>Signalöversikt</span>
-            {harDagar && onChangeVisaDagar && (
-              <SegmentedControl
-                size="sm"
-                ariaLabel="Aggregerat eller dagsnivå"
-                items={[{ id: "aggregerat", label: "Aggregerat" }, { id: "dag", label: "Dag" }]}
-                value={visaDagar ? "dag" : "aggregerat"}
-                onChange={(id) => onChangeVisaDagar(id === "dag")}
-              />
-            )}
-          </div>
-          <SignalTimeline sektioner={sektioner} vy={vyData.vy} visaDagar={visaDagar} onCellClick={onOpenChart} />
+    <section id="rapport-oversikt" className="ingang" style={{ scrollMarginTop: 60 }}>
+      {showGlobal && (
+        <section>
+          <Rubrik>{ANALYS_RUBRIK_GLOBAL}</Rubrik>
+          <BlocksEditor targetId="global" aiText={vyData.analys} vy={vyData.vy} />
         </section>
-      </div>
+      )}
+      <section>
+        <Rubrik kontroll={harDagar && onChangeVisaDagar && (
+          <SegmentedControl
+            size="sm"
+            ariaLabel="Aggregerat eller dagsnivå"
+            items={[{ id: "aggregerat", label: "Aggregerat" }, { id: "dag", label: "Dag" }]}
+            value={visaDagar ? "dag" : "aggregerat"}
+            onChange={(id) => onChangeVisaDagar(id === "dag")}
+          />
+        )}>
+          Signalöversikt
+        </Rubrik>
+        <SignalTimeline sektioner={sektioner} vy={vyData.vy} visaDagar={visaDagar} onCellClick={onOpenChart} />
+      </section>
     </section>
   );
 }
 
 // ════════════════════════════════════════
-//  ChapterPlate — kapitelrubrik som grön platta (folio + namn)
+//  Rubrik — innehållsrubriken: EN form för alla innehållstyper
+//  (bedömning, signalöversikt, om indikatorn, påverkansfaktorer, kommentar).
+//  Sans i gemener utan linje; en kontroll kan stå längst till höger.
 // ════════════════════════════════════════
 
-function ChapterPlate({ index, namn, kicker }: { index?: number; namn: string; kicker?: string }) {
+function Rubrik({ children, kontroll }: { children: React.ReactNode; kontroll?: React.ReactNode }) {
   return (
-    <div className="chapter-plate" style={kicker ? { alignItems: "flex-start" } : undefined}>
-      {index != null && (
-        <span className="chapter-plate__folio" style={{ ...mono, marginTop: kicker ? 3 : 0 }}>
-          {String(index).padStart(2, "0")}
-        </span>
-      )}
-      {index != null && <span className="chapter-plate__divider" aria-hidden="true" />}
-      <div style={{ minWidth: 0 }}>
-        {kicker && (
-          <div style={{
-            fontSize: 10.5, fontWeight: 600, textTransform: "uppercase",
-            letterSpacing: "0.13em", color: "#00AB60", marginBottom: 3,
-          }}>
-            {kicker}
-          </div>
-        )}
-        <h2 className="chapter-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
-          {namn}
-        </h2>
-      </div>
+    <h4 className="rub">
+      <span>{children}</span>
+      {kontroll ? <span className="rub__kontroll">{kontroll}</span> : null}
+    </h4>
+  );
+}
+
+// ════════════════════════════════════════
+//  KapitelRubrik — numrerad serif-rubrik med kategorin som kicker.
+//  Visas bara i helhetsvyn; i den enskilda rapporten är kapitlet mastheadet.
+// ════════════════════════════════════════
+
+function KapitelRubrik({ nr, namn, kicker }: { nr: string; namn: string; kicker?: string }) {
+  return (
+    <div className="rub-kap">
+      {kicker && <div className="rub-kap__kicker">{kicker}</div>}
+      <h2 className="rub-kap__titel">
+        <span className="rub-nr">{nr}</span>{namn}
+      </h2>
     </div>
   );
 }
 
 // ════════════════════════════════════════
-//  SectionBlock — en hel sektion
+//  SectionBlock — en hel sektion (ett kapitel)
+//
+//  Numreringen är rapportens vägvisning: kapitel "1", avsnitt "1.1",
+//  indikator "1.1.1". I den enskilda rapporten faller kapitelledet bort
+//  (avsnitt "1", indikator "1.1").
 // ════════════════════════════════════════
 
 function SectionBlock({
-  section, index, vyLabel, vy, onOpenChart, fristaende = false,
+  section, nr, vyLabel, vy, onOpenChart, fristaende = false,
 }: {
-  section: Section; index?: number; vyLabel: string; vy: string;
+  section: Section; nr?: string; vyLabel: string; vy: string;
   onOpenChart?: (kpi: KpiData) => void;
   /** Rapporten läses för sig — då hör inledning och källförteckning hit. */
   fristaende?: boolean;
 }) {
   const delar = section.delar && section.delar.length > 0 ? delSektioner(section) : null;
+  const under = (i: number) => (nr ? `${nr}.${i}` : String(i));
   return (
-    <section
-      id={`rapport-${section.id}`}
-      style={{ marginTop: index != null ? 56 : 0, scrollMarginTop: 60 }}
-    >
-      {/* Plattan utelämnas för enskilt sakområde — namnet står redan i mastheaden. */}
-      {index != null && (
-        <ChapterPlate
-          index={index}
-          namn={section.namn}
-          kicker={kategoriForOmrade(section.id)?.namn}
-        />
+    <section id={`rapport-${section.id}`} style={{ scrollMarginTop: 60 }}>
+      {/* Rubriken utelämnas för enskilt sakområde — namnet står redan i mastheadet. */}
+      {nr != null && (
+        <KapitelRubrik nr={nr} namn={section.namn} kicker={kategoriForOmrade(section.id)?.namn} />
       )}
 
       {fristaende && section.inledning && section.inledning.length > 0 && (
         <Inledning stycken={section.inledning} />
       )}
 
-      {/* Kapitlets översikt: räknare + bedömning + signalöversikt över samtliga
-          indikatorer, grupperade per avsnitt. Ligger på kapitelnivå och inte
-          per avsnitt — annars upprepas samma remsa fyra gånger i rad. */}
+      {/* Kapitlets ingång: bedömning + signalöversikt över samtliga
+          indikatorer, grupperade per avsnitt. */}
       {delar && (
-        <KapitelSammanfattning
-          section={section}
-          grupper={delar}
-          vy={vy}
-          onOpenChart={onOpenChart}
-        />
+        <KapitelSammanfattning section={section} grupper={delar} vy={vy} onOpenChart={onOpenChart} />
       )}
 
       {delar ? (
-        /* Tematiska avsnitt (SKR-kapitlets indelning) — rubrik + bedömning */
         delar.map((del, di) => (
-          <DelBlock key={del.id} del={del} nr={di + 1} vyLabel={vyLabel} vy={vy} onOpenChart={onOpenChart} />
+          <DelBlock key={del.id} del={del} nr={under(di + 1)} vyLabel={vyLabel} vy={vy} onOpenChart={onOpenChart} />
         ))
       ) : (
-        /* Indikatorer — varje som ett distinkt kort (analys + egna texter bor här) */
-        section.kpier.map((kpi) => (
-          <IndicatorBlock key={kpi.id} kpi={kpi} vyLabel={vyLabel} vy={vy} />
+        section.kpier.map((kpi, ki) => (
+          <IndicatorBlock key={kpi.id} kpi={kpi} nr={under(ki + 1)} vyLabel={vyLabel} vy={vy} />
         ))
       )}
 
@@ -454,18 +408,18 @@ function SectionBlock({
 }
 
 // ════════════════════════════════════════
-//  Inledning — redaktionell kontext före siffrorna
+//  Inledning — redaktionell kontext före siffrorna. Ingen etikett:
+//  ingressen direkt under mastheadet säger själv vad den är.
 // ════════════════════════════════════════
 
 function Inledning({ stycken }: { stycken: string[] }) {
   const [ingress, ...brod] = stycken;
   return (
-    <section className="report-lead" aria-label="Om rapporten">
-      <div className="report-lead__label">Om den här rapporten</div>
-      <p className="report-lead__ingress" style={{ fontFamily: FONT_RUBRIK }}>{ingress}</p>
-      {brod.map((p, i) => (
-        <p key={i} className="report-lead__text" style={{ fontFamily: FONT_RUBRIK }}>{p}</p>
-      ))}
+    <section className="inledning" aria-label="Om rapporten">
+      <p className="ingress">{ingress}</p>
+      <div className="prosa">
+        {brod.map((p, i) => <p key={i}>{p}</p>)}
+      </div>
     </section>
   );
 }
@@ -477,9 +431,6 @@ function Inledning({ stycken }: { stycken: string[] }) {
 //  indikatorer, grupperade per avsnitt. Den stora översikten med filter och
 //  sortering hör hemma just här: det är rapportens karta. Varje avsnitt har
 //  därtill en egen översikt över sina egna indikatorer, se DelBlock.
-//
-//  Att detta är en sammanfattning sägs av analysrubriken i serif, inte av en
-//  extra etikett eller en till statusremsa.
 // ════════════════════════════════════════
 
 function KapitelSammanfattning({
@@ -489,17 +440,13 @@ function KapitelSammanfattning({
   onOpenChart?: (kpi: KpiData) => void;
 }) {
   return (
-    <div className="report-indicator ind" style={{ marginBottom: 34 }}>
-      <div className="ind__sektion">
-        <BlocksEditor
-          targetId={section.id}
-          aiText={section.analys}
-          aiRubrik={section.analys_rubrik || "Sammanfattande bedömning av kapitlet"}
-          vy={vy}
-        />
-      </div>
-      <section className="ind__sektion">
-        <div className="ind-etikett"><span>Signalöversikt</span></div>
+    <div className="ingang">
+      <section>
+        <Rubrik>Sammanfattande bedömning</Rubrik>
+        <BlocksEditor targetId={section.id} aiText={section.analys} vy={vy} />
+      </section>
+      <section>
+        <Rubrik>Signalöversikt</Rubrik>
         <SignalTimeline sektioner={grupper} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
       </section>
     </div>
@@ -507,43 +454,37 @@ function KapitelSammanfattning({
 }
 
 // ════════════════════════════════════════
-//  DelBlock — tematiskt avsnitt: rubrik + bedömning + signalöversikt
-//  + indikatorer. Bedömningen och avsnittets egen signaltabell står nu
-//  tillsammans i ett block, så att orden och siffrorna kan läsas mot varandra.
+//  DelBlock — avsnitt: numrerad rubrik, bedömning + egen signalöversikt,
+//  därefter indikatorerna.
 // ════════════════════════════════════════
 
 function DelBlock({
   del, nr, vyLabel, vy, onOpenChart,
 }: {
-  del: Section; nr: number; vyLabel: string; vy: string;
+  del: Section; nr: string; vyLabel: string; vy: string;
   onOpenChart?: (kpi: KpiData) => void;
 }) {
   return (
-    <section
-      id={`rapport-${del.id}`}
-      style={{ marginTop: nr > 1 ? 56 : 0, scrollMarginTop: 60 }}
-    >
-      <div className="del-plate">
-        <span className="del-plate__nr" style={mono}>Avsnitt {nr}</span>
-        <h3 className="del-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
-          {del.namn}
-        </h3>
-      </div>
+    <section id={`rapport-${del.id}`} style={{ scrollMarginTop: 60 }}>
+      <h2 className="rub-avs">
+        <span className="rub-nr">{nr}</span>{del.namn}
+      </h2>
 
       {/* Avsnittets bedömning och avsnittets EGEN signalöversikt står
           tillsammans, så att orden och siffrorna kan läsas mot varandra. */}
-      <div className="report-indicator ind" style={{ marginBottom: 34 }}>
-        <div className="ind__sektion">
-          <BlocksEditor targetId={del.id} aiText={del.analys} aiRubrik="Bedömning av avsnittet" vy={vy} />
-        </div>
-        <section className="ind__sektion">
-          <div className="ind-etikett"><span>Signalöversikt</span></div>
+      <div className="ingang">
+        <section>
+          <Rubrik>Bedömning av avsnittet</Rubrik>
+          <BlocksEditor targetId={del.id} aiText={del.analys} vy={vy} />
+        </section>
+        <section>
+          <Rubrik>Signalöversikt</Rubrik>
           <SignalTimeline sektioner={[del]} vy={vy} visaDagar={false} onCellClick={onOpenChart} />
         </section>
       </div>
 
-      {del.kpier.map((kpi) => (
-        <IndicatorBlock key={kpi.id} kpi={kpi} vyLabel={vyLabel} vy={vy} />
+      {del.kpier.map((kpi, ki) => (
+        <IndicatorBlock key={kpi.id} kpi={kpi} nr={`${nr}.${ki + 1}`} vyLabel={vyLabel} vy={vy} />
       ))}
     </section>
   );
@@ -556,26 +497,21 @@ function DelBlock({
 function Kallforteckning({ kallor, leverans }: { kallor?: KallaRef[]; leverans?: KallaRef[] }) {
   if (!kallor?.length && !leverans?.length) return null;
   return (
-    <section id="rapport-kallor" className="report-sources" style={{ scrollMarginTop: 60 }}>
-      <div className="del-plate">
-        <span className="del-plate__nr" style={mono}>Källor</span>
-        <h3 className="del-plate__namn" style={{ fontFamily: FONT_RUBRIK }}>
-          Varifrån siffrorna kommer
-        </h3>
-      </div>
+    <section id="rapport-kallor" className="kallor" style={{ scrollMarginTop: 60 }}>
+      <h2 className="rub-avs" style={{ marginTop: 0 }}>Källor</h2>
 
       {kallor && kallor.length > 0 && (
-        <>
-          <div className="report-sources__label">Primärkällor</div>
+        <section>
+          <Rubrik>Primärkällor</Rubrik>
           {kallor.map((k) => <KallaPost key={k.id} kalla={k} />)}
-        </>
+        </section>
       )}
 
       {leverans && leverans.length > 0 && (
-        <>
-          <div className="report-sources__label" style={{ marginTop: 28 }}>Leveranskedja</div>
+        <section>
+          <Rubrik>Leveranskedja</Rubrik>
           {leverans.map((k) => <KallaPost key={k.namn} kalla={k} />)}
-        </>
+        </section>
       )}
     </section>
   );
@@ -583,39 +519,40 @@ function Kallforteckning({ kallor, leverans }: { kallor?: KallaRef[]; leverans?:
 
 function KallaPost({ kalla }: { kalla: KallaRef }) {
   return (
-    <div className="report-source">
-      <div className="report-source__head">
-        <h4 className="report-source__namn" style={{ fontFamily: FONT_RUBRIK }}>
+    <div className="kalla-post">
+      <div className="kalla-post__huvud">
+        <h5 className="kalla-post__namn">
           {kalla.url ? (
             <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
           ) : kalla.namn}
-        </h4>
+        </h5>
         {kalla.n_indikatorer != null && (
-          <span className="report-source__antal" style={mono}>
+          <span className="kalla-post__antal">
             {kalla.n_indikatorer} {kalla.n_indikatorer === 1 ? "indikator" : "indikatorer"}
           </span>
         )}
       </div>
-      <div className="report-source__meta">{kalla.typ} &middot; {kalla.huvudman}</div>
-      <p className="report-source__om" style={{ fontFamily: FONT_RUBRIK }}>{kalla.om}</p>
+      <div className="meta kalla-post__meta">{kalla.typ} &middot; {kalla.huvudman}</div>
+      <div className="prosa"><p>{kalla.om}</p></div>
     </div>
   );
 }
 
 // ════════════════════════════════════════
-//  IndicatorBlock — indikatorn som ett eget, inramat uppslag.
+//  IndicatorBlock — indikatorns uppslag, utan ram.
 //
-//  Läsordning (omtag 2026-08-20): bedömningen först, sedan beviset, sedan
-//  förklaringen, sist verksamhetens egna ord.
+//  Läsordning: vad måttet är, bedömningen, beviset, förklaringen, sist
+//  verksamhetens egna ord.
 //
-//    1. Huvud            namn, statuschip, Hallands nivå och placering
-//    2. Bedömning        AI-analysen
-//    3. Diagram          utfallet mot regionerna
-//    4. Faktablock       om indikatorn + påverkansfaktorer och teori
-//    5. Verksamhetens kommentar  egna anteckningar
+//    1. Huvud            nummer, namn, statuschip, Hallands nivå och placering
+//    2. Om indikatorn    vad måttet räknar, riktning, avgränsning
+//    3. Bedömning        AI-analysen
+//    4. Diagram          utfallet mot regionerna (rubriken sätts av diagrammet)
+//    5. Påverkansfaktorer och teori
+//    6. Verksamhetens kommentar
 //
-//  Sektionerna bärs av gröna etikettlinjer, inte av färgade paneler. Enda
-//  färgen utöver grönt är statuschippet i huvudet.
+//  Sektionerna 2–6 har samma innehållsrubrik (Rubrik). Enda färgen utöver
+//  numrets gröna är statuschippet i huvudet.
 // ════════════════════════════════════════
 
 // ── Diagramrubrik: vad grafen visar, inte vad indikatorn heter ──
@@ -650,9 +587,9 @@ function grafUnderrubrik(kpi: KpiData, forsta: string, sista: string): string {
 }
 
 function IndicatorBlock({
-  kpi, vyLabel: _vyLabel, vy,
+  kpi, nr, vyLabel: _vyLabel, vy,
 }: {
-  kpi: KpiData; vyLabel: string; vy: string;
+  kpi: KpiData; nr: string; vyLabel: string; vy: string;
 }) {
   const [visaDagar, setVisaDagar] = useState(false);
   const harDagar = vy !== "dag" && kpi.dagar && kpi.dagar.length > 0;
@@ -678,15 +615,17 @@ function IndicatorBlock({
     : kpi;
 
   return (
-    <article id={`rapport-${kpi.id}`} className="report-indicator ind" style={{ scrollMarginTop: 60 }}>
+    <article id={`rapport-${kpi.id}`} className="indikator" style={{ scrollMarginTop: 60 }}>
 
-      {/* ── 1. Huvud: namn, status, readout ── */}
-      <header className="ind__head">
-        <div className="ind__titelrad">
-          <h3 className="ind__titel" style={{ fontFamily: FONT_RUBRIK }}>{kpi.namn}</h3>
+      {/* ── 1. Huvud: nummer, namn, status, readout ── */}
+      <header className="indikator__huvud">
+        <div className="indikator__titelrad">
+          <h3 className="indikator__titel">
+            <span className="rub-nr">{nr}</span>{kpi.namn}
+          </h3>
           <StatusTag status={kpi.status} neutral={kpi.utan_mal} />
         </div>
-        <div className="ind__readout">
+        <div className="indikator__readout">
           <span>Halland{" "}
             <strong style={mono}>{fmtVarde(kpi.senaste, kpi.enhet)}{fmtSuffix(kpi.enhet)}</strong>
           </span>
@@ -695,28 +634,29 @@ function IndicatorBlock({
               <strong style={mono}>{kpi.rank}/{kpi.rank_av}</strong>{" "}bland regionerna
             </span>
           )}
-          {last && <span className="ind__readout-svag">Avser {lastLabel}</span>}
+          {last && <span className="indikator__readout-svag">Avser {lastLabel}</span>}
         </div>
       </header>
 
       {/* ── 2. Om indikatorn: vad måttet är, innan siffran tolkas ── */}
       <OmIndikatorn kpi={kpi} vy={vy} />
 
-      {/* ── 3. Den maskinella analysen av utfallet ── */}
-      <section className="ind__sektion">
-        <AiAnalys
-          targetId={kpi.id}
-          aiText={kpi.analystext}
-          aiRubrik={kpi.analys_rubrik || analysRubrikForStatus(kpi.status)}
-        />
+      {/* ── 3. Den maskinella analysen av utfallet. Statusordet ("Att bevaka")
+             står redan i chippet i huvudet och upprepas inte som rubrik. ── */}
+      <section>
+        <Rubrik>Bedömning</Rubrik>
+        <AiAnalys targetId={kpi.id} aiText={kpi.analystext} />
       </section>
 
-      {/* ── 4. Diagram. Rubriken säger vad grafen VISAR; indikatornamnet står
-             redan i huvudet och ska inte upprepas här. ── */}
-      <figure className="ind__sektion report-figure" style={{ margin: 0 }}>
-        <div className="ind-etikett">
-          <span>Utfall</span>
-          {harDagar && (
+      {/* ── 4. Diagram. Diagrammets egen rubrik säger vad grafen VISAR och
+             står i samma form som övriga innehållsrubriker. ── */}
+      <figure className="figur">
+        <FacetedChart
+          kpi={chartKpi}
+          vy={aktivVy}
+          rubrik={grafRubrik(kpi)}
+          underrubrik={grafUnderrubrik(kpi, firstLabel, lastLabel)}
+          verktyg={harDagar ? (
             <SegmentedControl
               size="sm"
               ariaLabel="Aggregerat eller dagsnivå"
@@ -724,13 +664,7 @@ function IndicatorBlock({
               value={visaDagar ? "dag" : "aggregerat"}
               onChange={(id) => setVisaDagar(id === "dag")}
             />
-          )}
-        </div>
-        <FacetedChart
-          kpi={chartKpi}
-          vy={aktivVy}
-          rubrik={grafRubrik(kpi)}
-          underrubrik={grafUnderrubrik(kpi, firstLabel, lastLabel)}
+          ) : undefined}
         />
       </figure>
 
@@ -738,8 +672,8 @@ function IndicatorBlock({
       <Paverkansfaktorer kpi={kpi} />
 
       {/* ── 6. Verksamhetens kommentar ── */}
-      <section className="ind__sektion ind__kommentar">
-        <h4 className="ind-etikett"><span>Verksamhetens kommentar</span></h4>
+      <section className="kommentar">
+        <Rubrik>Verksamhetens kommentar</Rubrik>
         <Anteckningar targetId={kpi.id} vy={vy} />
       </section>
     </article>
@@ -760,25 +694,20 @@ function genId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-/** AI-analysen: alltid aktuell R-text, skrivskyddad, lagras aldrig. */
-function AiAnalys({
-  targetId, aiText, aiRubrik,
-}: {
-  targetId: string; aiText: string; aiRubrik?: string;
-}) {
-  return (
-    <EditableBlock id={`ai-${targetId}`} type="ai" rubrik={aiRubrik} text={aiText} />
-  );
+/** AI-analysen: alltid aktuell R-text, skrivskyddad, lagras aldrig.
+ *  Rubriken sätts av den som anropar (Rubrik); här bara text + byline. */
+function AiAnalys({ targetId, aiText }: { targetId: string; aiText: string }) {
+  return <EditableBlock id={`ai-${targetId}`} type="ai" text={aiText} />;
 }
 
 function BlocksEditor({
-  targetId, aiText, aiRubrik, vy,
+  targetId, aiText, vy,
 }: {
-  targetId: string; aiText: string; aiRubrik?: string; vy?: string;
+  targetId: string; aiText: string; vy?: string;
 }) {
   return (
     <div>
-      <AiAnalys targetId={targetId} aiText={aiText} aiRubrik={aiRubrik} />
+      <AiAnalys targetId={targetId} aiText={aiText} />
       <Anteckningar targetId={targetId} vy={vy} />
     </div>
   );
@@ -959,14 +888,8 @@ function SidebarToc({
       width: 196, flexShrink: 0,
       padding: "28px 16px 28px 20px",
       fontFamily: FONT,
-      borderRight: "1px solid #ebebea",
     }}>
-      <div style={{
-        fontSize: 9.5, fontWeight: 600, textTransform: "uppercase",
-        letterSpacing: "0.1em", color: "#bbb", marginBottom: 14,
-      }}>
-        Innehåll
-      </div>
+      <div className="toc__rubrik">Innehåll</div>
       {visaOversikt && (
         <a href="#rapport-oversikt"
           style={{
@@ -1003,7 +926,7 @@ function SidebarToc({
               transition: "color 0.1s",
             }}
           >
-            {i + 1}. {sek.namn}
+            <span className="toc__nr">{i + 1}</span>{sek.namn}
           </a>
         );
 
@@ -1013,14 +936,15 @@ function SidebarToc({
         const prevKat = i > 0 ? kategoriForOmrade(sections[i - 1].id)?.namn : undefined;
         const visaKat = sections.length > 1 && kat && kat !== prevKat;
 
+        // Samma numrering som i dokumentet: kapitelledet bara i helhetsvyn.
+        const kapNr = sections.length > 1 ? `${i + 1}.` : "";
         const grupper = delar ?? [sek];
         return (
           <div key={sek.id} style={{ marginBottom: 10 }}>
             {visaKat && (
               <div style={{
-                fontSize: 9, fontWeight: 600, textTransform: "uppercase",
-                letterSpacing: "0.09em", color: "#a9ada8",
-                margin: "12px 0 4px", paddingLeft: 10,
+                fontSize: 10.5, fontWeight: 600, color: "#a9ada8",
+                margin: "14px 0 4px", paddingLeft: 10,
               }}>
                 {kat}
               </div>
@@ -1030,7 +954,7 @@ function SidebarToc({
               <TocGrupp
                 key={grupp.id}
                 grupp={grupp}
-                nr={delar && sections.length === 1 ? gi + 1 : undefined}
+                nr={delar ? `${kapNr}${gi + 1}` : kapNr.replace(/\.$/, "")}
                 visaRubrik={!!delar}
                 indent={sections.length > 1 ? 18 : 10}
                 activeId={activeId}
@@ -1065,7 +989,9 @@ function SidebarToc({
 function TocGrupp({
   grupp, nr, visaRubrik, indent, activeId, open, onToggle,
 }: {
-  grupp: Section; nr?: number; visaRubrik: boolean; indent: number;
+  grupp: Section;
+  /** Gruppens nummer i dokumentet ("1.2"); tomt = onumrerad grupp. */
+  nr: string; visaRubrik: boolean; indent: number;
   activeId: string; open?: boolean; onToggle: (open: boolean) => void;
 }) {
   const innehallerAktiv = activeId === grupp.id || grupp.kpier.some((k) => k.id === activeId);
@@ -1101,14 +1027,14 @@ function TocGrupp({
               transition: "color 0.1s",
             }}
           >
-            {nr != null ? `${nr}. ` : ""}{grupp.namn}
+            {nr && <span className="toc__nr">{nr}</span>}{grupp.namn}
             <span style={{ color: "#c4c4be", fontWeight: 400, marginLeft: 5, fontSize: 10.5 }}>
               {grupp.kpier.length}
             </span>
           </a>
         </div>
       )}
-      {(arOppen || !visaRubrik) && grupp.kpier.map((kpi) => (
+      {(arOppen || !visaRubrik) && grupp.kpier.map((kpi, ki) => (
         <a key={kpi.id} href={`#rapport-${kpi.id}`}
           style={{
             display: "block", padding: "2px 0 2px 22px",
@@ -1120,7 +1046,7 @@ function TocGrupp({
             transition: "color 0.1s",
           }}
         >
-          {kpi.namn}
+          <span className="toc__nr">{nr ? `${nr}.${ki + 1}` : ki + 1}</span>{kpi.namn}
         </a>
       ))}
     </div>

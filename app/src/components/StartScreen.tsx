@@ -292,7 +292,7 @@ function Kolofon({ tal, etikett }: { tal: number | string; etikett: string }) {
 
 // ── Kategorirubrik: avdelaren mellan rapportgrupperna ──
 // Grön topplinje + kicker + serif-titel + kort beskrivning, samma editoriella
-// språk som delrubrikerna inne i rapporten (.del-plate).
+// språk som avsnittsrubrikerna inne i rapporten (.rub-avs).
 function KategoriRubrik({ kategori, antalOmraden, antalIndikatorer }: {
   kategori: KategoriDef;
   antalOmraden: number;

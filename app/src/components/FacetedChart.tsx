@@ -47,10 +47,12 @@ interface Props {
   rubrik?: string;
   /** Egen undertext: enhet, period och hur serierna ska läsas. */
   underrubrik?: string;
+  /** Kontroll som står i rubrikraden bredvid Info-knappen (t.ex. Aggregerat/Dag). */
+  verktyg?: React.ReactNode;
 }
 
 export default function FacetedChart({
-  kpi, vy, visaRubrik = true, rubrik, underrubrik,
+  kpi, vy, visaRubrik = true, rubrik, underrubrik, verktyg,
 }: Props) {
   const [outerRef, containerWidth] = useResizeWidth();
   const [showInfo, setShowInfo] = useState(false);
@@ -170,15 +172,12 @@ export default function FacetedChart({
           }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <div style={{
-                  fontFamily: "'Source Serif 4', Georgia, serif",
-                  fontSize: 18, fontWeight: 600, color: "#1a1a1a", lineHeight: 1.3,
-                }}>
+                <h4 className="graf-rubrik" style={{ margin: 0 }}>
                   {kpi.namn}{expandedSeries.name !== "Totalt" ? `, ${expandedSeries.name}` : ""}
-                </div>
+                </h4>
                 {expandedSeries.status && <StatusTag status={expandedSeries.status} neutral={kpi.utan_mal} />}
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 12, color: "#555", marginTop: 4 }}>
+              <div className="graf-underrubrik" style={{ marginTop: 4 }}>
                 {kortBeskrivning(kpi) || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
               </div>
             </div>
@@ -216,20 +215,15 @@ export default function FacetedChart({
             marginBottom: 12, gap: 8,
           }}>
             <div>
-              <h4 style={{
-                fontFamily: "'Source Serif 4', Georgia, serif",
-                fontSize: 16, fontWeight: 600, color: "#1a1a1a",
-                letterSpacing: "-0.01em", lineHeight: 1.3, margin: "0 0 3px",
-              }}>
-                Nedbrytning per avdelning
-              </h4>
+              <h4 className="graf-rubrik">Nedbrytning per avdelning</h4>
               <div className="graf-underrubrik">
                 {underrubrik
                   || kortBeskrivning(kpi)
                   || `${enhetLabel(kpi.enhet)} · ${fmtPeriodRange()}`}
               </div>
             </div>
-            <div style={{ position: "relative", flexShrink: 0 }}>
+            <div style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+              {verktyg}
               <button
                 onClick={() => setShowInfo(!showInfo)}
                 title="Om indikatorn"
@@ -322,7 +316,8 @@ export default function FacetedChart({
                 </div>
               </div>
             ) : <div />}
-            <div style={{ position: "relative", flexShrink: 0 }}>
+            <div style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+              {verktyg}
               <button
                 onClick={() => setShowInfo(!showInfo)}
                 title="Om indikatorn"
