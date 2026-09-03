@@ -1,32 +1,35 @@
 import { useState } from "react";
-import type { KpiData, Paverkansfaktor } from "../types";
+import type { KpiData, KallaRef, Paverkansfaktor } from "../types";
 import { kortBeskrivning } from "../utils/definitions";
 import { periodRangeLabel } from "../utils/format";
+import { omradeDef } from "../taxonomy";
 
 // ════════════════════════════════════════════════════════════
-//  Indikatorns två referenssektioner. De exporteras var för sig eftersom de
-//  inte längre står bredvid varandra: "Om indikatorn" inleder uppslaget, och
-//  "Påverkansfaktorer och teori" kommer efter diagrammet.
+//  Indikatorns referenssektioner. De exporteras var för sig eftersom de
+//  inte står bredvid varandra i uppslaget: "Om indikatorn" och "Datakälla
+//  och uppdatering" inleder det, "Påverkansfaktorer och teori" kommer efter
+//  diagrammet.
 //
-//  OMTAG 2026-08-20 (fjärde vändan): "Påverkansfaktorer och teori" låg som en
-//  underrubrik INNE i "Om indikatorn" och bar därför en egen, svagare
-//  rubrikform. De två är inte över- och underordnade, de är två jämbördiga
-//  svar på var sin fråga, och renderas nu som två sektioner på samma nivå med
-//  identisk rubrik. Därmed finns bara EN rubrikform per nivå i hela
-//  indikatorblocket:
+//  OMTAG 2026-09-03: posterna ("Vad måttet räknar" ...) är riktiga
+//  underrubriker (.rub-under) i stället för inlöpande etiketter, och
+//  "Vad måttet inte fångar" finns inte längre som egen post: avgränsningen
+//  står som andra stycke under "Vad måttet räknar", eftersom måttets
+//  kvaliteter och brister hör ihop. Källinformationen har fått en egen
+//  sektion som handlar om datan: varifrån, hur ofta, via vilka led.
 //
-//    indikatornamn      serif 20
-//    sektion            innehållsrubrik, sans halvfet i gemener  (.rub)
-//    post i sektion     sans halvfet i svart                   (.fakta-lbl)
-//    prosa              serif
-//    metadata/källa     sans liten och dämpad
+//  Rubriknivåerna i uppslaget:
+//    indikatornamn      serif 23, numrerad
+//    sektion            innehållsrubrik, sans 19          (.rub)
+//    post i sektion     underrubrik, sans 15              (.rub-under)
+//    prosa              serif 16
+//    datarad            etikett sans 13 + värde serif 16  (.datarader)
 //
-//  Båda sektionerna är fällbara och står öppna från början.
-//
-//  Källhänvisningen per faktor sätts i R (indikatorfakta.R) och finns bara
-//  där en källa faktiskt dokumenterar påståendet. Faktorer som är analys
-//  snarare än regelverk eller mätmetod står medvetet utan.
+//  Sektionerna är fällbara och står öppna från början.
 // ════════════════════════════════════════════════════════════
+
+const VY_ORD: Record<string, string> = {
+  dag: "dag", vecka: "vecka", manad: "månad", kvartal: "kvartal", ar: "år",
+};
 
 function enhetsText(kpi: KpiData): string {
   if (kpi.enhet === "procent") return "Andel i procent";
@@ -80,24 +83,13 @@ function FallbarSektion({
   );
 }
 
-/** Post i en sektion: halvfet etikett som löper in i texten. */
-function Post({ etikett, children }: { etikett: string; children: React.ReactNode }) {
-  return (
-    <p className="fakta-stycke">
-      <span className="fakta-lbl">{etikett}</span>
-      {children}
-    </p>
-  );
-}
-
 function Faktor({ faktor, nr }: { faktor: Paverkansfaktor; nr: number }) {
   const { kalla } = faktor;
   return (
     <li className="fakta-faktor">
       <span className="fakta-faktor__nr" aria-hidden="true">{String(nr).padStart(2, "0")}</span>
       <div className="fakta-faktor__kropp">
-        {/* Samma form som postetiketten ovan: sans halvfet i svart. */}
-        <h5 className="fakta-lbl fakta-lbl--rad">{faktor.rubrik}</h5>
+        <h5 className="rub-under">{faktor.rubrik}</h5>
         <p className="fakta-faktor__text">{faktor.text}</p>
         {kalla && (
           kalla.url ? (
@@ -123,59 +115,94 @@ function PilIkon() {
   );
 }
 
-/** Sektion 1 i uppslaget: vad måttet är, innan siffran tolkas. */
-export function OmIndikatorn({ kpi, vy }: { kpi: KpiData; vy: string }) {
+/** Sektion 1 i uppslaget: vad måttet är, dess kvaliteter och brister. */
+export function OmIndikatorn({ kpi }: { kpi: KpiData }) {
   const fakta = kpi.fakta;
   const matt = fakta?.matt || kortBeskrivning(kpi);
   const riktning = fakta?.riktning || harleddRiktning(kpi);
-  const period = periodRangeLabel(kpi.tidsserie, vy);
+
+  return (
+    <FallbarSektion rubrik="Om indikatorn" panelId={`fakta-om-${kpi.id}`}>
+      <h5 className="rub-under">Vad måttet räknar</h5>
+      <p>{matt}</p>
+      {/* Avgränsningen är en del av beskrivningen av måttet, inte en egen post. */}
+      {fakta?.avgransning && <p>{fakta.avgransning}</p>}
+
+      <h5 className="rub-under">Riktning och mål</h5>
+      <p>{riktning}</p>
+    </FallbarSektion>
+  );
+}
+
+/** Sektion 2 i uppslaget: datan bakom talet. Varifrån den kommer, hur ofta
+ *  den förnyas och genom vilka led den når rapporten. För områden utan
+ *  källpost i R (regionens egna system) hämtas uppgifterna ur taxonomin. */
+export function Datakalla({
+  kpi, vy, sectionId, leverans,
+}: {
+  kpi: KpiData; vy: string; sectionId: string; leverans?: KallaRef[];
+}) {
   const kalla = kpi.kalla;
+  const omrade = omradeDef(sectionId);
+  const period = periodRangeLabel(kpi.tidsserie, vy);
   const koladaRa = kalla?.kolada_kalla?.replace(/\.$/, "").trim();
   const koladaText = koladaRa && koladaRa.toLowerCase() !== kalla?.namn.toLowerCase()
     ? koladaRa : null;
 
-  return (
-      <FallbarSektion rubrik="Om indikatorn" panelId={`fakta-om-${kpi.id}`}>
-        {/* Tre parallella poster i EN form. Tidigare stod definitionen som en
-            större, mörkare ingress utan etikett medan de två andra hade
-            etikett och egen färg, vilket gjorde sektionen brokig. */}
-        <Post etikett="Vad måttet räknar">{matt}</Post>
-        <Post etikett="Riktning och mål">{riktning}</Post>
-        {fakta?.avgransning && (
-          <Post etikett="Vad måttet inte fångar">{fakta.avgransning}</Post>
-        )}
+  const rader: { lbl: string; val: React.ReactNode }[] = [];
+  if (kalla) {
+    rader.push({
+      lbl: "Primärkälla",
+      val: kalla.url
+        ? <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
+        : kalla.namn,
+    });
+    rader.push({ lbl: "Typ av källa", val: kalla.typ });
+    rader.push({ lbl: "Huvudman", val: kalla.huvudman });
+    if (kalla.uppdatering) rader.push({ lbl: "Uppdateras", val: kalla.uppdatering });
+    if (leverans && leverans.length > 0) {
+      rader.push({
+        lbl: "Vägen till rapporten",
+        val: [kalla.namn, ...leverans.map((l) => l.namn), "den här rapporten"].join(" › "),
+      });
+    }
+    if (koladaText) rader.push({ lbl: "Kolada anger", val: koladaText });
+  } else if (omrade) {
+    rader.push({ lbl: "Källa", val: omrade.kalla });
+    rader.push({ lbl: "Uppdateras", val: omrade.takt });
+    rader.push({ lbl: "Jämförs mot", val: omrade.jamforelse });
+  }
+  const takt = VY_ORD[vy];
+  rader.push({
+    lbl: "Mått och period",
+    val: [takt ? `${enhetsText(kpi)} per ${takt}` : enhetsText(kpi), period].filter(Boolean).join(", "),
+  });
 
-        {/* Kolofon: enhet, period och härkomst satt som metadata. */}
-        <div className="meta fakta-kolofon">
-          <p>
-            {enhetsText(kpi)}
-            {period && <> <span className="meta__sep">·</span> {period}</>}
-          </p>
-          {kalla && (
-            <p>
-              Källa:{" "}
-              {kalla.url ? (
-                <a href={kalla.url} target="_blank" rel="noreferrer">{kalla.namn}</a>
-              ) : kalla.namn}{" "}
-              <span className="meta__sep">·</span> {kalla.typ}
-            </p>
-          )}
-          {/* Koladas egen formulering, men bara när den tillför något utöver
-              källans namn. Annars upprepar raden sig själv. */}
-          {koladaText && <p>Kolada anger: {koladaText}</p>}
-        </div>
-      </FallbarSektion>
+  return (
+    <FallbarSektion rubrik="Datakälla och uppdatering" panelId={`fakta-data-${kpi.id}`}>
+      <dl className="datarader">
+        {rader.map((r) => (
+          <div key={r.lbl} style={{ display: "contents" }}>
+            <dt>{r.lbl}</dt>
+            <dd>{r.val}</dd>
+          </div>
+        ))}
+      </dl>
+      {!kalla && omrade?.notis && (
+        <p className="meta datarader__notis">{omrade.notis}</p>
+      )}
+    </FallbarSektion>
   );
 }
 
-/** Sektion 4 i uppslaget: vad som drar i talet, efter att det visats.
+/** Sektion efter diagrammet: vad som drar i talet, efter att det visats.
  *  Renderar ingenting för indikatorer utan faktaunderlag i R. */
 export function Paverkansfaktorer({ kpi }: { kpi: KpiData }) {
   const fakta = kpi.fakta;
   if (!fakta) return null;
   return (
     <FallbarSektion rubrik="Påverkansfaktorer och teori" panelId={`fakta-pav-${kpi.id}`}>
-      <p className="fakta-teori">{fakta.teori}</p>
+      <p>{fakta.teori}</p>
       <ol className="fakta-faktorer">
         {fakta.faktorer.map((f, i) => (
           <Faktor key={f.rubrik} faktor={f} nr={i + 1} />

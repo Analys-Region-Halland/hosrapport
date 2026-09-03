@@ -224,7 +224,7 @@ export default function EditableBlock({ id, type, text, rubrik, author, timestam
 
 /** Anteckningens rubrik: postetikett i sans, samma form som faktaposterna. */
 function NoteTitle({ children }: { children: React.ReactNode }) {
-  return <h5 className="fakta-lbl fakta-lbl--rad">{children}</h5>;
+  return <h5 className="rub-under">{children}</h5>;
 }
 
 function NoteBody({ text }: { text: string }) {

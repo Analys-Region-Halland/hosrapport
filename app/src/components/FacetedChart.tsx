@@ -215,7 +215,7 @@ export default function FacetedChart({
             marginBottom: 12, gap: 8,
           }}>
             <div>
-              <h4 className="graf-rubrik">Nedbrytning per avdelning</h4>
+              <h4 className="graf-rubrik">{rubrik ?? "Nedbrytning per avdelning"}</h4>
               <div className="graf-underrubrik">
                 {underrubrik
                   || kortBeskrivning(kpi)

@@ -7,7 +7,7 @@ import type {
   ContentBlock,
 } from "../types";
 import FacetedChart from "./FacetedChart";
-import { OmIndikatorn, Paverkansfaktorer } from "./IndikatorFakta";
+import { OmIndikatorn, Datakalla, Paverkansfaktorer } from "./IndikatorFakta";
 import SignalTimeline from "./SignalTimeline";
 import { StatusTag } from "./SignalStrip";
 import EditableBlock, { type AnteckningData } from "./EditableBlock";
@@ -304,7 +304,7 @@ function OversiktBlock({
     <section id="rapport-oversikt" className="ingang" style={{ scrollMarginTop: 60 }}>
       {showGlobal && (
         <section>
-          <Rubrik>{ANALYS_RUBRIK_GLOBAL}</Rubrik>
+          <Rubrik marke={AI_MARKE}>{ANALYS_RUBRIK_GLOBAL}</Rubrik>
           <BlocksEditor targetId="global" aiText={vyData.analys} vy={vyData.vy} />
         </section>
       )}
@@ -332,14 +332,27 @@ function OversiktBlock({
 //  Sans i gemener utan linje; en kontroll kan stå längst till höger.
 // ════════════════════════════════════════
 
-function Rubrik({ children, kontroll }: { children: React.ReactNode; kontroll?: React.ReactNode }) {
+function Rubrik({
+  children, kontroll, marke,
+}: {
+  children: React.ReactNode; kontroll?: React.ReactNode;
+  /** Märke efter rubriktexten, t.ex. "AI-analys". */
+  marke?: string;
+}) {
   return (
     <h4 className="rub">
-      <span>{children}</span>
+      <span>
+        {children}
+        {marke && <span className="rub__marke">{marke}</span>}
+      </span>
       {kontroll ? <span className="rub__kontroll">{kontroll}</span> : null}
     </h4>
   );
 }
+
+/** Märket på alla AI-genererade bedömningar. Bylinen under texten säger
+ *  samma sak; märket gör det synligt redan i rubriken. */
+const AI_MARKE = "AI-analys";
 
 // ════════════════════════════════════════
 //  KapitelRubrik — numrerad serif-rubrik med kategorin som kicker.
@@ -394,11 +407,17 @@ function SectionBlock({
 
       {delar ? (
         delar.map((del, di) => (
-          <DelBlock key={del.id} del={del} nr={under(di + 1)} vyLabel={vyLabel} vy={vy} onOpenChart={onOpenChart} />
+          <DelBlock
+            key={del.id} del={del} nr={under(di + 1)} vyLabel={vyLabel} vy={vy}
+            sectionId={section.id} leverans={section.leverans} onOpenChart={onOpenChart}
+          />
         ))
       ) : (
         section.kpier.map((kpi, ki) => (
-          <IndicatorBlock key={kpi.id} kpi={kpi} nr={under(ki + 1)} vyLabel={vyLabel} vy={vy} />
+          <IndicatorBlock
+            key={kpi.id} kpi={kpi} nr={under(ki + 1)} vyLabel={vyLabel} vy={vy}
+            sectionId={section.id} leverans={section.leverans}
+          />
         ))
       )}
 
@@ -442,7 +461,7 @@ function KapitelSammanfattning({
   return (
     <div className="ingang">
       <section>
-        <Rubrik>Sammanfattande bedömning</Rubrik>
+        <Rubrik marke={AI_MARKE}>Sammanfattande bedömning</Rubrik>
         <BlocksEditor targetId={section.id} aiText={section.analys} vy={vy} />
       </section>
       <section>
@@ -459,9 +478,11 @@ function KapitelSammanfattning({
 // ════════════════════════════════════════
 
 function DelBlock({
-  del, nr, vyLabel, vy, onOpenChart,
+  del, nr, vyLabel, vy, sectionId, leverans, onOpenChart,
 }: {
   del: Section; nr: string; vyLabel: string; vy: string;
+  /** Kapitlet delen hör till: styr källuppgifterna i indikatorerna. */
+  sectionId: string; leverans?: KallaRef[];
   onOpenChart?: (kpi: KpiData) => void;
 }) {
   return (
@@ -474,7 +495,7 @@ function DelBlock({
           tillsammans, så att orden och siffrorna kan läsas mot varandra. */}
       <div className="ingang">
         <section>
-          <Rubrik>Bedömning av avsnittet</Rubrik>
+          <Rubrik marke={AI_MARKE}>Bedömning av avsnittet</Rubrik>
           <BlocksEditor targetId={del.id} aiText={del.analys} vy={vy} />
         </section>
         <section>
@@ -484,7 +505,10 @@ function DelBlock({
       </div>
 
       {del.kpier.map((kpi, ki) => (
-        <IndicatorBlock key={kpi.id} kpi={kpi} nr={`${nr}.${ki + 1}`} vyLabel={vyLabel} vy={vy} />
+        <IndicatorBlock
+          key={kpi.id} kpi={kpi} nr={`${nr}.${ki + 1}`} vyLabel={vyLabel} vy={vy}
+          sectionId={sectionId} leverans={leverans}
+        />
       ))}
     </section>
   );
@@ -555,41 +579,63 @@ function KallaPost({ kalla }: { kalla: KallaRef }) {
 //  numrets gröna är statuschippet i huvudet.
 // ════════════════════════════════════════
 
-// ── Diagramrubrik: vad grafen visar, inte vad indikatorn heter ──
-// Indikatornamnet står i uppslagets huvud. Rubriken här ska i stället svara
-// på vad läsaren tittar på, och undertexten på hur serierna ska läsas.
-function grafRubrik(kpi: KpiData): string {
-  if (kpi.kontext_serier && kpi.kontext_serier.length > 0) {
-    return "Halland mot samtliga regioner";
-  }
-  const harBand = kpi.tidsserie.some((p) => p.yhat_lower != null);
-  return harBand ? "Utfall mot förväntat läge" : "Utveckling över tid";
+// ── Diagramrubrik och undertext ──
+// Rubriken säger vad diagrammet visar, konkret nog att stå för sig själv
+// (i PowerPoint-exporten står den utan indikatorhuvudet): måttet, vem som
+// jämförs med vem. Undertexten är den tekniska raden: enhet, tidsupplösning,
+// period och hur serierna ska läsas. Rubriken är alltså beskrivande, inte
+// en slutsats; slutsatsen står i bedömningen ovanför.
+const VY_TAKT: Record<string, string> = {
+  dag: "dag", vecka: "vecka", manad: "månad", kvartal: "kvartal", ar: "år",
+};
+
+function harFacetter(kpi: KpiData): boolean {
+  return Boolean(kpi.undernivaer && kpi.undernivaer.length > 0);
+}
+function harBand(kpi: KpiData): boolean {
+  return kpi.tidsserie.some((p) => p.yhat_lower != null);
 }
 
-function grafUnderrubrik(kpi: KpiData, forsta: string, sista: string): string {
+function grafRubrik(kpi: KpiData): string {
+  if (harFacetter(kpi)) return `${kpi.namn} per avdelning`;
+  if (kpi.kontext_serier && kpi.kontext_serier.length > 0) {
+    return `${kpi.namn}, Halland jämfört med övriga regioner`;
+  }
+  if (harBand(kpi)) return `${kpi.namn} mot statistiskt förväntat intervall`;
+  return `${kpi.namn} över tid`;
+}
+
+function grafUnderrubrik(kpi: KpiData, forsta: string, sista: string, vy: string): string {
   // Enheten skrivs ut bara när den faktiskt är känd. Kolada märker allt som
   // inte är andel som "antal", även kronbelopp, så ordet "Antal" hade varit
   // direkt fel för kostnadsindikatorerna.
   const enhet = kpi.enhet === "procent" ? "Andel i procent"
     : kpi.enhet === "minuter" ? "Minuter" : "";
+  const takt = VY_TAKT[vy];
   const spann = forsta && sista && forsta !== sista ? `${forsta}–${sista}` : (sista || forsta);
+  const matt = enhet && takt ? `${enhet} per ${takt}` : enhet || (takt ? `Per ${takt}` : "");
   const las: string[] = [];
   if (kpi.kontext_serier && kpi.kontext_serier.length > 0) {
-    las.push("Halland i mörk linje", "övriga regioner grå");
+    las.push("Halland i mörk linje", "övriga regioner i grått");
     if (kpi.riket_serie && kpi.riket_serie.length > 0) las.push("riket streckat");
-    if (kpi.topp3_band && kpi.topp3_band.length > 0) las.push("topp 3-zonen grön");
-  } else if (kpi.tidsserie.some((p) => p.yhat_lower != null)) {
+    if (kpi.topp3_band && kpi.topp3_band.length > 0) las.push("topp 3-zonen i grönt");
+  } else if (harBand(kpi)) {
+    if (harFacetter(kpi)) las.push("totalen först och därefter varje avdelning");
     las.push("bandet visar det statistiskt förväntade intervallet");
+  } else if (harFacetter(kpi)) {
+    las.push("totalen först och därefter varje avdelning");
   }
   if (kpi.malniva != null) las.push("målnivån som vågrät linje");
-  const bas = [enhet, spann].filter(Boolean).join(", ");
-  return [bas, las.join(", ")].filter(Boolean).join(". ") + ".";
+  const bas = [matt, spann].filter(Boolean).join(", ");
+  const lasText = las.length > 0 ? las[0].charAt(0).toUpperCase() + las.join(", ").slice(1) : "";
+  return [bas, lasText].filter(Boolean).join(". ") + ".";
 }
 
 function IndicatorBlock({
-  kpi, nr, vyLabel: _vyLabel, vy,
+  kpi, nr, vyLabel: _vyLabel, vy, sectionId, leverans,
 }: {
   kpi: KpiData; nr: string; vyLabel: string; vy: string;
+  sectionId: string; leverans?: KallaRef[];
 }) {
   const [visaDagar, setVisaDagar] = useState(false);
   const harDagar = vy !== "dag" && kpi.dagar && kpi.dagar.length > 0;
@@ -639,23 +685,26 @@ function IndicatorBlock({
       </header>
 
       {/* ── 2. Om indikatorn: vad måttet är, innan siffran tolkas ── */}
-      <OmIndikatorn kpi={kpi} vy={vy} />
+      <OmIndikatorn kpi={kpi} />
 
-      {/* ── 3. Den maskinella analysen av utfallet. Statusordet ("Att bevaka")
+      {/* ── 3. Datan bakom talet: källa, uppdatering, leveransväg ── */}
+      <Datakalla kpi={kpi} vy={vy} sectionId={sectionId} leverans={leverans} />
+
+      {/* ── 4. Den maskinella analysen av utfallet. Statusordet ("Att bevaka")
              står redan i chippet i huvudet och upprepas inte som rubrik. ── */}
       <section>
-        <Rubrik>Bedömning</Rubrik>
+        <Rubrik marke={AI_MARKE}>Bedömning</Rubrik>
         <AiAnalys targetId={kpi.id} aiText={kpi.analystext} />
       </section>
 
-      {/* ── 4. Diagram. Diagrammets egen rubrik säger vad grafen VISAR och
+      {/* ── 5. Diagram. Diagrammets egen rubrik säger vad grafen VISAR och
              står i samma form som övriga innehållsrubriker. ── */}
       <figure className="figur">
         <FacetedChart
           kpi={chartKpi}
           vy={aktivVy}
           rubrik={grafRubrik(kpi)}
-          underrubrik={grafUnderrubrik(kpi, firstLabel, lastLabel)}
+          underrubrik={grafUnderrubrik(kpi, firstLabel, lastLabel, aktivVy)}
           verktyg={harDagar ? (
             <SegmentedControl
               size="sm"
@@ -668,10 +717,10 @@ function IndicatorBlock({
         />
       </figure>
 
-      {/* ── 5. Påverkansfaktorer: vad som drar i talet, efter att det visats ── */}
+      {/* ── 6. Påverkansfaktorer: vad som drar i talet, efter att det visats ── */}
       <Paverkansfaktorer kpi={kpi} />
 
-      {/* ── 6. Verksamhetens kommentar ── */}
+      {/* ── 7. Verksamhetens kommentar ── */}
       <section className="kommentar">
         <Rubrik>Verksamhetens kommentar</Rubrik>
         <Anteckningar targetId={kpi.id} vy={vy} />

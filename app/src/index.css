@@ -403,15 +403,20 @@
 
    Signalöversikten och diagrammen har sin egen formgivning och är orörda.
    ════════════════════════════════════════════ */
+/* Skalan, andra vändan (2026-09-03): användaren ville ha större titlar och
+   en tydligare trappa. Sex steg med tydligt avstånd mellan varje:
+     44 masthead · 34 kapitel · 28 avsnitt · 23 indikator ·
+     19 innehållsrubrik · 15 underrubrik · 16 brödtext · 12,5 meta          */
 :root {
-  --t-h1: 40px;
-  --t-kap: 32px;
-  --t-avs: 26px;
-  --t-ind: 20px;
-  --t-rub: 14px;
-  --t-ingress: 18.5px;
+  --t-h1: 44px;
+  --t-kap: 34px;
+  --t-avs: 28px;
+  --t-ind: 23px;
+  --t-rub: 19px;
+  --t-under: 15px;
+  --t-ingress: 19px;
   --t-brod: 16px;
-  --t-meta: 12px;
+  --t-meta: 12.5px;
 
   --prosa-bredd: 660px;
   --brod-farg: #2b2b2b;
@@ -469,7 +474,7 @@
 }
 
 .rub-kap {
-  margin: 96px 0 24px;
+  margin: 112px 0 28px;
 }
 .rub-kap__kicker {
   font-size: 12px;
@@ -490,7 +495,7 @@
 }
 
 .rub-avs {
-  margin: 80px 0 20px;
+  margin: 96px 0 24px;
   font-family: var(--font-serif);
   font-size: var(--t-avs);
   font-weight: 600;
@@ -507,15 +512,44 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin: 40px 0 12px;
+  margin: 56px 0 16px;
   font-family: var(--font-sans);
   font-size: var(--t-rub);
+  font-weight: 600;
+  letter-spacing: -.012em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.rub > span:first-child { min-width: 0; }
+/* Märke i rubriken: säger rakt ut att texten är en AI-analys. */
+.rub__marke {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 2px 7px;
+  border: 1px solid rgba(0, 102, 77, .4);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.3;
+  color: var(--brand-700);
+  vertical-align: 3px;
+  white-space: nowrap;
+}
+
+/* ── Underrubrik: nivån under innehållsrubriken. Sans, mindre, samma vikt.
+   Används för posterna i Om indikatorn, faktorerna i Påverkansfaktorer,
+   anteckningarnas rubriker och raderna i Datakälla. ── */
+.rub-under {
+  margin: 26px 0 6px;
+  font-family: var(--font-sans);
+  font-size: var(--t-under);
   font-weight: 600;
   letter-spacing: -.005em;
   line-height: 1.35;
   color: var(--ink);
 }
-.rub > span:first-child { min-width: 0; }
+.rub-under:first-child { margin-top: 0; }
+.rub + .rub-under { margin-top: 0; }
 /* Kontroll till höger i rubrikraden (fällknapp, växlare) */
 .rub__kontroll {
   display: inline-flex;
@@ -603,7 +637,7 @@ button.rub:hover .rub__pil { color: var(--brand-700); }
 /* ── Indikatorn ──
    Ingen ram. Uppslaget börjar med numrerad serif-rubrik, statuschip och
    avläsningsrad, och avgränsas mot nästa indikator av luft. ── */
-.indikator { margin-top: 72px; }
+.indikator { margin-top: 88px; }
 .ingang + .indikator,
 .rub-kap + .indikator { margin-top: 0; }
 .inledning + .indikator { margin-top: 48px; }
@@ -641,26 +675,32 @@ button.rub:hover .rub__pil { color: var(--brand-700); }
 .indikator__readout-svag { color: #a2a8a4; }
 /* Första sektionen ligger nära huvudet; den hör till det. */
 .indikator__huvud + * .rub:first-child,
-.indikator__huvud + .rub { margin-top: 24px; }
+.indikator__huvud + .rub { margin-top: 28px; }
 
-/* Diagrammet: rubriken sätts av FacetedChart (.graf-rubrik) i samma form
-   som övriga innehållsrubriker. */
-.figur { margin: 40px 0 0; }
+/* Diagrammet står på en vit platta mot pappret, så att det lyfter en aning
+   från texten. Rubriken sätts av FacetedChart (.graf-rubrik) i samma form
+   som övriga innehållsrubriker: titeln säger vad som visas, undertexten
+   enhet, tidsupplösning, period och hur serierna läses. */
+.figur {
+  margin: 56px 0 0;
+  padding: 22px 26px 18px;
+  background: #fff;
+}
 .graf-rubrik {
-  margin: 0 0 4px;
+  margin: 0 0 5px;
   font-family: var(--font-sans);
   font-size: var(--t-rub);
   font-weight: 600;
-  letter-spacing: -.005em;
-  line-height: 1.35;
+  letter-spacing: -.012em;
+  line-height: 1.3;
   color: var(--ink);
 }
 .graf-underrubrik {
   font-family: var(--font-sans);
-  font-size: var(--t-meta);
+  font-size: 13px;
   line-height: 1.5;
-  color: var(--meta-farg);
-  max-width: 620px;
+  color: #6e756f;
+  max-width: 640px;
 }
 
 /* Verksamhetens kommentar: infogningsraden är svagt synlig, annars ser ett
@@ -669,48 +709,64 @@ button.rub:hover .rub__pil { color: var(--brand-700); }
 .kommentar .report-insert:hover .report-insert__btn,
 .kommentar .report-insert__btn:focus-visible { opacity: 1; }
 
-/* ── Faktasektionerna: poster med inledande etikett, kolofon, faktorlista ── */
+/* ── Faktasektionerna: underrubrik + prosa, faktorlista, datarader ── */
 .fakta { margin-top: 0; animation: fadeIn .14s ease; }
-
-.fakta-stycke { margin: 0 0 12px; }
-.fakta-stycke:last-child { margin-bottom: 0; }
-.fakta-lbl {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0;
-  color: var(--ink);
-}
-.fakta-stycke .fakta-lbl { margin-right: 9px; }
-.fakta-lbl--rad { display: block; margin: 0 0 3px; }
-
-.fakta-kolofon { margin-top: 16px; }
-.fakta-kolofon p { margin: 0; }
+.fakta .prosa p + .rub-under { margin-top: 26px; }
 
 /* Prosans p-regel nollar marginaler; listan får därför sin luft ovanför själv. */
 .fakta-faktorer {
-  margin: 20px 0 0;
+  margin: 24px 0 0;
   padding: 0;
   list-style: none;
   max-width: var(--prosa-bredd);
 }
 .fakta-faktor {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 30px minmax(0, 1fr);
   gap: 0 12px;
-  margin-bottom: 16px;
+  margin-bottom: 22px;
 }
 .fakta-faktor:last-child { margin-bottom: 0; }
 .fakta-faktor__nr {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 1.75;
+  line-height: 1.7;
   color: var(--brand-700);
 }
 .fakta-faktor__kropp { min-width: 0; }
+.fakta-faktor .rub-under { margin-top: 0; }
 .fakta-faktor__text { margin: 0; }
+
+/* Datakälla: rader som linjerar utan linjer. Etikett i sans, värde i prosans
+   serif, så att avsnittet läses som fakta och inte som en tabell. */
+.datarader {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 10px 22px;
+  max-width: var(--prosa-bredd);
+  margin: 0;
+}
+.datarader dt {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+  padding-top: 3px;
+  color: #5b615e;
+}
+.datarader dd {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-brod);
+  line-height: 1.6;
+  color: var(--brod-farg);
+}
+.datarader dd a { color: inherit; text-decoration: underline; text-decoration-color: #b9c9c2; text-underline-offset: 2px; }
+.datarader dd a:hover { color: var(--brand-700); text-decoration-color: currentColor; }
+.fakta .datarader__notis { margin-top: 16px; }
 .fakta-kalla {
   display: inline-flex;
   align-items: center;
@@ -806,6 +862,9 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
 
 @media (max-width: 620px) {
   .fakta-faktor { grid-template-columns: 24px minmax(0, 1fr); gap: 0 10px; }
+  .datarader { grid-template-columns: 1fr; gap: 4px 0; }
+  .datarader dd { margin-bottom: 8px; }
+  .figur { padding: 14px 12px 10px; }
 }
 
 @media print {

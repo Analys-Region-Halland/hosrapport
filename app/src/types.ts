@@ -14,6 +14,8 @@ export interface Kalla {
   /** Vad källan är och vad den innebär för tolkningen. */
   om: string;
   url?: string;
+  /** Hur ofta källan ger nya siffror, t.ex. "Årlig mätning; publiceras våren efter mätåret". */
+  uppdatering?: string;
   /** Koladas egen källformulering, ordagrant ur indikatorbeskrivningen. */
   kolada_kalla?: string;
 }

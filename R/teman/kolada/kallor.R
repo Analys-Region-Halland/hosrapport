@@ -37,6 +37,7 @@ SKR_KALLOR <- list(
     namn = "Hälso- och sjukvårdsbarometern",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Befolkningsundersökning",
+    uppdatering = "Årlig mätning; resultatet publiceras våren efter mätåret",
     om = paste0(
       "Årlig nationell undersökning av befolkningens attityder till, förtroende för ",
       "och uppfattning om hälso- och sjukvården. Den riktar sig till alla som är 18 år ",
@@ -51,6 +52,7 @@ SKR_KALLOR <- list(
     namn = "Nationell patientenkät",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Patientenkät",
+    uppdatering = "Nationell mätning vartannat år per vårdform; regionerna kan göra egna mellanårsmätningar",
     om = paste0(
       "Samlingsnamn för de återkommande nationella undersökningarna av ",
       "patientupplevelser. Nationellt gemensamma mätningar görs vartannat år inom ",
@@ -66,6 +68,7 @@ SKR_KALLOR <- list(
     namn = "Nationella väntetidsdatabasen (Väntetider i vården)",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Lagreglerad inrapportering från regionerna",
+    uppdatering = "Månadsvis inrapportering; publiceras omkring den 25:e varje månad",
     om = paste0(
       "Regionerna är enligt hälso- och sjukvårdslagen skyldiga att rapportera ",
       "väntetidsuppgifter till en nationell databas, så att vårdgarantin kan följas upp. ",
@@ -81,6 +84,7 @@ SKR_KALLOR <- list(
     namn = "SKR:s mätning av vårdplatser, överbeläggningar och utlokaliseringar",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Inrapportering från regionerna",
+    uppdatering = "Månadsvis inrapportering från regionerna",
     om = paste0(
       "Varje sjukhus räknar klockan 06 antalet patienter som är överbelagda eller ",
       "utlokaliserade, och antalet disponibla vårdplatser. Regionerna rapporterar in ",
@@ -96,6 +100,7 @@ SKR_KALLOR <- list(
     namn = "SKR:s uppföljning av utskrivningsklara patienter",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Inrapportering från regionerna",
+    uppdatering = "Månadsvis inrapportering från regionerna",
     om = paste0(
       "Regionerna rapporterar hur många vårddygn som används av patienter som är ",
       "medicinskt färdigbehandlade men ännu inte har lämnat sjukhuset. Måttet ligger i ",
@@ -109,6 +114,7 @@ SKR_KALLOR <- list(
     namn = "Markörbaserad journalgranskning",
     huvudman = "Sveriges Kommuner och Regioner (metodansvar till Socialstyrelsen 2024)",
     typ = "Strukturerad journalgranskning",
+    uppdatering = "Löpande granskning av journaler; sammanställs och publiceras årligen",
     om = paste0(
       "Metod för att mäta skador och vårdskador. Ett granskningsteam med läkare och ",
       "sjuksköterska drar ett slumpmässigt urval journaler varje månad och söker ",
@@ -123,6 +129,7 @@ SKR_KALLOR <- list(
     namn = "SKR:s nationella punktprevalensmätningar",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Punktprevalensmätning",
+    uppdatering = "Punktmätning vid ett bestämt datum, en till två gånger per år",
     om = paste0(
       "Samlad observation vid ett givet tillfälle, i stället för löpande registrering. ",
       "Mätningarna har omfattat följsamhet till basala hygienrutiner och klädregler samt ",
@@ -136,6 +143,7 @@ SKR_KALLOR <- list(
     namn = "Patientregistret",
     huvudman = "Socialstyrelsen",
     typ = "Hälsodataregister",
+    uppdatering = "Löpande inrapportering; årsstatistik publiceras året efter",
     om = paste0(
       "Nationellt hälsodataregister över slutenvård och specialiserad öppenvård. ",
       "Vårdgivarna har lagreglerad uppgiftsskyldighet, vilket ger en i det närmaste ",
@@ -150,6 +158,7 @@ SKR_KALLOR <- list(
     namn = "Cancerregistret",
     huvudman = "Socialstyrelsen",
     typ = "Hälsodataregister",
+    uppdatering = "Löpande registrering; årsstatistik publiceras året efter",
     om = paste0(
       "Ett av landets äldsta hälsodataregister, i drift sedan 1958. Anmälningsplikten är ",
       "reglerad i föreskrift och varje nyupptäckt tumör ska rapporteras, vilket ger hög ",
@@ -163,6 +172,7 @@ SKR_KALLOR <- list(
     namn = "Dödsorsaksregistret",
     huvudman = "Socialstyrelsen",
     typ = "Nationellt register över dödsorsaker",
+    uppdatering = "Löpande registrering; årsstatistik publiceras året efter",
     om = paste0(
       "Register över samtliga dödsfall bland folkbokförda i Sverige, med underliggande ",
       "och bidragande dödsorsak enligt dödsbeviset. Registret är basen för mått på ",
@@ -176,6 +186,7 @@ SKR_KALLOR <- list(
     namn = "Läkemedelsregistret",
     huvudman = "Socialstyrelsen",
     typ = "Hälsodataregister",
+    uppdatering = "Löpande registrering; statistik publiceras månads- och årsvis",
     om = paste0(
       "Register över alla läkemedel som hämtats ut på recept, med uppgift om individ, ",
       "preparat och tidpunkt. Det gör det möjligt att följa samtidig användning av flera ",
@@ -188,6 +199,7 @@ SKR_KALLOR <- list(
     namn = "Nationella diabetesregistret",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Kvalitetsregister för diabetesvård, med uppgifter från både primärvård och ",
       "specialistmottagningar om provsvar, riskfaktorer, undersökningar och behandling. ",
@@ -201,6 +213,7 @@ SKR_KALLOR <- list(
     namn = "SWEDEHEART",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Samlat kvalitetsregister för hjärtsjukvård, som bland annat följer akut ",
       "kranskärlssjukvård och sekundärprevention efter hjärtinfarkt. Registret används ",
@@ -213,6 +226,7 @@ SKR_KALLOR <- list(
     namn = "Riksstroke",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Nationellt kvalitetsregister för strokevård, som följer patienten från akut ",
       "insjuknande till uppföljning efter tre månader. Registret ger både processmått, ",
@@ -226,6 +240,7 @@ SKR_KALLOR <- list(
     namn = "Nationella prostatacancerregistret",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Kvalitetsregister för prostatacancer med mycket hög täckningsgrad mot ",
       "Cancerregistret. Registret följer utredning, behandlingsbeslut och uppföljning, ",
@@ -238,6 +253,7 @@ SKR_KALLOR <- list(
     namn = "Nationellt kvalitetsregister för bröstcancer",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Kvalitetsregister som följer utredning, behandling och uppföljning vid ",
       "bröstcancer. Registret drivs inom ramen för Regionala cancercentrum i samverkan ",
@@ -249,6 +265,7 @@ SKR_KALLOR <- list(
     namn = "Svenska kolorektalcancerregistret",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Kvalitetsregister för tjock- och ändtarmscancer, som följer diagnostik, kirurgi, ",
       "onkologisk behandling och uppföljning. Används här för andelen patienter vars ",
@@ -260,6 +277,7 @@ SKR_KALLOR <- list(
     namn = "Nationella lungcancerregistret",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Kvalitetsregister för lungcancer, som följer utredning, behandlingsbeslut och ",
       "resultat. Används här för andelen patienter som bedömts vid multidisciplinär ",
@@ -271,6 +289,7 @@ SKR_KALLOR <- list(
     namn = "Svenskt perioperativt register",
     huvudman = "Nationellt kvalitetsregister",
     typ = "Nationellt kvalitetsregister",
+    uppdatering = "Löpande registrering; årsrapport",
     om = paste0(
       "Kvalitetsregister för anestesi och operationsverksamhet, som samlar uppgifter ",
       "direkt från operationsplaneringssystemen. Används här för följsamheten till ",
@@ -284,6 +303,7 @@ SKR_KALLOR <- list(
     namn = "Regionala cancercentrum i samverkan",
     huvudman = "Regionerna gemensamt",
     typ = "Uppföljning av standardiserade vårdförlopp",
+    uppdatering = "Löpande registrering; redovisas per kvartal och år",
     om = paste0(
       "De standardiserade vårdförloppen vid cancer följs upp gemensamt av de sex ",
       "regionala cancercentrumen. Uppföljningen mäter dels hur stor andel av patienterna ",
@@ -297,6 +317,7 @@ SKR_KALLOR <- list(
     namn = "Folkhälsomyndigheten",
     huvudman = "Folkhälsomyndigheten",
     typ = "Nationell folkhälsostatistik",
+    uppdatering = "Årlig publicering",
     om = paste0(
       "Myndighetens folkhälsostatistik bygger i sin tur på Socialstyrelsens register, ",
       "för suicid på dödsorsaksregistret. Talen redovisas som femårsmedelvärden eftersom ",
@@ -309,6 +330,7 @@ SKR_KALLOR <- list(
     namn = "KPP-databasen (kostnad per patient)",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Ekonomisk verksamhetsstatistik",
+    uppdatering = "Årlig leverans från regionerna efter bokslut",
     om = paste0(
       "I KPP beräknas kostnaden för varje enskild vårdkontakt i regionernas egen ",
       "verksamhet. För att kunna jämföra trots olika patientsammansättning viktas ",
@@ -322,6 +344,7 @@ SKR_KALLOR <- list(
     namn = "Regionernas räkenskaper (räkenskapssammandrag och bokslut)",
     huvudman = "SCB och Sveriges Kommuner och Regioner",
     typ = "Ekonomisk statistik",
+    uppdatering = "Årlig, efter regionernas bokslut",
     om = paste0(
       "Regionernas ekonomiska nyckeltal bygger på det årliga räkenskapssammandraget hos ",
       "SCB och på regionernas egna bokslutsuppgifter, sammanställda av SKR. Måtten avser ",
@@ -335,6 +358,7 @@ SKR_KALLOR <- list(
     namn = "Strukturjusterad kostnad (kostnadsutjämningens hälso- och sjukvårdsmodell)",
     huvudman = "SCB och Sveriges Kommuner och Regioner",
     typ = "Ekonomisk statistik med behovsjustering",
+    uppdatering = "Årlig, i takt med kostnadsutjämningen",
     om = paste0(
       "Regionernas nettokostnad justeras för strukturella faktorer som regionen inte kan ",
       "påverka, med hjälp av standardkostnaden i kostnadsutjämningens hälso- och ",
@@ -349,6 +373,7 @@ SKR_KALLOR <- list(
     namn = "SKR:s ekonomiska nyckeltal för regioner",
     huvudman = "Sveriges Kommuner och Regioner",
     typ = "Ekonomisk statistik",
+    uppdatering = "Årlig, efter regionernas bokslut",
     om = paste0(
       "SKR beräknar nyckeltal som gör regionernas ekonomi jämförbar trots olika ",
       "verksamhetsansvar. Justerad skattesats är ett sådant mått: den faktiska ",
@@ -362,6 +387,7 @@ SKR_KALLOR <- list(
     namn = "Socialstyrelsens statistik om hälso- och sjukvård",
     huvudman = "Socialstyrelsen",
     typ = "Officiell statistik",
+    uppdatering = "Årlig publicering",
     om = paste0(
       "Myndighetens sammanställda statistik bygger på hälsodataregistren, ofta ",
       "patientregistret kombinerat med dödsorsaksregistret och befolkningsuppgifter från ",
@@ -380,6 +406,7 @@ SKR_VIA <- list(
     namn = "Vården i siffror",
     huvudman = "Regionerna och Sveriges Kommuner och Regioner",
     typ = "Publiceringsplattform",
+    uppdatering = "Följer respektive primärkälla; en del indikatorer varje månad eller kvartal, andra en gång per år",
     om = paste0(
       "Regionernas och SKR:s gemensamma samlingsplats för kvalitets- och ",
       "effektivitetsindikatorer. Plattformen hämtar från kvalitetsregister, ",
@@ -392,6 +419,7 @@ SKR_VIA <- list(
     namn = "Kolada",
     huvudman = "Rådet för främjande av kommunala analyser (RKA)",
     typ = "Nyckeltalsdatabas",
+    uppdatering = "Uppdateras när Vården i siffror publicerar; rapporten hämtar via öppet API vid varje körning",
     om = paste0(
       "Öppen databas med flera tusen nyckeltal för kommuner och regioner, som drivs av ",
       "RKA, en ideell förening bildad av staten och SKR. Kolada är den kanal rapporten ",
@@ -490,6 +518,7 @@ kalla_for_kpi <- function(kpi_id, beskrivning = NULL) {
   k <- SKR_KALLOR[[nyckel]]
   ut <- list(id = nyckel, namn = k$namn, huvudman = k$huvudman,
              typ = k$typ, om = k$om)
+  if (!is.null(k$uppdatering)) ut$uppdatering <- k$uppdatering
   if (!is.null(k$url)) ut$url <- k$url
   if (!is.null(fras)) ut$kolada_kalla <- fras
   ut
