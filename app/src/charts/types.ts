@@ -74,7 +74,16 @@ export interface TidsserieOpts {
   showEndLabels?: boolean;
   /** Etikett för huvudlinjen i slutetiketterna (default "Faktiskt"). */
   mainLabel?: string;
-  showBrackets?: boolean;
+  /** Lägre värde är bättre — styr placeringsberäkningen i tooltipen. */
+  inverterad?: boolean;
+  /** Källrad nere till vänster ("Källa: …"). */
+  kalla?: string;
+
+  // Fästa regioner (klick på en kontextlinje)
+  /** Namn på regioner som ritas i färg med egen etikett och tooltiprad. */
+  pinned?: string[];
+  /** Anropas när användaren klickar på en kontextlinje. */
+  onTogglePin?: (namn: string) => void;
 
   // Storlek/densitet
   compact?: boolean;

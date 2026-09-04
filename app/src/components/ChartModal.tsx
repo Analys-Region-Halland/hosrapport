@@ -3,7 +3,7 @@ import type { KpiData, VyData } from "../types";
 import { fmtSuffix } from "../utils/format";
 import { tidsserie, parseTidsserie, parseSimpleSerie } from "../charts/tidsserie";
 import type { TidsserieSeries } from "../charts/types";
-import { FONT, FONT_TITEL, NEUTRAL_LINE } from "../charts/constants";
+import { FONT, FONT_TITEL, HALLAND_LINE } from "../charts/constants";
 import SegmentedControl from "./SegmentedControl";
 import { kortBeskrivning } from "../utils/definitions";
 import { StatusTag } from "./SignalStrip";
@@ -26,7 +26,11 @@ export default function ChartModal({ kpi, vyData, visaDagar: initialVisaDagar, o
   const aktivVyId = visaDagar && harDagar ? "dag" : vyData.vy;
   const aktivData = visaDagar && harDagar ? kpi.dagar! : kpi.tidsserie;
 
-  const accent = NEUTRAL_LINE;
+  const accent = HALLAND_LINE;
+  const [pinned, setPinned] = useState<string[]>([]);
+  const togglePin = useCallback((namn: string) => {
+    setPinned((prev) => prev.includes(namn) ? prev.filter((n) => n !== namn) : [...prev, namn]);
+  }, []);
   const dec = kpi.enhet === "procent" ? 1 : 0;
   const suffix = fmtSuffix(kpi.enhet);
 
@@ -40,7 +44,7 @@ export default function ChartModal({ kpi, vyData, visaDagar: initialVisaDagar, o
   const bandText = harBand
     ? "Skuggat fält: förväntat intervall — inre 80 % (i fas), yttre 95 % (bevaka). Streckad linje: modellens förväntade värde."
     : harKontext
-      ? "Grå linjer: övriga regioner · streckad linje: rikssnitt."
+      ? "Grå linjer: övriga regioner · streckad linje: rikssnitt. Klicka på en linje för att markera regionen."
       : "";
 
   const undertitel = useMemo(() => {
@@ -102,11 +106,15 @@ export default function ChartModal({ kpi, vyData, visaDagar: initialVisaDagar, o
       denseThreshold: 30,
       decimals: dec,
       suffix,
+      inverterad: kpi.inverterad,
+      kalla: kpi.kalla?.namn,
+      pinned,
+      onTogglePin: togglePin,
     });
 
     cleanupRef.current = cleanup;
     return cleanup;
-  }, [kpi, vyData, dims, accent, dec, suffix, aktivData, aktivVyId, titel]);
+  }, [kpi, vyData, dims, accent, dec, suffix, aktivData, aktivVyId, titel, harBand, pinned, togglePin]);
 
   return (
     <div

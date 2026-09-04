@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import type { KpiData } from "../types";
 import { fmtSuffix } from "../utils/format";
 import { tidsserie, parseTidsserie, parseSimpleSerie } from "../charts/tidsserie";
 import type { TidsserieSeries, Pt, BandPt, ToppBandPt } from "../charts/types";
-import { FONT, NEUTRAL_LINE, SIGNAL_COLORS } from "../charts/constants";
+import { FONT, HALLAND_LINE, SIGNAL_COLORS, pinColor } from "../charts/constants";
 import { useResizeWidth } from "../hooks/useResizeWidth";
 import { kortBeskrivning } from "../utils/definitions";
 import { StatusTag } from "./SignalStrip";
@@ -49,16 +49,32 @@ interface Props {
   underrubrik?: string;
   /** Kontroll som står i rubrikraden bredvid Info-knappen (t.ex. Aggregerat/Dag). */
   verktyg?: React.ReactNode;
+  /** Regioner som är fästa från start (provbänk/tester). */
+  initialPinned?: string[];
 }
 
 export default function FacetedChart({
-  kpi, vy, visaRubrik = true, rubrik, underrubrik, verktyg,
+  kpi, vy, visaRubrik = true, rubrik, underrubrik, verktyg, initialPinned,
 }: Props) {
   const [outerRef, containerWidth] = useResizeWidth();
   const [showInfo, setShowInfo] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const accent = NEUTRAL_LINE;
+  // Regioner som läsaren fäst med klick i storgrafen. Listan bär indikatorns
+  // id, så att en annan indikator i samma komponent börjar tom (härledning i
+  // stället för en nollställande effekt).
+  const [pinnedFor, setPinnedFor] = useState<{ id: string; list: string[] }>({ id: kpi.id, list: initialPinned ?? [] });
+  const pinned = pinnedFor.id === kpi.id ? pinnedFor.list : [];
+  const kpiId = kpi.id;
+  const togglePin = useCallback((namn: string) => {
+    setPinnedFor((prev) => {
+      const list = prev.id === kpiId ? prev.list : [];
+      return { id: kpiId, list: list.includes(namn) ? list.filter((n) => n !== namn) : [...list, namn] };
+    });
+  }, [kpiId]);
+  const setPinned = useCallback((list: string[]) => setPinnedFor({ id: kpiId, list }), [kpiId]);
+
+  const accent = HALLAND_LINE;
 
   const { allSeries, xDomain, yDomain } = useMemo(() => {
     const result: InternalSeries[] = [];
@@ -114,10 +130,9 @@ export default function FacetedChart({
         ...(s.toppBand || []).flatMap((b) => [b.lo, b.hi]),
       ]);
       const [mn, mx] = d3.extent(vals) as [number, number];
-      if (mn != null && mx != null) {
-        const pad = (mx - mn) * 0.1 || 1;
-        yd = [mn - pad, mx + pad];
-      }
+      // Ingen padding här: tidsserie() omsluter domänen med gridlinjer, och
+      // en padding hade bara tryckt ut ännu en (tom) linje över och under.
+      if (mn != null && mx != null) yd = [mn, mx];
     }
     return { allSeries: result, xDomain: xd, yDomain: yd };
   }, [kpi, accent]);
@@ -129,6 +144,7 @@ export default function FacetedChart({
   }
 
   const hasFacets = allSeries.length > 1;
+  const harKontext = !!(kpi.kontext_serier && kpi.kontext_serier.length > 0);
   const cols = 2;
   const gap = 14;
   const dec = kpi.enhet === "procent" ? 1 : 0;
@@ -352,14 +368,56 @@ export default function FacetedChart({
             showEndLabels
             mainLabel="Halland"
             vy={vy}
+            inverterad={kpi.inverterad}
+            kalla={kpi.kalla?.namn}
+            pinned={pinned}
+            onTogglePin={togglePin}
           />
+          {harKontext && (
+            <GrafFot pinned={pinned} onRemove={togglePin} onClear={() => setPinned([])} />
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// ═���════════════════��═════════════════════
+// ════════════════════════════════════════
+//  GrafFot — läsanvisning + fästa regioner (chip per region, färg = linjen)
+// ════════════════════════════════════════
+
+function GrafFot({ pinned, onRemove, onClear }: {
+  pinned: string[]; onRemove: (namn: string) => void; onClear: () => void;
+}) {
+  if (pinned.length === 0) {
+    return (
+      <div className="graf-fot">
+        <span className="graf-fot__tips">Klicka på en grå linje för att markera regionen och följa den i grafen.</span>
+      </div>
+    );
+  }
+  return (
+    <div className="graf-fot" role="group" aria-label="Markerade regioner">
+      <span>Markerade:</span>
+      {pinned.map((namn, i) => (
+        <button
+          key={namn} type="button" className="graf-markering"
+          onClick={() => onRemove(namn)} title={`Ta bort ${namn}`}
+          aria-label={`Ta bort markeringen av ${namn}`}
+        >
+          <span className="graf-markering__prick" style={{ background: pinColor(i) }} />
+          {namn}
+          <span className="graf-markering__x" aria-hidden="true">×</span>
+        </button>
+      ))}
+      {pinned.length > 1 && (
+        <button type="button" className="graf-fot__rensa" onClick={onClear}>Rensa alla</button>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════
 //  InfoPopover
 // ��═══════════���═══════════════════════════
 
@@ -424,9 +482,17 @@ interface PanelProps {
   showEndLabels?: boolean;
   /** Etikett för huvudlinjen i slutetiketterna (t.ex. "Halland") */
   mainLabel?: string;
+  inverterad?: boolean;
+  kalla?: string;
+  pinned?: string[];
+  onTogglePin?: (namn: string) => void;
 }
 
-function Panel({ series, xDomain, yDomain, yTickCount, width, enhet, dec, suffix, isSingle = false, vy, status, showEndLabels = false, mainLabel }: PanelProps) {
+function Panel({
+  series, xDomain, yDomain, yTickCount, width, enhet, dec, suffix,
+  isSingle = false, vy, status, showEndLabels = false, mainLabel,
+  inverterad, kalla, pinned, onTogglePin,
+}: PanelProps) {
   const ref = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -442,29 +508,32 @@ function Panel({ series, xDomain, yDomain, yTickCount, width, enhet, dec, suffix
     const cleanup = tidsserie(el, series, {
       width,
       height: h,
+      // Högermarginalen växer automatiskt i tidsserie() så att slutetiketterna
+      // ryms; värdet här är golvet. Det lilla golvet i facetpanelerna rymmer
+      // halva sista årtalet under tickmarken vid plotkanten.
       margins: isSingle
-        // Bredare högermarginal när regionetiketter (högsta/lägsta) ska få plats
-        ? { t: 16, r: showEndLabels ? (series.kontextLinjer?.length ? 136 : 96) : 20, b: 34, l: 48 }
-        // Högermarginal rymmer halva sista årtalet när det centreras under
-        // tickmarken vid plotkanten (annars sticker det ut till höger).
-        : { t: 12, r: 18, b: 28, l: 38 },
+        ? { t: 16, r: showEndLabels ? 96 : 20, b: 34, l: 44 }
+        : { t: 12, r: 18, b: 28, l: 36 },
       enhet,
       vy,
       xDomain,
       yDomain,
       yTickCount,
-      showBrackets: true,
       showEndLabels,
       mainLabel,
       compact: !isSingle ? true : false,
       denseThreshold: 30,
       decimals: dec,
       suffix,
+      inverterad,
+      kalla,
+      pinned,
+      onTogglePin,
     });
 
     cleanupRef.current = cleanup;
     return cleanup;
-  }, [series, xDomain, yDomain, yTickCount, width, enhet, dec, suffix, isSingle, vy, showEndLabels, mainLabel]);
+  }, [series, xDomain, yDomain, yTickCount, width, enhet, dec, suffix, isSingle, vy, showEndLabels, mainLabel, inverterad, kalla, pinned, onTogglePin]);
 
   // Panelhuvud: namn (för facets) + statustagg — direkt vid grafen.
   const showHeader = (!isSingle && series.name) || status;

@@ -703,6 +703,29 @@ button.rub:hover .rub__pil { color: var(--brand-700); }
   max-width: 640px;
 }
 
+/* Diagramfot: läsanvisning för klick + de regioner läsaren fäst i grafen.
+   Chippen är text med färgprick, ingen ram — samma färg som linjen. */
+.graf-fot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  margin-top: 8px; min-height: 18px;
+  font-family: var(--font-sans); font-size: 12px; line-height: 1.4; color: #8a8f8b;
+}
+.graf-fot__tips { color: #a2a8a4; }
+.graf-markering {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; font-weight: 500; color: var(--ink);
+}
+.graf-markering__prick { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.graf-markering__x { color: #a2a8a4; font-size: 13px; line-height: 1; }
+.graf-markering:hover .graf-markering__x,
+.graf-markering:focus-visible .graf-markering__x { color: var(--ink); }
+.graf-fot__rensa {
+  padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; color: #8a8f8b; text-decoration: underline; text-underline-offset: 2px;
+}
+.graf-fot__rensa:hover { color: var(--ink); }
+
 /* Verksamhetens kommentar: infogningsraden är svagt synlig, annars ser ett
    tomt kommentarsavsnitt ut som en bugg. */
 .kommentar .report-insert__btn { opacity: .5; }
@@ -1113,16 +1136,6 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: translateY(0) } }
 @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
 
-/* Pulsande "live"-ping på senaste punkten i linjegrafer (tidsserie.ts).
-   Bas-opacitet 0 → osynlig när animation är av (prefers-reduced-motion). */
-@keyframes pulse-ping {
-  0%   { transform: scale(0.5); opacity: 0.5; }
-  70%  { opacity: 0; }
-  100% { transform: scale(2.6); opacity: 0; }
-}
-/* "Live"-pulsen är borttagen — en formell årsrapport ska inte blinka.
-   Senaste datapunkten har kvar sin statiska markör i grafen. */
-.pulse-ping { display: none; }
 
 /* ════════════════════════════════════════════
    Rapport: utskrift/PDF + responsivt

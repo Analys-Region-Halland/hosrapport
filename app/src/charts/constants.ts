@@ -37,9 +37,18 @@ export const SIGNAL_LABELS: Record<string, string> = {
   rod: "Avvikelse",
 };
 
-// Neutral linjefärg för alla tidsseriegrafer — status visas via tagg vid
-// grafnamnet, inte genom att färga själva linjen.
+// Neutral linjefärg (signaltidslinjens sparklines) — status visas via tagg,
+// inte genom att färga linjen.
 export const NEUTRAL_LINE = "#33393f";
+
+// Halland i regiongrönt i alla tidsseriegrafer. Övriga regioner ligger i grått
+// bakom och kan fästas med klick — då får de en färg ur PIN_COLORS (Region
+// Hallands palett utan grönt, samma ordning som i kommundata).
+export const HALLAND_LINE = "#00664D";
+export const PIN_COLORS = ["#004990", "#FF7E00", "#433C9D", "#2DB8F6", "#A51300", "#895B42"];
+export function pinColor(i: number): string {
+  return PIN_COLORS[i % PIN_COLORS.length];
+}
 
 // Neutral fyllnadsfärg för signalceller utan signal (SignalStrip/SignalTimeline).
 export const NEUTRAL = "#ececea";

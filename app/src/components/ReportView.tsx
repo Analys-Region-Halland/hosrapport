@@ -724,9 +724,9 @@ function grafUnderrubrik(kpi: KpiData, forsta: string, sista: string, vy: string
   const matt = enhet && takt ? `${enhet} per ${takt}` : enhet || (takt ? `Per ${takt}` : "");
   const las: string[] = [];
   if (kpi.kontext_serier && kpi.kontext_serier.length > 0) {
-    las.push("Halland i mörk linje", "övriga regioner i grått");
+    las.push("Halland i grönt", "övriga regioner i grått");
     if (kpi.riket_serie && kpi.riket_serie.length > 0) las.push("riket streckat");
-    if (kpi.topp3_band && kpi.topp3_band.length > 0) las.push("topp 3-zonen i grönt");
+    if (kpi.topp3_band && kpi.topp3_band.length > 0) las.push("topp 3-zonen som ljusgrönt fält");
   } else if (harBand(kpi)) {
     if (harFacetter(kpi)) las.push("totalen först och därefter varje avdelning");
     las.push("bandet visar det statistiskt förväntade intervallet");
