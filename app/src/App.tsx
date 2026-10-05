@@ -10,7 +10,7 @@ import {
   type KapitelIndex,
 } from "./rapport/ramData";
 import { Laddar } from "./rapport/Laddar";
-import { LasPlatshallare } from "./rapport/RamPlatshallare";
+import SaLaserDu from "./rapport/SaLaserDu";
 import Sammanfattning from "./rapport/Sammanfattning";
 import StartSida from "./start/StartSida";
 
@@ -125,7 +125,7 @@ function NyApp() {
         sida = <BegreppSida key="begrepp" id={route.id} />;
         break;
       case "las":
-        sida = <LasPlatshallare />;
+        sida = <SaLaserDu key="las" />;
         break;
       case "om":
         sida = <OmRapporten key="om" />;
