@@ -141,19 +141,31 @@ export const tema = {
       minidiagram: { bredd: 96, hojd: 24 },
     },
     smaMultiplar: { tre: 760, tva: 480, maxPaneler: 12 },
-    rangordning: { punktradie: 4.5, fokusPunktradie: 5.5 },
+    // namnMaxAndel: namnkolumnen tar högst så stor del av bredden; längre namn kortas med ellips
+    rangordning: { punktradie: 4.5, fokusPunktradie: 5.5, namnMaxAndel: 0.4 },
     minidiagram: { bredd: 1.5, punktradie: 2.5 },
-    // Axlar och rutnät (6.3)
+    // Stapel över tid (6.6): stapelbredd = breddPerMellanrum × mellanrum. Stapeln under
+    // pekaren mörkas med farg.black i opaciteten morkning (6.8).
+    stapel: { breddPerMellanrum: 2, morkning: 0.3 },
+    // Axlar och rutnät (6.3). xAxel.hojd = raden under plotytan (axelstreck och etiketter),
+    // xAxel.etikettBaslinje = etikettens baslinje under plotytans underkant.
     rutnat: { bredd: 0.8, streck: "4 4", linjerDesktop: { min: 4, max: 6 }, linjerMobil: { min: 3, max: 4 } },
-    xAxel: { baslinje: 1, streckLangd: 5 },
+    xAxel: { baslinje: 1, streckLangd: 5, hojd: 34, etikettBaslinje: 20 },
     nollinje: 1,
     seriebrott: { langd: 9, bredd: 1.5 },
-    // Etiketter vid linjeslut (6.4)
+    // Etiketter vid linjeslut (6.4). Kopplingslinjens brytpunkter start, knack och slut
+    // räknas från sista periodens x.
     etikett: { kolumnAvstand: 21, minAvstand: 17, maxMarginalAndel: 0.34, kortaUnder: 560 },
-    kopplingslinje: { bredd: 0.6, farg: diagramFarg.anslutning },
+    kopplingslinje: { bredd: 0.6, farg: diagramFarg.anslutning, start: 6, knack: 12, slut: 18 },
     // Interaktion (6.8)
     hjalplinje: { bredd: 1, opacitet: 0.35 },
-    traffyta: { lyft: 8, slapp: 14, byte: 4 },
+    // Punkterna vid hjälplinjen: radie och vit kant
+    overlaggPunkt: { radie: 4, kant: 1.5 },
+    // lyftPekskarm: lyftradien på pekskärm (WCAG 2.5.8, 24 px träffyta). foretrade: fokus,
+    // referens och fästa serier räknas som så här mycket närmare.
+    traffyta: { lyft: 8, slapp: 14, byte: 4, lyftPekskarm: 12, foretrade: 2 },
+    // Under denna diagrambredd står tooltipen under plotytan i full bredd (6.8)
+    tooltip: { helBreddUnder: 560 },
     maxFasta: 4,
     platta: { luft: 24, luftMobil: 16 },
   },

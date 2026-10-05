@@ -1,22 +1,27 @@
 // charts/karna/geometri.ts: diagrammens fasta mått i ett ställe. Värden som
 // finns i design/tema.ts hämtas därifrån; resten är prototypens mått
-// (docs/referens/stilguide-granskning.html, "Tidsdiagram") och saknar ännu
-// egna nycklar i tema.ts (begärt i WP2:s slutrapport). Ägare: WP2.
+// (docs/referens/stilguide-granskning.html, "Tidsdiagram"). Axelraden,
+// x-etikettens baslinje, kopplingslinjen, överläggets punkt, lyftradien på
+// pekskärm och företrädet ligger sedan WP3 i tema.diagram. Ägare: WP2.
 
 import { tema } from "../../design/tema";
 
 const { rum, diagram, typ } = tema;
 
 /** Kopplingslinjens brytpunkter räknat från sista periodens x. */
-const KOPPLING = { start: 6, knack: 12, slut: 18 } as const;
+const KOPPLING = {
+  start: diagram.kopplingslinje.start,
+  knack: diagram.kopplingslinje.knack,
+  slut: diagram.kopplingslinje.slut,
+} as const;
 
 export const GEOMETRI = {
   /** Luft ovanför översta gridlinjen (prototypens m.t). */
   marginalTopp: rum[3],
   /** Höjden under plotytan: axelstreck och x-etiketter (prototypens m.b). */
-  axelrad: 34,
+  axelrad: diagram.xAxel.hojd,
   /** x-etikettens baslinje under plotytans underkant. */
-  xEtikettBaslinje: 20,
+  xEtikettBaslinje: diagram.xAxel.etikettBaslinje,
   /** Tickvärdet slutar så här långt till vänster om plotytan. */
   yEtikettLuft: 10,
   /** Plotytan börjar så här långt efter bredaste tickvärdet. */
@@ -43,9 +48,13 @@ export const GEOMETRI = {
   /** Klippytan sticker ut så här mycket så att slutpunkter och avvikelsemarkörer (7 px) inte skärs av. */
   klippMarginal: diagram.roll.forvantat.markor + 1,
   /** Punkter i överlägget (hjälplinjens punkter för visade serier). */
-  overlaggPunkt: { radie: 4, kant: 1.5 },
+  overlaggPunkt: diagram.overlaggPunkt,
   /** Tooltipen står så här långt från hjälplinjen. */
   tooltipAvstand: rum[4],
+  /** I smala diagram står tooltipen så här långt under ytan (plotytan med axel, eller panelen). */
+  tooltipUnder: rum[2],
+  /** Under denna diagrambredd står tooltipen under plotytan i full bredd (stilguiden 6.8). */
+  tooltipHelBreddUnder: diagram.tooltip.helBreddUnder,
   /** Vit kant runt tillfälliga texter ovanpå linjer. */
   halo: 4,
   /** Baslinjeförskjutning som centrerar 13 px-text på ett y. */
@@ -54,13 +63,15 @@ export const GEOMETRI = {
   seriebrottOver: 4,
   /** Avvikelseetikettens förskjutning från punkten. */
   avvikelseEtikett: { dx: 10, dy: 4 },
-  /** Fler avvikelser än så får markörer men inga korta etiketter (dag- och veckodata). */
+  /** Fler avvikelser än så får markörer men inga korta etiketter (stilguiden 6.8, täta serier). */
   avvikelseEtiketterMax: 8,
   /** Pekskärm: lyftradien är större än musens (WCAG 2.5.8, 24 px träffyta). */
-  pekskarmLyft: 12,
+  pekskarmLyft: diagram.traffyta.lyftPekskarm,
+  /** Fokus, referens och fästa serier räknas som så här mycket närmare. */
+  foretrade: diagram.traffyta.foretrade,
   /** Under denna diagrambredd: färre gridlinjer och kortade namn. */
   smal: diagram.etikett.kortaUnder,
-  /** Textstorlek i diagram (typ.roll.not) och för "ny metod" (typ.minsta). */
+  /** Textstorlek i diagram (typ.roll.not) och för "ny metod" och "topp 3" (typ.minsta). */
   textStorlek: typ.roll.not.storlek,
   textStorlekLiten: typ.minsta,
 } as const;

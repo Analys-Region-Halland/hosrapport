@@ -36,6 +36,11 @@ export function RitaForm({ f }: { f: Form }): ReactNode {
         </text>
       );
     }
+    case "rekt":
+      return (
+        <rect x={f.x} y={f.y} width={f.b} height={f.h} rx={f.radie} fill={f.farg}
+          data-serie={f.serieId} data-index={f.index} />
+      );
   }
 }
 

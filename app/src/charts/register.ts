@@ -11,9 +11,17 @@
 //             pekar- och tangenthändelser, tooltip och fästa serier. Rita får
 //             `aktiv` och ritar då bara ett överlägg; de statiska lagren är
 //             memoiserade på `scen` och ritas aldrig om vid hovring.
+//   interaktion  (tillägg i WP3) träffregel, tangentbord och tooltip för
+//             typen, byggd på scenen (karna/interaktion.ts). Utan interaktion
+//             (minidiagrammet) är diagrammet en bild utan fokus.
+//
+// Tillägg i WP3 (valfria, bryter inget): formen "rekt" (staplar,
+// statusmarkörens platta), Scen.paneler för små multiplar och
+// Renderare.interaktion.
 
 import type { ComponentType } from "react";
 import type { Tema } from "../design/tema";
+import type { Interaktion } from "./karna/interaktion";
 import type { ChartSpec, DiagramTyp } from "./spec";
 import { linje } from "./typer/linje";
 import { rangordning } from "./typer/rangordning";
@@ -38,6 +46,7 @@ export type Form =
   | { typ: "punkt"; serieId: string; x: number; y: number; r: number; farg: string }
   | { typ: "markor"; serieId: string; form: "upp" | "ned" | "romb"; x: number; y: number; storlek: number; farg: string }
   | { typ: "streck"; x1: number; y1: number; x2: number; y2: number; farg: string; bredd: number; streck: string | null }
+  | { typ: "rekt"; serieId?: string; index?: number; x: number; y: number; b: number; h: number; farg: string; radie?: number }
   | {
       typ: "text"; serieId?: string; x: number; y: number; text: string; farg: string;
       vikt: number; storlek: number; ankare: "start" | "middle" | "end"; halo: boolean;
@@ -75,10 +84,25 @@ export interface Stopp {
   varde: number;
 }
 
-/** Den period och serie som är aktiv under pekaren eller tangentbordet. */
+/**
+ * Den period och serie som är aktiv under pekaren eller tangentbordet.
+ * Rangordning: `index` är raden (uppifrån) och `serieId` radens serie.
+ * Små multiplar: `index` är perioden (samma i alla paneler) och `serieId`
+ * panelens serie.
+ */
 export interface AktivPunkt {
   index: number;
   serieId: string | null;   // lyft serie, null = bara perioden
+}
+
+/** En panel i små multiplar (tillägg i WP3). Alla mått i svg:ns koordinater. */
+export interface ScenPanel {
+  serieId: string;          // panelens fokusserie
+  enhetId: string;
+  x: number; y: number; b: number; h: number;     // hela panelen, namnraden och axeln inräknade
+  plot: { x: number; y: number; b: number; h: number };
+  namn: { text: string; x: number; y: number; b: number; h: number };   // namnets yta: pekarmål för nedborrning
+  stopp: Stopp[];           // panelens serie och referensen per period (serieId som i specen)
 }
 
 export interface Scen {
@@ -89,6 +113,7 @@ export interface Scen {
   lager: Lager[];             // ritordning: se LagerId (karna/former.tsx: LAGERORDNING)
   etiketter: Etikett[];       // färdigplacerade efter kollisionslösning
   stopp: Stopp[];             // pekar- och tangentbordsmål per period och serie
+  paneler?: ScenPanel[];      // små multiplar: panelerna i visningsordning
 }
 
 export interface Renderare {
@@ -97,6 +122,8 @@ export interface Renderare {
   hojd(bredd: number, spec: ChartSpec): number;
   layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, tema: Tema): Scen;   // ren funktion
   Rita: ComponentType<{ scen: Scen; spec: ChartSpec; aktiv: AktivPunkt | null; fasta: string[] }>;
+  /** Typens träffregel, tangentbord och tooltip (karna/interaktion.ts). Saknas = ingen interaktion. */
+  interaktion?: Interaktion;
 }
 
 export const RENDERARE: Record<DiagramTyp, Renderare> = {

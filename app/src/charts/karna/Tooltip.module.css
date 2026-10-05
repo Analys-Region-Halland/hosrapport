@@ -87,4 +87,16 @@
     width: 0;
     min-width: 100%;
   }
+
+  /* Smala diagram (stilguiden 6.8, tooltip på mobil): under plotytan i full
+     bredd. Bredden sätts från diagrammets bredd; namnen får brytas. */
+  .helBredd {
+    min-width: 0;
+    box-sizing: border-box;
+    white-space: normal;
+  }
+
+  .helBredd .tabell {
+    inline-size: 100%;
+  }
 }

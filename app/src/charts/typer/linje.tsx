@@ -16,6 +16,7 @@ import { kompaktHojd, standardHojd, type Tema } from "../../design/tema";
 import { hogermarginal, placeraEtiketter, type EtikettUnderlag } from "../karna/etiketter";
 import { arFastbar } from "../karna/fasta";
 import { GEOMETRI } from "../karna/geometri";
+import { tidsinteraktion } from "../karna/interaktion";
 import { textbredd } from "../karna/matt";
 import { RitaTid } from "../karna/Overlagg";
 import { skarp } from "../karna/ritstil";
@@ -239,19 +240,22 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
 
   // Punkter utanför förväntat intervall: triangel ovan eller under, romb långt
   // utanför. Vilka punkter som är utanför bestäms av fokuspunkternas signal
-  // och markeras bara när specen har ett förväntat intervall.
+  // och markeras bara när specen har ett förväntat intervall. Täta serier
+  // (dag- och veckodata, stilguiden 6.8): bara Avvikelse (romb) och inga korta
+  // etiketter; Bevaka syns i tooltipen.
   const forv = spec.serier.find((s) => s.roll === "forvantat");
   if (forv && fokus) {
     const iv = new Map((forv.intervall ?? []).map((d) => [axel.index.get(d.x.slice(0, 10)), d]));
     const pi = byggPunktIndex(spec, axel);
+    const tat = axel.vy === "dag" || axel.vy === "vecka";
     const avvikande: { i: number; p: Punkt; status: "gul" | "rod" }[] = [];
     pi.get(fokus.id)?.forEach((d, i) => {
       if (!d || d.punkt.varde === null) return;
       const st = forvantatStatus(d.punkt);
-      if (st === "gul" || st === "rod") avvikande.push({ i, p: d.punkt, status: st });
+      if (st === "rod" || (st === "gul" && !tat)) avvikande.push({ i, p: d.punkt, status: st });
     });
     const upptagna: [number, number, number, number][] = [];
-    const etiketter = avvikande.length <= GEOMETRI.avvikelseEtiketterMax;
+    const etiketter = !tat && avvikande.length <= GEOMETRI.avvikelseEtiketterMax;
     for (const a of avvikande) {
       const val = a.p.varde as number;
       const cx = x(a.i), cy = y(val);
@@ -314,4 +318,5 @@ export const linje: Renderare = {
   hojd: (bredd, spec) => (spec.hojdklass === "kompakt" ? kompaktHojd(bredd) : standardHojd(bredd)),
   layout,
   Rita: RitaTid,
+  interaktion: tidsinteraktion(),
 };

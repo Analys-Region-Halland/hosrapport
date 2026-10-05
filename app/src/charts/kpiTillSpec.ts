@@ -9,11 +9,13 @@
 //   enheterRang   de underliggande enheterna rangordnade
 // Inga legender och inga zoner: varje serie som ska ha namn står i `etiketter`.
 
-import type { KapitelModell, KpiModell, Not, Punkt, TalFormat } from "../data/modell";
+import type { Enhet, KapitelModell, KpiModell, Niva, Not, Punkt, TalFormat } from "../data/modell";
 import { platser, sistaMedVarde } from "../data/normalisera";
-import { UNDERTRYCKT, antalILoptext, period as periodText, tal } from "../design/format";
+import { UNDERTRYCKT, antalILoptext, tal } from "../design/format";
 import type { ChartSpec, SpecKontext, SpecSerie, VisningId } from "./spec";
-import { antalMeningar, figurTitel, figurUndertitel, luckText, miniSammanfattning, textsammanfattning, versal } from "./text";
+import {
+  antalMeningar, figurTitel, figurUndertitel, luckText, mattPeriod, miniSammanfattning, periodKort, textsammanfattning, versal,
+} from "./text";
 import {
   NIVA_ORD, STATUS_ORD, barnNiva, enhet, giltigVisning, indexera, kortNamn, panelEnheter, punkter, rangordning,
   referensForEnheter, somIndex, tillgangliga, underlag,
@@ -65,6 +67,9 @@ function jamforbaraFor(u: Underlag, ids: string[], index: number): ChartSpec["ja
     .sort((a, b) => a.namn.localeCompare(b.namn, "sv"));
 }
 
+/** De jämförbaras nivå för "+ Jämför med {etikett}": regioner, eller fokusenhetens syskon på samma nivå. */
+const jamforNivaFor = (niva: Niva): NonNullable<ChartSpec["jamforNiva"]> => ({ id: niva, etikett: NIVA_ORD[niva].en });
+
 /** Noter för tidsvisningar: seriebrott inom perioden, luckor och undertryckta värden. */
 function tidsnoter(u: Underlag, visadeIds: string[]): Not[] {
   const ut: Not[] = [];
@@ -102,7 +107,7 @@ const bas = (u: Underlag, visning: VisningId) => {
   };
 };
 
-const periodKolumner = (u: Underlag) => u.perioder.map((p) => periodText(p, u.vy, "kort"));
+const periodKolumner = (u: Underlag) => u.perioder.map((p) => periodKort(p, u.vy));
 
 // ── Över tid ──
 
@@ -166,6 +171,7 @@ function linjeRegioner(u: Underlag): ChartSpec {
     typ: "linje",
     etiketter,
     jamforbara: jamforbaraFor(u, u.regioner, iSenaste),
+    jamforNiva: jamforNivaFor("region"),
     serier,
     x: { typ: "tid", noll: false, format: f },
     y: { typ: "linjar", noll: false, format: f },
@@ -202,7 +208,7 @@ function linjeForvantat(u: Underlag): ChartSpec {
       { serieId: "forvantat", text: "Förväntat intervall" },
       ...fasta.map((id) => ({ serieId: id, text: kortNamn(enhet(u.kap, id)) })),
     ],
-    ...(u.syskon.length ? { jamforbara: jamforbaraFor(u, u.syskon.map((e) => e.id), Math.max(0, sistaMedVarde(p))) } : {}),
+    ...(u.syskon.length ? { jamforbara: jamforbaraFor(u, u.syskon.map((e) => e.id), Math.max(0, sistaMedVarde(p))), jamforNiva: jamforNivaFor(u.fokus.niva) } : {}),
     serier,
     x: { typ: "tid", noll: false, format: f },
     y: { typ: "linjar", noll: false, format: f },
@@ -210,7 +216,7 @@ function linjeForvantat(u: Underlag): ChartSpec {
     tabell: {
       caption: b.titel,
       kolumner: ["Period", u.fokusNamn, "Förväntat värde", "Intervall 80 %, nedre", "Intervall 80 %, övre", "Läge"],
-      rader: p.map((q) => [periodText(q.period, u.vy, "kort"), cell(q), q.yhat ?? null, q.lo80 ?? null, q.hi80 ?? null, q.signal && q.varde !== null ? STATUS_ORD[q.signal] : null]),
+      rader: p.map((q) => [periodKort(q.period, u.vy), cell(q), q.yhat ?? null, q.lo80 ?? null, q.hi80 ?? null, q.signal && q.varde !== null ? STATUS_ORD[q.signal] : null]),
     },
     hojdklass: "standard",
   };
@@ -237,7 +243,7 @@ function stapelEllerLinje(u: Underlag): ChartSpec {
     ...b,
     typ: stapel ? "stapel" : "linje",
     etiketter,
-    ...(!stapel && u.syskon.length ? { jamforbara: jamforbaraFor(u, u.syskon.map((e) => e.id), Math.max(0, sistaMedVarde(p))) } : {}),
+    ...(!stapel && u.syskon.length ? { jamforbara: jamforbaraFor(u, u.syskon.map((e) => e.id), Math.max(0, sistaMedVarde(p))), jamforNiva: jamforNivaFor(u.fokus.niva) } : {}),
     serier,
     x: { typ: "tid", noll: false, format: f },
     y: { typ: "linjar", noll: stapel, format: f },
@@ -245,7 +251,7 @@ function stapelEllerLinje(u: Underlag): ChartSpec {
     tabell: {
       caption: b.titel,
       kolumner: ["Period", u.fokusNamn, ...(ref ? [enhet(u.kap, ref).namn] : [])],
-      rader: p.map((q, i) => [periodText(q.period, u.vy, "kort"), cell(q), ...(ref ? [cell(punkter(u, ref)[i])] : [])]),
+      rader: p.map((q, i) => [periodKort(q.period, u.vy), cell(q), ...(ref ? [cell(punkter(u, ref)[i])] : [])]),
     },
     hojdklass: "standard",
   };
@@ -287,7 +293,7 @@ function rangSpec(u: Underlag, visning: "rang" | "enheterRang"): ChartSpec {
   const noter: Not[] = [];
   if (r.utanVarde > 0) {
     const ord = visning === "rang" ? NIVA_ORD.region : NIVA_ORD[barnNiva(u)];
-    noter.push({ typ: "fotnot", text: `${versal(r.utanVarde === 1 ? `en ${ord.en}` : `${antalILoptext(r.utanVarde)} ${ord.flera}`)} saknar värde ${periodText(r.period, u.vy, "kort")}.` });
+    noter.push({ typ: "fotnot", text: `${versal(r.utanVarde === 1 ? `en ${ord.en}` : `${antalILoptext(r.utanVarde)} ${ord.flera}`)} saknar värde ${periodKort(r.period, u.vy)}.` });
   }
   if (r.rader.some((x) => x.undertryckt)) noter.push(...undertrycktNot(u, r.rader.map((x) => x.enhetId)));
 
@@ -302,7 +308,7 @@ function rangSpec(u: Underlag, visning: "rang" | "enheterRang"): ChartSpec {
     ...b,
     typ: "rangordning",
     etiketter,
-    ...(visning === "rang" ? { jamforbara: jamforbaraFor(u, u.regioner, r.index) } : {}),
+    ...(visning === "rang" ? { jamforbara: jamforbaraFor(u, u.regioner, r.index), jamforNiva: jamforNivaFor("region") } : {}),
     serier,
     x: { typ: "linjar", noll: false, format: f },
     y: { typ: "kategori", noll: false, format: f },
@@ -315,15 +321,35 @@ function rangSpec(u: Underlag, visning: "rang" | "enheterRang"): ChartSpec {
     },
     hojdklass: "rangordning",
     ...(harPlats ? { platsAv: [rader.length] } : {}),
+    ...(r.period ? { period: { iso: r.period, vy: u.vy, text: periodKort(r.period, u.vy) } } : {}),
   };
 }
 
 // ── Små multiplar ──
 
+/**
+ * Panelernas visningsordning (stilguiden 6.6): bäst först enligt indikatorns
+ * riktning, efter värde (störst först) för neutrala mått. Senaste värdet med
+ * värde avgör; paneler utan värde sist.
+ */
+function ordnaPaneler(u: Underlag, enheter: Enhet[]): Enhet[] {
+  const senaste = (id: string) => {
+    const p = punkter(u, id);
+    const i = sistaMedVarde(p);
+    return i < 0 ? null : (p[i].varde as number);
+  };
+  const tecken = u.kpi.riktning === "lag" ? 1 : -1;
+  return [...enheter].sort((a, b) => {
+    const va = senaste(a.id), vb = senaste(b.id);
+    if (va === null || vb === null) return (va === null ? 1 : 0) - (vb === null ? 1 : 0) || a.namn.localeCompare(b.namn, "sv");
+    return tecken * (va - vb) || a.namn.localeCompare(b.namn, "sv");
+  });
+}
+
 function smaMultiplar(u: Underlag): ChartSpec {
   const index = indexera(u);
   const f = index ? INDEXFORMAT : u.kpi.format;
-  const paneler = panelEnheter(u);
+  const paneler = ordnaPaneler(u, panelEnheter(u));
   const visa = (id: string) => (index ? somIndex(punkter(u, id)) : punkter(u, id));
   const ref = referensForEnheter(u) && !index ? u.fokusId : undefined;
 
@@ -355,7 +381,7 @@ function smaMultiplar(u: Underlag): ChartSpec {
       caption: b.titel,
       kolumner: ["Period", ...paneler.map((e) => kortNamn(e)), ...(ref ? [u.fokusNamnLang] : [])],
       rader: u.perioder.map((p, i) => [
-        periodText(p, u.vy, "kort"),
+        periodKort(p, u.vy),
         ...paneler.map((e) => cell(visa(e.id)[i])),
         ...(ref ? [cell(punkter(u, ref)[i])] : []),
       ]),
@@ -380,11 +406,17 @@ export function kpiTillSpec(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext
   }
 }
 
-/** Minidiagrammet i översiktstabellen (stilguiden 5.8, 6.6): bara fokusserien, aldrig fristående. */
+/**
+ * Minidiagrammet i översiktstabellen (stilguiden 5.8, 6.6): bara fokusserien,
+ * aldrig fristående. Perioder som ingen serie i indikatorn har (inte mätta,
+ * t.ex. åren mellan enkäter) tas bort, så att linjen inte bryts där; riktiga
+ * luckor står kvar som null.
+ */
 export function minidiagramSpec(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext): ChartSpec {
   const u = underlag(kpi, kap, { ...ctx, fasta: [], fristaende: false });
   const f = kpi.format;
-  const p = punkter(u, u.fokusId);
+  const matt = mattPeriod(u);
+  const p = punkter(u, u.fokusId).filter((_, i) => matt(i));
   return {
     id: [kpi.id, "mini", u.fokusId !== kpi.fokus ? u.fokusId : ""].filter(Boolean).join(":"),
     typ: "minidiagram",
@@ -399,7 +431,7 @@ export function minidiagramSpec(kpi: KpiModell, kap: KapitelModell, ctx: SpecKon
     tabell: {
       caption: kpi.namn,
       kolumner: ["Period", u.fokusNamn],
-      rader: p.map((q) => [periodText(q.period, u.vy, "kort"), cell(q)]),
+      rader: p.map((q) => [periodKort(q.period, u.vy), cell(q)]),
     },
     hojdklass: "minidiagram",
   };

@@ -7,6 +7,12 @@
 // indikatorns riktning. Hallands plats följer `rank` i datan, som R räknar på
 // oavrundade värden.
 //
+// Tillägg i WP3 (valfria fält): `jamforNiva` säger vilken nivå de jämförbara
+// serierna har, så att figuren skriver "+ Jämför med region" eller "+ Jämför
+// med sjukhus" utan att gissa; `period` är rangordningens period (en period,
+// som tooltipen skriver i rubriken). Periodtexter i undertitel, noter och
+// tabellhuvud har hårt mellanslag (U+00A0) så att "apr 2024" inte bryts.
+//
 // Så fyller kpiTillSpec serierna per typ:
 //   linje         en serie per linje, `punkter` på ett gemensamt periodrutnät
 //                 (samma längd i alla serier, luckor som varde: null).
@@ -18,14 +24,16 @@
 //                 "grans" (topp 3) har `varde` = antal rader ovanför linjen.
 //   stapel        fokus med `punkter`.
 //   smaMultiplar  en fokusserie per panel (`enhetId` = panelens enhet) och högst en
-//                 referens som ritas i alla paneler. y.doman är delad.
-//   minidiagram   fokus med `punkter`.
+//                 referens som ritas i alla paneler. y.doman är delad. `paneler`
+//                 står i visningsordning: bäst först enligt riktningen.
+//   minidiagram   fokus med `punkter`, bara perioder som mättes (en enkät
+//                 vartannat år ger inga tomma år).
 //
 // Tabellen: tal är oformaterade värden i y.format (samma format på båda
 // axlarna); perioder, namn, plats och status är text; null = saknas ("–"),
 // ".." = undertryckt. Figurens titel är caption, utom för minidiagrammet.
 
-import type { Not, Punkt, Status, TalFormat, VyId } from "../data/modell";
+import type { Niva, Not, Punkt, Status, TalFormat, VyId } from "../data/modell";
 
 export type DiagramTyp = "linje" | "rangordning" | "stapel" | "smaMultiplar" | "minidiagram";
 export type SerieRoll = "fokus" | "referens" | "kontext" | "markerad" | "forvantat" | "grans" | "mal";
@@ -57,6 +65,7 @@ export interface ChartSpec {
   undertitel: string;                          // ≤ 2 meningar
   etiketter: { serieId: string; text: string }[];   // vilka serier som får namn vid linjeslut (stilguiden 6.4); inga legender
   jamforbara?: { enhetId: string; namn: string; senaste: number | null }[];   // underlag för "+ Jämför med …"
+  jamforNiva?: { id: Niva; etikett: string };  // de jämförbaras nivå: "+ Jämför med {etikett}" ("region", "sjukhus" …)
   serier: SpecSerie[];
   paneler?: { enhetId: string; titel: string; status?: Status }[];
   x: Axel; y: Axel;
@@ -66,6 +75,7 @@ export interface ChartSpec {
   tabell: { caption: string; kolumner: string[]; rader: (string | number | null)[][]; fokusRad?: number };
   hojdklass: "standard" | "rangordning" | "kompakt" | "minidiagram";
   platsAv?: number[];                          // nämnaren i "plats r av n" per period (rangordning: en period)
+  period?: { iso: string; vy: VyId; text: string };   // rangordningens period; text som i undertiteln ("2025", "mar 2026")
 }
 
 export interface SpecKontext {

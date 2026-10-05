@@ -11,21 +11,25 @@
 // delar det med jämför-raden och rangordningen) eller okontrollerat (bara
 // fasta som startvärde, t.ex. i grafprov). Specen bör vara memoiserad hos
 // anroparen; en ny spec-identitet ritar om de statiska lagren.
+//
+// Tillägg i WP3: träffregel, tangentbord och tooltip kommer från renderarens
+// `interaktion` (karna/interaktion.ts: tid, rader eller paneler), så att alla
+// graftyper delar samma händelser, samma tooltip och samma tangentbordsmönster.
+// Renderare utan interaktion (minidiagrammet) ritas som en bild utan fokus.
+// Nedborrning: `onFokus` (eller NedborrningKontext runt figuren) anropas vid
+// klick på en panels namn och vid Enter i en panel.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { tema } from "../design/tema";
 import { useLager } from "../ui/lager";
 import { arFastbar, fastNyckel, tillampaFasta, vaxlaFast } from "./karna/fasta";
-import {
-  byggTraffmodell, iPlotytan, PEKSKARMSREGLER, pekarlage, startlage, tangent,
-} from "./karna/interaktion";
+import { GEOMETRI } from "./karna/geometri";
 import { nollstallMatt } from "./karna/matt";
+import { NedborrningKontext } from "./karna/nedborrning";
 import { RitDelKontext } from "./karna/ritdel";
-import { tidsaxel } from "./karna/skalor";
 import { Tooltip } from "./karna/Tooltip";
-import { byggPunktIndex, tooltipModell, type Inmatning } from "./karna/tooltipModell";
-import { STANDARDREGLER } from "./karna/traff";
+import type { Inmatning } from "./karna/tooltipModell";
 import { RENDERARE, type AktivPunkt } from "./register";
 import type { ChartSpec } from "./spec";
 import s from "./Diagram.module.css";
@@ -34,6 +38,8 @@ export interface DiagramProps {
   spec: ChartSpec;
   fasta?: string[];
   onFasta?(ids: string[]): void;
+  /** Nedborrning (stilguiden 6.7): klick på en panels namn eller Enter i en panel. */
+  onFokus?(enhetId: string): void;
   /** Fast bredd i px i stället för mätning. Används vid SSR och i tester. */
   bredd?: number;
 }
@@ -97,11 +103,25 @@ function useBredd(ram: React.RefObject<HTMLDivElement | null>, fast: number | un
 const samma = (a: AktivPunkt | null, b: AktivPunkt | null) =>
   a === b || (a !== null && b !== null && a.index === b.index && a.serieId === b.serieId);
 
-export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: DiagramProps) {
+/** Etikett eller panelnamn under pekaren: serie-id ur data-etikett eller data-panelnamn. */
+function etikettUnder(e: { target: EventTarget }): string | null {
+  const el = e.target instanceof Element ? e.target.closest("[data-etikett],[data-panelnamn]") : null;
+  return el?.getAttribute("data-etikett") ?? el?.getAttribute("data-panelnamn") ?? null;
+}
+
+/** Panelnamnet under pekaren (små multiplar): panelens serie-id. */
+function panelnamnUnder(e: { target: EventTarget }): string | null {
+  const el = e.target instanceof Element ? e.target.closest("[data-panelnamn]") : null;
+  return el?.getAttribute("data-panelnamn") ?? null;
+}
+
+export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBredd }: DiagramProps) {
   const ram = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const bredd = useBredd(ram, fastBredd);
   const typsnitt = useTypsnitt();
+  const kontextFokus = useContext(NedborrningKontext);
+  const nedborrning = onFokus ?? kontextFokus ?? undefined;
 
   // Fästa serier, kontrollerat eller okontrollerat
   const [egnaFasta, setEgnaFasta] = useState<string[]>(fasta ?? []);
@@ -116,9 +136,12 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
     () => (bredd !== null && hojd !== null && typsnitt ? r.layout(effSpec, { bredd, hojd }, tema) : null),
     [r, effSpec, bredd, hojd, typsnitt],
   );
-  const modell = useMemo(() => (scen ? byggTraffmodell(scen, effSpec) : null), [scen, effSpec]);
-  const axel = useMemo(() => tidsaxel(effSpec), [effSpec]);
-  const punkter = useMemo(() => byggPunktIndex(effSpec, axel), [effSpec, axel]);
+  const kanBorra = !!nedborrning;
+  const modell = useMemo(
+    () => (scen && r.interaktion ? r.interaktion(scen, effSpec, { nedborrning: kanBorra }) : null),
+    [r, scen, effSpec, kanBorra],
+  );
+  const interaktiv = !!r.interaktion;
 
   // Aktiv period och serie, och hur den valdes (styr tooltipens uppmaning)
   const [aktiv, setAktiv] = useState<AktivPunkt | null>(null);
@@ -126,8 +149,8 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
   const senastePekare = useRef<string>("mouse");
   const tryckt = useRef<string | null>(null);
 
-  // Scenen kan ha ändrats så att den aktiva perioden saknas
-  const giltigAktiv = aktiv && modell?.perioder.some((p) => p.index === aktiv.index) ? aktiv : null;
+  // Scenen kan ha ändrats så att den aktiva punkten saknas
+  const giltigAktiv = aktiv && modell?.giltig(aktiv) ? aktiv : null;
 
   const vaxla = (serieId: string) => {
     const serie = effSpec.serier.find((x) => x.id === serieId);
@@ -137,14 +160,14 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
     else setEgnaFasta(ny);
   };
 
+  const borra = (serieId: string) => {
+    if (!nedborrning) return;
+    nedborrning(effSpec.serier.find((x) => x.id === serieId)?.enhetId ?? serieId);
+  };
+
   const lage = (e: { clientX: number; clientY: number }) => {
     const b = svg.current?.getBoundingClientRect();
     return b ? { px: e.clientX - b.left, py: e.clientY - b.top } : null;
-  };
-
-  const etikettUnder = (e: { target: EventTarget }): string | null => {
-    const el = e.target instanceof Element ? e.target.closest("[data-etikett]") : null;
-    return el?.getAttribute("data-etikett") ?? null;
   };
 
   type Traff =
@@ -152,17 +175,16 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
     | { slag: "plot"; px: number; py: number }
     | { slag: "utanfor" };
 
-  /** Vad pekaren står på: en etikett, plotytan eller något annat (axlar, marginaler). */
+  /** Vad pekaren står på: en etikett eller ett panelnamn, plotytan eller något annat (axlar, marginaler). */
   const vidPekare = (e: PointerEvent<SVGSVGElement>): Traff => {
     if (!modell) return { slag: "utanfor" };
     const etikett = etikettUnder(e);
     if (etikett !== null) {
-      // Etiketten lyfter serien vid dess sista värde (linjeslutet)
-      const index = modell.stoppPerSerie.get(etikett)?.at(-1)?.index ?? modell.perioder.at(-1)?.index;
-      if (index !== undefined) return { slag: "etikett", aktiv: { index, serieId: etikett } };
+      const a = modell.etikett(etikett);
+      if (a) return { slag: "etikett", aktiv: a };
     }
     const l = lage(e);
-    if (!l || !iPlotytan(modell, l.px, l.py)) return { slag: "utanfor" };
+    if (!l || !modell.inom(l.px, l.py)) return { slag: "utanfor" };
     return { slag: "plot", ...l };
   };
 
@@ -174,7 +196,7 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
     if (traff.slag === "utanfor") { setAktiv(null); return; }
     if (traff.slag === "etikett") { setAktiv((nu) => (samma(nu, traff.aktiv) ? nu : traff.aktiv)); return; }
     setAktiv((nu) => {
-      const ny = pekarlage(modell, traff.px, traff.py, nu, STANDARDREGLER);
+      const ny = modell.pekare(traff.px, traff.py, nu, false);
       return samma(nu, ny) ? nu : ny;
     });
   };
@@ -188,9 +210,12 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
   const onPointerDown = (e: PointerEvent<SVGSVGElement>) => {
     senastePekare.current = e.pointerType;
     if (e.pointerType !== "touch" || !modell) return;
+    // Tryck på en panels namn borrar ned direkt (namnet är en länk)
+    const namn = panelnamnUnder(e);
+    if (namn !== null && nedborrning) { borra(namn); return; }
     const traff = vidPekare(e);
     if (traff.slag === "utanfor") { setAktiv(null); tryckt.current = null; return; }
-    const ny = traff.slag === "etikett" ? traff.aktiv : pekarlage(modell, traff.px, traff.py, null, PEKSKARMSREGLER);
+    const ny = traff.slag === "etikett" ? traff.aktiv : modell.pekare(traff.px, traff.py, null, true);
     setSatt("peka");
     if (ny?.serieId && ny.serieId === tryckt.current) {
       tryckt.current = null;
@@ -207,6 +232,8 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
 
   const onClick = (e: MouseEvent<SVGSVGElement>) => {
     if (senastePekare.current === "touch") return;
+    const namn = panelnamnUnder(e);
+    if (namn !== null) { borra(namn); return; }
     const etikett = etikettUnder(e);
     if (etikett !== null) { vaxla(etikett); return; }
     if (giltigAktiv?.serieId) vaxla(giltigAktiv.serieId);
@@ -214,19 +241,20 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
 
   const onKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
     if (!modell) return;
-    const utfall = tangent(e.key, modell, effSpec, giltigAktiv);
+    const utfall = modell.tangent(e.key, giltigAktiv);
     if (!utfall.hanterad) return;
     e.preventDefault();
     if (e.key === "Escape") e.stopPropagation();
     setSatt("tangent");
     setAktiv(utfall.aktiv);
     if (utfall.vaxla) vaxla(utfall.vaxla);
+    if (utfall.fokus && nedborrning) nedborrning(utfall.fokus);
   };
 
   const onFocus = () => {
     if (!modell || giltigAktiv) return;
     setSatt("tangent");
-    setAktiv(startlage(modell, effSpec));
+    setAktiv(modell.start());
   };
 
   const onBlur = () => setAktiv(null);
@@ -250,16 +278,16 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
   }, [satt, aktiv]);
 
   const tooltip = useMemo(
-    () => (giltigAktiv ? tooltipModell(effSpec, axel, punkter, giltigAktiv, satt) : null),
-    [giltigAktiv, effSpec, axel, punkter, satt],
+    () => (giltigAktiv && modell ? modell.tooltip(giltigAktiv, satt) : null),
+    [giltigAktiv, modell, satt],
   );
-  const xAktiv = giltigAktiv ? modell?.perioder.find((p) => p.index === giltigAktiv.index)?.x : undefined;
   const lyftSerie = giltigAktiv?.serieId ? effSpec.serier.find((x) => x.id === giltigAktiv.serieId) : undefined;
   const hand = !!lyftSerie && arFastbar(lyftSerie);
 
   const Rita = r.Rita;
   return (
-    <div ref={ram} className={s.ram} data-diagram={spec.id} style={{ minHeight: hojd ?? undefined }}>
+    <div ref={ram} className={s.ram} data-diagram={spec.id} data-typ={spec.typ}
+      data-nedborrning={nedborrning ? "" : undefined} style={{ minHeight: hojd ?? undefined }}>
       {scen && (
         <svg
           ref={svg}
@@ -269,16 +297,16 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
           viewBox={`0 0 ${scen.bredd} ${scen.hojd}`}
           role="img"
           aria-label={spec.sammanfattning}
-          tabIndex={0}
+          tabIndex={interaktiv ? 0 : undefined}
           style={{ cursor: hand ? "pointer" : "default" }}
-          onPointerMove={onPointerMove}
-          onPointerLeave={onPointerLeave}
-          onPointerDown={onPointerDown}
-          onMouseDown={onMouseDown}
-          onClick={onClick}
-          onKeyDown={onKeyDown}
-          onFocus={onFocus}
-          onBlur={onBlur}
+          onPointerMove={interaktiv ? onPointerMove : undefined}
+          onPointerLeave={interaktiv ? onPointerLeave : undefined}
+          onPointerDown={interaktiv ? onPointerDown : undefined}
+          onMouseDown={interaktiv ? onMouseDown : undefined}
+          onClick={interaktiv ? onClick : undefined}
+          onKeyDown={interaktiv ? onKeyDown : undefined}
+          onFocus={interaktiv ? onFocus : undefined}
+          onBlur={interaktiv ? onBlur : undefined}
         >
           <RitDelKontext.Provider value="statisk">
             <Rita scen={scen} spec={effSpec} aktiv={null} fasta={aktuellaFasta} />
@@ -300,10 +328,10 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
           </RitDelKontext.Provider>
         </svg>
       )}
-      {scen && tooltip && xAktiv !== undefined && (
-        <Tooltip modell={tooltip} x={xAktiv} plot={scen.plot} bredd={scen.bredd} />
+      {scen && tooltip && (
+        <Tooltip lage={tooltip} bredd={scen.bredd} helBredd={scen.bredd < GEOMETRI.tooltipHelBreddUnder} />
       )}
-      <p className={s.sr} aria-live="polite" data-live="">{tooltip?.live ?? ""}</p>
+      {interaktiv && <p className={s.sr} aria-live="polite" data-live="">{tooltip?.modell.live ?? ""}</p>}
     </div>
   );
 }

@@ -212,7 +212,7 @@ export const vilaUttryck = `(async () => {
 /**
  * Öppnar en ny flik med fast viewport (ställs in före navigeringen och ändras
  * aldrig), navigerar och kör vyns steg. Returnerar { k, stang }.
- *   steg: { vanta: "selektor" } | { klicka: "selektor", index } | { vila: ms }
+ *   steg: { vanta: "selektor" } | { klicka: "selektor", index } | { vila: ms } | { hovra: "selektor", fx, fy }
  */
 export async function oppnaSida(adress, { bredd, hojd, steg = [], konsol = null }) {
   const url = /^(https?|file):/.test(adress) ? adress : `${BAS_URL}${adress}`;
@@ -241,6 +241,17 @@ export async function oppnaSida(adress, { bredd, hojd, steg = [], konsol = null 
         await k.utvardera(`(() => { const el = document.querySelectorAll(${JSON.stringify(s.klicka)})[${s.index ?? 0}];
           if (!el) throw new Error("hittade inte ${s.klicka.replace(/"/g, "'")}[${s.index ?? 0}]"); el.click(); return true; })()`);
       } else if (s.vila) await sov(s.vila);
+      else if (s.hovra) {
+        // Riktig mushändelse på andelen (fx, fy) av elementets yta (tillägg i WP3,
+        // för grafprovens hovring). Väntar först på typsnitt och ritning.
+        await k.utvardera(vilaUttryck);
+        const r = await k.utvardera(`(() => { const el = document.querySelector(${JSON.stringify(s.hovra)});
+          if (!el) throw new Error("hittade inte ${s.hovra.replace(/"/g, "'")}"); const b = el.getBoundingClientRect();
+          return { x: b.left + b.width * ${s.fx ?? 0.5}, y: b.top + b.height * ${s.fy ?? 0.5} }; })()`);
+        await k.skicka("Input.dispatchMouseEvent", { type: "mouseMoved", x: r.x - 12, y: r.y - 8, button: "none" });
+        await sov(80);
+        await k.skicka("Input.dispatchMouseEvent", { type: "mouseMoved", x: r.x, y: r.y, button: "none" });
+      }
     }
     await k.utvardera(vilaUttryck);
     await sov(1500);
