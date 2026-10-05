@@ -1,5 +1,5 @@
-/* Ram.module.css: platshållare för nya ramen (WP6 skriver om). Alla värden
-   hämtas ur CSS-variablerna från design/tema.ts. */
+/* Ram.module.css: rapportens ram, stilguiden 2.5 och 4.5. Alla värden ur
+   tema-variablerna. */
 @layer komponent {
   .ram {
     min-height: 100vh;
@@ -7,38 +7,58 @@
     color: var(--farg-black);
   }
 
+  /* Ett block ramen rullar till hamnar rum.5 under verktygsraden
+     (nav/scroll.ts RULLMARGINAL räknar med samma summa). Gäller även element
+     med id, så att sidornas egna ankare (t.ex. begreppen) inte hamnar under
+     den klibbiga verktygsraden. */
+  .ram :global([data-block]),
+  .ram :global([id]) {
+    scroll-margin-top: calc(var(--matt-verktygsrad) + var(--rum-5));
+  }
+
+  /* Fokus flyttas till blocket efter ett hopp; själva blocket ritar ingen ring */
+  .ram :global([data-block][tabindex="-1"]:focus),
+  .innehall:focus,
+  .start:focus {
+    outline: none;
+  }
+
+  .hoppa {
+    position: absolute;
+    top: 0;
+    left: var(--matt-marginal);
+    z-index: 20;
+    padding: var(--rum-2) var(--rum-4);
+    background: var(--farg-yta);
+    color: var(--farg-fokus);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    transform: translateY(-200%);
+  }
+
+  .hoppa:focus {
+    transform: none;
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
   .sida {
     max-width: var(--matt-sida);
     margin: 0 auto;
-    padding: var(--rum-8) var(--matt-marginal);
+    padding: var(--rum-8) var(--matt-marginal) var(--rum-10);
   }
 
-  .kicker {
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    font-weight: var(--typ-not-viktStark);
-    letter-spacing: var(--typ-kicker-sparr);
-    text-transform: uppercase;
-    color: var(--farg-fokus);
+  /* Desktop med innehållsförteckning: spalt matt.toc till vänster */
+  .ram[data-spalt] .sida {
+    display: grid;
+    grid-template-columns: var(--matt-toc) minmax(0, 1fr);
+    column-gap: var(--rum-7);
+    align-items: start;
   }
 
-  .titel {
-    margin-top: var(--rum-3);
-    font-family: var(--typ-titel-familj);
-    font-size: var(--typ-titel-storlek);
-    line-height: var(--typ-titel-radhojd);
-    font-weight: var(--typ-titel-vikt);
-    letter-spacing: var(--typ-titel-sparr);
-  }
-
-  .ingress {
-    margin-top: var(--rum-5);
-    max-width: var(--matt-text);
-    font-family: var(--typ-ingress-familj);
-    font-size: var(--typ-ingress-storlek);
-    line-height: var(--typ-ingress-radhojd);
-    font-weight: var(--typ-ingress-vikt);
-    color: var(--farg-text2);
+  .innehall {
+    min-width: 0;
   }
 }

@@ -1,0 +1,200 @@
+/* Innehall.module.css: innehållsförteckningen, stilguiden 4.5. Alla värden ur
+   tema-variablerna. Hårlinjer med matt.harlinje. */
+@layer komponent {
+  /* ── Spalt (desktop) ── */
+  .spalt {
+    position: sticky;
+    top: calc(var(--matt-verktygsrad) + var(--rum-5));
+    max-height: calc(100vh - var(--matt-verktygsrad) - 2 * var(--rum-5));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  /* ── Listan ── */
+  .lista,
+  .indikatorer {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .del + .del {
+    margin-top: var(--rum-1);
+  }
+
+  .avsnitt,
+  .indikator {
+    text-decoration: none;
+    color: var(--farg-text2);
+  }
+
+  .avsnitt:focus-visible,
+  .indikator:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
+  }
+
+  .avsnitt {
+    display: block;
+    padding: var(--rum-1) var(--rum-2);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+  }
+
+  .avsnitt:hover {
+    color: var(--farg-black);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  /* Avsnittet läsaren är i, eller blocket själv */
+  .avsnitt[data-i-delen],
+  .avsnitt[data-aktiv] {
+    color: var(--farg-black);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .nr {
+    color: var(--farg-fokus);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .indikatorer {
+    margin: var(--rum-1) 0 var(--rum-2);
+  }
+
+  .indikator {
+    display: grid;
+    grid-template-columns: var(--komponent-tocPrick) auto minmax(0, 1fr);
+    column-gap: var(--rum-2);
+    align-items: start;
+    padding: var(--rum-1) var(--rum-2) var(--rum-1) var(--rum-4);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+  }
+
+  [data-utan-avsnitt] .indikator {
+    padding-left: var(--rum-2);
+  }
+
+  .indikator:hover .namn {
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .indikator[data-aktiv] {
+    background: var(--farg-fokusLjus);
+    color: var(--farg-black);
+  }
+
+  /* Statusprick 6 px, centrerad på första raden */
+  .prick {
+    width: var(--komponent-tocPrick);
+    height: var(--komponent-tocPrick);
+    margin-top: calc((var(--typ-not-radhojd) * 1em - var(--komponent-tocPrick)) / 2);
+    border-radius: 50%;
+  }
+
+  .prick[data-status="gron"] { background: var(--farg-status-gron-markor); }
+  .prick[data-status="gul"] { background: var(--farg-status-gul-markor); }
+  .prick[data-status="rod"] { background: var(--farg-status-rod-markor); }
+
+  .osynlig {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ── Ark (mellan och mobil) ── */
+  .ark {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 85vh;
+    max-height: 85dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--farg-yta);
+    color: var(--farg-black);
+    border: 0;
+    border-top: var(--matt-harlinje) solid var(--farg-harlinje);
+  }
+
+  .ark[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ark::backdrop {
+    background: color-mix(in srgb, var(--farg-black) 30%, transparent);
+  }
+
+  .arkhuvud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rum-4);
+    padding: var(--rum-1) var(--rum-1) var(--rum-1) var(--matt-marginal);
+  }
+
+  .arkrubrik {
+    font-family: var(--typ-figurtitel-familj);
+    font-size: var(--typ-figurtitel-storlek);
+    line-height: var(--typ-figurtitel-radhojd);
+    font-weight: var(--typ-figurtitel-vikt);
+  }
+
+  .stang {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--komponent-ark-stangknapp);
+    height: var(--komponent-ark-stangknapp);
+    color: var(--farg-text2);
+    cursor: pointer;
+  }
+
+  .stang:hover {
+    color: var(--farg-black);
+  }
+
+  .stang:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
+  }
+
+  .stang svg {
+    width: 1.25em;
+    height: 1.25em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  .arkinnehall {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 var(--matt-marginal) var(--rum-6);
+  }
+
+  @media print {
+    .spalt,
+    .ark {
+      display: none;
+    }
+  }
+}

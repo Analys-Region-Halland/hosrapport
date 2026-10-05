@@ -1,0 +1,7 @@
+/* TidsupplosningVal.module.css: flikarna själva kommer från ui/Flikar (stilguiden 5.4). */
+@layer komponent {
+  .val {
+    display: inline-flex;
+    vertical-align: middle;
+  }
+}
