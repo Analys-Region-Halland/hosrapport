@@ -3,4 +3,13 @@
   .prosa > p + p {
     margin-top: var(--typ-styckeavstand);
   }
+
+  /* Markering + skiljetecken bryts inte isär; termen själv får brytas. */
+  .hel {
+    white-space: nowrap;
+  }
+
+  .hel > button {
+    white-space: normal;
+  }
 }

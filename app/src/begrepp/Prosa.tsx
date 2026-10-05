@@ -9,13 +9,43 @@
 // `utanMarkering` bort markeringen.
 //
 // Typografin ärvs från omgivningen (typ.roll.brod i analys och fördjupning);
-// komponenten sätter bara styckeavståndet.
+// komponenten sätter bara styckeavståndet. Markeringen är en knapp och bryts som
+// en enhet, så ett skiljetecken direkt efter den hålls ihop med den (stilguiden
+// 5.7) i stället för att hamna ensamt först på nästa rad.
 
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import Begrepp from "./Begrepp";
 import { gorAnsprak, lankadeId, lankaStycken, slappAnsprak } from "./lanka";
 import { BEGREPP, type Begrepp as BegreppTyp } from "./register";
 import s from "./Prosa.module.css";
+
+// Skiljetecken som inte får inleda en rad: punkt, komma, kolon, semikolon,
+// frågetecken, utropstecken, högerparentes och avslutande citattecken.
+const SKILJETECKEN = /^[.,:;!?)\]”»'"]+/;
+
+type Del = ReturnType<typeof lankaStycken>[number][number];
+
+function medSkiljetecken(stycke: Del[], register: BegreppTyp[]): ReactNode[] {
+  const ut: ReactNode[] = [];
+  for (let j = 0; j < stycke.length; j++) {
+    const d = stycke[j];
+    if (typeof d === "string") {
+      ut.push(d);
+      continue;
+    }
+    const term = <Begrepp key={j} id={d.id} register={register}>{d.text}</Begrepp>;
+    const nasta = stycke[j + 1];
+    const tecken = typeof nasta === "string" ? SKILJETECKEN.exec(nasta)?.[0] : undefined;
+    if (!tecken) {
+      ut.push(term);
+      continue;
+    }
+    ut.push(<span key={`h${j}`} className={s.hel}><Begrepp id={d.id} register={register}>{d.text}</Begrepp>{tecken}</span>);
+    ut.push((nasta as string).slice(tecken.length));
+    j++;
+  }
+  return ut;
+}
 
 export interface ProsaProps {
   text: string;
@@ -46,11 +76,7 @@ export default function Prosa({ text, redan, register = BEGREPP, className }: Pr
   return (
     <div className={className ? `${s.prosa} ${className}` : s.prosa} data-prosa="">
       {delar.map((stycke, i) => (
-        <p key={i}>
-          {stycke.map((d, j) =>
-            typeof d === "string" ? d : <Begrepp key={j} id={d.id} register={register}>{d.text}</Begrepp>,
-          )}
-        </p>
+        <p key={i}>{medSkiljetecken(stycke, register)}</p>
       ))}
     </div>
   );

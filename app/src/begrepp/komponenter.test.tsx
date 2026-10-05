@@ -40,6 +40,13 @@ describe("Prosa", () => {
     expect(html).toContain("ett ord");
   });
 
+  it("håller ett skiljetecken direkt efter markeringen ihop med den", () => {
+    const html = renderToStaticMarkup(<Prosa text="Halland ligger över rikssnittet. Medianen steg" />);
+    expect(html).toMatch(/<span class="[^"]*">\s*<button[^>]*data-begrepp="rikssnitt"[^>]*>rikssnittet<\/button>\.<\/span> /);
+    expect(html).toMatch(/<button[^>]*data-begrepp="median"[^>]*>Medianen<\/button> steg/);
+    expect(knappar(html)).toEqual([["rikssnitt", "rikssnittet"], ["median", "Medianen"]]);
+  });
+
   it("länkar inget i text utan begrepp", () => {
     expect(renderToStaticMarkup(<Prosa text="Halland ligger stabilt." />)).not.toContain("<button");
   });
