@@ -424,11 +424,11 @@ Små multiplar: 3 kolumner när figuren är ≥ 760 px, 2 vid 480–759, 1 under
 
 | Typ | När | Uppbyggnad | Regler |
 |---|---|---|---|
-| **Linje** | Utveckling över tid, ≥ 5 tidpunkter | Fokus, referens, kontext, markerade | Förval för rankade indikatorer. Inga zoner. Under 5 tidpunkter: stapel. |
+| **Linje** | Utveckling över tid, ≥ 5 tidpunkter | Fokus, referens, kontext, markerade | Förval för rankade indikatorer, även med färre än 5 tidpunkter eftersom jämförelsen med regionerna bär grafen. Inga zoner. En ensam serie med under 5 tidpunkter: stapel. |
 | **Linje mot förväntat** | Intern uppföljning med statistiskt förväntat läge | Fokus, ett band, markerade avvikelser | Bandet etiketteras "Förväntat intervall"; begreppet förklaras i begreppslistan och i fördjupningen. |
 | **Rangordning** | Läget senaste perioden bland regioner eller enheter | En rad per region: namn (`typ.roll.not`, högerställt), punkt r 4,5 `diagram.kontextPunkt`; fokus r 5,5 `diagram.fokus` med namn och värde i 600; fästa regioner i sina färger med värde; riket som lodrät streckad linje med etikett ovanför; topp 3 avgränsas med en `grans`-linje under tredje raden | Sorterad bäst till sämst efter indikatorns riktning; lika värden får samma plats. Övriga värden visas när man hovrar raden. Regioner utan värde listas inte. Neutrala mått: ingen topp 3-linje. |
 | **Stapel över tid** | Volymer (antal, kronor) | Staplar i `diagram.fokus`, stapelbredd = 2 × mellanrum | Alltid nollbaslinje. ≤ 24 staplar, annars linje. |
-| **Små multiplar** | Samma mått per enhet | Panel: namn (`typ.roll.granssnitt` 600) + senaste värde, enheten i fokus | Delad skala. För andels- och medelmått ritas överordnad nivå som referens i varje panel men etiketteras bara i den första. För summamått ingen referens. Ordning efter senaste värde. Statusmarkör per panel är tillåten (enhetens egen status). |
+| **Små multiplar** | Samma mått per enhet | Panel: namn (`typ.roll.granssnitt` 600) + senaste värde, enheten i fokus | Delad skala. För andels- och medelmått ritas överordnad nivå som referens i varje panel men etiketteras bara i den första. För summamått ingen referens. Ordning: bäst först enligt indikatorns riktning (efter värde för neutrala mått). Statusmarkör per panel är tillåten (enhetens egen status). |
 | **Minidiagram** | Utveckling i tabell | Fokuslinje 1,5 px + slutpunkt r 2,5 | Inga axlar, ingen etikett, egen skala per rad. Aldrig fristående. |
 | **Tabell** | Alternativ till varje graf | 5.9 | Alltid tillgänglig via "Tabell". |
 | Hantel (v1.1) | Förändring mellan två perioder | Två punkter förbundna med linje | Bara för jämförbara perioder (inte över seriebrott). |

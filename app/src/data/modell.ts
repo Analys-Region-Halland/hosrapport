@@ -1,6 +1,20 @@
 // data/modell.ts: rapportens datamodell efter normalisering (docs/arkitektur.md 4.1).
 // Ägare: WP1. Skapad av WP0 med slutliga typer så att alla paket kompilerar mot
 // varandra från början. Ny kod importerar härifrån, aldrig från src/types.ts.
+//
+// Konventioner från normalisera (WP1):
+//   - Regioner och riket har parent_id null. Riket är regionernas referens men
+//     inte deras förälder, så att brödsmulan börjar på Region Halland.
+//   - Underliggande enheter har parent_id = överordnad enhet ("0013" för sjukhus).
+//   - Alla serier i en indikator ligger på samma periodrutnät: en punkt per
+//     periodsteg, luckor som varde: null. Samma gäller `dagar`.
+//   - EnhetSerie.senaste för regioner och riket är värdet samma period som
+//     fokusenhetens senaste värde (rangordningens period).
+
+/** Kolada-id för Region Halland, normalt fokus. */
+export const HALLAND_ID = "0013";
+/** Kolada-id för riket. */
+export const RIKET_ID = "0000";
 
 export type Status = "gron" | "gul" | "rod";
 export type VyId = "dag" | "vecka" | "manad" | "kvartal" | "ar";
