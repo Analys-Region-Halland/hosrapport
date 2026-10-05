@@ -15,8 +15,13 @@
 //   med ersatt.
 //
 // Lyssnarna installeras först när någon prenumererar, så gamla appen påverkas inte.
+//
+// Tillägg i WP10: när läspositionen flyttas till ett block med en figur tas
+// figurens läge (v, e) med ur registret i nav/figurlage.ts, så att
+// uppdatering landar i samma läge som läsaren lämnade figuren i.
 
 import { useSyncExternalStore } from "react";
+import { figurlage } from "./figurlage";
 import { format, gammaltAnkare, harVy, parse, skrivOmGammalt, START, type Route } from "./route";
 
 export interface RouteTillstand {
@@ -148,8 +153,14 @@ export function skapaRouter(plats: Plats, fordrojning = LASPOSITION_FORDROJNING)
     avbrytVantande();
     const r = t.route;
     if (r.sida !== "kapitel" || r.i === i) return;
-    // v och e beskriver figuren i det gamla blocket och följer inte med
-    navigera({ sida: "kapitel", id: r.id, vy: r.vy, ...(i ? { i } : {}), ...(r.red ? { red: true } : {}) }, { ersatt: true, rulla: false });
+    // v och e beskriver figuren i det gamla blocket och följer inte med; det
+    // nya blockets figur har sitt eget läge i registret (WP10)
+    const lage = figurlage(i);
+    navigera({
+      sida: "kapitel", id: r.id, vy: r.vy,
+      ...(i ? { i } : {}), ...(lage?.v ? { v: lage.v } : {}), ...(lage?.e ? { e: lage.e } : {}),
+      ...(r.red ? { red: true } : {}),
+    }, { ersatt: true, rulla: false });
   }
 
   function uppdateraLasposition(i: string | undefined): void {

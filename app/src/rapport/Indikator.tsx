@@ -5,8 +5,8 @@
 //                   statusmarkör efter namnet; ingen markör för beskrivande mått
 //   2 nyckeltal     värde · plats · period (rapport/Nyckeltal)
 //   3 analys        Prosa med begrepp, proveniensrad med länk till Om statistiken
-//   4 figur         figur/Figur med h4, visningar och dagflik, monteras när den
-//                   närmar sig skärmen
+//   4 figur         figur/Figur med h4, visningar, nivåer (brödsmula, nedborrning)
+//                   och dagflik, monteras när den närmar sig skärmen
 //   5 fördjupning   stängd <details> (rapport/IndikatorFordjupning)
 //   6 kommentar     bara när en finns, eller i redigeringsläget (rapport/Kommentar)
 // Status visas en gång (rubrikraden), värde, plats och period en gång
@@ -28,12 +28,16 @@ import type { SpecKontext, VisningId } from "../charts/spec";
 import type { KapitelModell, KpiModell, VyId } from "../data/modell";
 import { tema } from "../design/tema";
 import Figur from "../figur/Figur";
+import { anmalFigurlage, useFigurAdress } from "../nav/figurlage";
 import Lank from "../nav/Lank";
 import { KAPITELBLOCK } from "../nav/route";
+import { sattAktivtBlock } from "../nav/scroll";
+import { aktuellRoute, navigera } from "../nav/useRoute";
 import StatusMarkor from "../ui/StatusMarkor";
 import IndikatorFordjupning from "./IndikatorFordjupning";
 import Kommentar from "./Kommentar";
 import { figurReserv, indikatorUppskattning } from "./hojder";
+import { brodsmula, bytFokus, giltigtLage, lageFranAdress, lageTillAdress, type NivaLage } from "./nedborrning";
 import Nyckeltal from "./Nyckeltal";
 import { utanUpprepning } from "./rapportText";
 import t from "./delat.module.css";
@@ -117,23 +121,74 @@ export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, 
 //  Figuren: visning, fästa serier och dagfliken
 // ════════════════════════════════════════════════════════════
 
+// Nivåer (WP10, stilguiden 6.7): figurens läge är fokusenheten och visningen
+// (rapport/nedborrning.ts). Nivåflikarna kommer ur WP1:s visningar för fokus
+// ("Region Halland", "Per sjukhus"; med fokus på ett sjukhus "Halmstad", "Per
+// avdelning"). Klick på en panels namn eller en rad i enheternas rangordning
+// borrar ned, brödsmulan går upp. Läget står i adressen som v och e: det läses
+// när figuren monteras och när läsaren går bakåt eller framåt till indikatorn,
+// och skrivs med replaceState när läsaren byter flik eller nivå. Registret i
+// nav/figurlage.ts ger "Kopiera länk" och läspositionen samma läge.
+
 function IndikatorFigur({ kpi, kapitel, vy }: { kpi: KpiModell; kapitel: KapitelModell; vy: VyId }) {
-  const [vald, setVald] = useState<VisningId | undefined>(undefined);
+  const adress = useFigurAdress();
+  const [onskat, setOnskat] = useState<NivaLage>(() => lageFranAdress(adress?.route ?? null, kpi, kapitel, vy));
+  // Bakåt, framåt och vanliga länkar till indikatorn: följ adressens läge
+  const [adressNr, setAdressNr] = useState(adress?.nr);
+  if (adress && adress.nr !== adressNr) {
+    setAdressNr(adress.nr);
+    const r = adress.route;
+    if (adress.kalla === "historik" && r.sida === "kapitel" && r.i === kpi.id) setOnskat(lageFranAdress(r, kpi, kapitel, vy));
+  }
+  const lage = useMemo(() => giltigtLage(kpi, kapitel, vy, onskat), [kpi, kapitel, vy, onskat]);
+
   const [fasta, setFasta] = useState<string[]>([]);
   const [dagar, setDagar] = useState(false);
-  const harDagar = (kpi.serier[kpi.fokus]?.dagar?.length ?? 0) > 0;
+  const harDagar = (kpi.serier[lage.fokus]?.dagar?.length ?? 0) > 0;
   const pa = harDagar && dagar;
 
-  const vis = useMemo(() => visningar(kpi, kapitel, { vy, dagar: pa }), [kpi, kapitel, vy, pa]);
-  const visning: VisningId = vald && vis.some((v) => v.id === vald) ? vald : vis[0]?.id ?? "tid";
-  // Specen byggs om bara när visning, dag eller fästa serier ändras; hovring
+  // Flikarna hör till nivån, inte till dagfliken: samma flikar med och utan dagar
+  const vis = useMemo(() => visningar(kpi, kapitel, { vy, fokus: lage.fokus }), [kpi, kapitel, vy, lage.fokus]);
+  const brodsmulan = useMemo(() => brodsmula(kpi, kapitel, lage.fokus), [kpi, kapitel, lage.fokus]);
+  // Specen byggs om bara när nivå, visning, dag eller fästa serier ändras; hovring
   // ändrar ingenting här, så de statiska lagren i diagrammet står still.
-  const ctx: SpecKontext = useMemo(() => ({ vy, fasta, dagar: pa }), [vy, fasta, pa]);
-  const spec = useMemo(() => kpiTillSpec(kpi, kapitel, ctx, visning), [kpi, kapitel, ctx, visning]);
+  const fokus = lage.fokus === kpi.fokus ? undefined : lage.fokus;
+  const ctx: SpecKontext = useMemo(() => ({ vy, fokus, fasta, dagar: pa }), [vy, fokus, fasta, pa]);
+  const spec = useMemo(() => kpiTillSpec(kpi, kapitel, ctx, lage.visning), [kpi, kapitel, ctx, lage.visning]);
+
+  // Läget i registret (för "Kopiera länk" och läspositionen), bara i rapportens ram
+  const iRam = adress !== null;
+  const adressLage = useMemo(() => lageTillAdress(kpi, kapitel, vy, lage), [kpi, kapitel, vy, lage]);
+  useEffect(() => {
+    if (!iRam) return;
+    anmalFigurlage(kpi.id, adressLage);
+    return () => anmalFigurlage(kpi.id, null);
+  }, [iRam, kpi.id, adressLage]);
+
+  /** Nytt läge från läsaren: tillstånd, register och adress (replaceState, ingen rullning). */
+  const byt = (ny: NivaLage) => {
+    setOnskat(ny);
+    if (!iRam) return;
+    const lage = lageTillAdress(kpi, kapitel, vy, ny);
+    anmalFigurlage(kpi.id, lage);
+    const r = aktuellRoute();
+    if (r.sida !== "kapitel" || r.id !== kapitel.id) return;
+    navigera({
+      sida: "kapitel", id: r.id, vy: r.vy, i: kpi.id,
+      ...(lage.v ? { v: lage.v } : {}), ...(lage.e ? { e: lage.e } : {}), ...(r.red ? { red: true } : {}),
+    }, { ersatt: true, rulla: false, fokus: false });
+  };
+  const bytVisning = (v: VisningId) => byt({ fokus: lage.fokus, visning: v });
+  const bytNiva = (enhetId: string) => {
+    byt(bytFokus(kpi, kapitel, vy, lage, enhetId));
+    setFasta([]);
+    // Läsaren arbetar i den här figuren: den är blocket läsaren står vid
+    if (iRam) sattAktivtBlock(kpi.id);
+  };
   // "Per dag" är en egen flik: den visar dagsserien över tid, inte den visning som var vald
-  const dagFlik = useMemo(() => (harDagar
-    ? { pa, onByt: (p: boolean) => { setDagar(p); if (p) setVald("tid"); } }
-    : undefined), [harDagar, pa]);
+  const dagFlik = harDagar
+    ? { pa, onByt: (p: boolean) => { setDagar(p); if (p) bytVisning("tid"); } }
+    : undefined;
 
   return (
     <Figur
@@ -141,8 +196,10 @@ function IndikatorFigur({ kpi, kapitel, vy }: { kpi: KpiModell; kapitel: Kapitel
       rubrikniva={4}
       indikatornamn={kpi.namn}
       visningar={vis}
-      visning={visning}
-      onVisning={setVald}
+      visning={lage.visning}
+      onVisning={bytVisning}
+      brodsmula={brodsmulan}
+      onFokus={bytNiva}
       fasta={fasta}
       onFasta={setFasta}
       dagFlik={dagFlik}

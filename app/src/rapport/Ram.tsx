@@ -7,9 +7,13 @@
 // scroll-spionen på kapitelsidor och visar aktivt block i positionsraden och
 // innehållsförteckningen. Ingen nedtoning av andra block. Startsidan har ingen
 // verktygsrad (den har egen brandlist, stilguiden 4.1).
+//
+// Tillägg i WP10: ramen ger figurerna routerns tillstånd (FigurAdressKontext),
+// och "Kopiera länk till här" tar med figurens läge (v, e) för blocket.
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import type { KapitelModell } from "../data/modell";
+import { FigurAdressKontext, lankTillBlock } from "../nav/figurlage";
 import { format, STANDARDVY, type Route } from "../nav/route";
 import { useAktivtBlock, aktivtBlock, useLasposition } from "../nav/scroll";
 import { aktuellRoute, navigera, useRouteTillstand } from "../nav/useRoute";
@@ -78,7 +82,10 @@ export default function Ram({ kapitel = null, klar = true, sidnamn = "", childre
       </Verktygsrad>
       <div className={s.sida}>
         {spalt && kapitel && <Innehall kapitel={kapitel} aktivt={aktivt} variant="spalt" vy={kapitelVy} red={red} />}
-        <main id="innehall" className={s.innehall} tabIndex={-1}>{children}</main>
+        <main id="innehall" className={s.innehall} tabIndex={-1}>
+          {/* Figurerna läser och skriver sitt läge (v, e) i adressen (WP10) */}
+          <FigurAdressKontext.Provider value={t}>{children}</FigurAdressKontext.Provider>
+        </main>
       </div>
       {ark && kapitel && (
         <Innehall kapitel={kapitel} aktivt={aktivt} variant="ark" oppen={arkOppet} onStang={() => setArkOppet(false)} vy={kapitelVy} red={red} />
@@ -113,12 +120,9 @@ function useExportMeny(route: Route, kapitel: KapitelModell | null): { val: Meny
   };
 
   const kopiera = () => {
-    // Länk till blocket läsaren är i just nu, inte till den fördröjda adressen
-    const r = aktuellRoute();
-    const blk = aktivtBlock();
-    const till: Route = r.sida === "kapitel" && blk !== (r.i ?? "")
-      ? { sida: "kapitel", id: r.id, vy: r.vy, ...(blk ? { i: blk } : {}), ...(r.red ? { red: true } : {}) }
-      : r;
+    // Länk till blocket läsaren är i just nu, inte till den fördröjda adressen,
+    // med figurens visning och fokusenhet (v, e) när blocket har en figur (WP10)
+    const till = lankTillBlock(aktuellRoute(), aktivtBlock());
     const url = location.href.split("#")[0] + format(till);
     navigator.clipboard.writeText(url).then(
       () => visa("Länken är kopierad."),
