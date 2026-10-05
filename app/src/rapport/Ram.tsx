@@ -16,7 +16,7 @@ import { aktuellRoute, navigera, useRouteTillstand } from "../nav/useRoute";
 import Innehall from "./Innehall";
 import Positionsrad from "./Positionsrad";
 import { useBrytpunkt } from "./ramBrytpunkt";
-import { laddaAllaKapitel } from "./ramData";
+import { laddaAllaKapitel, laddaManifest } from "./ramData";
 import { byggDisposition, positionsdelar } from "./ramDisposition";
 import Verktygsrad, { type MenyVal } from "./Verktygsrad";
 import s from "./Ram.module.css";
@@ -101,11 +101,16 @@ function useExportMeny(route: Route, kapitel: KapitelModell | null): { val: Meny
   }, []);
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  const pptx = async (lista: () => Promise<KapitelModell[]>, titel: string) => {
+  // PowerPoint (WP12a): exporten laddas först vid klick. Publiceringsdatumet
+  // är manifestets för vyn, som på kapitlets metarad.
+  const pptx = async (lista: () => Promise<KapitelModell[]>, titel: string, omfang: "kapitel" | "rapport") => {
     try {
       const vy = "vy" in route ? route.vy : STANDARDVY;
-      const [kap, { exporteraPptx }] = await Promise.all([lista(), import("../export/pptx")]);
-      await exporteraPptx(kap, { titel, vy });
+      visa("Skapar PowerPoint-filen.");
+      const [kap, manifest, { exporteraPptx }] = await Promise.all([lista(), laddaManifest(), import("../export/pptx")]);
+      const publicerad = manifest[vy]?.datum;
+      await exporteraPptx(kap, { titel, vy, omfang, ...(publicerad ? { publicerad } : {}) });
+      visa("PowerPoint-filen är klar.");
     } catch (e) {
       console.error(e);
       visa("Kunde inte skapa PowerPoint-filen.");
@@ -128,11 +133,11 @@ function useExportMeny(route: Route, kapitel: KapitelModell | null): { val: Meny
 
   const val: MenyVal[] = [];
   if (route.sida === "kapitel" && kapitel) {
-    val.push({ id: "pptx-kapitel", etikett: "PowerPoint (kapitlet)", onVal: () => void pptx(async () => [kapitel], kapitel.namn) });
+    val.push({ id: "pptx-kapitel", etikett: "PowerPoint (kapitlet)", onVal: () => void pptx(async () => [kapitel], kapitel.namn, "kapitel") });
   }
   if (route.sida === "kapitel" || route.sida === "sammanfattning") {
     const vy = route.vy;
-    val.push({ id: "pptx-rapport", etikett: "PowerPoint (hela rapporten)", onVal: () => void pptx(() => laddaAllaKapitel(vy), RAPPORTTITEL) });
+    val.push({ id: "pptx-rapport", etikett: "PowerPoint (hela rapporten)", onVal: () => void pptx(() => laddaAllaKapitel(vy), RAPPORTTITEL, "rapport") });
   }
   val.push({ id: "skriv-ut", etikett: "Skriv ut", onVal: () => print() });
   val.push({ id: "kopiera-lank", etikett: "Kopiera länk till här", onVal: kopiera });
