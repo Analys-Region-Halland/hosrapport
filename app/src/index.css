@@ -1,5 +1,6 @@
-@import "tailwindcss";
-
+/* Gamla vyns stilar, inslagna i @layer legacy av WP0 (se docs/arkitektur.md avsnitt 6).
+   Tailwinds preflight har ersatts av styles/reset.css. Filen raderas i WP12b. */
+@layer legacy {
 /* ── Reset ── */
 *, *::before, *::after {
   margin: 0;
@@ -1295,4 +1296,4 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
   .sig-row { break-inside: avoid; }
   .sig__chip { opacity: 1 !important; }
 }
-
+}

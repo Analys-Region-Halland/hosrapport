@@ -1,0 +1,20 @@
+/* styles/index.css: globala stilar och lagerordning. Importeras först i main.tsx.
+   Ägare: WP0 (se docs/arkitektur.md avsnitt 6).
+
+   Lagerordning, lägst prioritet först:
+     reset      Tailwinds preflight i egen fil (reset.css). Ligger under legacy,
+                precis som preflight låg under gamla index.css, annars skulle
+                återställningen vinna över gamla vyns regler.
+     legacy     gamla index.css (inslagen i @layer legacy), raderas i WP12b
+     tema       CSS-variablerna ur design/tema.ts (virtual:tema.css)
+     bas        grundtypografi för nya vyn
+     layout     sidans ramverk
+     komponent  CSS Modules (varje .module.css slår in sig i @layer komponent)
+     utskrift   @media print */
+@layer reset, legacy, tema, bas, layout, komponent, utskrift;
+
+@import "./reset.css" layer(reset);
+@import "./typsnitt.css";
+@import "./bas.css" layer(bas);
+@import "./layout.css" layer(layout);
+@import "./utskrift.css" layer(utskrift);

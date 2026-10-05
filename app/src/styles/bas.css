@@ -1,0 +1,4 @@
+/* bas.css: grundtypografi och element för nya vyn. Importeras i lagret `bas`
+   (styles/index.css). Tom tills vidare. Regler här får inte påverka gamla vyn
+   så länge den finns: skriv dem under en rot som bara nya ramen har, t.ex.
+   [data-ram]. Ägare: WP0; fylls av senare paket. */
