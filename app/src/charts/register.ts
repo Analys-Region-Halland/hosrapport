@@ -51,11 +51,12 @@ export interface Lager {
 /** En färdigplacerad etikett i etikettkolumnen till höger om sista perioden. */
 export interface Etikett {
   serieId: string;
-  text: string;             // ev. kortad med ellips
+  text: string;             // det som visas, raderna med mellanslag
+  rader: string[];          // en rad, eller två när namnet inte ryms på en (annars ellips)
   helText: string;          // okortat namn
   x: number;                // textens vänsterkant
-  y: number;                // textens mittlinje efter kollisionslösning
-  textbredd: number;        // uppmätt bredd, för pekarytan
+  y: number;                // etikettens mitt efter kollisionslösning
+  textbredd: number;        // bredaste radens uppmätta bredd, för pekarytan
   ankarX: number;           // kopplingslinjens början (strax höger om sista perioden)
   ankarY: number;           // linjeslutets y, för kopplingslinjen
   farg: string;

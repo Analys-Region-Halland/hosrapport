@@ -1,54 +1,51 @@
 // grafprov-data.ts: data till grafprovet och linjediagrammets stilguidesektion.
-// Hämtar en sektionsfil ur public/data och bygger en ChartSpec: först med
-// WP1:s normalisera + kpiTillSpec, och när de inte finns ännu (stubbar som
-// kastar) med WP2:s testhjälp provSpec. `kalla: "prov"` tvingar provSpec.
-// Ägare: WP2.
+// Hämtar en sektionsfil ur public/data, normaliserar den (WP1) och bygger
+// tidsvisningens spec med kpiTillSpec, med de fästa enheterna i kontexten,
+// precis som figuren gör i rapporten. Ägare: WP2.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { kpiTillSpec } from "../src/charts/kpiTillSpec";
-import { provSpec } from "../src/charts/karna/provspec";
-import type { ChartSpec } from "../src/charts/spec";
-import type { VyId } from "../src/data/modell";
+import type { ChartSpec, VisningId } from "../src/charts/spec";
+import type { KapitelModell, VyId } from "../src/data/modell";
 import { normalisera } from "../src/data/normalisera";
 
-export type Specskalla = "auto" | "prov";
+const cache = new Map<string, Promise<KapitelModell>>();
 
-const cache = new Map<string, Promise<unknown>>();
-
-export function hamtaSektion(vy: VyId, sektion: string): Promise<unknown> {
+export function hamtaKapitel(vy: VyId, sektion: string): Promise<KapitelModell> {
   const nyckel = `${vy}-${sektion}`;
   let p = cache.get(nyckel);
   if (!p) {
-    p = fetch(`${import.meta.env.BASE_URL}data/${nyckel}.json`).then((r) => {
-      if (!r.ok) throw new Error(`Kunde inte hämta ${nyckel}.json (HTTP ${r.status})`);
-      return r.json();
-    });
+    p = fetch(`${import.meta.env.BASE_URL}data/${nyckel}.json`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`Kunde inte hämta ${nyckel}.json (HTTP ${r.status})`);
+        return r.json();
+      })
+      .then((ra: unknown) => normalisera(ra, vy));
     cache.set(nyckel, p);
   }
   return p;
 }
 
-export function byggSpec(ra: unknown, vy: VyId, kpi: string | null, kalla: Specskalla): { spec: ChartSpec; byggd: "kpiTillSpec" | "provSpec" } {
-  if (kalla === "auto") {
-    try {
-      const kap = normalisera(ra, vy);
-      const k = kap.kpier.find((x) => x.id === kpi) ?? kap.kpier[0];
-      return { spec: kpiTillSpec(k, kap, { vy, fasta: [] }, "tid"), byggd: "kpiTillSpec" };
-    } catch {
-      // WP1 inte sammanslagen än: använd testhjälpen
-    }
-  }
-  return { spec: provSpec(ra, kpi, vy), byggd: "provSpec" };
-}
-
-export function useSpec(vy: VyId, sektion: string, kpi: string | null, kalla: Specskalla = "auto") {
-  const [tillstand, setTillstand] = useState<{ spec: ChartSpec | null; byggd?: string; fel?: string }>({ spec: null });
+/**
+ * Specen för en indikator. Byggs om när de fästa enheterna ändras (en ny
+ * spec ritar om de statiska lagren, som stilguiden 6.8 föreskriver), men
+ * inte vid hovring.
+ */
+export function useSpec(vy: VyId, sektion: string, kpiId: string | null, fasta: string[], visning: VisningId = "tid") {
+  const [kap, setKap] = useState<KapitelModell | null>(null);
+  const [fel, setFel] = useState<string | null>(null);
   useEffect(() => {
     let levande = true;
-    hamtaSektion(vy, sektion)
-      .then((ra) => { if (levande) setTillstand(byggSpec(ra, vy, kpi, kalla)); })
-      .catch((e: unknown) => { if (levande) setTillstand({ spec: null, fel: String(e) }); });
+    hamtaKapitel(vy, sektion)
+      .then((k) => { if (levande) setKap(k); })
+      .catch((e: unknown) => { if (levande) setFel(String(e)); });
     return () => { levande = false; };
-  }, [vy, sektion, kpi, kalla]);
-  return tillstand;
+  }, [vy, sektion]);
+  const nyckel = fasta.join(",");
+  const spec = useMemo<ChartSpec | null>(() => {
+    if (!kap) return null;
+    const kpi = kap.kpier.find((k) => k.id === kpiId) ?? kap.kpier[0];
+    return kpiTillSpec(kpi, kap, { vy, fasta: nyckel ? nyckel.split(",") : [] }, visning);
+  }, [kap, kpiId, vy, nyckel, visning]);
+  return { spec, fel };
 }

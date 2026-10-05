@@ -7,8 +7,9 @@ import { useMemo, type ReactNode } from "react";
 import { tema } from "../../design/tema";
 import type { AktivPunkt, Scen, Stopp } from "../register";
 import type { ChartSpec } from "../spec";
-import { StatiskaLager } from "./former";
+import { EtikettText, StatiskaLager } from "./former";
 import { GEOMETRI } from "./geometri";
+import { kortaText } from "./matt";
 import { HALO, kopplingD, skarp, textAttr } from "./ritstil";
 import { serieFarg } from "./tooltipModell";
 
@@ -31,7 +32,6 @@ export function TidsOverlagg({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpe
     for (const l of m.values()) l.sort((a, b) => a.index - b.index);
     return m;
   }, [scen]);
-  const sistaIndex = useMemo(() => scen.stopp.reduce((m, s) => Math.max(m, s.index), 0), [scen]);
   const xAktiv = scen.stopp.find((s) => s.index === aktiv.index)?.x;
   if (xAktiv === undefined) return null;
 
@@ -53,26 +53,30 @@ export function TidsOverlagg({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpe
     });
     const ka = t.diagram.roll.kontextAktiv;
     delar.push(<path key="lyft" d={d} fill="none" stroke={ka.farg} strokeWidth={ka.bredd} strokeLinejoin="round" data-lyft={lyft.id} />);
-    // Tillfälligt namn när serien saknar etikett i kolumnen (stilguiden 6.4)
+    // Namnet visas tillfälligt i 600 farg.black (stilguiden 6.4): har serien
+    // redan en etikett i kolumnen förstärks den, annars skrivs namnet på en
+    // ledig plats i kolumnen med kopplingslinje från linjeslutet.
     const sista = st[st.length - 1];
-    if (sista && !scen.etiketter.some((e) => e.serieId === lyft.id)) {
-      const a = textAttr(t.farg.black, t.typ.roll.not.viktStark);
-      if (sista.index === sistaIndex) {
-        const yl = ledigPlats(scen, sista.y, t.diagram.etikett.minAvstand);
-        const e = { ankarX: sista.x + GEOMETRI.koppling.start, ankarY: sista.y, y: yl };
-        delar.push(
-          <g key="namn" data-tillfalligt-namn={lyft.id}>
-            <path d={kopplingD(e)} fill="none" stroke={t.diagram.kopplingslinje.farg} strokeWidth={t.diagram.kopplingslinje.bredd} />
-            <text x={sista.x + t.diagram.etikett.kolumnAvstand} y={yl + GEOMETRI.textMitt} {...a} style={HALO}>{lyft.namn}</text>
-          </g>,
-        );
-      } else {
-        delar.push(
-          <text key="namn" x={sista.x + t.rum[2]} y={sista.y + GEOMETRI.textMitt} {...a} style={HALO} data-tillfalligt-namn={lyft.id}>
-            {lyft.namn}
-          </text>,
-        );
-      }
+    const a = textAttr(t.farg.black, t.typ.roll.not.viktStark);
+    const finns = scen.etiketter.find((e) => e.serieId === lyft.id);
+    if (finns) {
+      delar.push(
+        <g key="namn" data-tillfalligt-namn={lyft.id}>
+          <EtikettText e={finns} farg={t.farg.black} vikt={t.typ.roll.not.viktStark} halo />
+        </g>,
+      );
+    } else if (sista) {
+      const kolumn = plot.x + plot.b;
+      const x = kolumn + t.diagram.etikett.kolumnAvstand;
+      const yl = ledigPlats(scen, sista.y, t.diagram.etikett.minAvstand);
+      const e = { ankarX: sista.x + GEOMETRI.koppling.start, ankarY: sista.y, x, y: yl };
+      const text = kortaText(lyft.namn, Math.max(0, scen.bredd - x), t.typ.roll.not.viktStark);
+      delar.push(
+        <g key="namn" data-tillfalligt-namn={lyft.id}>
+          <path d={kopplingD(e)} fill="none" stroke={t.diagram.kopplingslinje.farg} strokeWidth={t.diagram.kopplingslinje.bredd} />
+          <text x={x} y={yl + GEOMETRI.textMitt} {...a} style={HALO}>{text}</text>
+        </g>,
+      );
     }
   }
 

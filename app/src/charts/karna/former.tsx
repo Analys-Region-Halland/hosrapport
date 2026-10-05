@@ -112,6 +112,18 @@ export function XAxel({ scen }: { scen: Scen }): ReactNode {
   );
 }
 
+/** Etikettens text på en eller två rader, centrerad på e.y. */
+export function EtikettText({ e, farg = e.farg, vikt = e.vikt, halo = false }: { e: Etikett; farg?: string; vikt?: number; halo?: boolean }): ReactNode {
+  const rad = tema.diagram.etikett.minAvstand;
+  const a = textAttr(farg, vikt);
+  const y0 = e.y - ((e.rader.length - 1) * rad) / 2 + GEOMETRI.textMitt;
+  return (
+    <text x={e.x} y={y0} {...a} style={halo ? HALO : a.style}>
+      {e.rader.length === 1 ? e.rader[0] : e.rader.map((r, i) => <tspan key={i} x={e.x} y={y0 + i * rad}>{r}</tspan>)}
+    </text>
+  );
+}
+
 /** Etikettkolumnen: kopplingslinje och namn i seriens färg. */
 export function Etikettkolumn({ etiketter }: { etiketter: Etikett[] }): ReactNode {
   const k = tema.diagram.kopplingslinje;
@@ -122,9 +134,9 @@ export function Etikettkolumn({ etiketter }: { etiketter: Etikett[] }): ReactNod
       {etiketter.map((e) => (
         <g key={e.serieId} data-etikett={e.serieId} style={e.interaktiv ? { cursor: "pointer" } : undefined}>
           {/* Pekaryta: hela etikettraden, inte bara glyferna */}
-          <rect x={e.x - (g.slut - g.knack)} y={e.y - rad / 2} width={e.textbredd + g.slut - g.knack} height={rad} fill="transparent" />
+          <rect x={e.x - (g.slut - g.knack)} y={e.y - (rad * e.rader.length) / 2} width={e.textbredd + g.slut - g.knack} height={rad * e.rader.length} fill="transparent" />
           <path d={kopplingD(e)} fill="none" stroke={k.farg} strokeWidth={k.bredd} />
-          <text x={e.x} y={e.y + GEOMETRI.textMitt} {...textAttr(e.farg, e.vikt)}>{e.text}</text>
+          <EtikettText e={e} />
         </g>
       ))}
     </g>

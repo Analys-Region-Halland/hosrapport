@@ -28,11 +28,16 @@ export const HALO: CSSProperties = {
 /** Halvpixeljusterat värde för skarpa 1 px-linjer. */
 export const skarp = (v: number) => Math.round(v) + 0.5;
 
-/** Kopplingslinjens bana: vågrät från linjeslutet, lodrät, vågrät in till texten. */
-export function kopplingD(e: Pick<Etikett, "ankarX" | "ankarY" | "y">): string {
+/**
+ * Kopplingslinjens bana: vågrät från linjeslutet till kolumnens knä, lodrät
+ * till etikettens höjd och vågrät in mot texten. Knät och slutet räknas från
+ * sista perioden (textens x minus kolumnavståndet), så en serie som slutar
+ * tidigare får en längre vågrät del från sitt eget linjeslut.
+ */
+export function kopplingD(e: Pick<Etikett, "ankarX" | "ankarY" | "x" | "y">): string {
   const k = GEOMETRI.koppling;
-  const bas = e.ankarX - k.start;
-  return `M${e.ankarX},${e.ankarY}H${bas + k.knack}V${e.y}H${bas + k.slut}`;
+  const kolumn = e.x - tema.diagram.etikett.kolumnAvstand;
+  return `M${e.ankarX},${e.ankarY}H${kolumn + k.knack}V${e.y}H${kolumn + k.slut}`;
 }
 
 /** Markör för punkt utanför förväntat intervall: triangel upp/ned eller romb. */

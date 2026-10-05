@@ -35,8 +35,18 @@ describe("etikettkolumnen", () => {
     const lang = [{ text: "Västra Götalandsregionen", vikt: 400 }];
     expect(hogermarginal(lang, 320)).toBeLessThanOrEqual(320 * 0.34 + 1e-9);
     const ut = placeraEtiketter([e("vg", 100, 1, "Västra Götalandsregionen")], 0, 300, 320);
-    expect(ut[0].kortText.endsWith("…")).toBe(true);
+    expect(ut[0].rader).toHaveLength(1);
+    expect(ut[0].rader[0].endsWith("…")).toBe(true);
     const bred = placeraEtiketter([e("vg", 100, 1, "Västra Götalandsregionen")], 0, 300, 880);
-    expect(bred[0].kortText).toBe("Västra Götalandsregionen");
+    expect(bred[0].rader).toEqual(["Västra Götalandsregionen"]);
+  });
+
+  it("bryter på två rader när båda raderna ryms, och ger dem dubbel höjd", () => {
+    const ut = placeraEtiketter([e("band", 100, 4, "Förväntat intervall"), e("fokus", 104, 6, "Halland")], 0, 300, 326);
+    const band = ut.find((x) => x.serieId === "band")!;
+    const fokus = ut.find((x) => x.serieId === "fokus")!;
+    expect(band.rader).toEqual(["Förväntat", "intervall"]);
+    // två rader (2 × 17) och en rad (17): mittpunkterna minst 25,5 px isär
+    expect(Math.abs(band.y - fokus.y)).toBeGreaterThanOrEqual(1.5 * min - 1e-9);
   });
 });

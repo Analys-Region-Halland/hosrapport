@@ -1,4 +1,4 @@
-// charts/karna/tooltip.ts: vad tooltipen visar för en aktiv period och serie
+// charts/karna/tooltipModell.ts: vad tooltipen visar för en aktiv period och serie
 // (stilguiden 6.8). Ren funktion; Tooltip.tsx ritar modellen. Ägare: WP2.
 //
 // Linje med regioner: perioden, Halland, riket, fästa och lyft region med
@@ -14,10 +14,6 @@ import type { AktivPunkt } from "../register";
 import type { ChartSpec, SpecSerie } from "../spec";
 import { arFastbar } from "./fasta";
 import { periodIndex, type Tidsaxel } from "./skalor";
-
-/** Fält som WP1 lägger till i spec.ts (plats per punkt och nämnare per period). */
-type SerieMedPlats = SpecSerie & { platser?: (number | null)[] };
-type SpecMedPlats = ChartSpec & { platsAv?: number[]; riktning?: "hog" | "lag" | "neutral" };
 
 export type Inmatning = "mus" | "tangent" | "peka";
 
@@ -78,45 +74,26 @@ export function seriebrottIndex(spec: ChartSpec, axel: Tidsaxel): number | null 
   return n?.period ? periodIndex(axel, n.period) : null;
 }
 
-/** Regionerna som rangordnas: fokus, kontext och markerade (inte riket). */
-function rankade(spec: ChartSpec): SpecSerie[] {
-  const harRegioner = spec.serier.some((s) => s.roll === "kontext" || s.roll === "markerad");
-  return harRegioner ? spec.serier.filter((s) => s.roll === "fokus" || s.roll === "kontext" || s.roll === "markerad") : [];
-}
-
-/** "plats r av n" för en serie vid en period. Lika värden får samma plats. */
+/**
+ * "plats r av n" för en serie vid en period, ur specens `platser` (per punkt)
+ * och `platsAv` (per period). Räknas aldrig om här: R rankar på oavrundade
+ * värden och kpiTillSpec bär resultatet. Saknas fälten visas ingen plats.
+ */
 export function platsVid(spec: ChartSpec, pi: PunktIndex, s: SpecSerie, index: number): string | null {
-  const sp = spec as SpecMedPlats;
-  if (sp.riktning === "neutral") return null;
-  const lista = rankade(spec);
-  if (!lista.includes(s)) return null;
   const egen = pi.get(s.id)?.[index];
-  const ws = (s as SerieMedPlats).platser;
-  if (ws && egen) {
-    const r = ws[egen.pos];
-    const n = sp.platsAv?.[egen.pos];
-    if (r != null && n != null) return plats(r, n);
-  }
-  const v = vardeVid(pi, s.id, index);
-  if (v === null) return null;
-  const varden = lista.map((x) => vardeVid(pi, x.id, index)).filter((x): x is number => x !== null);
-  const lag = sp.riktning === "lag";
-  const battre = varden.filter((x) => (lag ? x < v : x > v)).length;
-  return plats(battre + 1, varden.length);
+  if (!egen || !s.platser) return null;
+  const r = s.platser[egen.pos];
+  const n = spec.platsAv?.[egen.pos];
+  return r != null && n != null ? plats(r, n) : null;
 }
 
 function statusOrd(s: Status): string {
   return s === "gron" ? "I fas" : s === "gul" ? "Bevaka" : "Avvikelse";
 }
 
-/** Status för en punkt mot förväntat intervall: signal från R, annars läget mot banden. */
-export function forvantatStatus(p: Punkt | undefined, iv: { lo: number; hi: number; lo2?: number; hi2?: number } | undefined): Status | null {
-  if (!p || p.varde === null) return null;
-  if (p.signal) return p.signal;
-  if (!iv) return null;
-  if ((iv.lo2 !== undefined && p.varde < iv.lo2) || (iv.hi2 !== undefined && p.varde > iv.hi2)) return "rod";
-  if (p.varde < iv.lo || p.varde > iv.hi) return "gul";
-  return "gron";
+/** Status mot förväntat intervall: fokuspunktens signal (räknad i R, buren av kpiTillSpec). */
+export function forvantatStatus(p: Punkt | undefined): Status | null {
+  return p && p.varde !== null && p.signal ? p.signal : null;
 }
 
 /** Intervall i ett format: "89,1–91,3 %". */
@@ -162,8 +139,14 @@ export function tooltipModell(
       const andel = Math.round(tema.diagram.roll.forvantat.intervall * 100);
       rader.push({ serieId: forvantat.id, namn: `Förväntat intervall (${andel}${HART}%)`, varde: intervallText(iv.lo, iv.hi, spec), plats: null, farg: null, fet: false });
     }
-    const st = forvantatStatus(p, iv);
+    const st = forvantatStatus(p);
     if (st) rader.push({ serieId: null, namn: "Status", varde: statusOrd(st), plats: null, farg: null, fet: false });
+    // Fästa jämförelser (t.ex. sjukhus) med sina värden
+    for (const s of spec.serier) {
+      if (s.roll !== "markerad") continue;
+      const v = vardeVid(pi, s.id, i);
+      if (v !== null) rader.push({ serieId: s.id, namn: s.namn, varde: fmt(v), plats: null, farg: serieFarg(s), fet: lyft?.id === s.id });
+    }
   } else {
     // Linje med regioner (eller en ensam fokusserie)
     const visas: SpecSerie[] = [];

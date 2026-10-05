@@ -4,14 +4,16 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { akutflodeUtdrag, hierarki, skrUtdrag } from "../../data/fixturer";
 import { tema } from "../../design/tema";
 import Diagram from "../Diagram";
+import { kpiTillSpec, visningar } from "../kpiTillSpec";
 import { RENDERARE, type AktivPunkt, type Scen } from "../register";
 import type { ChartSpec } from "../spec";
 import { tillampaFasta, vaxlaFast } from "./fasta";
 import { byggTraffmodell, pekarlage, startlage, tangent } from "./interaktion";
 import { tidsaxel } from "./skalor";
-import { allaFixturer, fixtur } from "./testdata";
+import { allaLinjer, fixtur } from "./testdata";
 import { byggPunktIndex, tooltipModell } from "./tooltipModell";
 
 const linje = RENDERARE.linje;
@@ -19,13 +21,14 @@ const BREDDER = [326, 560, 832];
 const layout = (spec: ChartSpec, bredd: number): Scen =>
   linje.layout(spec, { bredd, hojd: linje.hojd(bredd, spec) }, tema);
 
-const fixturer = allaFixturer();
+const fixturer = allaLinjer();
 const telefon = fixtur("ar", "skr-tillganglighet", "kolada-n79179");
 
 describe("fixturerna", () => {
-  it("täcker alla datafiler", () => {
-    expect(new Set(fixturer.map((f) => f.fil)).size).toBe(11);
-    expect(fixturer.length).toBeGreaterThan(80);
+  it("täcker linjediagrammen i datafilerna (kpiTillSpec, visning tid)", () => {
+    expect(new Set(fixturer.map((f) => f.fil)).size).toBeGreaterThanOrEqual(8);
+    expect(fixturer.length).toBeGreaterThan(60);
+    expect(fixturer.some((f) => f.spec.serier.some((s) => s.roll === "forvantat"))).toBe(true);
   });
 });
 
@@ -68,8 +71,13 @@ describe("layout för alla fixturer", () => {
         const scen = layout(f.spec, bredd);
         const x = new Set(scen.etiketter.map((e) => e.x));
         expect(x.size, f.kpiId).toBeLessThanOrEqual(1);
-        const y = scen.etiketter.map((e) => e.y).sort((a, b) => a - b);
-        for (let i = 1; i < y.length; i++) expect(y[i] - y[i - 1], f.kpiId).toBeGreaterThanOrEqual(tema.diagram.etikett.minAvstand - 1e-6);
+        // Minst 17 px mellan raderna; en etikett på två rader tar två radhöjder
+        const rad = tema.diagram.etikett.minAvstand;
+        const e = scen.etiketter.slice().sort((a, b) => a.y - b.y);
+        for (let i = 1; i < e.length; i++) {
+          const krav = ((e[i].rader.length + e[i - 1].rader.length) * rad) / 2;
+          expect(e[i].y - e[i - 1].y, f.kpiId).toBeGreaterThanOrEqual(krav - 1e-6);
+        }
         for (const e of scen.etiketter) {
           expect(e.x + e.textbredd, f.kpiId).toBeLessThanOrEqual(bredd + 1);
           expect(e.y).toBeGreaterThanOrEqual(scen.plot.y);
@@ -114,15 +122,38 @@ describe("luckor och seriebrott (kolada-n79179)", () => {
   });
 });
 
+describe("mållinje", () => {
+  it("ritas som en streckad linje med etiketten Mål {värde}", () => {
+    const spec: ChartSpec = { ...telefon, serier: [...telefon.serier, { id: "mal", namn: "Mål", roll: "mal", varde: 90 }], etiketter: [...telefon.etiketter, { serieId: "mal", text: "" }] };
+    const scen = layout(spec, 832);
+    const mal = scen.lager.find((l) => l.id === "mal")!.former[0];
+    expect(mal.typ === "streck" && mal.streck).toBe(tema.diagram.roll.mal.streck);
+    expect(scen.etiketter.find((e) => e.serieId === "mal")?.text).toBe("Mål 90,0 %");
+  });
+});
+
 describe("fästa serier", () => {
   it("två fästa regioner blir markerade i fästordning med etikett", () => {
-    const spec = tillampaFasta(telefon, ["0012", "0001"]);
+    const spec = fixtur("ar", "skr-tillganglighet", "kolada-n79179", ["0012", "0001"]);
     const skane = spec.serier.find((s) => s.id === "0012")!;
     const sthlm = spec.serier.find((s) => s.id === "0001")!;
     expect([skane.roll, skane.markeringIndex, sthlm.roll, sthlm.markeringIndex]).toEqual(["markerad", 0, "markerad", 1]);
     const scen = layout(spec, 832);
     expect(scen.etiketter.some((e) => e.serieId === "0012" && e.farg === tema.farg.diagram.markering[0])).toBe(true);
+    // Specen är redan byggd med samma fästa: tillampaFasta ändrar inget
     expect(tillampaFasta(spec, ["0012", "0001"])).toBe(spec);
+    // Utan fästa i specen ger tillampaFasta samma roller som kpiTillSpec
+    const lokal = tillampaFasta(telefon, ["0012", "0001"]);
+    expect(lokal.serier.find((s) => s.id === "0012")!.markeringIndex).toBe(0);
+    expect(lokal.etiketter.some((e) => e.serieId === "0001")).toBe(true);
+  });
+  it("kopplingslinjen börjar vid linjeslutet även när serien slutar före sista perioden", () => {
+    const scen = layout(fixtur("ar", "skr-tillganglighet", "kolada-n79179", ["0001"]), 832);
+    const sthlm = scen.etiketter.find((e) => e.serieId === "0001")!;
+    const sista = scen.stopp.filter((s) => s.serieId === "0001").at(-1)!;
+    expect(sthlm.ankarX).toBeCloseTo(sista.x + 6);
+    expect(sthlm.ankarY).toBeCloseTo(sista.y);
+    expect(sthlm.x).toBeCloseTo(scen.plot.x + scen.plot.b + tema.diagram.etikett.kolumnAvstand);
   });
   it("högst fyra; den femte ersätter den äldsta", () => {
     expect(vaxlaFast(["a", "b", "c", "d"], "e")).toEqual(["b", "c", "d", "e"]);
@@ -147,7 +178,7 @@ describe("tooltip", () => {
     expect(m.noter).toEqual(["Inget värde för Halland 2023"]);
   });
   it("fäst region: Klicka för att ta bort", () => {
-    const spec = tillampaFasta(telefon, ["0006"]);
+    const spec = fixtur("ar", "skr-tillganglighet", "kolada-n79179", ["0006"]);
     const m = tooltipModell(spec, tidsaxel(spec), byggPunktIndex(spec, tidsaxel(spec)), { index: 9, serieId: "0006" });
     expect(m.uppmaning).toBe("Klicka för att ta bort");
   });
@@ -163,7 +194,7 @@ describe("tooltip", () => {
 });
 
 describe("tangentbord", () => {
-  const spec = tillampaFasta(telefon, ["0012"]);
+  const spec = fixtur("ar", "skr-tillganglighet", "kolada-n79179", ["0012"]);
   const scen = layout(spec, 832);
   const m = byggTraffmodell(scen, spec);
   it("startar på Hallands senaste värde och flyttar med pilar, Home och End", () => {
@@ -203,11 +234,29 @@ describe("SSR", () => {
       }
     }
   });
+
+  it("renderar WP1:s fixturer i alla visningar (linje här, övriga typer som stubbar)", () => {
+    let linjer = 0;
+    const fall = [{ kap: skrUtdrag(), vy: "ar" as const }, { kap: akutflodeUtdrag(), vy: "manad" as const }, { kap: hierarki(), vy: "manad" as const }];
+    for (const { kap, vy } of fall) {
+      for (const kpi of kap.kpier) {
+        const ctx = { vy };
+        for (const v of visningar(kpi, kap, ctx)) {
+          const spec = kpiTillSpec(kpi, kap, ctx, v.id);
+          if (spec.typ === "linje") linjer++;
+          const html = renderToStaticMarkup(<Diagram spec={spec} bredd={640} />);
+          expect(html, `${kpi.id}:${v.id}`).toContain('role="img"');
+          expect(html).not.toContain("NaN");
+        }
+      }
+    }
+    expect(linjer).toBeGreaterThan(3);
+  });
 });
 
 describe("hovring ritar bara överlägget", () => {
   it("statiska lagret är oförändrat under en pekarsekvens", () => {
-    const spec = tillampaFasta(telefon, ["0012"]);
+    const spec = fixtur("ar", "skr-tillganglighet", "kolada-n79179", ["0012"]);
     const scen = layout(spec, 832);
     const m = byggTraffmodell(scen, spec);
     const Rita = linje.Rita;

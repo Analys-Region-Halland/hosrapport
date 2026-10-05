@@ -50,6 +50,10 @@ describe("värdeaxelns ticks", () => {
   it("ger prototypens 60–100 för telefontillgängligheten", () => {
     expect(vardeTicks(61.5, 100, false).ticks).toEqual([60, 70, 80, 90, 100]);
   });
+  it("väljer det steg som slösar minst höjd (42–146 ger 25–150, inte 0–150)", () => {
+    expect(vardeTicks(42, 146, false).ticks).toEqual([25, 50, 75, 100, 125, 150]);
+    expect(vardeTicks(61.5, 100, true).ticks).toEqual([60, 80, 100]);
+  });
   it("tar med noll när axeln kräver det", () => {
     expect(vardeTicks(24000, 32000, false, true).ticks[0]).toBe(0);
   });

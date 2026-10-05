@@ -6,7 +6,7 @@
 // mellan perioderna. x-skalan är linjär i periodindex, så att varje period får
 // samma bredd (månader ritas jämnt, som i prototypen).
 
-import { precisionFixed, scaleLinear, tickStep } from "d3";
+import { precisionFixed, scaleLinear } from "d3";
 import type { ScaleLinear } from "d3";
 import type { TalFormat, VyId } from "../../data/modell";
 import { kronor, period, procent, tal } from "../../design/format";
@@ -123,6 +123,10 @@ export interface VardeTicks {
  * Ticks på jämna värden som omsluter datan: en gridlinje på eller över högsta
  * och på eller under lägsta värdet (stilguiden 6.3). 4–6 linjer, 3–4 i smala
  * diagram. Med `noll` ingår noll i spannet.
+ *
+ * Steg prövas bland 1, 2, 5 (och 25, 250 … utan decimaler) gånger en
+ * tiopotens. Bland stegen som ger rätt antal linjer väljs det som slösar minst
+ * höjd utanför datan, så att linjerna sitter tätt kring den.
  */
 export function vardeTicks(min: number, max: number, smal: boolean, noll = false): VardeTicks {
   let lo = min, hi = max;
@@ -133,26 +137,31 @@ export function vardeTicks(min: number, max: number, smal: boolean, noll = false
     lo -= d; hi += d;
   }
   const grans = smal ? LINJER_SMAL : LINJER_BRED;
-  const forsok = smal ? [3, 4, 2, 5] : [5, 4, 6, 3, 7];
-  let bast: VardeTicks | null = null;
-  let bastMiss = Infinity;
-  for (const mal of forsok) {
-    const steg = tickStep(lo, hi, mal);
-    if (!(steg > 0)) continue;
-    const t0 = Math.floor(lo / steg + 1e-9) * steg;
-    const t1 = Math.ceil(hi / steg - 1e-9) * steg;
-    const n = Math.round((t1 - t0) / steg) + 1;
-    const miss = n < grans.min ? grans.min - n : n > grans.max ? n - grans.max : 0;
-    if (miss < bastMiss) {
-      const decimaler = precisionFixed(steg);
-      const ticks: number[] = [];
-      for (let i = 0; i < n; i++) ticks.push(Number((t0 + i * steg).toFixed(decimaler + 2)));
-      bast = { ticks, steg, decimaler };
-      bastMiss = miss;
-      if (miss === 0) break;
+  const e = Math.floor(Math.log10(hi - lo));
+  let bast: (VardeTicks & { miss: number; spill: number; udda: boolean }) | null = null;
+  for (let k = e - 2; k <= e + 1; k++) {
+    for (const m of [1, 2, 2.5, 5]) {
+      if (m === 2.5 && k < 1) continue;               // 2,5 bara som 25, 250 … (inga decimaler)
+      const steg = m * 10 ** k;
+      const t0 = Math.floor(lo / steg + 1e-9) * steg;
+      const t1 = Math.ceil(hi / steg - 1e-9) * steg;
+      const n = Math.round((t1 - t0) / steg) + 1;
+      if (n < 2 || n > 12) continue;
+      const miss = n < grans.min ? grans.min - n : n > grans.max ? n - grans.max : 0;
+      const spill = (t1 - t0) - (hi - lo);
+      const udda = m === 2.5;
+      const battre = !bast || miss < bast.miss
+        || (miss === bast.miss && (spill < bast.spill - 1e-9 || (Math.abs(spill - bast.spill) <= 1e-9 && bast.udda && !udda)));
+      if (battre) {
+        const decimaler = precisionFixed(steg);
+        const ticks: number[] = [];
+        for (let i = 0; i < n; i++) ticks.push(Number((t0 + i * steg).toFixed(decimaler + 2)));
+        bast = { ticks, steg, decimaler, miss, spill, udda };
+      }
     }
   }
-  return bast ?? { ticks: [lo, hi], steg: hi - lo, decimaler: 0 };
+  if (!bast) return { ticks: [lo, hi], steg: hi - lo, decimaler: 0 };
+  return { ticks: bast.ticks, steg: bast.steg, decimaler: bast.decimaler };
 }
 
 /** Tickvärdets text: `%` och `kr` skrivs i ticken, andra enheter i undertiteln. */

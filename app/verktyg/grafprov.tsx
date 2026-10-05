@@ -8,10 +8,10 @@
 //   w                  figurens bredd i px (förval: upp till matt.figur, 880)
 //   fasta              kommaseparerade enhets-id som är fästa från början, t.ex. 0012,0001
 //   figur=1            rendera WP4:s Figur i stället för den enkla plattan
-//   kalla=prov         bygg specen med WP2:s testhjälp även när WP1:s kpiTillSpec finns
 //   stilguide=linje    visa linjediagrammets stilguidesektion i stället
 //
-// Fästa serier ägs här (som figuren gör i rapporten) och skickas till
+// Specen byggs med WP1:s normalisera + kpiTillSpec. Fästa serier ägs här
+// (som figuren gör i rapporten), ingår i specens kontext och skickas till
 // diagrammet med fasta/onFasta. Granskning med riktiga mushändelser:
 // verktyg/grafprov.mjs (CDP mot headless Edge). Ägare: WP2.
 
@@ -24,7 +24,7 @@ import "../src/index.css";
 import Figur from "../src/figur/Figur";
 import type { VyId } from "../src/data/modell";
 import { ProvFigur } from "./grafprov-figur";
-import { useSpec, type Specskalla } from "./grafprov-data";
+import { useSpec } from "./grafprov-data";
 import s from "./grafprov.module.css";
 import { Sektion as LinjeSektion } from "./sektioner/linje.stilguide";
 
@@ -35,22 +35,21 @@ const kpi = q.get("kpi");
 const w = q.get("w") ? Number(q.get("w")) : undefined;
 const startFasta = (q.get("fasta") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 const medFigur = q.get("figur") === "1";
-const kalla = (q.get("kalla") === "prov" ? "prov" : "auto") as Specskalla;
 
 export function Prov() {
-  const { spec, byggd, fel } = useSpec(vy, sektion, kpi, kalla);
   const [fasta, setFasta] = useState<string[]>(startFasta);
+  const { spec, fel } = useSpec(vy, sektion, kpi, fasta);
   if (fel) return <p className={s.etikett}>{fel}</p>;
   if (!spec) return <p className={s.etikett}>Laddar …</p>;
   return (
-    <div data-grafprov={byggd}>
+    <div data-grafprov="">
       {medFigur ? (
         <div style={w ? { width: w, margin: "0 auto" } : undefined}>
           <Figur spec={spec} rubrikniva={4} fasta={fasta} onFasta={setFasta} />
         </div>
       ) : (
         <ProvFigur spec={spec} fasta={fasta} onFasta={setFasta} bredd={w}
-          etikett={`${kpi ?? spec.id} · ${vy} · ${byggd}`} />
+          etikett={`${spec.id} · ${vy}`} />
       )}
     </div>
   );

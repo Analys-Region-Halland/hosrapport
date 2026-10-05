@@ -24,8 +24,8 @@ interface ExempelProps {
 }
 
 function Exempel({ etikett, vy, sektion, kpi, fasta: start = [] }: ExempelProps) {
-  const { spec, fel } = useSpec(vy, sektion, kpi);
   const [fasta, setFasta] = useState<string[]>(start);
+  const { spec, fel } = useSpec(vy, sektion, kpi, fasta);
   if (fel) return <p className={s.etikett}>{fel}</p>;
   if (!spec) return <p className={s.etikett}>Laddar {kpi} …</p>;
   return <ProvFigur spec={spec} fasta={fasta} onFasta={setFasta} etikett={etikett} />;

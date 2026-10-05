@@ -109,22 +109,25 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
 
   // ── Etiketternas underlag (utan y) och högermarginalen ──
   const serieAv = new Map(spec.serier.map((s) => [s.id, s]));
-  const underlag: (Omit<EtikettUnderlag, "ankarY"> & { ankarVarde: number })[] = [];
+  // Ankaret är linjeslutet: seriens sista värde (som kan ligga före sista
+  // perioden), bandets sista mittpunkt eller mållinjens höger ände.
+  const underlag: (Omit<EtikettUnderlag, "ankarY"> & { ankarVarde: number; ankarIndex: number })[] = [];
   for (const e of spec.etiketter) {
     const s = serieAv.get(e.serieId);
     if (!s || underlag.some((u) => u.serieId === s.id)) continue;
-    let ankarVarde: number | null = null;
+    let ankare: [number, number] | null = null;
     let text = e.text;
-    if (LINJEROLLER.has(s.roll)) ankarVarde = sistaDefinierade(varden.get(s.id) ?? [])?.[1] ?? null;
+    if (LINJEROLLER.has(s.roll)) ankare = sistaDefinierade(varden.get(s.id) ?? []);
     else if (s.roll === "forvantat") {
       const sista = s.intervall?.[s.intervall.length - 1];
-      ankarVarde = sista ? (sista.lo + sista.hi) / 2 : null;
+      const i = sista ? axel.index.get(sista.x.slice(0, 10)) : undefined;
+      ankare = sista && i !== undefined ? [i, (sista.lo + sista.hi) / 2] : null;
     } else if (s.roll === "mal" && s.varde !== undefined) {
-      ankarVarde = s.varde;
+      ankare = [sistaIndex, s.varde];
       if (!text) text = `Mål ${varde(s.varde, format)}`;
     }
-    if (ankarVarde === null) continue;
-    underlag.push({ serieId: s.id, text, ankarVarde, interaktiv: arFastbar(s), ...etikettStil(s, t) });
+    if (ankare === null) continue;
+    underlag.push({ serieId: s.id, text, ankarIndex: ankare[0], ankarVarde: ankare[1], interaktiv: arFastbar(s), ...etikettStil(s, t) });
   }
   const sistaText = n ? period(axel.perioder[sistaIndex], axel.vy, "axel") : "";
   const hoger = Math.max(
@@ -226,7 +229,9 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
     }
   }
 
-  // Punkter utanför förväntat intervall: triangel ovan eller under, romb långt utanför
+  // Punkter utanför förväntat intervall: triangel ovan eller under, romb långt
+  // utanför. Vilka punkter som är utanför bestäms av fokuspunkternas signal
+  // och markeras bara när specen har ett förväntat intervall.
   const forv = spec.serier.find((s) => s.roll === "forvantat");
   if (forv && fokus) {
     const iv = new Map((forv.intervall ?? []).map((d) => [axel.index.get(d.x.slice(0, 10)), d]));
@@ -234,7 +239,7 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
     const avvikande: { i: number; p: Punkt; status: "gul" | "rod" }[] = [];
     pi.get(fokus.id)?.forEach((d, i) => {
       if (!d || d.punkt.varde === null) return;
-      const st = forvantatStatus(d.punkt, iv.get(i));
+      const st = forvantatStatus(d.punkt);
       if (st === "gul" || st === "rod") avvikande.push({ i, p: d.punkt, status: st });
     });
     const upptagna: [number, number, number, number][] = [];
@@ -274,12 +279,13 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
   );
   const etiketter: Etikett[] = placerade.map((e) => ({
     serieId: e.serieId,
-    text: e.kortText,
+    text: e.rader.join(" "),
+    rader: e.rader,
     helText: e.text,
     x: xSista + t.diagram.etikett.kolumnAvstand,
     y: e.y,
-    textbredd: textbredd(e.kortText, e.vikt),
-    ankarX: xSista + GEOMETRI.koppling.start,
+    textbredd: Math.max(...e.rader.map((r) => textbredd(r, e.vikt))),
+    ankarX: x(e.ankarIndex) + GEOMETRI.koppling.start,
     ankarY: e.ankarY,
     farg: e.farg,
     vikt: e.vikt,

@@ -16,6 +16,7 @@
     color: var(--farg-black);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    min-width: 14em;
     pointer-events: none;
     animation: tona-in var(--rorelse-kort) ease-out;
   }
@@ -77,8 +78,13 @@
     font-weight: var(--typ-not-viktStark);
   }
 
+  /* Noter och uppmaning bryts inom tabellens bredd i stället för att göra
+     rutan bredare (viktigt i smala diagram där rutan annars täcker linjerna). */
   .not {
     margin-top: calc(var(--rum-1) * 1.5);
     color: var(--farg-text3);
+    white-space: normal;
+    width: 0;
+    min-width: 100%;
   }
 }
