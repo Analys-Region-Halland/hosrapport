@@ -5,7 +5,9 @@
 // Arbetsdelning:
 //   layout()  ren funktion: spec + storlek + tema → Scen med allt färdigräknat
 //             (pixlar, färger, etiketter efter kollisionslösning, pekarmål).
-//   Rita      ritar Scen som SVG-innehåll. Diagram.tsx äger den yttre <svg>,
+//   Rita      ritar Scen som SVG-innehåll (eller en egen inbäddad <svg>, som
+//             stubben och minidiagrammet, som också ritas fristående i
+//             tabellceller). Diagram.tsx äger den yttre <svg>,
 //             pekar- och tangenthändelser, tooltip och fästa serier. Rita får
 //             `aktiv` och ritar då bara ett överlägg; de statiska lagren är
 //             memoiserade på `scen` och ritas aldrig om vid hovring.

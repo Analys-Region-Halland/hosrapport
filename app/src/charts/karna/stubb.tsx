@@ -3,8 +3,9 @@
 // med texten "{typ}: byggs i {paket}". Ägare: WP2; tas bort när WP3 har
 // ersatt alla typer i typer/*.tsx.
 //
-// Rita returnerar SVG-innehåll: Diagram.tsx äger den yttre <svg> (med
-// role="img", aria-label och tangentbordsfokus).
+// Rita returnerar en egen <svg>: den fungerar både inne i Diagram.tsx yttre
+// svg (en inbäddad svg är giltig) och fristående, som när galleriet ritar
+// minidiagrammet direkt i en tabellcell.
 
 import { standardHojd, tema as standardTema } from "../../design/tema";
 import type { DiagramTyp } from "../spec";
@@ -23,14 +24,14 @@ export function stubbRenderare(typ: DiagramTyp, paket: string): Renderare {
     Rita: ({ scen }) => {
       const t = standardTema;
       return (
-        <g data-stubb={typ}>
+        <svg width={scen.bredd} height={scen.hojd} role="img" aria-label={`${typ}: byggs i ${paket}`} data-stubb={typ}>
           <rect x={0.5} y={0.5} width={scen.bredd - 1} height={scen.hojd - 1}
             fill={t.farg.yta} stroke={t.farg.harlinje} />
           <text x={t.rum[4]} y={t.rum[4] + t.typ.roll.not.storlek} fill={t.farg.text3}
             fontFamily={t.typ.familj.sans} fontSize={t.typ.roll.not.storlek}>
             {`${typ}: byggs i ${paket}`}
           </text>
-        </g>
+        </svg>
       );
     },
   };
