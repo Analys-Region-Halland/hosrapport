@@ -108,7 +108,7 @@ Fem textfärger totalt (`black`, `text2`, `text3`, `fokus` samt statusfärgernas
 
 **Avståndsskala** (`rum.*`, 8-punktsrutnät): 1 = 4, 2 = 8, 3 = 12, 4 = 16, 5 = 24, 6 = 32, 7 = 48, 8 = 64, 9 = 96, 10 = 128 px.
 
-**Närhetsregeln:** avståndet mellan två syskon ska vara minst 2,5 gånger det största avståndet inuti dem. Därför:
+**Närhetsregeln:** avståndet mellan två indikatorer ska vara minst 2,5 gånger det största avståndet inuti en indikator. På avsnitts- och kapitelnivå bärs gränsen av rubriken (numrerad serif 32 px) tillsammans med avståndet, så där gäller inte kvoten. Därför:
 
 | Mellan | Avstånd ovanför | Avstånd under rubriken |
 |---|---|---|
@@ -128,6 +128,7 @@ Fem textfärger totalt (`black`, `text2`, `text3`, `fokus` samt statusfärgernas
 | `matt.sida` | 1320 px | Sidans maxbredd inklusive innehållsförteckning |
 | `matt.toc` | 220 px | Innehållsförteckningens spalt (bara desktop) |
 | `matt.verktygsrad` | 56 px | Verktygsradens höjd |
+| `matt.harlinje` | 1 px | Hårlinjer: rutnät, tabellrader, popoverns ram |
 | `matt.marginal` | 24 px desktop, 16 px mobil | Sidmarginal |
 
 **Brytpunkter** (`brytpunkt.*`): `mobil` < 640, `mellan` 640–1199 (innehållsförteckning som ark), `desktop` ≥ 1200 (innehållsförteckning som spalt). Inget får ge vågrät rullning vid 320 px.

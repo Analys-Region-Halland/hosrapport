@@ -26,5 +26,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "verktyg/stilguide.tsx", "verktyg/stilguide-stil.ts", "verktyg/sektioner"]
 }

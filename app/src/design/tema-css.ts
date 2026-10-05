@@ -27,7 +27,8 @@ function medEnhet(sokvag: string[], v: number): string {
   const nyckel = sokvag[sokvag.length - 1];
   if (sokvag[0] === "rorelse") return `${v}ms`;
   if (nyckel === "sparr") return `${v}em`;
-  if (UTAN_ENHET.has(nyckel)) return String(v);
+  // Radhöjd och vikt är enhetslösa bara i typografin; komponenters radhöjd är px.
+  if (UTAN_ENHET.has(nyckel) && sokvag[0] === "typ") return String(v);
   return `${v}px`;
 }
 
