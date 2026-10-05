@@ -215,7 +215,7 @@ export const vilaUttryck = `(async () => {
  *   steg: { vanta: "selektor" } | { klicka: "selektor", index } | { vila: ms }
  */
 export async function oppnaSida(adress, { bredd, hojd, steg = [], konsol = null }) {
-  const url = /^https?:/.test(adress) ? adress : `${BAS_URL}${adress}`;
+  const url = /^(https?|file):/.test(adress) ? adress : `${BAS_URL}${adress}`;
   const flik = await (await fetch(`http://127.0.0.1:${CDP_PORT}/json/new?about:blank`, { method: "PUT" })).json();
   const k = await Cdp.anslut(flik.webSocketDebuggerUrl);
   const stang = async () => {

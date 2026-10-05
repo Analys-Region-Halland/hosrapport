@@ -278,7 +278,8 @@ export function oversiktExempel(): { kapitel: string; kalla: string; avsnitt: { 
 // ════════════════════════════════════════════════════════════
 
 /** Tar bort em dash ur text från datan (stilguiden 3.1): skrivs om till komma. */
-export const utanEmDash = (s: string) => s.replace(/\s*—\s*/g, ", ");
+const EM_DASH = new RegExp(`\\s*${String.fromCharCode(0x2014)}\\s*`, "g");
+export const utanEmDash = (s: string) => s.replace(EM_DASH, ", ");
 
 /** De första `n` meningarna i en text. */
 export function meningar(text: string, n: number): string {

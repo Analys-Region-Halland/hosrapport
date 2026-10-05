@@ -106,7 +106,7 @@ const kod = await medWebblasare(async () => {
         const text = await k.utvardera("document.body.innerText.trim()");
         if (a.rot) rotText = text;
         if (a.omFinns && rotText !== null && text === rotText) {
-          resultat.push({ adress: a.adress, bredd, grupp: a.grupp, hoppad: "visar samma innehåll som /?ny, adressen finns inte än" });
+          resultat.push({ adress: a.adress, bredd, grupp: a.grupp, hoppad: "visar samma innehåll som /?ny: samma sida, eller adressen finns inte än" });
           continue;
         }
         await k.utvardera(AXE);
@@ -137,7 +137,7 @@ const kod = await medWebblasare(async () => {
     for (const rad of r.konsol) console.log(`  konsol   ${rad.slice(0, 200)}`);
   }
   if (hoppade.length) {
-    console.log(`\nHoppade över ${hoppade.length} adresser som inte finns än (visar samma som /?ny):`);
+    console.log(`\nHoppade över ${hoppade.length} adresser som visar samma innehåll som /?ny (samma sida, eller adressen finns inte än):`);
     console.log(`  ${[...new Set(hoppade.map((r) => r.adress))].join(", ")}`);
   }
   const granskade = resultat.length - hoppade.length;

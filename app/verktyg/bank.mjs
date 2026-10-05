@@ -114,6 +114,13 @@ export const VYER = [
     steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
   },
   {
+    // Stilguidens första skärm: masthead och innehållsförteckning
+    id: "stilguide-topp", grupp: "stilguide",
+    adress: "/verktyg/stilguide.html",
+    steg: [{ vanta: "html[data-stilguide='klar']" }],
+    skivor: 1,
+  },
+  {
     // Den levande stilguiden: en bild per sektion och per galleriexempel
     id: "stilguide", grupp: "stilguide",
     adress: "/verktyg/stilguide.html",
@@ -348,7 +355,7 @@ function skrivKontaktark(resultat, { jamfort }) {
     : "ingen jämförelse (--skarmdump)"}</p>
 ${jamfort ? `<label><input type="checkbox" id="bara-fel"${fel.length ? " checked" : ""}> Visa bara avvikande</label>` : ""}
 ${ordnade.map(([vy, rader]) => `<h2>${esc(vy)} <span>${esc(VYER.find((v) => v.id === vy)?.grupp ?? "")}</span></h2>
-<ul>${rader.sort((a, b) => (a.bredd ?? 0) - (b.bredd ?? 0)).map(kort).join("\n")}</ul>`).join("\n")}
+<ul>${rader.sort((a, b) => (b.bredd ?? 0) - (a.bredd ?? 0)).map(kort).join("\n")}</ul>`).join("\n")}
 </body></html>`;
   const ut = path.join(BANK, "rapport.html");
   fs.writeFileSync(ut, html);
