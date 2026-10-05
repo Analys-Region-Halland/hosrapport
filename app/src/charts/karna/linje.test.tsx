@@ -17,6 +17,8 @@ import { allaLinjer, fixtur } from "./testdata";
 import { byggPunktIndex, tooltipModell } from "./tooltipModell";
 
 const linje = RENDERARE.linje;
+/** Tidsgräns för tester som går igenom alla fixturer. */
+const TUNG = 30_000;
 const BREDDER = [326, 560, 832];
 const layout = (spec: ChartSpec, bredd: number): Scen =>
   linje.layout(spec, { bredd, hojd: linje.hojd(bredd, spec) }, tema);
@@ -64,7 +66,7 @@ describe("layout för alla fixturer", () => {
         expect(plot.x + plot.b).toBeLessThanOrEqual(bredd);
         expect(bredd - plot.x - plot.b).toBeLessThanOrEqual(bredd * tema.diagram.etikett.maxMarginalAndel + 1e-6);
       }
-    });
+    }, TUNG);
 
     it(`etiketterna står i en kolumn utan överlapp (${bredd} px)`, () => {
       for (const f of fixturer) {
@@ -84,7 +86,7 @@ describe("layout för alla fixturer", () => {
           expect(e.y).toBeLessThanOrEqual(scen.plot.y + scen.plot.h);
         }
       }
-    });
+    }, TUNG);
   }
 });
 
@@ -244,7 +246,7 @@ describe("SSR", () => {
         expect(html).not.toContain("NaN");
       }
     }
-  });
+  }, TUNG);
 
   it("renderar WP1:s fixturer i alla visningar (linje här, övriga typer som stubbar)", () => {
     let linjer = 0;
@@ -262,7 +264,7 @@ describe("SSR", () => {
       }
     }
     expect(linjer).toBeGreaterThan(3);
-  });
+  }, TUNG);
 });
 
 describe("hovring ritar bara överlägget", () => {
@@ -294,5 +296,5 @@ describe("hovring ritar bara överlägget", () => {
       expect(statiskt(html)).toBe(vila);
     }
     expect(lyfta).toBeGreaterThan(5);
-  });
+  }, TUNG);
 });
