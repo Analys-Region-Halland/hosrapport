@@ -395,7 +395,7 @@ Validering: `R/gemensam/kontrakt.R` (R-sidan, båda versionerna), `schema/hos-da
 ```
 
 - Avvikelse (WP0): `reset` ligger under `legacy`, som preflight låg under gamla `index.css`; ovanför skulle återställningen vinna över gamla vyns regler.
-- `main.tsx` importerar i ordning: `styles/index.css`, `virtual:tema.css` (genereras av vite-pluginet i `design/tema-css.ts`; innehållet är redan inslaget i `@layer tema { :root { … } }`), gamla `index.css`.
+- `main.tsx` importerar i ordning: `styles/index.css` och `virtual:tema.css` (genereras av vite-pluginet i `design/tema-css.ts`; innehållet är redan inslaget i `@layer tema { :root { … } }`). Gamla `index.css` importeras av `GammalApp.tsx` och laddas bara bakom `?gammal` (WP12b); lagerordningen i `index.html` håller den under de nya lagren.
 - Gamla `index.css`: raden `@import "tailwindcss";` tas bort och resten av filen slås in i `@layer legacy { … }`. Det är den enda ändring WP0 gör i den frysta filen. Fungerar `@import … layer()` i Vite 8 utan omskrivning får WP0 välja den vägen i stället; kontrollera i byggd CSS att lagerordningen blev rätt.
 
 CSS-variablerna heter som tokens med bindestreck: `farg.diagram.fokus` → `--farg-diagram-fokus`, `typ.roll.brod` → `--typ-brod-storlek`, `--typ-brod-radhojd`, `--typ-brod-vikt`, `rum.5` → `--rum-5`. Komponenternas `.module.css` läggs automatiskt i lagret `komponent` via `@layer komponent { … }` i varje fil.

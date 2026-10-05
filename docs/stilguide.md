@@ -130,6 +130,7 @@ Fem textfärger totalt (`black`, `text2`, `text3`, `fokus` samt statusfärgernas
 | `matt.verktygsrad` | 56 px | Verktygsradens höjd |
 | `matt.harlinje` | 1 px | Hårlinjer: rutnät, tabellrader, popoverns ram |
 | `matt.marginal` | 24 px desktop, 16 px mobil | Sidmarginal |
+| `komponent.statusmatare` | höjd 6 px, mellanrum 2 px | Statusmätarens segment (startsida, sammanfattning) |
 
 **Brytpunkter** (`brytpunkt.*`): `mobil` < 640, `mellan` 640–1199 (innehållsförteckning som ark), `desktop` ≥ 1200 (innehållsförteckning som spalt). Inget får ge vågrät rullning vid 320 px.
 
@@ -207,9 +208,9 @@ Samma sak heter alltid samma sak.
 |---|---|---|
 | 1 | Brandlist | `farg.fokus` som yta, 48 px, vit logotyp 22 px och "HoS-rapport" i `typ.roll.granssnitt` 600 vitt. Enda gröna ytan i produkten. |
 | 2 | Masthead | Kicker "Region Halland · Analys", titel "Hälso- och sjukvården i Halland" (`typ.roll.titel`), ingress ≤ 3 meningar (`typ.roll.ingress`). |
-| 3 | Läget just nu | Blockrubrik + en statusmätare för alla indikatorer med rankning + rad `29 i fas · 20 bevaka · 31 avvikelse` + länk "Läs sammanfattningen". Inga andra nyckeltal (antal kapitel och indikatorer står i metaraden nedan). |
+| 3 | Läget just nu | Blockrubrik + en statusmätare som är summan av kapitelradernas mätare (varje kapitel räknas i den tidsupplösning det öppnas i, 4.5) + rad `27 i fas · 21 bevaka · 29 avvikelse` + länk "Läs sammanfattningen". Inga andra nyckeltal (antal kapitel och indikatorer står i metaraden nedan). |
 | 4 | Kapitelförteckning | Per tema: temanamn (`typ.roll.avsnitt`) och en mening (`typ.roll.granssnitt`, `farg.text2`). Per kapitel: nummer (`farg.fokus`), namn (`typ.roll.indikator`), dek högst två rader (`typ.roll.granssnitt`), metarad (`typ.roll.not`: `14 indikatorer · årlig · SKR via Kolada`), statusmätare. Hela raden är en länk; hover stryker under namnet. |
-| 5 | Sidfot | Om rapporten · Begrepp · Så läser du rapporten · Publicerad {datum}. `typ.roll.not`. |
+| 5 | Sidfot | Om rapporten · Begrepp · Så läser du rapporten · Publicerad {datum}. `typ.roll.not`. Brandlisten är `header` och sidfoten `footer`, båda utanför `main`. |
 
 Inga ramar, vänsterkanter, topplinjer, källtaggar ("Öppen data") eller fyrfältsfakta. Avstånd mellan teman `rum.9`, mellan kapitel `rum.6`.
 
@@ -251,15 +252,28 @@ Status visas en gång (rubrikraden). Värde, plats och period en gång (nyckelta
 
 ### 4.5 Ram: verktygsrad, positionsrad, innehållsförteckning
 
+En adress utan tidsupplösning öppnar kapitlet i månadsvyn om den finns, annars i den vy som har kapitlet. Startsidans rader och mätare följer samma regel.
+
+
 | Del | Spec |
 |---|---|
 | Verktygsrad | Sticky, höjd `matt.verktygsrad`, `farg.papper`. Vänster: `← Alla kapitel`. Mitten: positionsraden. Höger: `Exportera` (meny). En hårlinje under raden visas först när sidan rullats. Ryms i 360 px (positionsraden kortas, exportmenyn blir ikon med etikett för skärmläsare). |
 | Positionsrad | `typ.roll.not`, `farg.text2`: `2 Vårdgarantin › 2.3 Väntande till operation`, aktuell del i `farg.black` 600. Ingen statusmarkör och ingen förloppslinje. På mellan och mobil är raden en knapp som öppnar innehållsförteckningen som ark. |
-| Exportera | Menyval: PowerPoint (kapitlet eller hela rapporten), Skriv ut, Kopiera länk till här, Redigeringsläge på/av. |
+| Exportera | Menyval: PowerPoint (kapitlet eller hela rapporten), Skriv ut, Kopiera länk till här, Redigeringsläge. Listan högerjusteras under knappen. Redigeringsläge är ett kryssval (`menuitemcheckbox`) som visar "på" eller "av" i `farg.text2`. Under 640 px är knappen en ikon på 36 × 36 px med etikett för skärmläsare. |
 | Innehållsförteckning | Desktop: spalt `matt.toc`, sticky. Avsnitt i `typ.roll.granssnitt` (aktivt 600 `farg.black`), indikatorer i `typ.roll.not` med statusprick 6 px före namnet. Aktiv indikator: `farg.fokusLjus` bakgrund. Inga trianglar, ingen förloppslinje, inga räknare. Avsnitt fälls ut automatiskt när läsaren är i dem. |
 | Läsläge | Ingen nedtoning av andra block. All text har alltid full kontrast. |
 | Escape | Stänger bara det översta lagret (popover, ark, förstoring). Navigerar aldrig. |
 | URL | Varje kapitel, indikator och begrepp har en adress. Uppdatera, bakåt och delad länk landar på samma ställe. |
+
+### 4.6 Textsida (Så läser du rapporten, Om rapporten)
+
+| Del | Spec |
+|---|---|
+| Masthead | Som kapitlets, med kicker "Hälso- och sjukvården i Halland", titel, 2 px linje och dek. Metaraden är valfri. |
+| Del | Rubrik i `typ.roll.avsnitt` utan nummer, `rum.9` mellan delarna. Underrubrik i `typ.roll.figurtitel`. |
+| Löptext | `typ.roll.brod`, `matt.text`. Inga ramar, inga kort. |
+| Listor | Term i `typ.roll.granssnitt` 600 över förklaringen i `typ.roll.brod`. En statuslista visar statusmarkören (5.1) över förklaringen. |
+| Adresser | `#/las` och `#/om`, länkade från startsidans sidfot. |
 
 ---
 
@@ -304,7 +318,7 @@ Summering i `typ.roll.granssnitt` 600 `farg.fokus` med chevron som roterar 90°.
 
 | Del | Spec |
 |---|---|
-| Markering i text | Ärver texten. Prickad understrykning 1 px `farg.text3`, avstånd 0,2 em. Muspekare: hjälp. Bara första förekomsten per indikator (och per kapitelblock). Aldrig i rubriker, knappar eller tabeller. |
+| Markering i text | Ärver texten. Prickad understrykning 1 px `farg.text3`, avstånd 0,2 em. Muspekare: hjälp. Bara första förekomsten per indikator (och per kapitelblock). Aldrig i rubriker, knappar eller tabeller. Ett skiljetecken direkt efter markeringen bryts aldrig till en ny rad. |
 | Aktivering | Klick, Enter eller mellanslag. Inte hover. `button` med `aria-expanded`. |
 | Popover (≥ 640 px) | `farg.yta`, 1 px ram `farg.harlinje`, ingen skugga, maxbredd 320 px, luft `rum.4`. Term `typ.roll.granssnitt` 600, kort definition `typ.roll.granssnitt`, länk "Mer i begreppslistan" `typ.roll.not`. Stängs med Escape, klick utanför eller samma knapp; fokus återgår till termen. |
 | Ark (< 640 px) | Från skärmens nederkant, samma innehåll, stängknapp 44 px. |
@@ -510,6 +524,7 @@ En bild per indikator: kicker (kapitel), titel = indikatornamn, figurens titel o
 | Klickytor | ≥ 24 × 24 px |
 | Förstoring | Fungerar vid 200 % zoom och 320 px bredd utan vågrät rullning |
 | Rubrikstruktur | h1 titel, h2 avsnitt och kapitelblock, h3 indikator, h4 figurtitel. Inga hoppade nivåer. |
+| Text bara för skärmläsare | En enda form: den globala klassen `.visuellt-dold` i `styles/bas.css`. |
 | Språk | `lang="sv"` |
 | Rörelse | Respekterar `prefers-reduced-motion` |
 | Automatisk granskning | axe utan allvarliga eller kritiska fel på alla sidor |
