@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { akutflodeUtdrag, hierarki, skrUtdrag } from "../data/fixturer";
 import { HALLAND_ID, RIKET_ID } from "../data/modell";
+import { tema } from "../design/tema";
 import type { KapitelModell, KpiModell, VyId } from "../data/modell";
 import { normalisera } from "../data/normalisera";
 import { kpiTillSpec, minidiagramSpec, specTextfel, visningar } from "./kpiTillSpec";
@@ -280,6 +281,18 @@ describe("påhittad hierarki och utdrag", () => {
     for (const kap of [skrUtdrag(), akutflodeUtdrag()]) {
       const vy: VyId = kap.id.startsWith("skr") ? "ar" : "manad";
       for (const kpi of kap.kpier) for (const v of visningar(kpi, kap, { vy })) kontrollera(kpiTillSpec(kpi, kap, { vy }, v.id), kpi, `${kpi.id} ${v.id}`);
+    }
+  });
+});
+
+describe("tema", () => {
+  it("varje serieroll har färg, bredd och streckning i tema.ts", () => {
+    for (const r of ROLLER) {
+      expect(tema.diagram.roll, r).toHaveProperty(r);
+      const t = tema.diagram.roll[r as keyof typeof tema.diagram.roll];
+      expect(t).toHaveProperty("farg");
+      expect(t).toHaveProperty("bredd");
+      expect(t).toHaveProperty("streck");
     }
   });
 });
