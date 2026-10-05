@@ -38,6 +38,19 @@
     outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
   }
 
+  /* Små multiplar (WP3): panelens namn borrar ned när figuren kan det
+     (stilguiden 6.7). Hand och understrykning som en länk; tangentbordet når
+     samma sak med Enter i panelen. */
+  .ram[data-nedborrning] [data-panelnamn] {
+    cursor: pointer;
+  }
+
+  .ram[data-nedborrning] [data-panelnamn]:hover text {
+    text-decoration: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
   .sr {
     position: absolute;
     width: 1px;
