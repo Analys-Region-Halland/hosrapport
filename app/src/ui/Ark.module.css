@@ -1,0 +1,75 @@
+/* Ark.module.css: ark från skärmens nederkant (stilguiden 5.7). Värden ur design/tema.ts. */
+@layer komponent {
+  .ark {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    box-sizing: border-box;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: var(--rum-2) var(--matt-marginal) max(var(--rum-5), env(safe-area-inset-bottom));
+    background: var(--farg-yta);
+    /* Samma 1 px hårlinje som popoverns ram (stilguiden 5.7); egen token saknas. */
+    border-top: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
+    color: var(--farg-black);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    animation: in var(--rorelse-kort) ease-out;
+  }
+
+  .ark:focus {
+    outline: none;
+  }
+
+  .huvud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rum-3);
+    min-height: var(--komponent-ark-stangknapp);
+  }
+
+  .rubrik {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .stang {
+    flex: none;
+    min-width: var(--komponent-ark-stangknapp);
+    min-height: var(--komponent-ark-stangknapp);
+    margin-right: calc(-1 * var(--rum-3));
+    padding: 0 var(--rum-3);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-text2);
+    cursor: pointer;
+  }
+
+  .stang:hover {
+    text-decoration: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .stang:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
+  }
+
+  .innehall {
+    margin-top: var(--rum-1);
+  }
+
+  @keyframes in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}

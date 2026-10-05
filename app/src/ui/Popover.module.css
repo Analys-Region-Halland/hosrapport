@@ -1,0 +1,37 @@
+/* Popover.module.css: popover enligt stilguiden 5.7. Värden ur design/tema.ts. */
+@layer komponent {
+  .popover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(var(--komponent-popover-maxbredd), calc(100vw - 2 * var(--rum-4)));
+    padding: var(--rum-4);
+    background: var(--farg-yta);
+    /* Samma 1 px ram som menyknappen (stilguiden 5.3 och 5.7); egen token saknas. */
+    border: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
+    color: var(--farg-black);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    text-align: left;
+    animation: in var(--rorelse-kort) ease-out;
+  }
+
+  .popover:focus {
+    outline: none;
+  }
+
+  .popover:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  @keyframes in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
