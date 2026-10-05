@@ -1,0 +1,40 @@
+/* Disclosure: fördjupningen som <details> (stilguiden 5.5). Ingen ram eller
+   bakgrund, innehållet indenteras inte, ingen animation av vinkeln (2.6). */
+@layer komponent {
+  .details { margin: 0; }
+  .summering {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rum-2);
+    min-block-size: var(--komponent-klickyta);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-fokus);
+    cursor: pointer;
+    list-style: none;
+  }
+  .summering::-webkit-details-marker { display: none; }
+  .summering::before {
+    content: "›";
+    display: inline-block;
+    inline-size: 0.6em;
+    font-size: var(--typ-figurtitel-storlek);
+    line-height: 1;
+    text-align: center;
+  }
+  .details[open] > .summering::before { transform: rotate(90deg); }
+  .summering:hover { text-decoration: underline; text-underline-offset: var(--typ-lank-avstand); }
+  .summering:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+  .innehall { padding-block-start: var(--rum-4); }
+
+  /* Skrivs ut öppen även när läsaren inte öppnat den. */
+  @media print {
+    .details::details-content { content-visibility: visible; display: block; }
+    .details > .summering::before { display: none; }
+  }
+}

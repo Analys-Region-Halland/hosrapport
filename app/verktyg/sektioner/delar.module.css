@@ -1,0 +1,157 @@
+/* delar.module.css: byggstenarna i delar.tsx. Alla värden ur CSS-variablerna
+   från design/tema.ts. Ägare: WP7. */
+@layer komponent {
+  .dek {
+    margin: var(--rum-4) 0 0;
+    max-width: var(--matt-text);
+    font-family: var(--typ-ingress-familj);
+    font-size: var(--typ-ingress-storlek);
+    line-height: var(--typ-ingress-radhojd);
+    font-weight: var(--typ-ingress-vikt);
+    color: var(--farg-text2);
+  }
+
+  .underrubrik {
+    margin: var(--rum-9) 0 var(--rum-4);
+    font-family: var(--typ-indikator-familj);
+    font-size: var(--typ-indikator-storlek);
+    line-height: var(--typ-indikator-radhojd);
+    font-weight: var(--typ-indikator-vikt);
+    text-wrap: balance;
+    scroll-margin-top: var(--rum-5);
+  }
+
+  .blockrubrik {
+    margin: var(--rum-7) 0 var(--rum-4);
+    font-family: var(--typ-figurtitel-familj);
+    font-size: var(--typ-figurtitel-storlek);
+    line-height: var(--typ-figurtitel-radhojd);
+    font-weight: var(--typ-figurtitel-vikt);
+  }
+
+  .prosa {
+    margin: 0 0 var(--typ-styckeavstand);
+    max-width: var(--matt-text);
+    font-family: var(--typ-brod-familj);
+    font-size: var(--typ-brod-storlek);
+    line-height: var(--typ-brod-radhojd);
+    font-weight: var(--typ-brod-vikt);
+  }
+
+  .not {
+    margin: var(--rum-2) 0 0;
+    max-width: var(--matt-text);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+
+  .kod {
+    font-family: var(--typ-familj-sans);
+    font-size: 0.9em;
+    color: var(--farg-text2);
+    overflow-wrap: anywhere;
+  }
+
+  .notis {
+    margin: var(--rum-5) 0;
+    padding: var(--rum-4);
+    max-width: var(--matt-figur);
+    background: var(--farg-yta);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+  }
+
+  .notis p, .notis li {
+    margin: 0;
+  }
+
+  .notis ul {
+    margin: var(--rum-2) 0 0;
+    padding-left: var(--rum-5);
+  }
+
+  .notisRubrik {
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .notisText {
+    margin-top: var(--rum-2);
+    color: var(--farg-text2);
+  }
+
+  /* Tabell enligt stilguiden 5.9 */
+  .tabell {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+  }
+
+  .caption {
+    padding-bottom: var(--rum-2);
+    text-align: left;
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .dold {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tabell th {
+    padding: var(--rum-2) var(--rum-4) var(--rum-2) 0;
+    border-bottom: 1px solid var(--farg-harlinje);
+    text-align: left;
+    vertical-align: bottom;
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+  }
+
+  .tabell td {
+    padding: var(--rum-2) var(--rum-4) var(--rum-2) 0;
+    border-bottom: 1px solid var(--farg-harlinje);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .tabell th:last-child, .tabell td:last-child {
+    padding-right: 0;
+  }
+
+  .tabell .tal {
+    text-align: right;
+    font-variant-numeric: var(--typ-siffror);
+    white-space: nowrap;
+  }
+
+  /* Statusmarkören ur tokens (stilguiden 5.1) */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    height: var(--komponent-statusmarkor-hojd);
+    padding: 0 var(--komponent-statusmarkor-sidoluft);
+    border-radius: var(--komponent-statusmarkor-radie);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    font-weight: var(--typ-not-viktStark);
+    white-space: nowrap;
+  }
+
+  .prick {
+    display: inline-block;
+    width: var(--komponent-tocPrick);
+    height: var(--komponent-tocPrick);
+    border-radius: var(--komponent-statusmarkor-radie);
+    vertical-align: middle;
+  }
+}

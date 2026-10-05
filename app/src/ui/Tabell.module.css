@@ -1,0 +1,58 @@
+/* Tabell: allmän tabell och figurens tabellvy (stilguiden 5.9). Hårlinje under
+   huvud och mellan rader, inga lodräta linjer, ingen zebra. */
+@layer komponent {
+  .tabell {
+    inline-size: 100%;
+    border-collapse: collapse;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-black);
+  }
+  .caption {
+    caption-side: top;
+    padding-block-end: var(--rum-2);
+    text-align: start;
+    font-family: var(--typ-figurtitel-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+  .dold {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .tabell th,
+  .tabell td {
+    padding-block: var(--rum-2);
+    padding-inline: 0 var(--rum-4);
+    border-block-end: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
+    text-align: start;
+    vertical-align: top;
+  }
+  .tabell th:last-child,
+  .tabell td:last-child { padding-inline-end: 0; }
+  .tabell thead th {
+    vertical-align: bottom;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+  }
+  /* Radrubriker ser ut som celler; fokusenhetens rad sätts i 600. */
+  .tabell tbody th { font-weight: var(--typ-granssnitt-vikt); }
+  .tabell .fokus > th,
+  .tabell .fokus > td { font-weight: var(--typ-granssnitt-viktStark); }
+  .tabell .tal {
+    text-align: end;
+    font-variant-numeric: var(--typ-siffror);
+    white-space: nowrap;
+  }
+  /* Kolumnhuvuden får brytas, talen inte. */
+  .tabell thead .tal { white-space: normal; }
+}

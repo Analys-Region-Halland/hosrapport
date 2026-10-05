@@ -1,0 +1,122 @@
+/* galleri.module.css: diagramgalleriets ram. Själva figuren styls av Figur (WP4)
+   och graferna av renderarna (WP2, WP3). Platshållaren syns bara när exemplet
+   innehåller en stubbrenderare ([data-stubb]). Ägare: WP7. */
+@layer komponent {
+  .meta {
+    margin: var(--rum-2) 0 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+    overflow-wrap: anywhere;
+  }
+
+  .platshallare {
+    display: none;
+    margin: var(--rum-4) 0 0;
+    padding: var(--rum-3) var(--rum-4);
+    background: var(--farg-yta);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-black);
+  }
+
+  .exempel:has([data-stubb]) .platshallare {
+    display: block;
+  }
+
+  .figurplats {
+    min-width: 0;
+    margin-top: var(--rum-5);
+  }
+
+  /* Stubbrenderaren har fast bredd; den får inte ge vågrät rullning */
+  .figurplats [data-stubb] {
+    max-width: 100%;
+  }
+
+  /* Översiktstabellen (stilguiden 5.8 och 5.9) */
+  .oversikt {
+    width: 100%;
+    margin-top: var(--rum-5);
+    border-collapse: collapse;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+  }
+
+  .caption {
+    padding-bottom: var(--rum-2);
+    text-align: left;
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .oversikt th {
+    padding: var(--rum-2) var(--rum-4) var(--rum-2) 0;
+    border-bottom: 1px solid var(--farg-harlinje);
+    text-align: left;
+    vertical-align: bottom;
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+  }
+
+  .oversikt td {
+    padding: var(--rum-2) var(--rum-4) var(--rum-2) 0;
+    border-bottom: 1px solid var(--farg-harlinje);
+    vertical-align: middle;
+  }
+
+  .oversikt th:last-child, .oversikt td:last-child {
+    padding-right: 0;
+  }
+
+  .oversikt .grupp th {
+    padding-top: var(--rum-5);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-black);
+  }
+
+  .oversikt .tal {
+    text-align: right;
+    font-variant-numeric: var(--typ-siffror);
+    white-space: nowrap;
+  }
+
+  .period {
+    display: block;
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+
+  .lank {
+    color: var(--farg-black);
+    text-decoration: none;
+  }
+
+  .lank:hover {
+    color: var(--farg-fokus);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .lank:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  .mini {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 0;
+  }
+
+  :global([data-lage="mobil"]) .dMob {
+    display: none;
+  }
+}

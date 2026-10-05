@@ -1,0 +1,56 @@
+/* Knapp: textknapp och menyknapp (stilguiden 5.3). Ingen avstängd variant:
+   en kontroll som inte kan användas visas inte. */
+@layer komponent {
+  .knapp {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rum-1);
+    min-block-size: var(--komponent-klickyta);
+    min-inline-size: var(--komponent-klickyta);
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: start;
+    white-space: nowrap;
+  }
+  .knapp:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  /* Textknapp: figurens åtgärder, Visa mer */
+  .text {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+    text-underline-offset: var(--typ-lank-avstand);
+    text-decoration-thickness: var(--typ-lank-understrykning);
+  }
+  .text:hover,
+  .text[aria-expanded="true"] {
+    color: var(--farg-black);
+    text-decoration-line: underline;
+  }
+  /* Grön ton för "+ Jämför med …" */
+  .fokus { color: var(--farg-fokus); }
+  .fokus:hover,
+  .fokus[aria-expanded="true"] { color: var(--farg-fokus); }
+
+  /* Menyknapp: Exportera. Enda inramade knappen. */
+  .meny {
+    block-size: var(--komponent-menyknapp-hojd);
+    padding-inline: var(--rum-3);
+    border: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-black);
+  }
+  .meny:hover,
+  .meny[aria-expanded="true"] { border-color: var(--farg-text3); }
+}

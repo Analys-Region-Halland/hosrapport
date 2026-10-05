@@ -1,0 +1,142 @@
+/* Figur: plattan runt varje diagram (stilguiden 6.1). Ingen ram, ingen skugga,
+   ingen radie. Plattan är en flexrad som bryts: titelblocket och flikarna delar
+   första raden när de får plats, allt annat tar hela bredden. Avstånden mellan
+   delarna räknas från radavståndet (rum.2) upp till stilguidens värden. */
+@layer komponent {
+  .platta {
+    --figur-luft: var(--rum-5);
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    column-gap: var(--rum-5);
+    row-gap: var(--rum-2);
+    max-inline-size: var(--matt-figur);
+    margin: 0;
+    padding: var(--figur-luft);
+    background: var(--farg-yta);
+    color: var(--farg-black);
+  }
+
+  .rubriker {
+    flex: 1 1 20rem;
+    min-inline-size: 0;
+  }
+  .kicker {
+    margin: 0 0 var(--rum-1);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+  }
+  .titel {
+    margin: 0;
+    font-family: var(--typ-figurtitel-familj);
+    font-size: var(--typ-figurtitel-storlek);
+    line-height: var(--typ-figurtitel-radhojd);
+    font-weight: var(--typ-figurtitel-vikt);
+    color: var(--farg-black);
+    text-wrap: balance;
+  }
+  .undertitel {
+    max-inline-size: 40em;
+    margin: var(--rum-1) 0 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-text2);
+  }
+
+  /* Flikarna högerställda på titelraden. */
+  .flikar {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+  }
+
+  .hel {
+    flex: 0 0 100%;
+    min-inline-size: 0;
+  }
+
+  .brodsmula {
+    margin-block-start: calc(var(--rum-4) - var(--rum-2));
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+  .brodsmula ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--rum-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .brodsmula li { display: inline-flex; align-items: center; gap: var(--rum-2); }
+  .brodsmula li + li::before { content: "›"; color: var(--farg-text3); }
+  .brodsmulaLank {
+    min-block-size: var(--komponent-klickyta);
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    color: var(--farg-fokus);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+    cursor: pointer;
+  }
+  .brodsmulaLank:hover { text-decoration-thickness: var(--typ-lank-understrykningHover); }
+  .brodsmulaLank:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+  .brodsmula [aria-current] { color: var(--farg-black); font-weight: var(--typ-not-viktStark); }
+
+  /* Plotytan rum.5 under undertiteln; efter brödsmulan rum.3. */
+  .panel { margin-block-start: calc(var(--rum-5) - var(--rum-2)); }
+  .brodsmula + .panel { margin-block-start: calc(var(--rum-3) - var(--rum-2)); }
+  /* Klipp i sidled: diagrammet ritas inom plotytan (stilguiden 6.4) och får
+     aldrig ge vågrät rullning; lodrätt klipps inget (tooltip, etiketter). */
+  .plotyta { position: relative; overflow-x: clip; }
+  /* Diagrammet ligger kvar (för SVG och PNG) men syns inte när tabellen visas.
+     Bredden behålls så att diagrammet inte ritas om. */
+  .plotDold {
+    position: relative;
+    block-size: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  .jamfor { margin-block-start: calc(var(--rum-3) - var(--rum-2)); }
+
+  .fot {
+    display: grid;
+    row-gap: var(--rum-1);
+    margin-block-start: calc(var(--rum-4) - var(--rum-2));
+  }
+  .meddelande {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+  .meddelande:empty { display: none; }
+
+  /* Under brytpunkt.mobil (tema.ts, 639 px): mindre luft och flikarna under
+     undertiteln. Mediefrågor kan inte läsa CSS-variabler. */
+  @media (max-width: 639px) {
+    .platta { --figur-luft: var(--rum-4); }
+    .flikar { flex-basis: 100%; margin-inline-start: 0; }
+  }
+
+  @media print {
+    .platta { break-inside: avoid; }
+  }
+}

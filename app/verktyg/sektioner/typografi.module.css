@@ -1,0 +1,161 @@
+/* typografi.module.css: typrollernas prov i stilguiden. Provtexterna får sin
+   storlek inline ur tema.ts (desktop och mobil sida vid sida); här står bara
+   uppställningen. Ägare: WP7. */
+@layer komponent {
+  .roller, .familjer {
+    display: grid;
+    gap: var(--rum-7);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rad {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--rum-4) var(--rum-6);
+  }
+
+  .meta {
+    flex: 0 1 calc(var(--rum-10) + var(--rum-8));
+    min-width: calc(var(--rum-10) + var(--rum-8));
+  }
+
+  .meta p, .familjer p {
+    margin: 0;
+  }
+
+  .meta p + p {
+    margin-top: var(--rum-1);
+  }
+
+  .rollNamn {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .metaRad, .metaText {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+    overflow-wrap: anywhere;
+  }
+
+  .metaText {
+    color: var(--farg-text3);
+  }
+
+  .prover {
+    flex: 1 1 calc(var(--rum-10) * 3);
+    display: grid;
+    gap: var(--rum-5);
+    min-width: 0;
+  }
+
+  .prov p {
+    margin: 0;
+  }
+
+  .provEtikett {
+    margin-bottom: var(--rum-1) !important;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+
+  .provText {
+    color: var(--farg-black);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+
+  .provTextBrod {
+    max-width: var(--matt-text);
+    color: var(--farg-black);
+  }
+
+  .nr {
+    margin-right: 0.35em;
+    color: var(--farg-fokus);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .nyckeltal {
+    color: var(--farg-text2);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .nyckeltal b {
+    color: var(--farg-black);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .sep {
+    color: var(--farg-text3);
+  }
+
+  .familjProv {
+    margin-top: var(--rum-2) !important;
+    line-height: var(--typ-ingress-radhojd);
+  }
+
+  .siffror {
+    display: block;
+    font-variant-numeric: var(--typ-siffror);
+    color: var(--farg-text2);
+  }
+
+  .detaljer {
+    display: grid;
+    gap: var(--rum-5);
+    margin: 0;
+  }
+
+  .detaljer dt {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+
+  .detaljer dd {
+    margin: var(--rum-2) 0 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+  }
+
+  .kicker {
+    font-family: var(--typ-not-familj) !important;
+    font-size: var(--typ-not-storlek) !important;
+    font-weight: var(--typ-not-viktStark);
+    text-transform: uppercase;
+    color: var(--farg-fokus);
+  }
+
+  .talkolumn {
+    display: inline-grid;
+    justify-items: end;
+    gap: var(--rum-1);
+  }
+
+  .lank {
+    color: var(--farg-fokus);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .lank:hover {
+    text-decoration-thickness: var(--typ-lank-understrykningHover);
+  }
+
+  .lank:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+}
