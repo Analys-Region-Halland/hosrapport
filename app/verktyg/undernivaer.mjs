@@ -120,6 +120,22 @@ async function vila(k) {
 }
 
 /**
+ * Väntar tills ramen har rullat blocket till sin plats under verktygsraden och
+ * det ligger still (tre mätningar i rad, 100 ms isär), högst 5 s.
+ */
+const vantaPaRullning = (blockId) => `(async () => {
+  const el = document.querySelector('[data-block="${blockId}"]');
+  const plats = () => Math.abs(el.getBoundingClientRect().top - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0)) <= 2;
+  const slut = Date.now() + 5000;
+  let still = 0;
+  while (still < 3 && Date.now() < slut) {
+    await new Promise((r) => setTimeout(r, 100));
+    still = plats() ? still + 1 : 0;
+  }
+  return still >= 3;
+})()`;
+
+/**
  * Skärmdump av ett element, rullat till fönstrets överkant (under verktygsraden).
  * Fönstret ändras aldrig (captureBeyondViewport skulle montera lata figurer och
  * flytta allt); bildflikarna är i stället höga nog för hela figuren.
@@ -327,7 +343,11 @@ async function adress(bredd, hojd) {
 
     // Läsaren byter nivå (replaceState), går till ett annat kapitel och tillbaka.
     // Ramen håller kvar blocket den rullat till tills läsaren rör sidan; ett
-    // hjul utan utslag är den beröringen, som när en läsare börjar rulla.
+    // hjul utan utslag är den beröringen, som när en läsare börjar rulla. Hjulet
+    // skickas först när ramen har rullat dit efter uppdateringen (nav/scroll.ts
+    // hallKvar); kommer det före släpper inget, och kvarhållningen rullar
+    // tillbaka sidan mellan mätningen och klicket nedan (WP12b).
+    await k.utvardera(vantaPaRullning("vantetid"));
     await k.skicka("Input.dispatchMouseEvent", { type: "mouseWheel", x: 4, y: 300, deltaX: 0, deltaY: 0 });
     const historik = await k.utvardera("history.length");
     await klicka(k, await u(k, `mitt('[data-brodsmula-lank="0013"]', ${q})`));

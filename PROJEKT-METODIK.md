@@ -316,7 +316,7 @@ source("R/test-signal.R")         # fristående signaltest → data/signal-test-
 ### Naturliga utvecklingsspår
 
 1. **Riktig datakälla** — ersätt `R/hamta/demo-data.R` med API/databas; behåll samma `radata-hos.rds`/`radata-dept.rds`-kontrakt så resten av pipelinen är oförändrad.
-2. **Målläge frikopplat från statistik** — i dag härleds både "förväntat läge" (95 %) och "målläge" (80 %) ur conformal-modellen. Verksamhetens egna riktvärden kan läggas som separat fält per indikator.
+2. **Målläge frikopplat från statistik**: i dag härleds både "förväntat läge" (95 %) och "målläge" (80 %) ur conformal-modellen. Verksamhetens egna riktvärden kan läggas som separat fält per indikator.
 3. **Fler sektioner/KPI:er** — följ "Ny sektion — steg för steg" ovan.
 4. **Automatiserad validering** — koppla `granskningsrapport.R`-kvalitetskrav (se `SIGNAL-METODIK.md` §7.2) till ett test som failar pipelinen vid otillräcklig täckning.
 5. **Persistens av redigeringar** — i dag `localStorage` per webbläsare (`hos-rapport-content-blocks`, nyckel `${vy}:${targetId}`). För delning mellan användare krävs backend.
