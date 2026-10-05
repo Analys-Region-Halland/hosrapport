@@ -6,11 +6,12 @@
 // Ingen DOM; allt här är rena funktioner.
 
 import { antalILoptext, kronor, period as periodText, plats, procentenheter, tal } from "../design/format";
+import { kapitelInfo } from "./kapitelinfo";
 import { valideraKontrakt } from "./kontrakt";
 import type { RaKpi, RaPunkt, RaSektion } from "./kontrakt";
 import { HALLAND_ID, RIKET_ID } from "./modell";
 import type {
-  AvsnittModell, Enhet, EnhetSerie, Huvudpunkt, KapitelModell, KpiModell, Not, Punkt,
+  AvsnittModell, Enhet, EnhetSerie, Huvudpunkt, Kalla, KapitelModell, KpiModell, Not, Punkt,
   Status, TalFormat, VyId,
 } from "./modell";
 
@@ -267,6 +268,27 @@ function normaliseraKpi(raw: RaKpi, vy: VyId, enheter: Map<string, Enhet>): KpiM
 
 // ── Kapitlet ──
 
+/**
+ * Källa för indikatorer som saknar `kalla` i datan (akutflödet i dag), ur
+ * kapitlets post i data/kapitelinfo.ts. Interna kapitel har regionen som
+ * huvudman: "Regionens vårddatalager, Region Halland". undefined när kapitlet
+ * saknas i kapitelinfo eller inte har någon källa där.
+ */
+export function reservkalla(kapitelId: string): Kalla | undefined {
+  const info = kapitelInfo(kapitelId);
+  if (!info?.kalla) return undefined;
+  const intern = info.datatyp === "intern";
+  const k: Kalla = {
+    id: slug(info.kalla),
+    namn: info.kalla,
+    huvudman: intern ? "Region Halland" : "",
+    typ: intern ? "Regionens egna system" : "Öppna jämförelser",
+    om: intern ? ["Regionens egna system för vårddata.", info.notis].filter(Boolean).join(" ") : info.beskrivning,
+  };
+  if (info.takt) k.uppdatering = info.takt;
+  return k;
+}
+
 /** Dagens JSON för ett kapitel och en tidsupplösning som KapitelModell. */
 export function normalisera(raw: unknown, vy: VyId): KapitelModell {
   const fel = valideraKontrakt(raw);
@@ -277,6 +299,8 @@ export function normalisera(raw: unknown, vy: VyId): KapitelModell {
     [HALLAND_ID, { id: HALLAND_ID, namn: "Region Halland", kortnamn: "Halland", niva: "region", parent_id: null }],
   ]);
   const kpier = s.kpier.map((k) => normaliseraKpi(k, vy, enheter));
+  const reserv = reservkalla(s.id);
+  if (reserv) for (const k of kpier) k.kalla ??= reserv;
   const avsnitt: AvsnittModell[] = (s.delar ?? []).map((d) => ({ id: d.id, namn: d.namn, kpi_ids: [...d.kpi_ids] }));
 
   return {
