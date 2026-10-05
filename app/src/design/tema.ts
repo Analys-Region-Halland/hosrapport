@@ -52,7 +52,7 @@ export const tema = {
   // ── 2.4 Typografi ──
   typ: {
     familj: {
-      serif: "'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif",
+      serif: "'Source Serif 4 Variable', 'Source Serif 4', 'Source Serif Pro', Georgia, serif",
       sans: "'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif",
     },
     // storlek = desktop, mobilstorlek = under brytpunkt.mobil
