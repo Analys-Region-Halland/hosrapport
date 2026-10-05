@@ -1,0 +1,179 @@
+/* stilguide.module.css: den levande stilguidens ram. Följer stilguiden:
+   papper, typrollerna, avståndsskalan och måtten (2.1–2.5). Brytpunkten för
+   innehållsförteckningen kommer ur tema.ts via data-lage på roten. Ägare: WP7. */
+@layer komponent {
+  .sidan {
+    min-height: 100vh;
+    background: var(--farg-papper);
+    color: var(--farg-black);
+    font-family: var(--typ-familj-sans);
+  }
+
+  .ram {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: var(--matt-sida);
+    margin: 0 auto;
+    padding: 0 var(--matt-marginal) var(--rum-10);
+  }
+
+  .sidan[data-lage="desktop"] .ram {
+    grid-template-columns: var(--matt-toc) minmax(0, 1fr);
+    column-gap: var(--rum-8);
+  }
+
+  .huvud {
+    min-width: 0;
+    max-width: var(--matt-figur);
+  }
+
+  /* Innehållsförteckning: spalt på desktop, lista under mastheaden annars */
+  .toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding-top: var(--rum-8);
+  }
+
+  .tocInline {
+    margin-top: var(--rum-7);
+  }
+
+  .tocRubrik {
+    margin: 0 0 var(--rum-2);
+    padding: 0 var(--rum-2);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text3);
+  }
+
+  .tocLista {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tocLista a {
+    display: flex;
+    gap: var(--rum-2);
+    min-height: var(--komponent-klickyta);
+    padding: var(--rum-1) var(--rum-2);
+    color: var(--farg-text2);
+    text-decoration: none;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+  }
+
+  .tocLista a:hover {
+    color: var(--farg-black);
+  }
+
+  .tocLista a[aria-current="true"] {
+    background: var(--farg-fokusLjus);
+    color: var(--farg-black);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .nr {
+    min-width: 1.4em;
+    margin-right: 0.35em;
+    color: var(--farg-fokus);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .tocLista .nr {
+    margin-right: 0;
+  }
+
+  a:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  /* Masthead (stilguiden 4.3) */
+  .masthead {
+    padding-top: var(--rum-8);
+  }
+
+  .kicker {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    letter-spacing: var(--typ-kicker-sparr);
+    text-transform: uppercase;
+    color: var(--farg-fokus);
+  }
+
+  .titel {
+    margin: var(--rum-3) 0 0;
+    font-family: var(--typ-titel-familj);
+    font-size: var(--typ-titel-storlek);
+    line-height: var(--typ-titel-radhojd);
+    font-weight: var(--typ-titel-vikt);
+    letter-spacing: var(--typ-titel-sparr);
+    text-wrap: balance;
+  }
+
+  .linje {
+    height: var(--komponent-kapitellinje);
+    margin: var(--rum-5) 0;
+    background: var(--farg-fokus);
+  }
+
+  .ingress {
+    margin: 0 0 var(--rum-4);
+    max-width: var(--matt-text);
+    font-family: var(--typ-ingress-familj);
+    font-size: var(--typ-ingress-storlek);
+    line-height: var(--typ-ingress-radhojd);
+    font-weight: var(--typ-ingress-vikt);
+  }
+
+  .meta {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+
+  /* Sektioner: avsnittsnivå (h2) med rum.10 ovanför */
+  .avsnitt {
+    margin: var(--rum-10) 0 0;
+    font-family: var(--typ-avsnitt-familj);
+    font-size: var(--typ-avsnitt-storlek);
+    line-height: var(--typ-avsnitt-radhojd);
+    font-weight: var(--typ-avsnitt-vikt);
+    letter-spacing: var(--typ-avsnitt-sparr);
+    text-wrap: balance;
+    scroll-margin-top: var(--rum-5);
+  }
+
+  .fel {
+    margin-top: var(--rum-7);
+    padding: var(--rum-4);
+    background: var(--farg-yta);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+  }
+
+  .fel ul {
+    margin: var(--rum-2) 0 0;
+    padding-left: var(--rum-5);
+  }
+
+  .felRubrik {
+    margin: 0;
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+}
