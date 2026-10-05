@@ -210,11 +210,9 @@ export async function rullaTillBlock(blockId: string, alt: { fokus?: boolean; va
 //  Läsposition knuten till routern
 // ════════════════════════════════════════════════════════════
 
-/** Blocket en adress pekar på: läspositionen i ett kapitel, begreppet på begreppssidan. */
+/** Blocket en adress pekar på: läspositionen i ett kapitel. */
 function malFor(r: Route): string | undefined {
-  if (r.sida === "kapitel") return r.i;
-  if (r.sida === "begrepp") return r.id;
-  return undefined;
+  return r.sida === "kapitel" ? r.i : undefined;
 }
 
 /**
@@ -236,6 +234,12 @@ export function useLasposition(t: RouteTillstand, klar: boolean, spana: boolean)
     const forra = l.forra;
     l.forra = t.route;
     if (!t.rulla) {
+      l.spanar = true;
+      return;
+    }
+    // Begreppssidan rullar själv fram begreppet i adressen (begrepp/BegreppSida.tsx)
+    if (t.route.sida === "begrepp" && t.route.id) {
+      avbrytRullning();
       l.spanar = true;
       return;
     }

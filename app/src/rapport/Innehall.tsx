@@ -12,10 +12,10 @@
 // nav/lager.ts; dialogens egen avbrytning (cancel) stänger också, utan att
 // navigera. Länkarna navigerar med pushState och flyttar fokus till blocket.
 
-import { useEffect, useId, useMemo, useRef, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import type { KapitelModell, Status, VyId } from "../data/modell";
 import Lank from "../nav/Lank";
-import { registreraLager } from "../nav/lager";
+import { arOverst, registreraLager } from "../nav/lager";
 import { STANDARDVY, type Route } from "../nav/route";
 import { useRoute } from "../nav/useRoute";
 import { byggDisposition, hittaPosition, type Disposition, type DispIndikator } from "./ramDisposition";
@@ -92,6 +92,8 @@ function InnehallArk({ d, aktivt, till, oppen, onStang }: {
   useEffect(() => {
     stang.current = onStang;
   });
+  // Samma funktion i stapeln och i arOverst
+  const [stangLager] = useState(() => () => stang.current?.());
 
   useEffect(() => {
     const el = dlg.current;
@@ -103,12 +105,12 @@ function InnehallArk({ d, aktivt, till, oppen, onStang }: {
     if (!el.open) el.showModal();
     // Aktiv post synlig i arket
     el.querySelector<HTMLElement>("[data-aktiv]")?.scrollIntoView({ block: "center", behavior: "instant" });
-    return registreraLager(() => stang.current?.());
-  }, [oppen]);
+    return registreraLager(stangLager);
+  }, [oppen, stangLager]);
 
-  // Klick på bakgrunden (utanför arkets ruta) stänger
+  // Klick på bakgrunden (utanför arkets ruta) stänger, när arket är överst
   const klick = (e: MouseEvent<HTMLDialogElement>) => {
-    if (e.target !== e.currentTarget) return;
+    if (e.target !== e.currentTarget || !arOverst(stangLager)) return;
     const r = e.currentTarget.getBoundingClientRect();
     const utanfor = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
     if (utanfor) onStang?.();

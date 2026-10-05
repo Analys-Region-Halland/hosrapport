@@ -8,8 +8,11 @@
   }
 
   /* Ett block ramen rullar till hamnar rum.5 under verktygsraden
-     (nav/scroll.ts RULLMARGINAL räknar med samma summa). */
-  .ram :global([data-block]) {
+     (nav/scroll.ts RULLMARGINAL räknar med samma summa). Gäller även element
+     med id, så att sidornas egna ankare (t.ex. begreppen) inte hamnar under
+     den klibbiga verktygsraden. */
+  .ram :global([data-block]),
+  .ram :global([id]) {
     scroll-margin-top: calc(var(--matt-verktygsrad) + var(--rum-5));
   }
 

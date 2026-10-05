@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import Lank from "../nav/Lank";
-import { registreraLager } from "../nav/lager";
+import { arOverst, registreraLager } from "../nav/lager";
 import { START } from "../nav/route";
 import s from "./Verktygsrad.module.css";
 
@@ -81,13 +81,16 @@ function ExportMeny({ val, ikon }: { val: MenyVal[]; ikon: boolean }) {
     if (fokusTillbaka) knapp.current?.focus();
   }, []);
 
-  // Escape stänger menyn (lagerstapeln), klick utanför stänger utan att flytta fokus
+  // Escape stänger menyn (lagerstapeln), klick utanför stänger utan att flytta
+  // fokus. Båda bara när menyn är det översta lagret.
   useEffect(() => {
     if (!oppen) return;
-    const taBort = registreraLager(() => stang(true));
+    const stangLager = () => stang(true);
+    const taBort = registreraLager(stangLager);
     const utanfor = (e: PointerEvent) => {
       const mal = e.target as Node;
-      if (!lista.current?.contains(mal) && !knapp.current?.contains(mal)) stang(false);
+      if (!arOverst(stangLager) || lista.current?.contains(mal) || knapp.current?.contains(mal)) return;
+      stang(false);
     };
     document.addEventListener("pointerdown", utanfor, true);
     return () => {
