@@ -1,45 +1,7 @@
-/* TidsupplosningVal.module.css: textflikar enligt stilguiden 5.4. Alla värden ur tema-variablerna. */
+/* TidsupplosningVal.module.css: flikarna själva kommer från ui/Flikar (stilguiden 5.4). */
 @layer komponent {
-  .flikar {
+  .val {
     display: inline-flex;
-    flex-wrap: wrap;
-    column-gap: var(--rum-5);
     vertical-align: middle;
-  }
-
-  .flik {
-    position: relative;
-    height: var(--komponent-flik-hojd);
-    padding: 0;
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    font-weight: var(--typ-not-viktStark);
-    color: var(--farg-text2);
-    cursor: pointer;
-  }
-
-  .flik:hover {
-    color: var(--farg-black);
-  }
-
-  .flik[aria-selected="true"] {
-    color: var(--farg-black);
-    cursor: default;
-  }
-
-  .flik[aria-selected="true"]::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: var(--komponent-flik-understrykning);
-    background: var(--farg-fokus);
-  }
-
-  .flik:focus-visible {
-    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
-    outline-offset: var(--komponent-fokusring-avstand);
   }
 }

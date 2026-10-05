@@ -1,5 +1,5 @@
 /* Verktygsrad.module.css: stilguiden 4.5 och 5.3. Alla värden ur tema-variablerna.
-   Hårlinjer skrivs `thin` (1 px i alla webbläsare); menyknappens ram har en egen token. */
+   Hårlinjer med matt.harlinje; menyknappens ram har en egen token. */
 @layer komponent {
   .verktygsrad {
     position: sticky;
@@ -7,7 +7,7 @@
     z-index: 10;
     height: var(--matt-verktygsrad);
     background: var(--farg-papper);
-    border-bottom: thin solid transparent;
+    border-bottom: var(--matt-harlinje) solid transparent;
   }
 
   /* Hårlinjen först när sidan rullats */
@@ -130,7 +130,7 @@
     min-width: max-content;
     padding: var(--rum-1) 0;
     background: var(--farg-yta);
-    border: thin solid var(--farg-harlinje);
+    border: var(--matt-harlinje) solid var(--farg-harlinje);
   }
 
   .menyval {

@@ -1,5 +1,5 @@
 /* Innehall.module.css: innehållsförteckningen, stilguiden 4.5. Alla värden ur
-   tema-variablerna. Hårlinjer skrivs `thin` (1 px). */
+   tema-variablerna. Hårlinjer med matt.harlinje. */
 @layer komponent {
   /* ── Spalt (desktop) ── */
   .spalt {
@@ -130,7 +130,7 @@
     background: var(--farg-yta);
     color: var(--farg-black);
     border: 0;
-    border-top: thin solid var(--farg-harlinje);
+    border-top: var(--matt-harlinje) solid var(--farg-harlinje);
   }
 
   .ark[open] {
