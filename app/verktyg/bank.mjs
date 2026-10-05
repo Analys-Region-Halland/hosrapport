@@ -1,48 +1,44 @@
-// bank.mjs: skärmdumpsbänk som tar bilder av rapportens vyer och jämför dem
-// pixel för pixel mot en baslinje. Ägs av WP0; WP7 bygger ut listan VYER med
-// nya adresser och kontaktarket.
+// bank.mjs: skärmdumpsbänk som tar bilder av rapportens vyer och den levande
+// stilguiden och jämför dem pixel för pixel mot en baslinje. Ägs av WP0; WP7
+// har byggt ut den med grupper, en bild per stilguidesektion och kontaktark.
 //
 //   npm run bank -- --baslinje          tar baslinjen  (verktyg/bank/baslinje/)
 //   npm run bank                        tar nya bilder (verktyg/bank/senaste/),
-//                                       jämför och skriver verktyg/bank/rapport.html
-//   npm run bank -- --skarmdump         tar bara bilder till senaste/, ingen jämförelse
+//                                       jämför och skriver kontaktarket
+//                                       verktyg/bank/rapport.html
+//   npm run bank -- --skarmdump         tar bara bilder till senaste/ och skriver
+//                                       kontaktarket utan jämförelse
+//   npm run bank -- --bara stilguide    bara en grupp (eller flera: gammal,grafprov)
 //   npm run bank -- --vyer start,ny-ram bara angivna vyer (även extra-vyer)
 //   npm run bank -- --bredder 1440      bara angivna bredder
 //   npm run bank -- --tolerans 0.1      största tillåtna andel avvikande pixlar i procent
 //
+// Grupper: gammal (gamla vyn), grafprov (verktyg/grafprov.html), stilguide (en
+// bild per sektion och per galleriexempel i verktyg/stilguide.html), ny (nya
+// adresser under ?ny; extra tills de har en baslinje värd att skydda).
+//
 // Miljövariabler: BANK_PORT (Vite, standard 5174) och CDP_PORT (Edge, standard
 // 9223). Med egna portar kan flera agenter köra bänken samtidigt. BANK_URL pekar
 // bänken mot en server som redan kör (t.ex. `vite preview` av ett bygge) i stället
-// för att starta Vite; adresserna i VYER läggs till efter den.
-//
-// Bänken startar själv en Vite dev-server (motsvarar `npx vite --port
-// $BANK_PORT --strictPort`, men startas med node direkt så att processen går
-// att avsluta utan skal) och en headless Edge med egen profilmapp i %TEMP%.
-// Den avslutar bara processer den själv startat: Edge identifieras på sin
-// profilmapp, aldrig på namn, så användarens egen Edge lämnas ifred.
+// för att starta Vite; adresserna i VYER läggs till efter den. Processerna startas
+// och städas av webblasare.mjs, som bara avslutar det den själv startat.
 //
 // Fallgropar (verifierade tidigare):
-// - Page.captureScreenshot med `clip` använder sidkoordinater. Bänken tar därför
-//   bilder utan clip (synlig viewport) och rullar i stället.
 // - Viewporten ställs in en gång per flik före navigeringen och ändras aldrig
 //   mitt i en mätning; ResizeObserver skulle annars rita om graferna.
 //   captureBeyondViewport används inte av samma skäl.
+// - Vyer med skivor tas utan clip (synlig viewport) och rullas.
+// - Vyer med `bilder` (stilguiden) klipps per element i sidkoordinater. Sidan
+//   mäts först i en flik med normal höjd; bilderna tas sedan i en ny flik vars
+//   viewport är så hög att det högsta elementet ryms, så att inget element
+//   behöver en annan viewport.
 // - Vänta på document.fonts.ready och ~1,5 s efter navigering.
 
-import { spawn, execFileSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { CDP_PORT, HAR, medWebblasare, oppnaSida, sov } from "./webblasare.mjs";
 
-const HAR = path.dirname(fileURLToPath(import.meta.url));
-const APP = path.resolve(HAR, "..");
 const BANK = path.join(HAR, "bank");
-const EDGE = process.env.EDGE_PATH ?? "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
-const BANK_PORT = Number(process.env.BANK_PORT ?? 5174);
-const CDP_PORT = Number(process.env.CDP_PORT ?? 9223);
-const PROFIL = path.join(os.tmpdir(), `hos-bank-edge-${CDP_PORT}`);
-const BAS_URL = (process.env.BANK_URL ?? `http://localhost:${BANK_PORT}`).replace(/\/$/, "");
 
 // ── Argument ──
 const argv = process.argv.slice(2);
@@ -51,230 +47,96 @@ const varde = (namn) => {
   const i = argv.indexOf(`--${namn}`);
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : null;
 };
+const lista = (namn) => varde(namn)?.split(",").map((s) => s.trim()).filter(Boolean) ?? null;
 const BASLINJE = flagga("baslinje");
 const BARA_BILDER = flagga("skarmdump");
 const TOLERANS = Number(varde("tolerans") ?? 0.1); // procent
-const VALDA_VYER = varde("vyer")?.split(",").map((s) => s.trim()).filter(Boolean) ?? null;
+const VALDA_VYER = lista("vyer");
+const VALDA_GRUPPER = lista("bara");
 const BREDDER = (varde("bredder") ?? "1440,390").split(",").map(Number);
 const HOJD = { 1440: 900, 390: 844 };
-
-const sov = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Högsta viewport för elementbilder; högre element kapas (och det sägs i loggen). */
+const MAX_HOJD = 16_000;
+/** Luft runt elementbilder i px. */
+const LUFT = 16;
 
 // ════════════════════════════════════════════════════════════
-//  Vyer. Varje vy har en adress (eller en funktion av bredden), en lista med
-//  steg som körs efter laddningen och ett största antal skivor. Steg:
+//  Vyer. Varje vy har en grupp, en adress (eller en funktion av bredden) och
+//  en lista med steg som körs efter laddningen. Steg:
 //    { vanta: "selektor" }                  vänta tills elementet finns
 //    { klicka: "selektor", index: n }       element.click() på n:te träffen
 //    { vila: ms }                           vänta en fast tid
-//  Rullningen sker i det element som har overflow-y auto/scroll och störst
-//  rullbar höjd (gamla rapportvyn rullar i en inre container), annars i
-//  dokumentet. `extra: true` = körs bara när vyn anges med --vyer.
+//  Antingen `skivor` (högst så många skärmbilder när sidan rullas; rullningen
+//  sker i det element som har overflow-y auto/scroll och störst rullbar höjd,
+//  annars i dokumentet) eller `bilder` (en selektor; varje träff blir en bild
+//  som heter efter sitt data-bank-bild). `extra: true` = körs bara när vyn
+//  anges med --vyer eller dess grupp med --bara.
 // ════════════════════════════════════════════════════════════
 
 const grafprov = (param) => (bredd) =>
   `/verktyg/grafprov.html?${param}&w=${Math.min(820, bredd - 32)}`;
 
 export const VYER = [
+  { id: "start", grupp: "gammal", adress: "/", steg: [{ vanta: "button.start-area" }], skivor: 6 },
   {
-    id: "start",
-    adress: "/",
-    steg: [{ vanta: "button.start-area" }],
-    skivor: 6,
-  },
-  {
-    id: "kapitel2",
-    adress: "/",
+    id: "kapitel2", grupp: "gammal", adress: "/",
     steg: [{ vanta: "button.start-area" }, { klicka: "button.start-area", index: 1 }, { vanta: "[data-block]" }],
     skivor: 6,
   },
   {
-    id: "akutflode",
-    adress: "/",
+    id: "akutflode", grupp: "gammal", adress: "/",
     steg: [{ vanta: "button.start-area" }, { klicka: "button.start-area", index: 6 }, { vanta: "[data-block]" }],
     skivor: 6,
   },
   {
-    id: "graf-spagetti",
+    id: "graf-spagetti", grupp: "grafprov",
     adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79179"),
-    steg: [{ vanta: "svg rect[role='img']" }],
-    skivor: 2,
+    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
   },
   {
-    id: "graf-fasta",
+    id: "graf-fasta", grupp: "grafprov",
     adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79221&pin=Stockholm,Skåne"),
-    steg: [{ vanta: "svg rect[role='img']" }],
-    skivor: 2,
+    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
   },
   {
-    id: "graf-hovring",
+    id: "graf-hovring", grupp: "grafprov",
     adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79179&hover=0.55,0.4"),
-    steg: [{ vanta: "svg rect[role='img']" }],
-    skivor: 2,
+    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
   },
   {
-    id: "graf-forvantat",
+    id: "graf-forvantat", grupp: "grafprov",
     adress: grafprov("vy=manad&sektion=akutflode&kpi=belaggning"),
-    steg: [{ vanta: ".figur svg" }],
-    skivor: 2,
+    steg: [{ vanta: ".figur svg" }], skivor: 2,
   },
   {
-    id: "graf-kostnad",
+    id: "graf-kostnad", grupp: "grafprov",
     adress: grafprov("vy=ar&sektion=skr-kostnader&kpi=kolada-u70020"),
-    steg: [{ vanta: "svg rect[role='img']" }],
-    skivor: 2,
+    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
+  },
+  {
+    // Den levande stilguiden: en bild per sektion och per galleriexempel
+    id: "stilguide", grupp: "stilguide",
+    adress: "/verktyg/stilguide.html",
+    steg: [{ vanta: "html[data-stilguide='klar']" }],
+    bilder: "[data-bank-bild]",
   },
   {
     // Den nya ramen bakom ?ny-flaggan. Ingår inte i jämförelsen förrän den
     // har en baslinje som är värd att skydda.
-    id: "ny-ram",
-    adress: "/?ny",
-    steg: [{ vanta: "[data-ram]" }],
-    skivor: 1,
-    extra: true,
+    id: "ny-ram", grupp: "ny", adress: "/?ny", steg: [{ vanta: "[data-ram]" }], skivor: 1, extra: true,
   },
 ];
 
-// ════════════════════════════════════════════════════════════
-//  Processer
-// ════════════════════════════════════════════════════════════
-
-const startade = { vite: null, edge: null };
-
-async function vantaPaUrl(url, ms, namn) {
-  const slut = Date.now() + ms;
-  while (Date.now() < slut) {
-    try {
-      const r = await fetch(url);
-      if (r.ok) return r;
-    } catch { /* inte uppe än */ }
-    await sov(250);
-  }
-  throw new Error(`${namn} svarade inte på ${url} inom ${ms} ms`);
-}
-
-async function startaVite() {
-  const bin = path.join(APP, "node_modules/vite/bin/vite.js");
-  const p = spawn(process.execPath, [bin, "--port", String(BANK_PORT), "--strictPort"], {
-    cwd: APP, stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
-  });
-  let logg = "";
-  p.stdout.on("data", (d) => { logg += d; });
-  p.stderr.on("data", (d) => { logg += d; });
-  p.on("exit", (kod) => { if (kod && !avslutar) console.error(`Vite avslutades (${kod}):\n${logg}`); });
-  startade.vite = p;
-  await vantaPaUrl(`http://localhost:${BANK_PORT}/`, 60_000, "Vite").catch((e) => {
-    throw new Error(`${e.message}\n${logg}`);
-  });
-}
-
-// Avslutar Edge-processer vars kommandorad innehåller bänkens profilmapp.
-function dodaEgnaEdge() {
-  if (process.platform !== "win32") return;
-  const skript = `Get-CimInstance Win32_Process -Filter "Name = 'msedge.exe'" | `
-    + `Where-Object { $_.CommandLine -and $_.CommandLine.Contains('${PROFIL.replace(/'/g, "''")}') } | `
-    + `ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`;
-  try {
-    execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", skript], { stdio: "ignore" });
-  } catch { /* inget att avsluta */ }
-}
-
-async function startaEdge() {
-  dodaEgnaEdge(); // rester från en avbruten körning med samma port
-  fs.rmSync(PROFIL, { recursive: true, force: true, maxRetries: 3 });
-  const p = spawn(EDGE, [
-    "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
-    "--no-default-browser-check", "--disable-extensions", "--disable-component-update",
-    "--disable-background-networking", "--disable-sync", "--mute-audio",
-    "--force-color-profile=srgb", "--force-device-scale-factor=1",
-    "--remote-allow-origins=*",
-    `--user-data-dir=${PROFIL}`, `--remote-debugging-port=${CDP_PORT}`, "about:blank",
-  ], { stdio: "ignore", windowsHide: true });
-  startade.edge = p;
-  const r = await vantaPaUrl(`http://127.0.0.1:${CDP_PORT}/json/version`, 30_000, "Edge");
-  return (await r.json()).webSocketDebuggerUrl;
-}
-
-let avslutar = false;
-async function stadaUpp(webblasareWs) {
-  avslutar = true;
-  if (webblasareWs) {
-    try {
-      const k = await Cdp.anslut(webblasareWs);
-      k.skicka("Browser.close").catch(() => {});
-      await sov(800);
-      k.stang();
-    } catch { /* redan stängd */ }
-  }
-  dodaEgnaEdge();
-  if (startade.vite && startade.vite.exitCode === null) startade.vite.kill();
-}
+/** Bildens filnamn: {vy}-{bredd}-{del}.png, där del är skivnummer eller data-bank-bild. */
+const filnamn = (vyId, bredd, del) => `${vyId}-${bredd}-${del}.png`;
+const lasFilnamn = (namn) => {
+  const m = namn.match(/^(.+?)-(\d{3,4})-(.+)\.png$/);
+  return m ? { vy: m[1], bredd: Number(m[2]), del: m[3] } : null;
+};
 
 // ════════════════════════════════════════════════════════════
-//  DevTools-protokollet
+//  Fotografering
 // ════════════════════════════════════════════════════════════
-
-class Cdp {
-  static async anslut(url) {
-    const k = new Cdp();
-    k.ws = new WebSocket(url);
-    k.id = 0;
-    k.vantande = new Map();
-    k.lyssnare = new Map();
-    k.ws.onmessage = (ev) => {
-      const m = JSON.parse(ev.data);
-      if (m.id && k.vantande.has(m.id)) {
-        const { lös, avvisa } = k.vantande.get(m.id);
-        k.vantande.delete(m.id);
-        if (m.error) avvisa(new Error(`${m.error.message} (${m.error.code})`));
-        else lös(m.result);
-      } else if (m.method && k.lyssnare.has(m.method)) {
-        for (const f of k.lyssnare.get(m.method)) f(m.params);
-      }
-    };
-    await new Promise((r, e) => { k.ws.onopen = r; k.ws.onerror = e; });
-    return k;
-  }
-  skicka(method, params = {}) {
-    return new Promise((lös, avvisa) => {
-      const i = ++this.id;
-      this.vantande.set(i, { lös, avvisa });
-      this.ws.send(JSON.stringify({ id: i, method, params }));
-    });
-  }
-  vanta(method, ms = 30_000) {
-    return new Promise((lös, avvisa) => {
-      const t = setTimeout(() => avvisa(new Error(`timeout: ${method}`)), ms);
-      const f = (p) => { clearTimeout(t); this.lyssnare.get(method).delete(f); lös(p); };
-      if (!this.lyssnare.has(method)) this.lyssnare.set(method, new Set());
-      this.lyssnare.get(method).add(f);
-    });
-  }
-  async utvardera(uttryck) {
-    const r = await this.skicka("Runtime.evaluate", { expression: uttryck, awaitPromise: true, returnByValue: true });
-    if (r.exceptionDetails) throw new Error(`Fel i sidan: ${r.exceptionDetails.exception?.description ?? r.exceptionDetails.text}`);
-    return r.result.value;
-  }
-  stang() { try { this.ws.close(); } catch { /* redan stängd */ } }
-}
-
-// Körs i sidan: väntar på att ett element finns.
-const vantaUttryck = (sel, ms = 20_000) => `new Promise((lös, avvisa) => {
-  const slut = Date.now() + ${ms};
-  const f = () => document.querySelector(${JSON.stringify(sel)}) ? lös(true)
-    : Date.now() > slut ? avvisa(new Error("hittade inte " + ${JSON.stringify(sel)})) : setTimeout(f, 100);
-  f();
-})`;
-
-// Körs i sidan: väntar på att stilmallar och typsnitt laddats och två
-// renderingsbilder passerat.
-const vilaUttryck = `(async () => {
-  const lankar = [...document.querySelectorAll('link[rel="stylesheet"]')];
-  const slut = Date.now() + 10000;
-  while (lankar.some((l) => !l.sheet) && Date.now() < slut) await new Promise((r) => setTimeout(r, 100));
-  await document.fonts.ready;
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-  return document.fonts.status;
-})()`;
 
 // Körs i sidan: väljer rullningselement och lägger det i window.__bankRull.
 const rullUttryck = `(() => {
@@ -297,32 +159,13 @@ const rullaTill = (y) => `(async () => {
   return el.scrollTop;
 })()`;
 
-async function fotograferaVy(vy, bredd, utMapp) {
-  const hojd = HOJD[bredd] ?? 900;
+/** Vyer med skivor: rulla och ta den synliga viewporten. */
+async function fotograferaSkivor(vy, bredd, utMapp) {
   const adress = typeof vy.adress === "function" ? vy.adress(bredd) : vy.adress;
-  const url = `${BAS_URL}${adress}`;
-  const flik = await (await fetch(`http://127.0.0.1:${CDP_PORT}/json/new?about:blank`, { method: "PUT" })).json();
-  const k = await Cdp.anslut(flik.webSocketDebuggerUrl);
+  const { k, stang } = await oppnaSida(adress, { bredd, hojd: HOJD[bredd] ?? 900, steg: vy.steg });
   const filer = [];
   try {
-    await k.skicka("Page.enable");
-    await k.skicka("Runtime.enable");
-    await k.skicka("Emulation.setDeviceMetricsOverride", { width: bredd, height: hojd, deviceScaleFactor: 1, mobile: false });
-    const laddad = k.vanta("Page.loadEventFired");
-    await k.skicka("Page.navigate", { url });
-    await laddad;
-    for (const s of vy.steg ?? []) {
-      if (s.vanta) await k.utvardera(vantaUttryck(s.vanta));
-      else if (s.klicka) {
-        await k.utvardera(`(() => { const el = document.querySelectorAll(${JSON.stringify(s.klicka)})[${s.index ?? 0}];
-          if (!el) throw new Error("hittade inte ${s.klicka.replace(/"/g, "'")}[${s.index ?? 0}]"); el.click(); return true; })()`);
-      } else if (s.vila) await sov(s.vila);
-    }
-    await k.utvardera(vilaUttryck);
-    await sov(1500);
-    await k.utvardera(vilaUttryck);
     await k.utvardera(rullUttryck);
-
     const steg = 820;
     let foregaende = -1;
     for (let i = 0; i < (vy.skivor ?? 6); i++) {
@@ -331,27 +174,87 @@ async function fotograferaVy(vy, bredd, utMapp) {
       foregaende = y;
       await sov(i === 0 ? 300 : 700); // rullningsstyrda tillstånd (läsposition) hinner sätta sig
       const bild = await k.skicka("Page.captureScreenshot", { format: "png" });
-      const namn = `${vy.id}-${bredd}-${String(i + 1).padStart(2, "0")}.png`;
+      const namn = filnamn(vy.id, bredd, String(i + 1).padStart(2, "0"));
       fs.writeFileSync(path.join(utMapp, namn), Buffer.from(bild.data, "base64"));
       filer.push(namn);
     }
   } finally {
-    k.stang();
-    await fetch(`http://127.0.0.1:${CDP_PORT}/json/close/${flik.id}`).catch(() => {});
+    await stang();
   }
   return filer;
 }
 
+// Körs i sidan: elementen som ska bli bilder, med mått i sidkoordinater.
+const elementUttryck = (sel) => `(() => [...document.querySelectorAll(${JSON.stringify(sel)})].map((el) => {
+  const r = el.getBoundingClientRect();
+  return { namn: el.getAttribute("data-bank-bild"), x: r.left + scrollX, y: r.top + scrollY, b: r.width, h: r.height };
+}).filter((e) => e.namn && e.b > 0 && e.h > 0))()`;
+
+const rullaDokument = (y) => `(async () => {
+  window.scrollTo(0, ${y});
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  return scrollY;
+})()`;
+
+/** Vyer med bilder: en bild per element, klippt i sidkoordinater. */
+async function fotograferaBilder(vy, bredd, utMapp) {
+  const adress = typeof vy.adress === "function" ? vy.adress(bredd) : vy.adress;
+  // 1. Mät elementen i en flik med normal höjd
+  let matt;
+  {
+    const { k, stang } = await oppnaSida(adress, { bredd, hojd: HOJD[bredd] ?? 900, steg: vy.steg });
+    try { matt = await k.utvardera(elementUttryck(vy.bilder)); } finally { await stang(); }
+  }
+  if (!matt.length) throw new Error(`${vy.id}: inga element matchar ${vy.bilder}`);
+  const dubbletter = matt.map((e) => e.namn).filter((n, i, a) => a.indexOf(n) !== i);
+  if (dubbletter.length) throw new Error(`${vy.id}: data-bank-bild förekommer flera gånger: ${[...new Set(dubbletter)].join(", ")}`);
+  const hojd = Math.min(MAX_HOJD, Math.max(HOJD[bredd] ?? 900, Math.ceil(Math.max(...matt.map((e) => e.h))) + 2 * LUFT));
+
+  // 2. Ta bilderna i en ny flik där det högsta elementet ryms i viewporten
+  const { k, stang } = await oppnaSida(adress, { bredd, hojd, steg: vy.steg });
+  const filer = [];
+  try {
+    const element = await k.utvardera(elementUttryck(vy.bilder));
+    for (const e of element) {
+      const rullat = await k.utvardera(rullaDokument(Math.max(0, Math.floor(e.y) - LUFT)));
+      await sov(150);
+      const nu = (await k.utvardera(elementUttryck(`[data-bank-bild=${JSON.stringify(e.namn)}]`)))[0] ?? e;
+      const x = Math.max(0, Math.floor(nu.x) - LUFT);
+      const y = Math.max(rullat, Math.floor(nu.y) - LUFT);
+      const b = Math.min(bredd - x, Math.ceil(nu.b) + 2 * LUFT);
+      const h = Math.min(rullat + hojd - y, Math.ceil(nu.y + nu.h) + LUFT - y);
+      if (nu.h + 2 * LUFT > hojd) console.warn(`  ${vy.id} ${bredd}: ${e.namn} är ${Math.round(nu.h)} px hög och kapas vid ${hojd} px`);
+      const bild = await k.skicka("Page.captureScreenshot", { format: "png", clip: { x, y, width: b, height: h, scale: 1 } });
+      const namn = filnamn(vy.id, bredd, e.namn);
+      fs.writeFileSync(path.join(utMapp, namn), Buffer.from(bild.data, "base64"));
+      filer.push(namn);
+    }
+  } finally {
+    await stang();
+  }
+  return filer;
+}
+
+const fotografera = (vy, bredd, utMapp) => (vy.bilder ? fotograferaBilder : fotograferaSkivor)(vy, bredd, utMapp);
+
 // ════════════════════════════════════════════════════════════
-//  Jämförelse och rapport
+//  Jämförelse
 // ════════════════════════════════════════════════════════════
+
+/** Lägger en bild på en större, genomskinlig duk så att bilder med olika mått kan jämföras. */
+function utfyll(PNG, bild, bredd, hojd) {
+  if (bild.width === bredd && bild.height === hojd) return bild;
+  const ut = new PNG({ width: bredd, height: hojd, fill: true });
+  PNG.bitblt(bild, ut, 0, 0, bild.width, bild.height, 0, 0);
+  return ut;
+}
 
 async function jamfor(namnLista) {
   const { PNG } = await import("pngjs");
   const { default: pixelmatch } = await import("pixelmatch");
   const diffMapp = path.join(BANK, "diff");
-  fs.rmSync(diffMapp, { recursive: true, force: true });
   fs.mkdirSync(diffMapp, { recursive: true });
+  for (const namn of namnLista) fs.rmSync(path.join(diffMapp, namn), { force: true });
   const las = (p) => PNG.sync.read(fs.readFileSync(p));
   const resultat = [];
   for (const namn of namnLista) {
@@ -359,61 +262,94 @@ async function jamfor(namnLista) {
     const ny = path.join(BANK, "senaste", namn);
     if (!fs.existsSync(bas)) { resultat.push({ namn, status: "saknar baslinje", andel: 100 }); continue; }
     if (!fs.existsSync(ny)) { resultat.push({ namn, status: "saknas i senaste", andel: 100 }); continue; }
-    const a = las(bas), b = las(ny);
-    if (a.width !== b.width || a.height !== b.height) {
-      resultat.push({ namn, status: `olika mått ${a.width}×${a.height} / ${b.width}×${b.height}`, andel: 100 });
-      continue;
-    }
-    const diff = new PNG({ width: a.width, height: a.height });
+    let a = las(bas), b = las(ny);
+    const olikaMatt = a.width !== b.width || a.height !== b.height
+      ? `olika mått ${a.width}×${a.height} / ${b.width}×${b.height}` : null;
+    const bredd = Math.max(a.width, b.width), hojd = Math.max(a.height, b.height);
+    a = utfyll(PNG, a, bredd, hojd);
+    b = utfyll(PNG, b, bredd, hojd);
+    const diff = new PNG({ width: bredd, height: hojd });
     // Kantutjämning räknas med (includeAA) så att typsnittsskillnader syns.
-    const avvikande = pixelmatch(a.data, b.data, diff.data, a.width, a.height, { threshold: 0.1, includeAA: true });
+    const avvikande = pixelmatch(a.data, b.data, diff.data, bredd, hojd, { threshold: 0.1, includeAA: true });
     let exakt = 0;
     for (let i = 0; i < a.data.length; i += 4) {
       if (a.data[i] !== b.data[i] || a.data[i + 1] !== b.data[i + 1] || a.data[i + 2] !== b.data[i + 2] || a.data[i + 3] !== b.data[i + 3]) exakt++;
     }
     fs.writeFileSync(path.join(diffMapp, namn), PNG.sync.write(diff));
-    const andel = (100 * avvikande) / (a.width * a.height);
-    resultat.push({ namn, status: andel > TOLERANS ? "avviker" : "ok", andel, avvikande, exakt, diff: true });
+    const andel = (100 * avvikande) / (bredd * hojd);
+    resultat.push({ namn, status: olikaMatt ?? (andel > TOLERANS ? "avviker" : "ok"), andel, avvikande, exakt, diff: true });
   }
-  // Bilder som bara finns i baslinjen för vyer som kördes
-  const korda = new Set(namnLista.map((n) => n.replace(/-\d+-\d+\.png$/, "")));
-  for (const namn of fs.existsSync(path.join(BANK, "baslinje")) ? fs.readdirSync(path.join(BANK, "baslinje")) : []) {
-    const vyId = namn.replace(/-\d+-\d+\.png$/, "");
-    const bredd = Number(namn.match(/-(\d+)-\d+\.png$/)?.[1]);
-    if (korda.has(vyId) && BREDDER.includes(bredd) && !namnLista.includes(namn)) {
+  // Bilder som bara finns i baslinjen för vyer och bredder som kördes
+  const korda = new Set(namnLista.map((n) => lasFilnamn(n)?.vy));
+  const basMapp = path.join(BANK, "baslinje");
+  for (const namn of fs.existsSync(basMapp) ? fs.readdirSync(basMapp) : []) {
+    const f = lasFilnamn(namn);
+    if (f && korda.has(f.vy) && BREDDER.includes(f.bredd) && !namnLista.includes(namn)) {
       resultat.push({ namn, status: "saknas i senaste", andel: 100 });
     }
   }
   return resultat;
 }
 
-function skrivRapport(resultat) {
-  const rader = [...resultat].sort((x, y) => y.andel - x.andel || x.namn.localeCompare(y.namn));
+// ════════════════════════════════════════════════════════════
+//  Kontaktark: en ruta per bild med baslinje, senaste och diff sida vid sida,
+//  grupperat per vy. Kryssrutan döljer bilderna inom toleransen.
+// ════════════════════════════════════════════════════════════
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function skrivKontaktark(resultat, { jamfort }) {
   const fmt = (v) => v.toLocaleString("sv-SE", { maximumFractionDigits: 4 });
-  const cell = (mapp, namn) => fs.existsSync(path.join(BANK, mapp, namn))
-    ? `<a href="${mapp}/${namn}"><img loading="lazy" src="${mapp}/${namn}" alt="${mapp} ${namn}"></a>` : `<span>saknas</span>`;
+  const fel = resultat.filter((r) => r.status !== "ok" && r.status !== "ej jämförd");
+  const vyOrdning = VYER.map((v) => v.id);
+  const grupper = new Map();
+  for (const r of resultat) {
+    const f = lasFilnamn(r.namn) ?? { vy: "övrigt" };
+    if (!grupper.has(f.vy)) grupper.set(f.vy, []);
+    grupper.get(f.vy).push({ ...r, ...f });
+  }
+  const ordnade = [...grupper.entries()].sort(([a], [b]) => vyOrdning.indexOf(a) - vyOrdning.indexOf(b));
+  const bild = (mapp, namn, etikett) => fs.existsSync(path.join(BANK, mapp, namn))
+    ? `<figure><figcaption>${etikett}</figcaption><a href="${mapp}/${esc(namn)}"><img loading="lazy" src="${mapp}/${esc(namn)}" alt="${etikett}: ${esc(namn)}"></a></figure>`
+    : `<figure><figcaption>${etikett}</figcaption><p class="saknas">saknas</p></figure>`;
+  const klass = (r) => (r.status === "ok" ? "ok" : r.status === "ej jämförd" ? "ny" : "avviker");
+  const kort = (r) => `<li class="kort ${klass(r)}">
+  <p class="namn">${esc(r.del ?? r.namn)} <span>· ${r.bredd ?? ""} px</span></p>
+  <p class="status">${esc(r.status)}${r.avvikande != null ? ` · ${fmt(r.andel)} % (${r.avvikande} px, exakt ${r.exakt} px)` : ""}</p>
+  <div class="bilder">${jamfort ? bild("baslinje", r.namn, "Baslinje") : ""}${bild("senaste", r.namn, "Senaste")}${jamfort && r.diff ? bild("diff", r.namn, "Diff") : ""}</div>
+</li>`;
   const html = `<!doctype html>
-<html lang="sv"><head><meta charset="utf-8"><title>Skärmdumpsbänk</title>
+<html lang="sv"><head><meta charset="utf-8"><title>Kontaktark, skärmdumpsbänken</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { font: 14px/1.45 system-ui, sans-serif; margin: 24px; color: #1a1a1a; background: #fbfbf9; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  p.meta { color: #4a4f4c; margin: 0 0 24px; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid #e6e6e1; }
-  th { font-weight: 600; color: #4a4f4c; }
-  td.tal { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  img { width: 360px; height: auto; display: block; border: 1px solid #e6e6e1; }
-  .avviker td:first-child { color: #9a2e22; font-weight: 600; }
+  body { font: 15px/1.45 "IBM Plex Sans", system-ui, sans-serif; margin: 24px; color: #1a1a1a; background: #fbfbf9; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 40px 0 12px; }
+  h2 span { font-weight: 400; color: #4a4f4c; font-size: 15px; }
+  p { margin: 0; }
+  .meta { color: #4a4f4c; margin-bottom: 16px; font-variant-numeric: tabular-nums; }
+  label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+  body:has(#bara-fel:checked) .kort.ok { display: none; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 24px; }
+  .kort { background: #fff; padding: 16px; }
+  .namn { font-weight: 600; }
+  .namn span { font-weight: 400; color: #4a4f4c; }
+  .status { color: #4a4f4c; font-size: 13px; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+  .avviker .status { color: #9a2e22; font-weight: 600; }
+  .bilder { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  figure { margin: 0; width: 320px; }
+  figcaption { font-size: 13px; color: #6b716d; margin-bottom: 4px; }
+  img { display: block; width: 100%; max-height: 640px; object-fit: cover; object-position: top; outline: 1px solid #e6e6e1; }
+  .saknas { color: #6b716d; font-size: 13px; }
 </style></head><body>
-<h1>Skärmdumpsbänk</h1>
-<p class="meta">${new Date().toLocaleString("sv-SE")} · ${resultat.length} bilder · tolerans ${fmt(TOLERANS)} % · `
-  + `${resultat.filter((r) => r.status !== "ok").length} avviker</p>
-<table><thead><tr><th>Bild</th><th>Avvikande pixlar</th><th>Baslinje</th><th>Senaste</th><th>Diff</th></tr></thead><tbody>
-${rader.map((r) => `<tr class="${r.status === "ok" ? "ok" : "avviker"}"><td>${r.namn}<br>${r.status}</td>`
-  + `<td class="tal">${fmt(r.andel)} %<br>${r.avvikande ?? "–"} st (pixelmatch)<br>${r.exakt ?? "–"} st (exakt)</td>`
-  + `<td>${cell("baslinje", r.namn)}</td><td>${cell("senaste", r.namn)}</td><td>${r.diff ? cell("diff", r.namn) : "–"}</td></tr>`).join("\n")}
-</tbody></table></body></html>`;
+<h1>Kontaktark</h1>
+<p class="meta">${new Date().toLocaleString("sv-SE")} · ${resultat.length} bilder · ${jamfort
+    ? `tolerans ${fmt(TOLERANS)} % · ${resultat.length - fel.length} inom toleransen · ${fel.length} avviker eller saknas`
+    : "ingen jämförelse (--skarmdump)"}</p>
+${jamfort ? `<label><input type="checkbox" id="bara-fel"${fel.length ? " checked" : ""}> Visa bara avvikande</label>` : ""}
+${ordnade.map(([vy, rader]) => `<h2>${esc(vy)} <span>${esc(VYER.find((v) => v.id === vy)?.grupp ?? "")}</span></h2>
+<ul>${rader.sort((a, b) => (a.bredd ?? 0) - (b.bredd ?? 0)).map(kort).join("\n")}</ul>`).join("\n")}
+</body></html>`;
   const ut = path.join(BANK, "rapport.html");
   fs.writeFileSync(ut, html);
   return ut;
@@ -423,60 +359,56 @@ ${rader.map((r) => `<tr class="${r.status === "ok" ? "ok" : "avviker"}"><td>${r.
 //  Huvudflöde
 // ════════════════════════════════════════════════════════════
 
-const vyer = VYER.filter((v) => (VALDA_VYER ? VALDA_VYER.includes(v.id) : !v.extra));
+const kandaGrupper = new Set(VYER.map((v) => v.grupp));
+if (VALDA_GRUPPER) {
+  const okanda = VALDA_GRUPPER.filter((g) => !kandaGrupper.has(g) && !VYER.some((v) => v.id === g));
+  if (okanda.length) { console.error(`Okända grupper: ${okanda.join(", ")} (finns: ${[...kandaGrupper].join(", ")})`); process.exit(2); }
+}
 if (VALDA_VYER) {
   const okanda = VALDA_VYER.filter((id) => !VYER.some((v) => v.id === id));
   if (okanda.length) { console.error(`Okända vyer: ${okanda.join(", ")}`); process.exit(2); }
 }
+const vyer = VYER.filter((v) => {
+  if (VALDA_VYER) return VALDA_VYER.includes(v.id);
+  if (VALDA_GRUPPER) return VALDA_GRUPPER.includes(v.grupp) || VALDA_GRUPPER.includes(v.id);
+  return !v.extra;
+});
 
 const utMapp = path.join(BANK, BASLINJE ? "baslinje" : "senaste");
 fs.mkdirSync(utMapp, { recursive: true });
 // Rensa bara bilderna för de vyer och bredder som tas om
 for (const f of fs.readdirSync(utMapp)) {
-  const m = f.match(/^(.*)-(\d+)-\d+\.png$/);
-  if (m && vyer.some((v) => v.id === m[1]) && BREDDER.includes(Number(m[2]))) fs.rmSync(path.join(utMapp, f));
+  const m = lasFilnamn(f);
+  if (m && vyer.some((v) => v.id === m.vy) && BREDDER.includes(m.bredd)) fs.rmSync(path.join(utMapp, f));
 }
 
-let webblasareWs = null;
-let kod = 0;
-const avbryt = async () => { await stadaUpp(webblasareWs); process.exit(130); };
-process.on("SIGINT", avbryt);
-process.on("SIGTERM", avbryt);
-
-try {
-  if (process.env.BANK_URL) console.log(`Använder ${BAS_URL}; startar Edge på ${CDP_PORT} …`);
-  else {
-    console.log(`Startar Vite på ${BANK_PORT} och Edge på ${CDP_PORT} …`);
-    await startaVite();
-  }
-  webblasareWs = await startaEdge();
+const kod = await medWebblasare(async () => {
+  console.log(`Vyer: ${vyer.map((v) => v.id).join(", ")} · bredder ${BREDDER.join(", ")} · CDP ${CDP_PORT}`);
   const tagna = [];
   for (const vy of vyer) {
     for (const bredd of BREDDER) {
-      const filer = await fotograferaVy(vy, bredd, utMapp);
-      console.log(`  ${vy.id} ${bredd}: ${filer.length} skivor`);
+      const filer = await fotografera(vy, bredd, utMapp);
+      console.log(`  ${vy.id} ${bredd}: ${filer.length} bilder`);
       tagna.push(...filer);
     }
   }
   if (BASLINJE) {
     console.log(`Baslinje: ${tagna.length} bilder i ${utMapp}`);
-  } else if (BARA_BILDER) {
-    console.log(`${tagna.length} bilder i ${utMapp}`);
-  } else {
-    const resultat = await jamfor(tagna);
-    const ut = skrivRapport(resultat);
-    const fel = resultat.filter((r) => r.status !== "ok");
-    for (const r of resultat) {
-      const tal = r.avvikande != null ? `${r.andel.toFixed(4)} % (${r.avvikande} st, exakt ${r.exakt} st)` : "";
-      console.log(`  ${r.status === "ok" ? "ok     " : "AVVIKER"} ${r.namn} ${tal} ${r.status === "ok" || r.status === "avviker" ? "" : r.status}`);
-    }
-    console.log(`\n${resultat.length - fel.length}/${resultat.length} inom toleransen ${TOLERANS} %. Rapport: ${ut}`);
-    if (fel.length) kod = 1;
+    return 0;
   }
-} catch (e) {
-  console.error(e);
-  kod = 1;
-} finally {
-  await stadaUpp(webblasareWs);
-}
+  if (BARA_BILDER) {
+    const ut = skrivKontaktark(tagna.map((namn) => ({ namn, status: "ej jämförd", andel: 0 })), { jamfort: false });
+    console.log(`${tagna.length} bilder i ${utMapp}. Kontaktark: ${ut}`);
+    return 0;
+  }
+  const resultat = await jamfor(tagna);
+  const ut = skrivKontaktark(resultat, { jamfort: true });
+  const fel = resultat.filter((r) => r.status !== "ok");
+  for (const r of resultat) {
+    const tal = r.avvikande != null ? `${r.andel.toFixed(4)} % (${r.avvikande} st, exakt ${r.exakt} st)` : "";
+    console.log(`  ${r.status === "ok" ? "ok     " : "AVVIKER"} ${r.namn} ${tal} ${r.status === "ok" || r.status === "avviker" ? "" : r.status}`);
+  }
+  console.log(`\n${resultat.length - fel.length}/${resultat.length} inom toleransen ${TOLERANS} %. Kontaktark: ${ut}`);
+  return fel.length ? 1 : 0;
+});
 process.exit(kod);
