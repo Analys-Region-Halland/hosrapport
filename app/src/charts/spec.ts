@@ -20,6 +20,10 @@
 //   smaMultiplar  en fokusserie per panel (`enhetId` = panelens enhet) och högst en
 //                 referens som ritas i alla paneler. y.doman är delad.
 //   minidiagram   fokus med `punkter`.
+//
+// Tabellen: tal är oformaterade värden i y.format (samma format på båda
+// axlarna); perioder, namn, plats och status är text; null = saknas ("–"),
+// ".." = undertryckt. Figurens titel är caption, utom för minidiagrammet.
 
 import type { Not, Punkt, Status, TalFormat, VyId } from "../data/modell";
 
