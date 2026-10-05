@@ -147,7 +147,9 @@ describe("normalisera i detalj", () => {
 
   it("undernivåer blir sjukhus under Region Halland med egna serier och förväntat intervall", () => {
     const kap = modell("manad-akutflode.json");
-    expect(kap.enheter.filter((e) => e.niva === "sjukhus").map((e) => e.id).sort()).toEqual(["halmstad", "kungsbacka", "nord", "syd", "varberg"]);
+    // Ambulansuppdragens Nord och Syd är ambulansområden (data/exempelhierarki.ts, WP10)
+    expect(kap.enheter.filter((e) => e.niva === "sjukhus").map((e) => e.id).sort()).toEqual(["halmstad", "kungsbacka", "varberg"]);
+    expect(kap.enheter.filter((e) => e.parent_id === HALLAND_ID).map((e) => e.id).sort()).toEqual(["halmstad", "kungsbacka", "nord", "syd", "varberg"]);
     expect(kap.enheter.find((e) => e.id === "halmstad")).toMatchObject({ namn: "Halmstad", parent_id: HALLAND_ID });
     const b = kpi("manad-akutflode.json", "belaggning");
     expect(b.serier.halmstad.tidsserie.at(-1)).toMatchObject({ period: "2026-03-01", etikett: "mar 26", varde: 98.8, yhat: 99.4, lo80: 97.8, hi80: 100.9 });

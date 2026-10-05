@@ -22,6 +22,8 @@ export const NIVA_ORD: Record<Niva, { en: string; flera: string; bestamd: string
   verksamhet: { en: "verksamhet", flera: "verksamheter", bestamd: "verksamheterna" },
   avdelning: { en: "avdelning", flera: "avdelningar", bestamd: "avdelningarna" },
   vardcentral: { en: "vårdcentral", flera: "vårdcentraler", bestamd: "vårdcentralerna" },
+  ambulansomrade: { en: "ambulansområde", flera: "ambulansområden", bestamd: "ambulansområdena" },
+  ambulansstation: { en: "station", flera: "stationer", bestamd: "stationerna" },
 };
 
 export const PERIODORD: Record<VyId, string> = { dag: "dag", vecka: "vecka", manad: "månad", kvartal: "kvartal", ar: "år" };

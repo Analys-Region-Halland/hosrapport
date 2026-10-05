@@ -6,6 +6,7 @@
 // Ingen DOM; allt här är rena funktioner.
 
 import { antalILoptext, kronor, period as periodText, plats, procentenheter, tal } from "../design/format";
+import { medExempelhierarki } from "./exempelhierarki";
 import { kapitelInfo } from "./kapitelinfo";
 import { valideraKontrakt } from "./kontrakt";
 import type { RaKpi, RaPunkt, RaSektion } from "./kontrakt";
@@ -303,7 +304,7 @@ export function normalisera(raw: unknown, vy: VyId): KapitelModell {
   if (reserv) for (const k of kpier) k.kalla ??= reserv;
   const avsnitt: AvsnittModell[] = (s.delar ?? []).map((d) => ({ id: d.id, namn: d.namn, kpi_ids: [...d.kpi_ids] }));
 
-  return {
+  const kap: KapitelModell = {
     id: s.id,
     namn: s.namn,
     huvudpunkter: huvudpunkter(kpier, vy),
@@ -314,7 +315,12 @@ export function normalisera(raw: unknown, vy: VyId): KapitelModell {
     kallor: s.kallor ?? [],
     leverans: s.leverans ?? [],
   };
+  // Påhittad nivå under sjukhusen tills riktig data per avdelning finns (WP10).
+  return s.id === EXEMPELHIERARKI_KAPITEL ? medExempelhierarki(kap, vy) : kap;
 }
+
+/** Kapitlet som får den påhittade nivån under sjukhusen (data/exempelhierarki.ts). */
+export const EXEMPELHIERARKI_KAPITEL = "akutflode";
 
 // ── Huvudpunkter (Det viktigaste), en enkel regel tills R levererar dem ──
 
