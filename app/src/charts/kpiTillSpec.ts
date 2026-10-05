@@ -322,6 +322,8 @@ function rangSpec(u: Underlag, visning: "rang" | "enheterRang"): ChartSpec {
     hojdklass: "rangordning",
     ...(harPlats ? { platsAv: [rader.length] } : {}),
     ...(r.period ? { period: { iso: r.period, vy: u.vy, text: periodKort(r.period, u.vy) } } : {}),
+    // Enheternas rader kan bli fokus (nedborrning, stilguiden 6.7); regionernas kan inte
+    ...(visning === "enheterRang" ? { borrbar: true } : {}),
   };
 }
 
@@ -387,6 +389,7 @@ function smaMultiplar(u: Underlag): ChartSpec {
       ]),
     },
     hojdklass: "kompakt",
+    borrbar: true,
   };
 }
 

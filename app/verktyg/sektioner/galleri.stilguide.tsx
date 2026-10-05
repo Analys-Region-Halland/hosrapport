@@ -3,9 +3,8 @@
 // utan luckor), två fästa regioner, rangordning (även med lika värden), linje
 // mot förväntat intervall, stapel över tid, små multiplar per sjukhus och per
 // avdelning, och minidiagram i översiktstabellen. Exemplen och deras spec finns
-// i exempel.ts (exempelSpec, byggd av WP1:s kpiTillSpec). Graferna ritas av WP2
-// och WP3; så länge renderaren är en stubb visar exemplet en platshållare.
-// Ägare: WP7 (ramen).
+// i exempel.ts (exempelSpec, byggd av WP1:s kpiTillSpec). Graferna ritas av
+// WP2:s och WP3:s renderare. Ägare: WP7 (ramen).
 
 import { Fragment, useMemo, useState } from "react";
 import Figur from "../../src/figur/Figur";
@@ -41,14 +40,6 @@ function specFakta(spec: ChartSpec): string {
   ].filter(Boolean).join(" · ");
 }
 
-function Platshallare({ e }: { e: Exempel }) {
-  return (
-    <p className={s.platshallare} role="note">
-      Platshållare: grafen ritas av {e.paket} i src/{e.fil}. Data och spec är klara; figuren nedan visar stubbrenderaren.
-    </p>
-  );
-}
-
 type Resultat<T> = { ok: T } | { fel: string };
 function forsok<T>(f: () => T): Resultat<T> {
   try {
@@ -79,7 +70,6 @@ function Exempelvisning({ e }: { e: Exempel }) {
             <br />
             {specFakta(resultat.ok.spec)}
           </p>
-          <Platshallare e={e} />
           <div className={s.figurplats}>
             <Figur spec={resultat.ok.spec} rubrikniva={4}
               visningar={resultat.ok.visningar.length > 1 ? resultat.ok.visningar : undefined} visning={visning}
@@ -118,7 +108,6 @@ function Oversikt({ e }: { e: Exempel }) {
       {"ok" in resultat ? (
         <>
           <p className={s.meta}>{e.typ} · src/{e.fil} ({e.paket}) · {resultat.ok.kalla} · minidiagramSpec (WP1)</p>
-          <Platshallare e={e} />
           <table className={s.oversikt}>
             <caption className={s.caption}>Läget i korthet, {resultat.ok.kapitel}</caption>
             <thead>
@@ -168,8 +157,8 @@ export function Sektion() {
     <>
       <Dek>Varje graftyp med data ur rapporten. Hovra, fäst och använd tangentbordet som i rapporten.</Dek>
       <Not>
-        Specarna byggs av kpiTillSpec ur WP1:s fixturer. Graferna ritas av WP2 och WP3; tills deras renderare finns visar varje
-        exempel figuren med en platshållare. Varje exempel fotograferas för sig i bänken, i 1440 och 390 px.
+        Specarna byggs av kpiTillSpec ur WP1:s fixturer, och graferna ritas av renderarna för respektive graftyp. Varje exempel
+        fotograferas för sig i bänken, i 1440 och 390 px.
       </Not>
       {EXEMPEL.map((e) => (e.typ === "minidiagram" ? <Oversikt key={e.namn} e={e} /> : <Exempelvisning key={e.namn} e={e} />))}
     </>

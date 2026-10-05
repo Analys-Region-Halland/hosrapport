@@ -14,7 +14,9 @@
 //   tid        linje och stapel: reglerna ovan (tidsinteraktion)
 //   rader      rangordning: raden under pekaren (närmaste rad i höjdled, hela
 //              raden från namnet till högerkanten), ↑ ↓ mellan rader,
-//              Home/End, Enter fäster (radinteraktion)
+//              Home/End, Enter fäster (radinteraktion). Tillägg i WP10: i
+//              enheternas rangordning (spec.borrbar) borrar klick och Enter
+//              ned i raden i stället, när figuren kan (Interaktiv.borra)
 //   paneler    små multiplar: perioden är gemensam för alla paneler
 //              (synkroniserad hjälplinje), panelen under pekaren får tooltipen,
 //              ← → mellan perioder, ↑ ↓ mellan paneler, Enter borrar ned
@@ -201,6 +203,12 @@ export interface Interaktiv {
   /** Om den aktiva punkten finns i scenen (scenen kan ha ritats om). */
   giltig(aktiv: AktivPunkt): boolean;
   tooltip(aktiv: AktivPunkt, satt: Inmatning): TooltipLage | null;
+  /**
+   * Enheten som ett klick på den aktiva punkten gör till fokus, annars null
+   * (tillägg i WP10). Bara rader i enheternas rangordning när figuren kan borra
+   * ned; panelerna borrar via namnet (data-panelnamn) och saknar den.
+   */
+  borra?(aktiv: AktivPunkt): string | null;
 }
 
 export interface InteraktionVal {
@@ -287,8 +295,21 @@ export function radStart(m: Radmodell, spec: ChartSpec): AktivPunkt | null {
   return r ? { index: r.index, serieId: r.serieId } : null;
 }
 
-/** Tangentbordet i rangordningen: ↑ ↓ mellan rader, Home/End, Enter fäster, Escape stänger. */
-export function radTangent(nyckel: string, m: Radmodell, spec: ChartSpec, aktiv: AktivPunkt | null): Tangentutfall {
+/**
+ * Enheten en rad borrar ned till: radens enhet när raderna i specen är enheter
+ * som kan bli fokus (spec.borrbar, enheternas rangordning), annars null.
+ */
+export function radEnhet(spec: ChartSpec, serieId: string | null): string | null {
+  if (!spec.borrbar || !serieId) return null;
+  const s = spec.serier.find((x) => x.id === serieId);
+  return s && (s.roll === "fokus" || s.roll === "kontext" || s.roll === "markerad") ? s.enhetId ?? s.id : null;
+}
+
+/**
+ * Tangentbordet i rangordningen: ↑ ↓ mellan rader, Home/End, Enter fäster
+ * (eller borrar ned i raden när figuren kan och raderna är enheter), Escape stänger.
+ */
+export function radTangent(nyckel: string, m: Radmodell, spec: ChartSpec, aktiv: AktivPunkt | null, nedborrning = false): Tangentutfall {
   const start = aktiv ?? radStart(m, spec);
   if (!start) return { hanterad: false, aktiv };
   const pos = Math.max(0, m.rader.findIndex((r) => r.index === start.index));
@@ -300,6 +321,8 @@ export function radTangent(nyckel: string, m: Radmodell, spec: ChartSpec, aktiv:
     case "Home": return till(0);
     case "End": return till(m.rader.length - 1);
     case "Enter": {
+      const enhet = nedborrning ? radEnhet(spec, start.serieId) : null;
+      if (enhet) return { hanterad: true, aktiv: start, fokus: enhet };
       const s = start.serieId ? spec.serier.find((x) => x.id === start.serieId) : undefined;
       if (s && arFastbar(s)) return { hanterad: true, aktiv: start, vaxla: s.id };
       return { hanterad: aktiv !== null, aktiv: start };
@@ -311,13 +334,14 @@ export function radTangent(nyckel: string, m: Radmodell, spec: ChartSpec, aktiv:
   }
 }
 
-/** Tooltipens innehåll för en rad. */
-export type RadTooltip = (spec: ChartSpec, rad: Stopp, satt: Inmatning) => TooltipModell;
+/** Tooltipens innehåll för en rad. `nedborrning`: klick på raden borrar ned (tillägg i WP10). */
+export type RadTooltip = (spec: ChartSpec, rad: Stopp, satt: Inmatning, nedborrning: boolean) => TooltipModell;
 
 /** Rangordningens interaktion: träffregeln för rader och radernas tangentbord. */
 export function radinteraktion(innehall: RadTooltip): Interaktion {
-  return (scen, spec) => {
+  return (scen, spec, val) => {
     const m = byggRadmodell(scen);
+    const ned = !!val?.nedborrning && !!spec.borrbar;
     return {
       inom: (px, py) => radVid(m, px, py) !== null,
       pekare: (px, py) => {
@@ -329,12 +353,13 @@ export function radinteraktion(innehall: RadTooltip): Interaktion {
         return r ? radAktiv(m, r.index) : null;
       },
       start: () => radStart(m, spec),
-      tangent: (nyckel, aktiv) => radTangent(nyckel, m, spec, aktiv),
+      tangent: (nyckel, aktiv) => radTangent(nyckel, m, spec, aktiv, ned),
       giltig: (aktiv) => m.rader.some((r) => r.index === aktiv.index && r.serieId === aktiv.serieId),
       tooltip: (aktiv, satt) => {
         const r = m.rader.find((x) => x.index === aktiv.index);
-        return r ? { modell: innehall(spec, r, satt), x: r.x, y: r.y, yta: scen.plot, under: scen.hojd } : null;
+        return r ? { modell: innehall(spec, r, satt, ned), x: r.x, y: r.y, yta: scen.plot, under: scen.hojd } : null;
       },
+      borra: (aktiv) => (ned ? radEnhet(spec, aktiv.serieId) : null),
     };
   };
 }

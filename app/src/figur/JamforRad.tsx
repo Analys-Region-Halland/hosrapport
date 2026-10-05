@@ -13,6 +13,8 @@
 // - Visas bara när spec har jämförbara serier. Listan byggs ur spec.jamforbara
 //   (redan alfabetisk från WP1, sorteras ändå); tillståndet (fasta) ägs av Figur
 //   och delas med diagrammet.
+// - Knappens nivå kommer ur spec.jamforNiva: "+ Jämför med region", "+ Jämför
+//   med sjukhus", "+ Jämför med avdelning" (tillägg i WP10, i stället för att gissa).
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { ChartSpec } from "../charts/spec";
@@ -27,10 +29,10 @@ export interface JamforRadProps {
   spec: ChartSpec;
   fasta: string[];
   onFasta(ids: string[]): void;
-  nivanamn?: string;        // "region" (förval), "sjukhus" …: "+ Jämför med {nivanamn}"
 }
 
-export default function JamforRad({ spec, fasta, onFasta, nivanamn = "region" }: JamforRadProps) {
+export default function JamforRad({ spec, fasta, onFasta }: JamforRadProps) {
+  const nivanamn = spec.jamforNiva?.etikett ?? "region";
   const [oppen, setOppen] = useState(false);
   const [knapp, setKnapp] = useState<HTMLButtonElement | null>(null);
   const lista = useRef<HTMLDivElement>(null);

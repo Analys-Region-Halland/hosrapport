@@ -6,12 +6,11 @@
 // Exemplen är riktig data (beläggningen per sjukhus ur akutflödesutdraget) och
 // WP1:s påhittade hierarki (återinskrivningar per avdelning på sjukhuset i
 // Halmstad), byggda av kpiTillSpec (exempelSpec) och ritade i WP4:s Figur med
-// nivåflikar och brödsmula. Nedborrning: Figur skickar ännu inte onFokus vidare
-// till diagrammet, så sektionen lägger den i NedborrningKontext runt figuren.
-// Klick på ett panelnamn (eller Enter i panelen) byter då fokus, som i rapporten.
+// nivåflikar och brödsmula. Nedborrning: Figur skickar onFokus vidare till
+// diagrammet, så klick på ett panelnamn (eller Enter i panelen) byter fokus,
+// som i rapporten.
 
 import { useMemo, useState } from "react";
-import { NedborrningKontext } from "../../src/charts/karna/nedborrning";
 import type { VisningId } from "../../src/charts/spec";
 import { smaMultiplarKolumner, tema } from "../../src/design/tema";
 import Figur from "../../src/figur/Figur";
@@ -44,14 +43,12 @@ function Exempel({ namn, rubrik, bild }: { namn: ExempelNamn; rubrik: string; bi
     <div data-bank-bild={bild} data-smaexempel={bild}>
       <Blockrubrik>{rubrik}</Blockrubrik>
       <Prosa>{start.vad}</Prosa>
-      <NedborrningKontext.Provider value={borra}>
-        <Figur
-          spec={resultat.spec} rubrikniva={4}
-          visningar={resultat.visningar.length > 1 ? resultat.visningar : undefined} visning={visning} onVisning={setVisning}
-          brodsmula={resultat.brodsmula.length ? resultat.brodsmula : undefined} onFokus={borra}
-          fasta={fasta} onFasta={setFasta}
-        />
-      </NedborrningKontext.Provider>
+      <Figur
+        spec={resultat.spec} rubrikniva={4}
+        visningar={resultat.visningar.length > 1 ? resultat.visningar : undefined} visning={visning} onVisning={setVisning}
+        brodsmula={resultat.brodsmula.length ? resultat.brodsmula : undefined} onFokus={borra}
+        fasta={fasta} onFasta={setFasta}
+      />
     </div>
   );
 }

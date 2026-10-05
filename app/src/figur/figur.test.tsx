@@ -159,15 +159,30 @@ describe("figuren", () => {
       />,
     );
     expect(html).toMatch(/aria-selected="true"[^>]*data-flik="dag"/);
-    expect(html).toContain('aria-label="Nivå"');
+    // Brödsmulans landmärke har ett namn per figur (axe landmark-unique, WP10)
+    expect(html).toContain('aria-label="Nivå, Halland jämfört med övriga regioner"');
     expect(html).toContain('<span aria-current="location">Halmstad</span>');
+    const medNamn = renderToStaticMarkup(
+      <Figur spec={spec()} indikatornamn="Beläggningsgrad"
+        brodsmula={[{ id: "0013", namn: "Region Halland" }, { id: "halmstad", namn: "Halmstad" }]} />,
+    );
+    expect(medNamn).toContain('aria-label="Nivå, Beläggningsgrad"');
+    expect(medNamn).toContain('data-brodsmula-lank="0013"');
   });
 
-  it("jämför med enhet när de jämförbara inte är regioner", () => {
-    const html = renderToStaticMarkup(
-      <Figur spec={spec({ jamforbara: [{ enhetId: "varberg", namn: "Varberg", senaste: 95.1 }] })} />,
-    );
-    expect(html).toContain("+ Jämför med enhet");
+  it("jämför med den nivå specen anger, region när den saknas", () => {
+    const syskon = { jamforbara: [{ enhetId: "varberg", namn: "Varberg", senaste: 95.1 }] };
+    expect(renderToStaticMarkup(<Figur spec={spec({ ...syskon, jamforNiva: { id: "sjukhus", etikett: "sjukhus" } })} />))
+      .toContain("+ Jämför med sjukhus");
+    expect(renderToStaticMarkup(<Figur spec={spec({ ...syskon, jamforNiva: { id: "avdelning", etikett: "avdelning" } })} />))
+      .toContain("+ Jämför med avdelning");
+    expect(renderToStaticMarkup(<Figur spec={spec()} />)).toContain("+ Jämför med region");
+  });
+
+  it("skickar onFokus vidare till diagrammet (nedborrning, WP10)", () => {
+    const sma = kpiTillSpec(hierarki().kpier[0], hierarki(), { vy: "manad" }, "enheter");
+    expect(renderToStaticMarkup(<Figur spec={sma} onFokus={() => {}} />)).toContain("data-nedborrning");
+    expect(renderToStaticMarkup(<Figur spec={sma} />)).not.toContain("data-nedborrning");
   });
 
   it("visar kicker bara när spec har en", () => {

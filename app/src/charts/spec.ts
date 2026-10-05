@@ -13,6 +13,11 @@
 // som tooltipen skriver i rubriken). Periodtexter i undertitel, noter och
 // tabellhuvud har hårt mellanslag (U+00A0) så att "apr 2024" inte bryts.
 //
+// Tillägg i WP10 (valfritt fält): `borrbar` säger att enheterna i grafen ligger
+// under fokus och kan bli fokus (visningarna enheter och enheterRang). I
+// enheternas rangordning borrar klick och Enter på en rad då ned i stället för
+// att fästa, när figuren ger onFokus; panelerna i små multiplar borrar via namnet.
+//
 // Så fyller kpiTillSpec serierna per typ:
 //   linje         en serie per linje, `punkter` på ett gemensamt periodrutnät
 //                 (samma längd i alla serier, luckor som varde: null).
@@ -76,6 +81,7 @@ export interface ChartSpec {
   hojdklass: "standard" | "rangordning" | "kompakt" | "minidiagram";
   platsAv?: number[];                          // nämnaren i "plats r av n" per period (rangordning: en period)
   period?: { iso: string; vy: VyId; text: string };   // rangordningens period; text som i undertiteln ("2025", "mar 2026")
+  borrbar?: boolean;                           // enheterna (paneler, rader) ligger under fokus och kan bli fokus (WP10)
 }
 
 export interface SpecKontext {

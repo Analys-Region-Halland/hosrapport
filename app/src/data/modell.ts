@@ -18,7 +18,11 @@ export const RIKET_ID = "0000";
 
 export type Status = "gron" | "gul" | "rod";
 export type VyId = "dag" | "vecka" | "manad" | "kvartal" | "ar";
-export type Niva = "riket" | "region" | "forvaltning" | "sjukhus" | "verksamhet" | "avdelning" | "vardcentral";
+// Tillägg i WP10: ambulansområde och ambulansstation, så att ambulansuppdragens
+// enheter (Nord och Syd) inte kallas sjukhus och kan borras ned till stationer.
+export type Niva =
+  | "riket" | "region" | "forvaltning" | "sjukhus" | "verksamhet" | "avdelning" | "vardcentral"
+  | "ambulansomrade" | "ambulansstation";
 
 export interface Enhet {
   id: string;              // Kolada-kod för regioner ("0013" = Region Halland, "0000" = riket), annars slug

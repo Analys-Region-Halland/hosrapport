@@ -174,6 +174,45 @@ describe("tooltip och interaktion", () => {
   it("Tab startar på Halland", () => {
     expect(m.start()).toEqual({ index: scen.stopp.find((s) => s.serieId === "0013")!.index, serieId: "0013" });
   });
+
+  it("regionernas rader borrar aldrig ned, även när figuren kan", () => {
+    const med = radinteraktion(radTooltip)(scen, telefon, { nedborrning: true });
+    const dalarna = scen.stopp.find((s) => s.serieId === "0020")!;
+    const a = { index: dalarna.index, serieId: "0020" };
+    expect(telefon.borrbar).toBeUndefined();
+    expect(med.borra?.(a)).toBeNull();
+    expect(med.tangent("Enter", a)).toMatchObject({ vaxla: "0020" });
+    expect(med.tangent("Enter", a).fokus).toBeUndefined();
+  });
+});
+
+describe("nedborrning i enheternas rangordning (WP10)", () => {
+  const sjukhus = provSpec("manad", "akutflode", "vantetid", "enheterRang");
+  const scen = layout(sjukhus, 832);
+  const utan = radinteraktion(radTooltip)(scen, sjukhus);
+  const med = radinteraktion(radTooltip)(scen, sjukhus, { nedborrning: true });
+  const rad = scen.stopp.find((s) => s.serieId === "halmstad")!;
+  const a = { index: rad.index, serieId: "halmstad" };
+
+  it("specen säger att raderna kan bli fokus", () => {
+    expect(sjukhus.borrbar).toBe(true);
+    expect(scen.stopp.map((s) => s.serieId).sort()).toEqual(["halmstad", "kungsbacka", "varberg"]);
+  });
+
+  it("klick och Enter på en rad borrar ned när figuren kan, annars fäster de", () => {
+    expect(med.borra?.(a)).toBe("halmstad");
+    expect(med.tangent("Enter", a)).toMatchObject({ hanterad: true, fokus: "halmstad" });
+    expect(med.tangent("Enter", a).vaxla).toBeUndefined();
+    expect(utan.borra?.(a)).toBeNull();
+    expect(utan.tangent("Enter", a)).toMatchObject({ vaxla: "halmstad" });
+  });
+
+  it("uppmaningen säger att raden visar enheten", () => {
+    expect(med.tooltip(a, "mus")!.modell.uppmaning).toBe("Klicka för att visa Halmstad");
+    expect(med.tooltip(a, "tangent")!.modell.uppmaning).toBe("Tryck Enter för att visa Halmstad");
+    expect(med.tooltip(a, "peka")!.modell.uppmaning).toBe("Tryck igen för att visa Halmstad");
+    expect(utan.tooltip(a, "mus")!.modell.uppmaning).toBe("Klicka för att markera Halmstad");
+  });
 });
 
 describe("ritning", () => {

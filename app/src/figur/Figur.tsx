@@ -14,8 +14,14 @@
 // Förstoringen visar samma figur i full bredd med indikatornamnet som kicker
 // (spec.kicker, annars `indikatornamn`) och samma fästa serier. Samma kicker
 // bakas in i SVG och PNG.
+//
+// Nedborrning (stilguiden 6.7, tillägg i WP10): `onFokus` går både till
+// brödsmulan och till diagrammet, där klick på en panels namn, en rad i
+// enheternas rangordning eller Enter gör enheten till fokus. Brödsmulans
+// landmärke heter "Nivå, {indikatornamn eller titel}", så att flera figurer på
+// samma sida får olika namn.
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Diagram from "../charts/Diagram";
 import type { ChartSpec, VisningId } from "../charts/spec";
 import Atgarder from "./Atgarder";
@@ -45,13 +51,6 @@ export interface FigurProps {
 }
 
 const ALLA: Atgard[] = ["tabell", "ladda", "forstora"];
-
-// Nivånamnet i "+ Jämför med …". ChartSpec säger inte vilken nivå de jämförbara
-// serierna har; Kolada-koder (fyra siffror) är regioner, annat är underliggande
-// enheter. Ersätts när spec får nivån (behov till WP1).
-const KOLADA_KOD = /^\d{4}$/;
-const jamforNiva = (spec: ChartSpec) =>
-  (spec.jamforbara ?? []).every((j) => KOLADA_KOD.test(j.enhetId)) ? "region" : "enhet";
 const DAG = "dag";
 
 export default function Figur(props: FigurProps) {
@@ -97,6 +96,23 @@ export default function Figur(props: FigurProps) {
   const kicker = spec.kicker ?? indikatornamn;
   const fristaende = kicker && kicker !== spec.kicker ? { ...spec, kicker } : spec;
 
+  // Brödsmulan uppåt: länken man klickade försvinner (den blir aktuell nivå,
+  // eller hela brödsmulan försvinner på regionnivå). Fokus flyttas då till den
+  // valda fliken (nivån man kom till), annars till diagrammet.
+  const ram = useRef<HTMLElement>(null);
+  const fokusEfterUppat = useRef(false);
+  const uppat = (enhetId: string) => {
+    fokusEfterUppat.current = true;
+    onFokus?.(enhetId);
+  };
+  useEffect(() => {
+    if (!fokusEfterUppat.current) return;
+    fokusEfterUppat.current = false;
+    const el = ram.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+      ?? ram.current?.querySelector<HTMLElement>('[data-plotyta] svg[role="img"]');
+    el?.focus({ preventScroll: true });
+  }, [spec.id]);
+
   const ladda = async (format: "csv" | "svg" | "png") => {
     setMeddelande("");
     const namn = figurFilnamn(spec, aktivFlik, format);
@@ -127,6 +143,7 @@ export default function Figur(props: FigurProps) {
 
   return (
     <figure
+      ref={ram}
       className={s.platta}
       aria-labelledby={titelId}
       aria-describedby={spec.undertitel ? undertitelId : undefined}
@@ -145,12 +162,12 @@ export default function Figur(props: FigurProps) {
       )}
 
       {visaBrodsmula && brodsmula && (
-        <nav className={`${s.hel} ${s.brodsmula}`} aria-label="Nivå" data-brodsmula="">
+        <nav className={`${s.hel} ${s.brodsmula}`} aria-label={`Nivå, ${kicker ?? spec.titel}`} data-brodsmula="">
           <ol>
             {brodsmula.map((b, i) => (
               <li key={b.id}>
                 {i < brodsmula.length - 1
-                  ? <button type="button" className={s.brodsmulaLank} onClick={() => onFokus?.(b.id)}>{b.namn}</button>
+                  ? <button type="button" className={s.brodsmulaLank} onClick={() => uppat(b.id)} data-brodsmula-lank={b.id}>{b.namn}</button>
                   : <span aria-current="location">{b.namn}</span>}
               </li>
             ))}
@@ -165,14 +182,14 @@ export default function Figur(props: FigurProps) {
         aria-labelledby={medFlikar ? `${panelId}-flik-${aktivFlik}` : undefined}
       >
         <div ref={plot} className={tabell ? s.plotDold : s.plotyta} data-plotyta="">
-          <Diagram spec={spec} fasta={fasta} onFasta={satFasta} />
+          <Diagram spec={spec} fasta={fasta} onFasta={satFasta} onFokus={onFokus} />
         </div>
         {tabell && <TabellVy tabell={spec.tabell} format={spec.y.format} />}
       </div>
 
       {!tabell && (spec.jamforbara?.length ?? 0) > 0 && (
         <div className={`${s.hel} ${s.jamfor}`}>
-          <JamforRad spec={spec} fasta={fasta} onFasta={satFasta} nivanamn={jamforNiva(spec)} />
+          <JamforRad spec={spec} fasta={fasta} onFasta={satFasta} />
         </div>
       )}
 

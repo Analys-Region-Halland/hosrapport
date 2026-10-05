@@ -1,6 +1,5 @@
 /* galleri.module.css: diagramgalleriets ram. Själva figuren styls av Figur (WP4)
-   och graferna av renderarna (WP2, WP3). Platshållaren syns bara när exemplet
-   innehåller en stubbrenderare ([data-stubb]). Ägare: WP7. */
+   och graferna av renderarna (WP2, WP3). Ägare: WP7. */
 @layer komponent {
   .meta {
     margin: var(--rum-2) 0 0;
@@ -9,21 +8,6 @@
     line-height: var(--typ-not-radhojd);
     color: var(--farg-text2);
     overflow-wrap: anywhere;
-  }
-
-  .platshallare {
-    display: none;
-    margin: var(--rum-4) 0 0;
-    padding: var(--rum-3) var(--rum-4);
-    background: var(--farg-yta);
-    font-family: var(--typ-granssnitt-familj);
-    font-size: var(--typ-granssnitt-storlek);
-    line-height: var(--typ-granssnitt-radhojd);
-    color: var(--farg-black);
-  }
-
-  .exempel:has([data-stubb]) .platshallare {
-    display: block;
   }
 
   .figurplats {

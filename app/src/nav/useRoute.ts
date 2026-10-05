@@ -15,8 +15,14 @@
 //   med ersatt.
 //
 // Lyssnarna installeras först när någon prenumererar, så gamla appen påverkas inte.
+//
+// Tillägg i WP10: när en kapiteladress pekar på ett block med en figur men
+// saknar v och e (läspositionen, länkar till en indikator) tas figurens läge
+// med ur registret i nav/figurlage.ts, så att adressen, uppdatering och bakåt
+// landar i samma läge som figuren står i.
 
 import { useSyncExternalStore } from "react";
+import { figurlage } from "./figurlage";
 import { format, gammaltAnkare, harVy, parse, skrivOmGammalt, START, type Route } from "./route";
 
 export interface RouteTillstand {
@@ -73,6 +79,17 @@ export interface Router {
 
 /** Fördröjning innan läspositionen skrivs till adressen, i ms. */
 export const LASPOSITION_FORDROJNING = 600;
+
+/**
+ * En kapiteladress som pekar på ett block utan v och e får blockets figurläge
+ * ur registret (WP10): en länk till en indikator vars figur läsaren borrat ned
+ * i står i samma läge som figuren. Adresser med egen v eller e lämnas.
+ */
+function medFigurlage(till: Route): Route {
+  if (till.sida !== "kapitel" || !till.i || till.v || till.e) return till;
+  const lage = figurlage(till.i);
+  return lage ? { ...till, ...(lage.v ? { v: lage.v } : {}), ...(lage.e ? { e: lage.e } : {}) } : till;
+}
 
 export function skapaRouter(plats: Plats, fordrojning = LASPOSITION_FORDROJNING): Router {
   let uppslag: ((blockId: string) => string | undefined) | undefined;
@@ -131,7 +148,7 @@ export function skapaRouter(plats: Plats, fordrojning = LASPOSITION_FORDROJNING)
     const fokus = a.fokus ?? (!ersatt && rulla);
     if (ersatt) avbrytVantande();
     else skrivLasposition();
-    const route = parse(format(till));
+    const route = parse(format(medFigurlage(till)));
     const hash = format(route);
     if (hash !== plats.hash()) {
       if (ersatt) plats.ersatt(hash);
@@ -148,7 +165,8 @@ export function skapaRouter(plats: Plats, fordrojning = LASPOSITION_FORDROJNING)
     avbrytVantande();
     const r = t.route;
     if (r.sida !== "kapitel" || r.i === i) return;
-    // v och e beskriver figuren i det gamla blocket och följer inte med
+    // v och e beskriver figuren i det gamla blocket och följer inte med; det
+    // nya blockets figur har sitt eget läge i registret, som navigera tar med (WP10)
     navigera({ sida: "kapitel", id: r.id, vy: r.vy, ...(i ? { i } : {}), ...(r.red ? { red: true } : {}) }, { ersatt: true, rulla: false });
   }
 
