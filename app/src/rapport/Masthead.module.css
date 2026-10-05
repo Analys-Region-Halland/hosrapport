@@ -1,0 +1,88 @@
+/* Masthead.module.css: kapitlets och sammanfattningens masthead (stilguiden
+   4.2 och 4.3). Alla värden ur tema-variablerna. */
+@layer komponent {
+  .masthead {
+    max-inline-size: var(--matt-figur);
+  }
+
+  /* Logotypen är 28 px hög (stilguiden 4.3): rum.6 − rum.1 */
+  .logotyp {
+    display: block;
+    block-size: calc(var(--rum-6) - var(--rum-1));
+    inline-size: auto;
+    margin-block-end: var(--rum-6);
+  }
+
+  .kicker {
+    margin: 0 0 var(--rum-3);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    letter-spacing: var(--typ-kicker-sparr);
+    text-transform: uppercase;
+    color: var(--farg-fokus);
+  }
+
+  .titel {
+    margin: 0;
+    font-family: var(--typ-titel-familj);
+    font-size: var(--typ-titel-storlek);
+    line-height: var(--typ-titel-radhojd);
+    font-weight: var(--typ-titel-vikt);
+    letter-spacing: var(--typ-titel-sparr);
+    color: var(--farg-black);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+
+  /* Den enda linjen i läsflödet */
+  .linje {
+    block-size: var(--komponent-kapitellinje);
+    margin-block: var(--rum-5);
+    background: var(--farg-fokus);
+  }
+
+  .dek {
+    max-inline-size: var(--matt-text);
+    margin: 0 0 var(--rum-4);
+    font-family: var(--typ-ingress-familj);
+    font-size: var(--typ-ingress-storlek);
+    line-height: var(--typ-ingress-radhojd);
+    font-weight: var(--typ-ingress-vikt);
+    color: var(--farg-text2);
+  }
+
+  .metarad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--rum-5);
+    row-gap: var(--rum-2);
+  }
+
+  .meta {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text3);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  /* Delarna bryts hellre mellan än inne i sig */
+  .del {
+    white-space: nowrap;
+  }
+
+  .skiljare {
+    color: var(--farg-text3);
+  }
+
+  @media (max-width: 639px) {
+    .del {
+      white-space: normal;
+    }
+  }
+}

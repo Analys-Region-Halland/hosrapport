@@ -1,0 +1,33 @@
+/* Sammanfattning.module.css: sammanfattningen (stilguiden 2.5 och 4.2).
+   Kapitlen skiljs av avstånd; inga ramar, inga linjer. */
+@layer komponent {
+  .sida {
+    max-inline-size: var(--matt-figur);
+  }
+
+  .sida > [data-masthead] + * {
+    margin-block-start: var(--rum-8);
+  }
+
+  .kapitel {
+    display: grid;
+    row-gap: var(--rum-8);
+    margin-block-start: var(--rum-9);
+  }
+
+  .post > * + * {
+    margin-block-start: var(--rum-3);
+  }
+
+  .dek {
+    max-inline-size: var(--matt-text);
+    color: var(--farg-text2);
+  }
+
+  .om {
+    margin-block-start: var(--rum-9);
+  }
+  .omText {
+    margin-block-start: var(--rum-4);
+  }
+}

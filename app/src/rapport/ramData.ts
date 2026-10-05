@@ -132,28 +132,32 @@ export interface KapitelLaddning {
   /** Sant när kapitel är laddat för exakt den vy och det id som efterfrågas. */
   klar: boolean;
   fel: string | null;
+  /** Vyn som `kapitel` hör till (den förra medan nästa laddas). Tillägg i WP9. */
+  vy: VyId | null;
 }
 
 /** Laddar ett kapitel. Vid vybyte visas förra vyns kapitel tills nästa är laddat. */
 export function useKapitel(vy: VyId | null, id: string | null): KapitelLaddning {
   const nyckel = vy && id ? `${vy}:${id}` : null;
-  const [res, setRes] = useState<{ nyckel: string; id: string; kapitel: KapitelModell | null; fel: string | null } | null>(null);
+  const [res, setRes] = useState<{ nyckel: string; id: string; vy: VyId; kapitel: KapitelModell | null; fel: string | null } | null>(null);
   useEffect(() => {
     if (!vy || !id) return;
     let avbruten = false;
     const n = `${vy}:${id}`;
     laddaKapitel(vy, id).then(
-      (k) => { if (!avbruten) setRes({ nyckel: n, id, kapitel: k, fel: null }); },
-      (e) => { if (!avbruten) setRes({ nyckel: n, id, kapitel: null, fel: meddelande(e) }); },
+      (k) => { if (!avbruten) setRes({ nyckel: n, id, vy, kapitel: k, fel: null }); },
+      (e) => { if (!avbruten) setRes({ nyckel: n, id, vy, kapitel: null, fel: meddelande(e) }); },
     );
     return () => { avbruten = true; };
   }, [vy, id]);
-  if (!nyckel || !res) return { kapitel: null, klar: false, fel: null };
+  if (!nyckel || !res) return { kapitel: null, klar: false, fel: null, vy: null };
   const klar = res.nyckel === nyckel;
+  const kapitel = klar || res.id === id ? res.kapitel : null;
   return {
-    kapitel: klar || res.id === id ? res.kapitel : null,
+    kapitel,
     klar,
     fel: klar ? res.fel : null,
+    vy: kapitel ? res.vy : null,
   };
 }
 

@@ -1,0 +1,31 @@
+/* Statusmatare.module.css: statusmätaren (stilguiden 4.1 och 4.2). Höjd 6 px
+   (komponent.tocPrick), 2 px mellanrum, inga rundade hörn. */
+@layer komponent {
+  .matare {
+    max-inline-size: var(--matt-text);
+  }
+
+  .stapel {
+    display: flex;
+    gap: var(--komponent-kapitellinje);
+    block-size: var(--komponent-tocPrick);
+  }
+
+  .del {
+    display: block;
+    flex-basis: 0;
+    block-size: 100%;
+  }
+  .gron { background: var(--farg-status-gron-markor); }
+  .gul { background: var(--farg-status-gul-markor); }
+  .rod { background: var(--farg-status-rod-markor); }
+
+  .rad {
+    margin: var(--rum-2) 0 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+    font-variant-numeric: var(--typ-siffror);
+  }
+}

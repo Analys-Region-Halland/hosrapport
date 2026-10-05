@@ -1,0 +1,39 @@
+/* DetViktigaste.module.css: Det viktigaste (stilguiden 3.4 och 4.3). */
+@layer komponent {
+  .lista {
+    display: grid;
+    row-gap: var(--rum-3);
+    max-inline-size: var(--matt-text);
+    margin: var(--rum-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Punkten är en liten grön fyrkant, 7 px, ingen radie (princip 9) */
+  .punkt {
+    position: relative;
+    padding-inline-start: calc(var(--rum-5) - var(--komponent-kapitellinje));
+    font-family: var(--typ-brod-familj);
+    font-size: var(--typ-brod-storlek);
+    line-height: var(--typ-brod-radhojd);
+    font-weight: var(--typ-brod-vikt);
+    color: var(--farg-black);
+  }
+  .punkt::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: var(--komponent-kapitellinje);
+    inset-block-start: 0.62em;
+    inline-size: calc(var(--rum-2) - var(--matt-harlinje));
+    block-size: calc(var(--rum-2) - var(--matt-harlinje));
+    background: var(--farg-fokus);
+  }
+
+  /* "se 2.3": not 600, på samma rad som punktens slut */
+  .se {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    font-weight: var(--typ-not-viktStark);
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,26 @@
+/* KapitelSida.module.css: avstånden mellan kapitlets block (stilguiden 2.5).
+   Masthead → första blocket rum.8, block på kapitelnivå rum.9, avsnitt
+   rum.10, indikatorer rum.9 (inne i avsnitten: Avsnitt.module.css). Inga
+   ramar eller linjer; avstånden grupperar (princip 9). */
+@layer komponent {
+  .kapitel {
+    max-inline-size: var(--matt-figur);
+  }
+
+  .kapitel > * + [data-block],
+  .kapitel > * + .indikatorer {
+    margin-block-start: var(--rum-9);
+  }
+
+  .kapitel > * + [data-avsnitt] {
+    margin-block-start: var(--rum-10);
+  }
+
+  .kapitel > [data-masthead] + * {
+    margin-block-start: var(--rum-8);
+  }
+
+  .indikatorer > * + * {
+    margin-block-start: var(--rum-9);
+  }
+}

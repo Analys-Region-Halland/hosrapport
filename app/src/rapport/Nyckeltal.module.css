@@ -1,0 +1,28 @@
+/* Nyckeltal.module.css: nyckeltalsraden (stilguiden 4.4 och 5.2). */
+@layer komponent {
+  .rad {
+    margin: 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-text2);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .varde {
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-black);
+    white-space: nowrap;
+  }
+
+  .del {
+    white-space: nowrap;
+  }
+
+  /* Två blanksteg runt avskiljaren som i stilguidens exempel: rum.2 på var sida */
+  .skiljare {
+    padding-inline: var(--rum-2);
+    color: var(--farg-text3);
+  }
+}

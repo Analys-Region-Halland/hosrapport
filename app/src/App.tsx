@@ -3,7 +3,7 @@ import type { Scope } from "./types";
 import StartScreen from "./components/StartScreen";
 import ReportShell from "./components/ReportShell";
 import BegreppSida from "./begrepp/BegreppSida";
-import { skrivOmGammalt, START, STANDARDVY, type Route } from "./nav/route";
+import { KAPITELVY, skrivOmGammalt, START, STANDARDVY, type Route } from "./nav/route";
 import { navigera, registreraAnkarUppslag, useRouteTillstand } from "./nav/useRoute";
 import KapitelSida from "./rapport/KapitelSida";
 import Ram from "./rapport/Ram";
@@ -12,8 +12,7 @@ import {
   type KapitelIndex,
 } from "./rapport/ramData";
 import {
-  BegreppPlatshallare, KapitelPlatshallare, Laddar, LasPlatshallare, SammanfattningPlatshallare,
-  StartPlatshallare, Stubbgrans,
+  BegreppPlatshallare, Laddar, LasPlatshallare, StartPlatshallare, Stubbgrans,
 } from "./rapport/RamPlatshallare";
 import Sammanfattning from "./rapport/Sammanfattning";
 import StartSida from "./start/StartSida";
@@ -37,8 +36,11 @@ export default function App() {
 //    #/kapitel/{id}?vy=&i=   kapitlet (WP9), rullat till blocket i
 //    #/begrepp, #/begrepp/x  begreppslistan (WP5)
 //    #/las                   så läser du rapporten
-//  Sidorna i andra paket renderas i en Stubbgrans: så länge de är stubbar
-//  visas ramens platshållare (rapport/RamPlatshallare.tsx).
+//  Startsidan och begreppslistan renderas i en Stubbgrans: så länge de är
+//  stubbar visas ramens platshållare (rapport/RamPlatshallare.tsx). Kapitlet
+//  och sammanfattningen (WP9) renderas direkt.
+//  Saknar adressen vy öppnas ett kapitel i månadsvyn om den finns, annars i
+//  en vy som har kapitlet (KAPITELVY; routern säger utanVy).
 // ════════════════════════════════════════════════════════════
 
 function NyApp() {
@@ -47,7 +49,9 @@ function NyApp() {
   const { index, fel: indexFel } = useKapitelIndex();
 
   // Ett kapitel visas bara i en vy där det finns; annars byts vyn eller (okänt kapitel) startsidan.
-  const kapitelVy = route.sida === "kapitel" && index ? vyForKapitel(index, route.id, route.vy) : undefined;
+  // Saknade adressen vy öppnas kapitlet i månadsvyn om den finns (KAPITELVY, gamla utils/vyval.ts).
+  const onskadVy = t.utanVy ? KAPITELVY : route.sida === "kapitel" ? route.vy : STANDARDVY;
+  const kapitelVy = route.sida === "kapitel" && index ? vyForKapitel(index, route.id, onskadVy) : undefined;
   const giltigt = route.sida === "kapitel" && kapitelVy === route.vy;
   const kap = useKapitel(giltigt ? route.vy : null, giltigt ? route.id : null);
   const alla = useAllaKapitel(route.sida === "sammanfattning" ? route.vy : null);
@@ -81,7 +85,7 @@ function NyApp() {
       case "start":
         sida = (
           <Stubbgrans key="start" ersattning={<StartPlatshallare index={index} />}>
-            <StartSida onValj={(id) => navigera({ sida: "kapitel", id, vy: (index && vyForKapitel(index, id, STANDARDVY)) ?? STANDARDVY })} />
+            <StartSida onValj={(id) => navigera({ sida: "kapitel", id, vy: (index && vyForKapitel(index, id, KAPITELVY)) ?? STANDARDVY })} />
           </Stubbgrans>
         );
         break;
@@ -89,21 +93,16 @@ function NyApp() {
         kapitel = kap.kapitel;
         klar = kap.klar;
         const vyer = index?.kapitel.find((k) => k.id === route.id)?.vyer ?? [route.vy];
+        // Medan nästa vy laddas visas förra vyns kapitel med sin egen vy
         sida = kap.kapitel ? (
-          <Stubbgrans
+          <KapitelSida
             key={`kapitel:${route.id}`}
-            ersattning={
-              <KapitelPlatshallare
-                kapitel={kap.kapitel}
-                vy={route.vy}
-                vyer={vyer}
-                period={index?.period[route.vy]}
-                onVy={(vy) => navigera({ ...route, vy }, { fokus: false })}
-              />
-            }
-          >
-            <KapitelSida kapitel={kap.kapitel} vy={route.vy} />
-          </Stubbgrans>
+            kapitel={kap.kapitel}
+            vy={kap.vy ?? route.vy}
+            vyer={vyer}
+            onVy={(vy) => navigera({ ...route, vy }, { fokus: false })}
+            redigera={route.red === true}
+          />
         ) : (
           <Laddar fel={kap.fel} />
         );
@@ -112,9 +111,7 @@ function NyApp() {
       case "sammanfattning":
         klar = alla.kapitel !== null;
         sida = alla.kapitel ? (
-          <Stubbgrans key="sammanfattning" ersattning={<SammanfattningPlatshallare kapitel={alla.kapitel} vy={route.vy} />}>
-            <Sammanfattning kapitel={alla.kapitel} vy={route.vy} />
-          </Stubbgrans>
+          <Sammanfattning key="sammanfattning" kapitel={alla.kapitel} vy={route.vy} />
         ) : (
           <Laddar fel={alla.fel} />
         );
@@ -168,7 +165,8 @@ function useGamlaAnkare(ankare: string | null, index: KapitelIndex | null): void
     hittaKapitelForBlock(index, ankare).then((kap) => {
       if (avbruten) return;
       const till = kap ? skrivOmGammalt(ankare, { kapitelFor: () => kap }) : null;
-      navigera(till ?? START, { ersatt: true, fokus: false });
+      // Gamla ankare har ingen vy: kapitlet öppnas enligt KAPITELVY
+      navigera(till ?? START, { ersatt: true, fokus: false, utanVy: true });
     });
     return () => {
       avbruten = true;

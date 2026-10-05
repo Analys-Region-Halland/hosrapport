@@ -1,0 +1,81 @@
+/* OmStatistiken.module.css: Om statistiken (stilguiden 4.3). Delarna skiljs av
+   avstånd, inte linjer. */
+@layer komponent {
+  .delar {
+    display: grid;
+    row-gap: var(--rum-7);
+    margin-block-start: var(--rum-5);
+  }
+
+  .del > * + * {
+    margin-block-start: var(--rum-3);
+  }
+
+  .statuslista,
+  .begrepp {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--rum-4);
+    row-gap: var(--rum-3);
+    max-inline-size: var(--matt-text);
+    margin-block-end: 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-black);
+  }
+  .statusrad,
+  .begreppsrad {
+    display: contents;
+  }
+  .statuslista dt,
+  .begrepp dt {
+    margin: 0;
+  }
+  .statuslista dd,
+  .begrepp dd {
+    margin: 0;
+    color: var(--farg-text2);
+  }
+  .begrepp dt {
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .beskrivande {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    color: var(--farg-text3);
+  }
+
+  .kallor {
+    display: grid;
+    row-gap: var(--rum-5);
+    max-inline-size: var(--matt-text);
+    margin-inline: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kalla > * + * {
+    margin-block-start: var(--rum-1);
+  }
+  .om {
+    margin: 0;
+    color: var(--farg-text2);
+  }
+
+  .vagEtikett {
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  @media (max-width: 639px) {
+    .statuslista,
+    .begrepp {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--rum-1);
+    }
+    .statusrad + .statusrad dt,
+    .begreppsrad + .begreppsrad dt {
+      margin-block-start: var(--rum-3);
+    }
+  }
+}

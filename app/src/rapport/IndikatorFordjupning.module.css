@@ -1,0 +1,74 @@
+/* IndikatorFordjupning.module.css: fördjupningens tre delar (stilguiden 4.4
+   och 5.5). Ingen ram eller bakgrund; innehållet indenteras inte. */
+@layer komponent {
+  .delar {
+    display: grid;
+    row-gap: var(--rum-5);
+  }
+
+  .del > * + * {
+    margin-block-start: var(--rum-2);
+  }
+
+  .text {
+    margin: 0;
+  }
+
+  /* Radlista: etikett till vänster, värde till höger; under varandra på mobil */
+  .datarader {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--rum-4);
+    row-gap: var(--rum-2);
+    max-inline-size: var(--matt-text);
+    margin: 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-black);
+  }
+  .datarad {
+    display: contents;
+  }
+  .datarader dt {
+    color: var(--farg-text2);
+  }
+  .datarader dd {
+    margin: 0;
+  }
+
+  .faktorer {
+    display: grid;
+    row-gap: var(--rum-4);
+    max-inline-size: var(--matt-text);
+    margin: 0;
+    padding-inline-start: var(--rum-5);
+    font-family: var(--typ-brod-familj);
+    font-size: var(--typ-brod-storlek);
+    line-height: var(--typ-brod-radhojd);
+    color: var(--farg-black);
+  }
+  .faktor::marker {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-fokus);
+  }
+  .faktorrubrik {
+    display: block;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  @media (max-width: 639px) {
+    .datarader {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 0;
+    }
+    .datarad + .datarad dt {
+      margin-block-start: var(--rum-2);
+    }
+  }
+}

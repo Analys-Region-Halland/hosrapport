@@ -1,4 +1,5 @@
-/* RamPlatshallare.module.css: enkla platshållare för sidor i andra paket.
+/* RamPlatshallare.module.css: enkla platshållare för sidor i andra paket (startsidan,
+   begreppslistan, läsanvisningen).
    Avstånd och typroller enligt stilguiden 2.4, 2.5 och 4.3 så att sidlängd och
    rullning liknar den riktiga rapportsidan. Alla värden ur tema-variablerna. */
 @layer komponent {
@@ -43,38 +44,12 @@
     color: var(--farg-text2);
   }
 
-  .metarad {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: var(--rum-2);
-    row-gap: var(--rum-1);
-    margin-top: var(--rum-4);
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    color: var(--farg-text3);
-  }
-
-  .metarad > [data-tidsupplosning] {
-    margin-left: var(--rum-4);
-  }
-
   .skiljare {
     color: var(--farg-text3);
   }
 
   .block {
     margin-top: var(--rum-9);
-  }
-
-  .masthead + .block,
-  .masthead + .avsnitt {
-    margin-top: var(--rum-8);
-  }
-
-  .avsnitt {
-    margin-top: var(--rum-10);
   }
 
   .blockrubrik {
@@ -84,87 +59,15 @@
     font-weight: var(--typ-figurtitel-vikt);
   }
 
-  .avsnittsrubrik {
-    font-family: var(--typ-avsnitt-familj);
-    font-size: var(--typ-avsnitt-storlek);
-    line-height: var(--typ-avsnitt-radhojd);
-    font-weight: var(--typ-avsnitt-vikt);
-    letter-spacing: var(--typ-avsnitt-sparr);
-  }
-
-  .indikator {
-    margin-top: var(--rum-9);
-  }
-
-  .avsnittsrubrik + .indikator {
-    margin-top: var(--rum-8);
-  }
-
-  .indikatorrubrik {
-    font-family: var(--typ-indikator-familj);
-    font-size: var(--typ-indikator-storlek);
-    line-height: var(--typ-indikator-radhojd);
-    font-weight: var(--typ-indikator-vikt);
-  }
-
   .nr {
     color: var(--farg-fokus);
     font-variant-numeric: var(--typ-siffror);
   }
 
-  .brod {
-    margin-top: var(--rum-4);
-    max-width: var(--matt-text);
-    font-family: var(--typ-brod-familj);
-    font-size: var(--typ-brod-storlek);
-    line-height: var(--typ-brod-radhojd);
-    font-weight: var(--typ-brod-vikt);
-  }
-
-  .indikatorrubrik + .brod {
-    margin-top: var(--rum-5);
-  }
-
-  .figur {
-    display: grid;
-    place-items: center;
-    margin-top: var(--rum-6);
-    background: var(--farg-yta);
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    color: var(--farg-text3);
-  }
-
-  .punkter {
-    list-style: disc;
-    margin-top: var(--rum-4);
-    padding-left: 1.2em;
-  }
-
-  .punkter .brod {
-    margin-top: var(--rum-2);
-  }
-
-  .oversikt,
   .kapitellista {
     list-style: none;
     margin-top: var(--rum-4);
     padding: 0;
-  }
-
-  .oversikt li {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--rum-4);
-    padding: var(--rum-2) 0;
-    font-family: var(--typ-granssnitt-familj);
-    font-size: var(--typ-granssnitt-storlek);
-    line-height: var(--typ-granssnitt-radhojd);
-  }
-
-  .status {
-    flex: none;
-    color: var(--farg-text2);
   }
 
   .kapitellista {
