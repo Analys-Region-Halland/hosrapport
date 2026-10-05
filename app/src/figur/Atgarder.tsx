@@ -25,7 +25,6 @@ export default function Atgarder({ atgarder, tabellVisas, onTabell, onLadda, onF
         <Meny
           etikett="Ladda ner"
           typ="text"
-          placering="hoger"
           val={[
             { id: "csv", etikett: "CSV för Excel", onVal: () => onLadda("csv") },
             { id: "svg", etikett: "SVG", onVal: () => onLadda("svg") },

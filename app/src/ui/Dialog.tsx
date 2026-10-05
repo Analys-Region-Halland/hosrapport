@@ -5,8 +5,10 @@
 // - Renderas i document.body; allt annat i body blir `inert` medan dialogen är
 //   öppen, så att klick och Tab inte når sidan bakom.
 // - Fokusfälla: Tab och Skift+Tab cirkulerar bland dialogens fokuserbara element.
-// - Escape via lagerstapeln (ui/lager.ts): stänger bara det översta lagret, t.ex.
-//   en öppen meny inne i dialogen före dialogen själv. Klick utanför stänger också.
+// - Escape via lagerstapeln (ui/lager.ts, ui/lagerLokal.ts): stänger bara det
+//   översta lagret, t.ex. en öppen meny eller popover i dialogen före dialogen.
+//   Klick på bakgrunden stänger inte: ett klick som stänger en popover i
+//   dialogen ska inte också stänga dialogen. Stäng-knappen och Escape räcker.
 // - Fokus återgår till elementet som hade fokus när dialogen öppnades.
 
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
@@ -77,11 +79,7 @@ function OppenDialog({ onStang, etikett, children }: Omit<DialogProps, "oppen">)
   };
 
   return (
-    <div
-      className={s.bakgrund}
-      data-dialog-rot=""
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onStang(); }}
-    >
+    <div className={s.bakgrund} data-dialog-rot="">
       <div
         ref={yta}
         className={s.yta}

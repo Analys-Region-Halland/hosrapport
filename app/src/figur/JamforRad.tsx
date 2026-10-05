@@ -1,24 +1,25 @@
 // figur/JamforRad.tsx: jämförraden under plotytan, "+ Jämför med …" och chips för fästa serier (stilguiden 6.1).
 // Ägare: WP4.
 //
-// - Knappen öppnar en lista med kryssrutor i alfabetisk ordning och senaste
-//   värde till höger (rad 34 px). Listan står öppen medan man kryssar och
-//   stängs med Escape (via lagerstapeln, fokus tillbaka till knappen), klick
-//   utanför eller när fokus lämnar den.
+// - Knappen öppnar WP5:s ui/Popover med kryssrutor i alfabetisk ordning och
+//   senaste värde till höger (rad 34 px). Listan står öppen medan man kryssar.
+//   Popovern sköter Escape (lagerstapeln, fokus tillbaka till knappen), klick
+//   utanför, Tab ut ur listan och portalen (klipps inte av content-visibility).
+// - Första kryssrutan får fokus när listan öppnas.
 // - Högst fyra fästa; den femte ersätter den äldsta (figur/fasta.ts).
 // - Chips i fästordning: färgstreck i markeringsfärgen, namn och ×. "Rensa"
 //   när fler än en är vald. Fokus flyttas till nästa chip (eller knappen) när
 //   ett chip tas bort.
-// - Visas bara när spec har jämförbara serier. Listan byggs ur spec.jamforbara;
-//   tillståndet (fasta) ägs av Figur och delas med diagrammet.
-// Listan är byggd här tills WP5:s ui/Popover finns; den kan då byta yta.
+// - Visas bara när spec har jämförbara serier. Listan byggs ur spec.jamforbara
+//   (redan alfabetisk från WP1, sorteras ändå); tillståndet (fasta) ägs av Figur
+//   och delas med diagrammet.
 
-import { useEffect, useId, useRef, useState, type FocusEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ChartSpec } from "../charts/spec";
 import { varde } from "../design/format";
 import { tema } from "../design/tema";
 import Knapp from "../ui/Knapp";
-import { useLager } from "../ui/lager";
+import Popover from "../ui/Popover";
 import { jamforNamn, markeringsIndex, vaxlaFast } from "./fasta";
 import s from "./JamforRad.module.css";
 
@@ -31,31 +32,19 @@ export interface JamforRadProps {
 
 export default function JamforRad({ spec, fasta, onFasta, nivanamn = "region" }: JamforRadProps) {
   const [oppen, setOppen] = useState(false);
-  const valjare = useRef<HTMLDivElement>(null);
-  const knapp = useRef<HTMLButtonElement>(null);
+  const [knapp, setKnapp] = useState<HTMLButtonElement | null>(null);
+  const lista = useRef<HTMLDivElement>(null);
   const chips = useRef<HTMLDivElement>(null);
   const fokusEfter = useRef<number | null>(null);
   const listaId = useId();
 
-  const stang = (aterFokus: boolean) => {
-    setOppen(false);
-    if (aterFokus) knapp.current?.focus();
-  };
-  useLager(oppen, () => stang(true));
-
-  // Första kryssrutan får fokus när listan öppnas.
-  useEffect(() => {
-    if (oppen) valjare.current?.querySelector<HTMLInputElement>("input")?.focus();
-  }, [oppen]);
-
-  // Klick utanför stänger listan.
+  // Första kryssrutan får fokus när listan öppnas. Popovern fokuserar sin yta i
+  // en effekt; nästa bildruta kommer efter alla effekter, även StrictModes omkörning.
   useEffect(() => {
     if (!oppen) return;
-    const vidPekare = (e: PointerEvent) => {
-      if (!valjare.current?.contains(e.target as Node)) setOppen(false);
-    };
-    document.addEventListener("pointerdown", vidPekare);
-    return () => document.removeEventListener("pointerdown", vidPekare);
+    const r = requestAnimationFrame(() =>
+      lista.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(r);
   }, [oppen]);
 
   // Efter att ett chip tagits bort: fokus till chipet på samma plats, föregående eller knappen.
@@ -64,8 +53,8 @@ export default function JamforRad({ spec, fasta, onFasta, nivanamn = "region" }:
     if (i === null) return;
     fokusEfter.current = null;
     const kvar = [...(chips.current?.querySelectorAll<HTMLButtonElement>("[data-chip]") ?? [])];
-    (kvar[Math.min(i, kvar.length - 1)] ?? knapp.current)?.focus();
-  }, [fasta]);
+    (kvar[Math.min(i, kvar.length - 1)] ?? knapp)?.focus();
+  }, [fasta, knapp]);
 
   const jamforbara = spec.jamforbara ?? [];
   if (jamforbara.length === 0) return null;
@@ -75,11 +64,6 @@ export default function JamforRad({ spec, fasta, onFasta, nivanamn = "region" }:
     ? "Högst fyra åt gången. Du kan också klicka på en linje i grafen."
     : "Högst fyra åt gången.";
 
-  const vidFokusUt = (e: FocusEvent<HTMLDivElement>) => {
-    const till = e.relatedTarget as Node | null;
-    if (oppen && till && !e.currentTarget.contains(till)) setOppen(false);
-  };
-
   const taBort = (id: string, i: number) => {
     fokusEfter.current = i;
     onFasta(fasta.filter((f) => f !== id));
@@ -87,20 +71,21 @@ export default function JamforRad({ spec, fasta, onFasta, nivanamn = "region" }:
 
   return (
     <div className={s.rad} data-jamfor="">
-      <div ref={valjare} className={s.valjare} onBlur={vidFokusUt}>
-        <Knapp
-          ref={knapp}
-          ton="fokus"
-          aria-expanded={oppen}
-          aria-controls={oppen ? listaId : undefined}
-          onClick={() => (oppen ? stang(false) : setOppen(true))}
-          data-jamfor-knapp=""
-        >
-          + Jämför med {nivanamn}
-        </Knapp>
-        {oppen && (
-          <div id={listaId} className={s.lista} role="group" aria-label={`Jämför med ${nivanamn}`} data-jamfor-lista="">
-            <p className={s.tips}>{tips}</p>
+      <Knapp
+        ref={setKnapp}
+        ton="fokus"
+        aria-haspopup="dialog"
+        aria-expanded={oppen}
+        aria-controls={oppen ? listaId : undefined}
+        onClick={() => setOppen((o) => !o)}
+        data-jamfor-knapp=""
+      >
+        + Jämför med {nivanamn}
+      </Knapp>
+      <Popover oppen={oppen} onStang={() => setOppen(false)} ankare={knapp} etikett={`Jämför med ${nivanamn}`} id={listaId}>
+        <div ref={lista} className={s.lista} data-jamfor-lista="">
+          <p className={s.tips}>{tips}</p>
+          <div className={s.rader}>
             {alfabetisk.map((j) => (
               <label key={j.enhetId} className={s.val} style={{ minBlockSize: tema.komponent.jamforLista.radhojd }}>
                 <input
@@ -114,8 +99,8 @@ export default function JamforRad({ spec, fasta, onFasta, nivanamn = "region" }:
               </label>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      </Popover>
       {fasta.length > 0 && (
         <div ref={chips} className={s.rad} data-chips="">
           {fasta.map((id, i) => {

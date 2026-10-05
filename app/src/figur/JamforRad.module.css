@@ -1,6 +1,6 @@
 /* Jämför-raden under plotytan: "+ Jämför med …", listan och chipsen
-   (stilguiden 6.1 och 6.8). Listan har popoverns yta: farg.yta, hårlinje,
-   ingen skugga. */
+   (stilguiden 6.1 och 6.8). Listan ligger i WP5:s popover (farg.yta, hårlinje,
+   ingen skugga, luft rum.4); raderna går ut till popoverns kanter. */
 @layer komponent {
   .rad {
     display: flex;
@@ -11,24 +11,22 @@
     font-size: var(--typ-not-storlek);
     line-height: var(--typ-not-radhojd);
   }
-  .valjare { position: relative; }
-
   .lista {
-    position: absolute;
-    inset-block-start: calc(100% + var(--rum-1));
-    inset-inline-start: 0;
-    z-index: 15;
-    inline-size: min(var(--komponent-popover-maxbredd), calc(100vw - 2 * var(--matt-marginal)));
-    max-block-size: min(60vh, 22rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-block: var(--rum-1);
-    background: var(--farg-yta);
-    border: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
+    inline-size: min(calc(var(--komponent-popover-maxbredd) - 2 * var(--rum-4)), calc(100vw - 4 * var(--rum-4)));
+    margin-block: calc(-1 * var(--rum-2));
   }
   .tips {
-    margin: var(--rum-1) var(--rum-4) var(--rum-2);
+    margin: 0 0 var(--rum-2);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
     color: var(--farg-text3);
+  }
+  .rader {
+    max-block-size: min(60vh, 22rem);
+    margin-inline: calc(-1 * var(--rum-4));
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .val {
     display: flex;

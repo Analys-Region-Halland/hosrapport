@@ -1,5 +1,6 @@
-/* Meny: menyknapp med en lista av val (stilguiden 4.5 och 5.3). Listan har
-   samma yta som popovern: farg.yta, 1 px hårlinje, ingen skugga. */
+/* Meny: menyknapp med en lista av val (stilguiden 4.5 och 5.3). Listan ligger i
+   WP5:s popover (farg.yta, 1 px hårlinje, ingen skugga, luft rum.4); raderna
+   går ut till popoverns kanter så att markeringen fyller hela bredden. */
 @layer komponent {
   .meny {
     position: relative;
@@ -7,22 +8,13 @@
     vertical-align: top;
   }
   .lista {
-    position: absolute;
-    inset-block-start: calc(100% + var(--rum-1));
-    z-index: 20;
-    min-inline-size: 12em;
-    margin: 0;
-    padding-block: var(--rum-1);
-    background: var(--farg-yta);
-    border: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
-    list-style: none;
+    display: grid;
+    min-inline-size: 10em;
+    margin: calc(-1 * var(--rum-3)) calc(-1 * var(--rum-4));
   }
-  .vanster { inset-inline-start: 0; }
-  .hoger { inset-inline-end: 0; }
   .val {
     display: flex;
     align-items: center;
-    inline-size: 100%;
     min-block-size: var(--komponent-klickyta);
     margin: 0;
     padding: var(--rum-2) var(--rum-4);
