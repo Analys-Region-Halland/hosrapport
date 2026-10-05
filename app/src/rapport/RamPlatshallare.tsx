@@ -132,6 +132,11 @@ export function KapitelPlatshallare({ kapitel, vy, vyer, period, onVy }: Kapitel
       {d.fore.map((b) => (
         <section key={b.id} data-block={b.id} className={s.block}>
           <h2 className={s.blockrubrik}>{b.namn}</h2>
+          {b.id === KAPITELBLOCK.viktigast && (
+            <ul className={s.punkter}>
+              {kapitel.huvudpunkter.map((h, i) => <li key={i} className={s.brod}>{h.text}</li>)}
+            </ul>
+          )}
           {b.id === KAPITELBLOCK.laget && (
             <ol className={s.oversikt}>
               {kapitel.kpier.map((k) => (

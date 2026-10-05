@@ -135,6 +135,16 @@
     color: var(--farg-text3);
   }
 
+  .punkter {
+    list-style: disc;
+    margin-top: var(--rum-4);
+    padding-left: 1.2em;
+  }
+
+  .punkter .brod {
+    margin-top: var(--rum-2);
+  }
+
   .oversikt,
   .kapitellista {
     list-style: none;

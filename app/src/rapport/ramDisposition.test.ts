@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { KapitelModell, KpiModell } from "../data/modell";
 import { KAPITELBLOCK } from "../nav/route";
-import { kapitelIndex, v1TillModell, vyForKapitel } from "./ramData";
+import { normalisera } from "../data/normalisera";
+import { kapitelIndex, vyForKapitel } from "./ramData";
 import { byggDisposition, hittaPosition, positionsdelar } from "./ramDisposition";
 
 const data = (fil: string) => JSON.parse(readFileSync(fileURLToPath(new URL(`../../public/data/${fil}`, import.meta.url)), "utf8"));
@@ -19,7 +20,7 @@ const kapitel = (over: Partial<KapitelModell> = {}): KapitelModell => ({
 });
 
 describe("disposition", () => {
-  const tillg = byggDisposition(v1TillModell(data("ar-skr-tillganglighet.json")));
+  const tillg = byggDisposition(normalisera(data("ar-skr-tillganglighet.json"), "ar"));
 
   it("numrerar avsnitt och indikatorer som rapporten", () => {
     expect(tillg.avsnitt.map((a) => `${a.nummer} ${a.namn}`)).toEqual([
@@ -46,7 +47,7 @@ describe("disposition", () => {
   });
 
   it("block på kapitelnivå: Läget i korthet före, Om statistiken efter; Det viktigaste bara med huvudpunkter", () => {
-    expect(tillg.fore.map((b) => b.id)).toEqual([KAPITELBLOCK.laget]);
+    expect(tillg.fore.map((b) => b.id)).toEqual([KAPITELBLOCK.viktigast, KAPITELBLOCK.laget]);
     expect(tillg.efter.map((b) => b.id)).toEqual([KAPITELBLOCK.om]);
     expect(positionsdelar(tillg, KAPITELBLOCK.om)).toEqual([{ id: KAPITELBLOCK.om, text: "Om statistiken" }]);
     const med = byggDisposition(kapitel({ kpier: [kpi("a", "A")], huvudpunkter: [{ text: "x", ton: "neutral" }] }));
@@ -55,7 +56,7 @@ describe("disposition", () => {
   });
 
   it("kapitel utan avsnitt numrerar indikatorerna direkt", () => {
-    const akut = byggDisposition(v1TillModell(data("manad-akutflode.json")));
+    const akut = byggDisposition(normalisera(data("manad-akutflode.json"), "manad"));
     expect(akut.avsnitt).toEqual([]);
     expect(akut.indikatorer.map((x) => `${x.nummer} ${x.namn}`)).toEqual([
       "1 Beläggningsgrad", "2 Besök akutmottagning", "3 Medianväntetid akut", "4 Ambulansuppdrag",
@@ -98,20 +99,5 @@ describe("kapitellistan ur manifestet", () => {
   it("tål ett tomt eller trasigt manifest", () => {
     expect(kapitelIndex({})).toEqual({ kapitel: [], period: {} });
     expect(kapitelIndex({ ar: "fel", manad: { sektioner: "fel" } } as never).kapitel).toEqual([]);
-  });
-});
-
-describe("reservläsningen av v1", () => {
-  it("läser status, beskrivande mått och avsnitt", () => {
-    const k = v1TillModell({
-      id: "x", namn: "X", inledning: "Metod.",
-      kpier: [{ id: "a", namn: "A", status: "rod" }, { id: "b", namn: "B", status: "gron", utan_mal: true }, { id: "c", namn: "C", status: "lila" }],
-      delar: [{ id: "d", namn: "D", kpi_ids: ["a", "b"] }],
-    });
-    expect(k.kpier.map((x) => x.status)).toEqual(["rod", null, null]);
-    expect(k.kpier[1].riktning).toBe("neutral");
-    expect(k.avsnitt).toEqual([{ id: "d", namn: "D", kpi_ids: ["a", "b"] }]);
-    expect(k.om_statistiken).toEqual(["Metod."]);
-    expect(v1TillModell(null)).toMatchObject({ id: "", kpier: [], avsnitt: [] });
   });
 });

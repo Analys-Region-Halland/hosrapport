@@ -1,115 +1,30 @@
 // rapport/ramData.ts: data till ramen (kapitellista, innehållsförteckning,
-// export). Ägare: WP6.
+// export, gamla ankare). Ägare: WP6.
 //
-// Laddningen går via data/laddning.ts (WP1) med samma signatur. Så länge WP1:s
-// laddning är en stubb ("Ej byggd") används en egen minimal läsning av dagens
-// JSON (kontrakt v1) som bara fyller det ramen behöver: kapitlets namn,
-// avsnitt, indikatorernas namn och status. När WP1 är sammanslagen tar dess
-// normalisera över utan ändring här, och reservvägen kan tas bort.
+// Manifest och kapitel laddas med data/laddning.ts (WP1), som normaliserar och
+// cachar. Här finns bara det ramen lägger till: kapitellistan med vyer per
+// kapitel, ett synkront uppslag bland redan laddade kapitel (för gamla ankare)
+// och hooks för React.
 
 import { useEffect, useState } from "react";
 import type { RaManifest } from "../data/kontrakt";
-import { laddaKapitel as wp1Kapitel, laddaManifest as wp1Manifest } from "../data/laddning";
-import type { AvsnittModell, KallaRef, KapitelModell, KpiModell, Status, VyId } from "../data/modell";
+import { laddaKapitel as wp1Kapitel, laddaManifest } from "../data/laddning";
+import type { KapitelModell, VyId } from "../data/modell";
 import { STANDARDVY, VYER } from "../nav/route";
 
-const ejByggd = (e: unknown) => e instanceof Error && e.message.startsWith("Ej byggd");
+export { laddaManifest };
+
 const meddelande = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-// ════════════════════════════════════════════════════════════
-//  Laddning med samma signatur som data/laddning.ts
-// ════════════════════════════════════════════════════════════
-
-let manifestLofte: Promise<RaManifest> | null = null;
-const kapitelLofte = new Map<string, Promise<KapitelModell>>();
+// Kapitel som redan är laddade, för synkront uppslag av gamla ankare.
 const kapitelKlara = new Map<string, KapitelModell>();
 
-async function hamtaJson(fil: string): Promise<unknown> {
-  const r = await fetch(`${import.meta.env.BASE_URL}data/${fil}`);
-  if (!r.ok) throw new Error(`Kunde inte hämta ${fil} (HTTP ${r.status})`);
-  return r.json();
-}
-
-export function laddaManifest(): Promise<RaManifest> {
-  if (!manifestLofte) {
-    manifestLofte = (async () => {
-      try {
-        return await wp1Manifest();
-      } catch (e) {
-        if (!ejByggd(e)) throw e;
-      }
-      return (await hamtaJson("index.json")) as RaManifest;
-    })();
-    manifestLofte.catch(() => { manifestLofte = null; });
-  }
-  return manifestLofte;
-}
-
+/** data/laddning.ts laddaKapitel, plus att kapitlet minns för ankaruppslaget. */
 export function laddaKapitel(vy: VyId, kapitelId: string): Promise<KapitelModell> {
-  const nyckel = `${vy}:${kapitelId}`;
-  let p = kapitelLofte.get(nyckel);
-  if (!p) {
-    p = (async () => {
-      let k: KapitelModell;
-      try {
-        k = await wp1Kapitel(vy, kapitelId);
-      } catch (e) {
-        if (!ejByggd(e)) throw e;
-        k = v1TillModell(await hamtaJson(`${vy}-${kapitelId}.json`));
-      }
-      kapitelKlara.set(nyckel, k);
-      return k;
-    })();
-    p.catch(() => kapitelLofte.delete(nyckel));
-    kapitelLofte.set(nyckel, p);
-  }
-  return p;
-}
-
-// ── Reserv: minimal läsning av kontrakt v1 ──
-
-type Obj = Record<string, unknown>;
-const obj = (x: unknown): Obj => (x && typeof x === "object" && !Array.isArray(x) ? (x as Obj) : {});
-const lista = (x: unknown): unknown[] => (Array.isArray(x) ? x : []);
-const text = (x: unknown): string => (typeof x === "string" ? x : x == null ? "" : String(x));
-const arStatus = (x: unknown): x is Status => x === "gron" || x === "gul" || x === "rod";
-
-/** Reservläsning av en kapitelfil i kontrakt v1 (exporterad för tester). */
-export function v1TillModell(raw: unknown): KapitelModell {
-  const r = obj(raw);
-  const kpier: KpiModell[] = lista(r.kpier).map((x) => {
-    const k = obj(x);
-    const utanMal = k.utan_mal === true;
-    return {
-      id: text(k.id),
-      namn: text(k.namn),
-      // Formatet används inte av ramen; WP1:s normalisera ger det rätta.
-      format: { enhet: "procent", decimaler: 1, etikett: "%" },
-      aggregering: "andel",
-      riktning: utanMal ? "neutral" : k.inverterad === true ? "lag" : "hog",
-      status: !utanMal && arStatus(k.status) ? k.status : null,
-      fokus: "0013",
-      serier: {},
-      analystext: text(k.analystext),
-      noter: [],
-    };
+  return wp1Kapitel(vy, kapitelId).then((k) => {
+    kapitelKlara.set(`${vy}:${kapitelId}`, k);
+    return k;
   });
-  const avsnitt: AvsnittModell[] = lista(r.delar).map((x) => {
-    const d = obj(x);
-    return { id: text(d.id), namn: text(d.namn), kpi_ids: lista(d.kpi_ids).map(text) };
-  });
-  const inledning = r.inledning;
-  return {
-    id: text(r.id),
-    namn: text(r.namn),
-    huvudpunkter: [],
-    enheter: [],
-    avsnitt,
-    kpier,
-    om_statistiken: Array.isArray(inledning) ? inledning.map(text) : inledning ? [text(inledning)] : [],
-    kallor: lista(r.kallor) as KallaRef[],
-    leverans: lista(r.leverans) as KallaRef[],
-  };
 }
 
 // ════════════════════════════════════════════════════════════
@@ -130,22 +45,20 @@ export interface KapitelIndex {
   period: Partial<Record<VyId, string>>;
 }
 
-/** Läser kapitel och vyer ur manifestet (v1: { [vy]: { period, sektioner: [{ id, namn }] } }). */
+/** Kapitel och vyer ur manifestet ({ [vy]: { period, sektioner: [{ id, namn }] } }). */
 export function kapitelIndex(manifest: RaManifest): KapitelIndex {
   const ordning: VyId[] = [STANDARDVY, ...[...VYER].reverse().filter((v) => v !== STANDARDVY)];
   const poster = new Map<string, KapitelPost>();
   const period: KapitelIndex["period"] = {};
   for (const vy of ordning) {
-    const m = obj((manifest as Obj)[vy]);
-    if (!("sektioner" in m)) continue;
-    if (m.period) period[vy] = text(m.period);
-    for (const x of lista(m.sektioner)) {
-      const s = obj(x);
-      const id = text(s.id);
-      if (!id) continue;
-      const post = poster.get(id) ?? { id, namn: text(s.namn) || id, vyer: [] };
+    const m = manifest[vy];
+    if (!m || !Array.isArray(m.sektioner)) continue;
+    if (m.period) period[vy] = m.period;
+    for (const s of m.sektioner) {
+      if (!s?.id) continue;
+      const post = poster.get(s.id) ?? { id: s.id, namn: s.namn || s.id, vyer: [] };
       post.vyer.push(vy);
-      poster.set(id, post);
+      poster.set(s.id, post);
     }
   }
   const kapitel = [...poster.values()];
