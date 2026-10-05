@@ -2,20 +2,22 @@
 // (data/laddning.ts) och kapitelinfo (data/kapitelinfo.ts). Ingen DOM, ingen
 // React, så att summering och gruppering går att testa. Ägare: WP11.
 //
-// - Läget just nu: summan av statusräkningen över alla kapitel i årsvyn
-//   (STANDARDVY), det vill säga alla indikatorer med status.
+// - Läget just nu: summan av kapitelradernas statusräkning, det vill säga alla
+//   indikatorer med status i den vy varje kapitel öppnas i. Mätaren överst är
+//   därmed alltid summan av mätarna i förteckningen.
 // - Kapitelförteckningen: teman i kapitelinfos ordning, kapitlen i temats
 //   ordning. Kapitel i kapitelinfo som saknas i manifestet visas inte; tema utan
 //   kapitel visas inte; kapitel i manifestet som saknas i kapitelinfo hamnar i
 //   gruppen "Övrigt" sist. Numreringen löper över hela förteckningen (1, 2, 3 …).
-// - Varje kapitels siffror hämtas ur den vy kapitlets länk leder till
-//   (vyForKapitel med STANDARDVY), så att startsidan aldrig visar en fördelning
-//   som inte finns i kapitlet bakom länken.
+// - Varje kapitels siffror hämtas ur den vy kapitlets länk leder till. Det är
+//   samma vy som en adress utan vy öppnar (vyForKapitel med KAPITELVY):
+//   månadsvyn för akutflödet, årsvyn för SKR-kapitlen. Så visar startsidan
+//   aldrig en fördelning som inte finns i kapitlet bakom länken.
 
 import type { RaManifest } from "../data/kontrakt";
 import type { KategoriDef, OmradeDef } from "../data/kapitelinfo";
 import type { Status, VyId } from "../data/modell";
-import { STANDARDVY } from "../nav/route";
+import { KAPITELVY } from "../nav/route";
 import { kapitelIndex, vyForKapitel } from "../rapport/ramData";
 
 /** Antal indikatorer per status. */
@@ -106,7 +108,7 @@ export interface StartTema {
 }
 
 export interface StartModell {
-  /** Läget just nu: alla indikatorer med status i årsvyn. */
+  /** Läget just nu: summan av kapitelradernas räkning. */
   lage: StatusRakning;
   teman: StartTema[];
 }
@@ -122,11 +124,10 @@ const OVRIGT: Pick<StartTema, "id" | "namn" | "mening"> = {
 /** Bygger startsidan ur manifestet och kapitelinfos teman. */
 export function byggStartModell(manifest: RaManifest, teman: readonly KategoriDef[]): StartModell {
   const index = kapitelIndex(manifest);
-  const lage = summeraStatus((manifest[STANDARDVY]?.sektioner ?? []).map((s) => s?.status));
 
-  // Siffrorna för ett kapitel i den vy dess länk leder till.
+  // Siffrorna för ett kapitel i den vy dess länk leder till (som en adress utan vy).
   const summering = (id: string) => {
-    const vy = vyForKapitel(index, id, STANDARDVY);
+    const vy = vyForKapitel(index, id, KAPITELVY);
     const s = vy ? manifest[vy]?.sektioner.find((x) => x?.id === id) : undefined;
     return vy && s ? { vy, s } : null;
   };
@@ -171,5 +172,6 @@ export function byggStartModell(manifest: RaManifest, teman: readonly KategoriDe
     .filter((k): k is StartKapitel => k !== null);
   if (ovriga.length) ut.push({ ...OVRIGT, kapitel: ovriga });
 
+  const lage = summeraStatus(ut.flatMap((t) => t.kapitel.map((k) => k.status)));
   return { lage, teman: ut };
 }

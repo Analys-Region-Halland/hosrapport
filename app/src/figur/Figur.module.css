@@ -102,8 +102,20 @@
   .panel { margin-block-start: calc(var(--rum-5) - var(--rum-2)); }
   .brodsmula + .panel { margin-block-start: calc(var(--rum-3) - var(--rum-2)); }
   /* Klipp i sidled: diagrammet ritas inom plotytan (stilguiden 6.4) och får
-     aldrig ge vågrät rullning; lodrätt klipps inget (tooltip, etiketter). */
-  .plotyta { position: relative; overflow-x: clip; }
+     aldrig ge vågrät rullning; lodrätt klipps inget (tooltip, etiketter).
+     Klippkanten ligger fokusringens bredd och avstånd utanför diagrammet, så
+     att svg:ns fokusring syns hel; plattans luft (rum.5, rum.4) rymmer den.
+     overflow-clip-margin räcker inte: Chromium (Edge 154) tillämpar den bara
+     när båda axlarna klipps, och lodrätt ska inget klippas. Därför breddas
+     ytan med negativ marginal och lika mycket utfyllnad, så att innehållets
+     bredd (och diagrammets mätning) är oförändrad. */
+  .plotyta {
+    --ringplats: calc(var(--komponent-fokusring-bredd) + var(--komponent-fokusring-avstand));
+    position: relative;
+    margin-inline: calc(-1 * var(--ringplats));
+    padding-inline: var(--ringplats);
+    overflow-x: clip;
+  }
   /* Diagrammet ligger kvar (för SVG och PNG) men syns inte när tabellen visas.
      Bredden behålls så att diagrammet inte ritas om. */
   .plotDold {

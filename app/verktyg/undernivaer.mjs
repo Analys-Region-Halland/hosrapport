@@ -27,7 +27,7 @@ const varde = (n) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i 
 const UT = path.resolve(varde("ut") ?? path.join(HAR, "bank", "undernivaer"));
 fs.mkdirSync(UT, { recursive: true });
 
-const KAPITEL = "/?ny#/kapitel/akutflode?vy=manad";
+const KAPITEL = "/#/kapitel/akutflode?vy=manad";
 const KPIER = ["belaggning", "akutbesok", "vantetid", "ambulans"];
 const BREDDER = [{ bredd: 1440, hojd: 900 }, { bredd: 390, hojd: 844 }];
 
@@ -118,6 +118,22 @@ async function vila(k) {
   await k.utvardera(vilaUttryck);
   await sov(200);
 }
+
+/**
+ * Väntar tills ramen har rullat blocket till sin plats under verktygsraden och
+ * det ligger still (tre mätningar i rad, 100 ms isär), högst 5 s.
+ */
+const vantaPaRullning = (blockId) => `(async () => {
+  const el = document.querySelector('[data-block="${blockId}"]');
+  const plats = () => Math.abs(el.getBoundingClientRect().top - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0)) <= 2;
+  const slut = Date.now() + 5000;
+  let still = 0;
+  while (still < 3 && Date.now() < slut) {
+    await new Promise((r) => setTimeout(r, 100));
+    still = plats() ? still + 1 : 0;
+  }
+  return still >= 3;
+})()`;
 
 /**
  * Skärmdump av ett element, rullat till fönstrets överkant (under verktygsraden).
@@ -327,7 +343,11 @@ async function adress(bredd, hojd) {
 
     // Läsaren byter nivå (replaceState), går till ett annat kapitel och tillbaka.
     // Ramen håller kvar blocket den rullat till tills läsaren rör sidan; ett
-    // hjul utan utslag är den beröringen, som när en läsare börjar rulla.
+    // hjul utan utslag är den beröringen, som när en läsare börjar rulla. Hjulet
+    // skickas först när ramen har rullat dit efter uppdateringen (nav/scroll.ts
+    // hallKvar); kommer det före släpper inget, och kvarhållningen rullar
+    // tillbaka sidan mellan mätningen och klicket nedan (WP12b).
+    await k.utvardera(vantaPaRullning("vantetid"));
     await k.skicka("Input.dispatchMouseEvent", { type: "mouseWheel", x: 4, y: 300, deltaX: 0, deltaY: 0 });
     const historik = await k.utvardera("history.length");
     await klicka(k, await u(k, `mitt('[data-brodsmula-lank="0013"]', ${q})`));
@@ -360,9 +380,9 @@ async function adress(bredd, hojd) {
     await u(k, `visa(${q})`);
     await k.utvardera(`window.dispatchEvent(new Event("scroll"))`);
     await sov(300);
-    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector("[data-exportera]").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
-    await k.utvardera(vantaUttryck('[data-menyval="kopiera-lank"]'));
-    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector('[data-menyval="kopiera-lank"]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
+    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector("[data-exportera] button").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
+    await k.utvardera(vantaUttryck('[data-val="kopiera-lank"]'));
+    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector('[data-val="kopiera-lank"]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
     await sov(300);
     const kopierat = await k.utvardera("window.__kopierat");
     kolla(`${bredd} Kopiera länk: i, v och e för figuren`, typeof kopierat === "string" && kopierat.includes("#/kapitel/akutflode?vy=manad&i=vantetid&v=enheter&e=varberg"), String(kopierat));

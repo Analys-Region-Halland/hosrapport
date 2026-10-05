@@ -76,7 +76,7 @@ export interface TabellProps {
 export function Tabell({ caption, kolumner, rader, tal = [], doldCaption }: TabellProps) {
   return (
     <table className={s.tabell}>
-      <caption className={doldCaption ? s.dold : s.caption}>{caption}</caption>
+      <caption className={doldCaption ? "visuellt-dold" : s.caption}>{caption}</caption>
       <thead>
         <tr>{kolumner.map((k, i) => <th key={k} scope="col" className={tal.includes(i) ? s.tal : undefined}>{k}</th>)}</tr>
       </thead>

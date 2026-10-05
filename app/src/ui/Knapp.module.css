@@ -53,4 +53,12 @@
   }
   .meny:hover,
   .meny[aria-expanded="true"] { border-color: var(--farg-text3); }
+
+  /* Ikon i menyknappen (verktygsraden i mobil): kvadratisk, ikonen centrerad */
+  .ikon {
+    justify-content: center;
+    inline-size: var(--komponent-menyknapp-hojd);
+    padding-inline: 0;
+  }
+  .ikon:hover { color: var(--farg-fokus); }
 }

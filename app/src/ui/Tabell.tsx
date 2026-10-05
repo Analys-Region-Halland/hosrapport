@@ -69,7 +69,7 @@ export default function Tabell({
   })();
   return (
     <table className={s.tabell} data-tabell="">
-      <caption className={captionDold ? `${s.caption} ${s.dold}` : s.caption}>{caption}</caption>
+      <caption className={captionDold ? `${s.caption} visuellt-dold` : s.caption}>{caption}</caption>
       <thead>
         <tr>
           {kolumner.map((k, j) => (

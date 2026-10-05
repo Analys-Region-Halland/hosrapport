@@ -37,6 +37,18 @@ export default defineConfig(({ command }) => ({
     // Tillåt dev-servern att läsa JSON från repo-roten (utanför app/)
     fs: { allow: [repoRoot] },
   },
+  // Bygget delas i bitar: gamla appen (?gammal) och PowerPoint-exporten laddas
+  // med dynamisk import, och React ligger i en egen bit som sällan ändras.
+  // Så håller sig nya appens huvudbit under Vites gräns på 500 kB.
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [{ name: "react", test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/ }],
+        },
+      },
+    },
+  },
   // Enhetstester (npm run check). Rena funktioner, ingen DOM.
   test: {
     environment: "node",

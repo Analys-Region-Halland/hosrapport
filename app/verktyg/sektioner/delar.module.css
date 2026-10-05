@@ -97,15 +97,6 @@
     font-weight: var(--typ-granssnitt-viktStark);
   }
 
-  .dold {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
   .tabell th {
     padding: var(--rum-2) var(--rum-4) var(--rum-2) 0;
     border-bottom: 1px solid var(--farg-harlinje);

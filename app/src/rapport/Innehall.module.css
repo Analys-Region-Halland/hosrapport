@@ -106,16 +106,6 @@
   .prick[data-status="gul"] { background: var(--farg-status-gul-markor); }
   .prick[data-status="rod"] { background: var(--farg-status-rod-markor); }
 
-  .osynlig {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
   /* ── Ark (mellan och mobil) ── */
   .ark {
     position: fixed;

@@ -6,23 +6,20 @@
 // (data/kapitelinfo.ts); inga kapitelfiler laddas här. Summering och gruppering
 // finns i startModell.ts. Brandlisten och mastheadet ritas direkt, resten när
 // manifestet är laddat.
+//
+// Landmärken (tillägg i WP12b): brandlisten är sidans <header> och sidfoten
+// dess <footer>, båda utanför <main>. Ramen (rapport/Ram.tsx) lägger inget eget
+// runt startsidan, så <main id="innehall"> finns här.
 
-import { useEffect, useId, useState, type ReactNode } from "react";
-import { TEMAN } from "../data/kapitelinfo";
-import { laddaManifest } from "../data/laddning";
+import { useId, type ReactNode } from "react";
 import { datum } from "../design/format";
 import Lank from "../nav/Lank";
 import { STANDARDVY } from "../nav/route";
 import Kapitelrad from "./Kapitelrad";
 import Statusmatare from "./Statusmatare";
-import { byggStartModell, type StartModell } from "./startModell";
+import type { StartModell } from "./startModell";
+import { useStartModell } from "./useStartModell";
 import s from "./StartSida.module.css";
-
-export interface StartSidaProps {
-  /** Används inte längre: kapitelraderna är länkar (nav/Lank) som navigerar
-   *  själva. Finns kvar så att App.tsx kompilerar oförändrad. */
-  onValj?(kapitelId: string): void;
-}
 
 const LOGO = `${import.meta.env.BASE_URL}logo_vit.svg`;
 
@@ -31,30 +28,24 @@ const INGRESS =
   "Varje kapitel kan läsas för sig och redovisar sina källor indikator för indikator. " +
   "Innehållet växer när fler källor kopplas in, både öppna jämförelser och regionens egna data.";
 
-const OM_RAPPORTEN = [
-  "HoS-rapporten är Region Hallands samlade analys av hälso- och sjukvården. " +
-    "Den visar bara kapitel med inhämtad data.",
-  "Tidigare områden för befolkning, folkhälsa och ekonomi är arkiverade och kan återinföras när de ska ingå igen.",
-];
-
-export default function StartSida(_props: StartSidaProps): ReactNode {
+export default function StartSida(): ReactNode {
   const { modell, fel } = useStartModell();
 
   return (
     <div className={s.startsida} data-startsida="">
-      <div className={s.brandlist}>
+      <header className={s.brandlist} data-start-brandlist="">
         <div className={s.brandinnehall}>
           <img src={LOGO} alt="Region Halland" className={s.logo} />
           <span className={s.produkt}>HoS-rapport</span>
         </div>
-      </div>
+      </header>
 
-      <div className={s.spalt}>
-        <header className={s.masthead}>
+      <main id="innehall" tabIndex={-1} className={`${s.bredd} ${s.huvud}`}>
+        <div>
           <p className={s.kicker}>Region Halland · Analys</p>
           <h1 className={s.titel}>Hälso- och sjukvården i Halland</h1>
           <p className={s.ingress}>{INGRESS}</p>
-        </header>
+        </div>
 
         {fel ? (
           <p role="alert" className={s.laddar}>Kunde inte ladda rapportens kapitel: {fel}</p>
@@ -63,9 +54,9 @@ export default function StartSida(_props: StartSidaProps): ReactNode {
         ) : (
           <Innehall modell={modell} />
         )}
+      </main>
 
-        <Sidfot />
-      </div>
+      <Sidfot />
     </div>
   );
 }
@@ -99,23 +90,13 @@ function Innehall({ modell }: { modell: StartModell }) {
   );
 }
 
+// Sidfoten (stilguiden 4.1): Om rapporten · Begrepp · Så läser du rapporten · Publicerad {datum}
 function Sidfot() {
-  const id = useId();
-  const [omOppen, setOmOppen] = useState(false);
   const skiljare = <span className={s.skiljare} aria-hidden="true"> · </span>;
   return (
-    <footer className={s.sidfot} data-start-sidfot="">
+    <footer className={`${s.bredd} ${s.sidfot}`} data-start-sidfot="">
       <p className={s.sidfotrad}>
-        <button
-          type="button"
-          className={s.lank}
-          aria-expanded={omOppen}
-          aria-controls={`${id}-om`}
-          onClick={() => setOmOppen((o) => !o)}
-          data-start-om=""
-        >
-          Om rapporten
-        </button>
+        <Lank till={{ sida: "om" }} className={s.lank} data-start-om="">Om rapporten</Lank>
         {skiljare}
         <Lank till={{ sida: "begrepp" }} className={s.lank} data-start-begrepp="">Begrepp</Lank>
         {skiljare}
@@ -123,22 +104,6 @@ function Sidfot() {
         {skiljare}
         <span className={s.publicerad}>Publicerad {datum(__BUILD_DATE__)}</span>
       </p>
-      <div id={`${id}-om`} className={s.om} hidden={!omOppen}>
-        {OM_RAPPORTEN.map((p, i) => <p key={i}>{p}</p>)}
-      </div>
     </footer>
   );
-}
-
-function useStartModell(): { modell: StartModell | null; fel: string | null } {
-  const [res, setRes] = useState<{ modell: StartModell | null; fel: string | null }>({ modell: null, fel: null });
-  useEffect(() => {
-    let avbruten = false;
-    laddaManifest().then(
-      (m) => { if (!avbruten) setRes({ modell: byggStartModell(m, TEMAN), fel: null }); },
-      (e: unknown) => { if (!avbruten) setRes({ modell: null, fel: e instanceof Error ? e.message : String(e) }); },
-    );
-    return () => { avbruten = true; };
-  }, []);
-  return res;
 }

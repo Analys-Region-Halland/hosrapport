@@ -8,6 +8,7 @@
 //                                             kapitlet, rullat till blocket i
 //   /begrepp  ·  /begrepp/{id}                begreppslistan
 //   /las                                      så läser du rapporten
+//   /om                                       om rapporten
 //   rapport-{x}                               gammalt ankare, skrivs om (skrivOmGammalt)
 // Allt annat (okänd sökväg, för många led, trasig kodning) blir startsidan.
 // Ogiltiga parametrar tas bort: okänd vy blir STANDARDVY, okänd visning och
@@ -22,7 +23,8 @@ export type Route =
   | { sida: "sammanfattning"; vy: VyId }
   | { sida: "kapitel"; id: string; vy: VyId; i?: string; v?: VisningId; e?: string; red?: boolean }
   | { sida: "begrepp"; id?: string }
-  | { sida: "las" };
+  | { sida: "las" }
+  | { sida: "om" };
 
 /** Tidsupplösningarna i rapportens ordning, kortast först. */
 export const VYER: readonly VyId[] = ["dag", "vecka", "manad", "kvartal", "ar"];
@@ -179,6 +181,8 @@ export function parse(hash: string, ktx?: AnkarKontext): Route {
       return delar.length === 2 ? { sida: "begrepp", id: delar[1] } : START;
     case "las":
       return delar.length === 1 ? { sida: "las" } : START;
+    case "om":
+      return delar.length === 1 ? { sida: "om" } : START;
     default:
       return START;
   }
@@ -203,6 +207,8 @@ export function format(route: Route): string {
       return route.id ? `#/begrepp/${kod(route.id)}` : "#/begrepp";
     case "las":
       return "#/las";
+    case "om":
+      return "#/om";
   }
 }
 

@@ -26,7 +26,7 @@ export default function Positionsrad({ delar, onOppnaInnehall, innehallOppet = f
       {i > 0 && (
         <>
           <span className={s.skiljare} aria-hidden="true">›</span>
-          <span className={s.osynlig}>, </span>
+          <span className="visuellt-dold">, </span>
         </>
       )}
       <span className={i === visade.length - 1 ? s.aktuell : s.del}>{d.text}</span>
@@ -43,7 +43,7 @@ export default function Positionsrad({ delar, onOppnaInnehall, innehallOppet = f
         onClick={onOppnaInnehall}
         data-positionsrad="knapp"
       >
-        <span className={s.osynlig}>Innehåll. Du läser: </span>
+        <span className="visuellt-dold">Innehåll. Du läser: </span>
         <span className={s.spar}>{spar}</span>
         <svg className={s.ikon} viewBox="0 0 16 16" aria-hidden="true">
           <path d="M4 6l4 4 4-4" />
@@ -53,7 +53,7 @@ export default function Positionsrad({ delar, onOppnaInnehall, innehallOppet = f
   }
   return (
     <p className={s.rad} data-positionsrad="">
-      <span className={s.osynlig}>Du läser: </span>
+      <span className="visuellt-dold">Du läser: </span>
       <span className={s.spar}>{spar}</span>
     </p>
   );

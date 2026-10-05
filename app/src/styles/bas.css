@@ -1,4 +1,38 @@
 /* bas.css: grundtypografi och element för nya vyn. Importeras i lagret `bas`
-   (styles/index.css). Tom tills vidare. Regler här får inte påverka gamla vyn
-   så länge den finns: skriv dem under en rot som bara nya ramen har, t.ex.
-   [data-ram]. Ägare: WP0; fylls av senare paket. */
+   (styles/index.css), ovanför `legacy`. Ägare: WP0; fylls av senare paket.
+
+   Gamla vyns stilar (index.css) laddas bara med gamla appen bakom ?gammal.
+   Det nya får därför inget av dem och sätter sin grund här. Reglerna ger
+   samma resultat i gamla vyn som dess egna (samma typsnittsfiler, samma
+   fokusring), så att den ritas oförändrad. */
+
+/* Element som inte sätter eget typsnitt ärver sans (typ.familj.sans), som
+   förut via gamla vyns --font-sans. Annars får de systemets typsnitt. */
+html {
+  font-family: var(--typ-familj-sans);
+}
+
+/* Tangentbordsfokus (stilguiden 2.1): 2 px heldragen, 2 px avstånd. Komponenter
+   med egen ring (i lagret komponent) går före. */
+:focus-visible {
+  outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+  outline-offset: var(--komponent-fokusring-avstand);
+}
+
+/* Visuellt dold text: bara för skärmläsare, t.ex. "Status: " före
+   statusmarkören eller en dold tabellrubrik. Den enda varianten i appen;
+   används som className="visuellt-dold" (även tillsammans med en
+   komponentklass). !important eftersom lagret bas annars förlorar mot en
+   komponentklass på samma element; viktiga deklarationer i ett lägre lager
+   vinner över alla senare lager. */
+.visuellt-dold {
+  position: absolute !important;
+  inline-size: 1px !important;
+  block-size: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

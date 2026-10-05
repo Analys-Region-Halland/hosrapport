@@ -24,62 +24,74 @@ Version 1.0 · 2026-10-05. Tekniskt underlag för arbetspaketen (WP0–WP12). Ut
 
 ## 2. Gammalt och nytt sida vid sida
 
-Det nya byggs bredvid det gamla och slås på med en flagga tills bytet.
+Nya rapporten är standard sedan WP12b. Gamla appen finns kvar bakom `?gammal` tills användaren har granskat den nya; den raderas i ett senare paket (8, WP12c).
 
-| Steg | Hur |
+| Del | Hur det är byggt |
 |---|---|
-| Flagga | `App.tsx` renderar den nya appen när adressen har `?ny` (`location.search`), annars den gamla. WP0 lägger in flaggan, WP6 äger den nya grenen. |
-| Byte | När WP9 och WP11 är godkända blir den nya appen standard och `?gammal` visar den gamla. |
-| Radering | WP12b raderar den gamla appen, flaggan, v1-kontraktet och frysta filer. |
-| CSS | Gamla `index.css` importeras i `@layer legacy` (under alla nya lager) så att nya lager alltid vinner. Tailwinds preflight ersätts av `styles/reset.css` med samma regler, så att gamla vyn är pixelidentisk. |
-| Typsnitt | Självhostade via `@fontsource-variable/source-serif-4` och `@fontsource/ibm-plex-sans` (400, 600). Plex Mono och Lexend Deca självhostas också tills WP12b eftersom gamla vyn använder dem. Google Fonts-länken i `App.tsx` tas bort. Avvikelse (WP0): Plex Sans och Lexend Deca kommer från `@fontsource-variable/*`, som är samma filer som Google Fonts serverade; de statiska paketen gav upp till 1,7 % avvikande pixlar i banken. |
+| Val av app | `App.tsx` läser `location.search`. Utan parametrar renderas nya appen (`NyApp`), även för gamla bokmärken utan hash. `?gammal` visar gamla appen oförändrad. Gamla ankare `#rapport-{x}` skrivs om till kapiteladresser (4.6). |
+| Gamla appen | `GammalApp.tsx` (StartScreen och ReportShell) laddas med `lazy(() => import("./GammalApp"))` och ligger med `components/*`, `utils/*`, `charts/{tidsserie,constants,types}.ts`, `types.ts`, `taxonomy.ts`, `data/load.ts` och `stores/position.ts` i en egen bit av bygget. Ny kod importerar aldrig därifrån (undantag: `stores/blocks.ts` och `stores/dirty.ts` för redigeringsläget). |
+| Gamla stilar | Gamla `index.css`, inslagen i `@layer legacy`, importeras av `GammalApp.tsx` och laddas bara med gamla appen. Lagerordningen deklareras i `index.html`, så att stilarna hamnar under de nya lagren fast de laddas sist. Nya appen sätter grundtypsnitt, fokusring och `.visuellt-dold` i `styles/bas.css`; `styles/reset.css` (Tailwinds preflight) ligger kvar för båda. |
+| Kontroll | Bänken: gamla vyn på `/?gammal` har 0 avvikande pixlar mot baslinjen från före bytet, och nya vyerna har 0 avvikande pixlar före och efter flytten av `index.css`. |
+| Typsnitt | Självhostade i `styles/typsnitt.css`: Source Serif 4 och IBM Plex Sans (`@fontsource-variable/*`, samma filer som Google Fonts serverade). Plex Mono och Lexend Deca används bara av gamla vyn och tas bort med den. |
+| Byggets bitar | `index` (nya appen, cirka 300 kB), `react` (React, React DOM, scheduler; egen grupp i `vite.config.ts`), `GammalApp` (gamla appen och dess CSS) och `pptx` + `pptxgen` (PowerPoint-exporten, laddas vid klick). Stilguiden och grafprovet är egna sidor i `verktyg/` som bara dev-servern serverar; de ingår inte i bygget. |
 
 ---
 
-## 3. Modulkarta och ägarskap
+## 3. Modulkarta
+
+Filerna som de är efter sammanslagningen av alla paket. Paketet inom parentes byggde delen; varje fil säger sin ägare i huvudkommentaren.
 
 ```
-innehall/begrepp.json ............................ WP5
-schema/hos-data.schema.json ...................... WP1 (v1 + v2)
+innehall/begrepp.json ............................ begreppsregistret (WP5)
+schema/hos-data.schema.json ...................... v1, oförändrat (WP1 bantat, WP8 parkerat)
 docs/stilguide.md, docs/arkitektur.md ............ orkestreraren
-R/** ............................................. WP8, sedan WP10
+R/** ............................................. oförändrat (WP8 parkerat)
 app/
-  package.json, package-lock.json, vite.config.ts,
-  eslint.config.js, tsconfig*.json, index.html ... WP0
+  package.json, package-lock.json, eslint.config.js,
+  tsconfig*.json, index.html ..................... grund (WP0)
+  vite.config.ts ................................. grund (WP0); byggets bitar (WP12b)
   src/
-    main.tsx ..................................... WP0
-    App.tsx ...................................... WP0 (flagga), WP6 (ny gren)
-    design/  tema.ts tema-css.ts format.ts
-             kontrast.test.ts format.test.ts ..... WP0 (värden ur stilguiden); WP7 får justera värden
-    styles/  index.css reset.css bas.css layout.css
-             typsnitt.css utskrift.css ........... WP0
-    data/    kontrakt.ts modell.ts normalisera.ts
-             laddning.ts fixturer/ *.test.ts ..... WP1
-    charts/  spec.ts kpiTillSpec.ts text.ts *.test.ts ... WP1
-             register.ts Diagram.tsx karna/* typer/linje.tsx ... WP2
-             typer/{rangordning,stapel,smaMultiplar,minidiagram}.tsx ... WP3
-    figur/   Figur.tsx JamforRad.tsx Flikrad.tsx Noter.tsx Kallrad.tsx
-             Atgarder.tsx Forstoring.tsx TabellVy.tsx nedladdning.ts ... WP4
-    ui/      StatusMarkor Knapp Flikar Disclosure Dialog Meny Tabell ... WP4
-             Popover Ark ......................... WP5
-    begrepp/ register.ts lanka.ts Begrepp.tsx Prosa.tsx BegreppSida.tsx ... WP5
-    nav/     route.ts useRoute.ts lager.ts Lank.tsx scroll.ts ... WP6
-    rapport/ Ram.tsx Verktygsrad.tsx Positionsrad.tsx
-             Innehall.tsx TidsupplosningVal.tsx .. WP6
-             KapitelSida.tsx Sammanfattning.tsx Masthead.tsx DetViktigaste.tsx
-             LagetIKorthet.tsx Avsnitt.tsx Indikator.tsx Nyckeltal.tsx
-             IndikatorFordjupning.tsx Kommentar.tsx OmStatistiken.tsx ... WP9
-    start/   StartSida.tsx ....................... WP11
-    export/  pptx.ts ............................. WP12a
-    stores/  blocks.ts dirty.ts position.ts ...... oförändrade (nycklar `${vy}:${targetId}` behålls)
+    main.tsx ..................................... globala stilar, tema-CSS, App
+    App.tsx ...................................... ny eller gammal app; NyApp: adress → sida
+    GammalApp.tsx ................................ gamla appen, lat laddad, med index.css
+    design/  tema.ts tema-css.ts format.ts kontrast.ts (+ tester)
+    styles/  index.css reset.css typsnitt.css bas.css layout.css utskrift.css
+    data/    kontrakt.ts modell.ts normalisera.ts laddning.ts kapitelinfo.ts
+             exempelhierarki.ts (påhittad avdelningsnivå, WP10) fixturer/
+    charts/  spec.ts kpiTillSpec.ts text.ts underlag.ts (WP1)
+             register.ts Diagram.tsx karna/* typer/linje.tsx (WP2)
+             typer/{rangordning,stapel,smaMultiplar,minidiagram}*.tsx (WP3)
+    figur/   Figur Flikrad JamforRad Noter Kallrad Atgarder Forstoring TabellVy
+             nedladdning.ts fasta.ts (WP4)
+    ui/      StatusMarkor Knapp Flikar Disclosure Dialog Meny Tabell lager.ts (WP4)
+             Popover Ark fokus.ts (WP5)
+    begrepp/ register.ts lanka.ts Begrepp.tsx Prosa.tsx BegreppSida.tsx (WP5)
+    nav/     route.ts useRoute.ts lager.ts Lank.tsx scroll.ts (WP6) figurlage.ts (WP10)
+    rapport/ ramen: Ram Verktygsrad Positionsrad Innehall TidsupplosningVal Laddar
+             ramData.ts ramDisposition.ts ramBrytpunkt.ts (WP6)
+             sidorna: KapitelSida Sammanfattning (WP9) OmRapporten SaLaserDu
+             Textsida.module.css (WP12b)
+             kapitlets delar: Masthead DetViktigaste LagetIKorthet Avsnitt Indikator
+             Nyckeltal IndikatorFordjupning Kommentar OmStatistiken (WP9)
+             logik: rapportText.ts huvudpunkter.ts oversikt.ts fordjupning.ts
+             publicering.ts hojder.ts (WP9) nedborrning.ts (WP10)
+    start/   StartSida Kapitelrad Statusmatare startModell.ts useStartModell.ts (WP11)
+    export/  pptx.ts graf.ts innehall.ts pptxTema.ts (WP12a)
+    stores/  blocks.ts dirty.ts (redigeringsläget) position.ts (bara gamla appen)
+    components/ utils/ types.ts taxonomy.ts data/load.ts index.css
+    charts/{tidsserie,constants,types}.ts ........ gamla appen, raderas med den
   verktyg/
-    bank.mjs (baslinje + pixeldiff) .............. WP0; WP7 bygger ut (kontaktark)
-    stilguide.html stilguide.tsx a11y.mjs ........ WP7
-    sektioner/{wp}.stilguide.tsx ................. varje WP sin egen fil (globbas)
-    grafprov.html grafprov.tsx ................... WP2 skriver om
+    webblasare.mjs ............................... Vite och headless Edge för verktygen (WP7)
+    bank.mjs ..................................... baslinje, pixeldiff och kontaktark (WP0, WP7)
+    a11y.mjs ..................................... axe mot stilguiden och alla adresser (WP7)
+    stilguide.html stilguide.tsx stilguide-stil.ts levande stilguide (WP7)
+    sektioner/*.stilguide.tsx .................... en sektion per paket (globbas)
+    grafprov.html grafprov.tsx grafprov-data.ts .. provbänk för en figur (WP2)
+    graftyper.mjs ................................ granskning av graftyperna (WP3)
+    undernivaer.mjs .............................. granskning av nedborrningen (WP10)
+    pptx-smoke.mjs ............................... röktest för PowerPoint-exporten (WP12a)
+    skarmdump.mjs ................................ enstaka skärmdump via CDP
 ```
-
-WP0 skapar varje ny fil som en stubb med slutlig exportsignatur (typer enligt avsnitt 4) så att alla paket kompilerar mot varandra från dag ett.
 
 ---
 
@@ -88,9 +100,14 @@ WP0 skapar varje ny fil som en stubb med slutlig exportsignatur (typer enligt av
 ### 4.1 Datamodell (`data/modell.ts`)
 
 ```ts
+export const HALLAND_ID = "0013";   // normalt fokus
+export const RIKET_ID = "0000";
+
 export type Status = "gron" | "gul" | "rod";
 export type VyId = "dag" | "vecka" | "manad" | "kvartal" | "ar";
-export type Niva = "riket" | "region" | "forvaltning" | "sjukhus" | "verksamhet" | "avdelning" | "vardcentral";
+export type Niva =
+  | "riket" | "region" | "forvaltning" | "sjukhus" | "verksamhet" | "avdelning" | "vardcentral"
+  | "ambulansomrade" | "ambulansstation";   // tillägg i WP10
 
 export interface Enhet {
   id: string;              // Kolada-kod för regioner ("0013" = Region Halland, "0000" = riket), annars slug
@@ -170,7 +187,9 @@ export interface KapitelModell {
 }
 ```
 
-`normalisera(raw: unknown, vy: VyId): KapitelModell` läser både v1 och v2. För v1 härleds `enheter` ur `kontext_serier`-id:n, "0000" och `undernivaer`, `serier` ur samma fält, `format` ur `enhet` + `beskrivning` ("kr"), `riktning` ur `inverterad`/`utan_mal`, `jamforelse` ur `referens` (riket när `kontext_serier` finns, annars föregående period), och `huvudpunkter` med en enkel TS-regel tills R levererar dem.
+`Kalla`, `KallaRef`, `Fakta` och `Paverkansfaktor` är R:s typer, kopierade hit så att ny kod inte importerar från `types.ts`.
+
+`normalisera(raw, vy)` läser kontrakt v1 (WP1 bantat; v2 väntar på WP8). Den härleder `enheter` ur `kontext_serier`, "0000" och `undernivaer`, `serier` ur samma fält, `format` ur `enhet` och `beskrivning` ("kr"), `riktning` ur `inverterad`/`utan_mal`, `jamforelse` ur `referens` och `huvudpunkter` med en regel i TS. Alla serier i en indikator ligger på samma periodrutnät med luckor som `null`. Regioner och riket har `parent_id: null`; underliggande enheter har sin överordnade enhet. För akutflödet lägger `data/exempelhierarki.ts` till en påhittad nivå: avdelningar under sjukhusen, och stationer under ambulansområdena Nord och Syd (som får nivån `ambulansomrade` i stället för `sjukhus`), med `n` och undertryckning under tio fall.
 
 ### 4.2 Diagramspec (`charts/spec.ts`)
 
@@ -186,6 +205,8 @@ export interface SpecSerie {
   intervall?: { x: string; lo: number; hi: number; lo2?: number; hi2?: number }[];
   varde?: number;                              // för rangordning och mål
   interaktiv?: boolean;                        // får lyftas och fästas
+  plats?: number;                              // rangordning: radens plats (lika värden samma plats)
+  platser?: (number | null)[];                 // linje med regioner: plats per punkt
 }
 
 export interface Axel {
@@ -201,8 +222,9 @@ export interface ChartSpec {
   kicker?: string;                             // indikatornamn, bara fristående
   titel: string;                               // stilguiden 6.2
   undertitel: string;                          // ≤ 2 meningar
-  etiketter: { serieId: string; text: string }[];   // vilka serier som får namn vid linjeslut (stilguiden 6.4); inga legender
+  etiketter: { serieId: string; text: string }[];   // namn vid linjeslut (stilguiden 6.4); inga legender
   jamforbara?: { enhetId: string; namn: string; senaste: number | null }[];   // underlag för "+ Jämför med …"
+  jamforNiva?: { id: Niva; etikett: string };  // de jämförbaras nivå: "+ Jämför med region", "… sjukhus" (WP3, WP10)
   serier: SpecSerie[];
   paneler?: { enhetId: string; titel: string; status?: Status }[];
   x: Axel; y: Axel;
@@ -211,6 +233,9 @@ export interface ChartSpec {
   sammanfattning: string;                      // aria-label, 100–200 tecken
   tabell: { caption: string; kolumner: string[]; rader: (string | number | null)[][]; fokusRad?: number };
   hojdklass: "standard" | "rangordning" | "kompakt" | "minidiagram";
+  platsAv?: number[];                          // nämnaren i "plats r av n" per period
+  period?: { iso: string; vy: VyId; text: string };   // rangordningens period, som i undertiteln (WP3)
+  borrbar?: boolean;                           // enheterna ligger under fokus och kan bli fokus (WP10)
 }
 
 export interface SpecKontext {
@@ -223,20 +248,21 @@ export interface SpecKontext {
 
 export function visningar(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext): { id: VisningId; etikett: string }[];
 export function kpiTillSpec(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext, visning: VisningId): ChartSpec;
+export function minidiagramSpec(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext): ChartSpec;
 ```
 
 **Vad `kpiTillSpec` bestämmer**
 
 | Datan har | Förvald visning | Övriga visningar | Roller |
 |---|---|---|---|
-| Jämförbara regioner | `tid`: linje | `rang`: rangordning senaste period | fokus Halland, kontext övriga, referens riket, markerad = fästa; i rangordningen även `grans` för topp 3 (ej för neutrala) |
+| Jämförbara regioner | `tid`: linje ("Över tid") | `rang`: rangordning senaste period ("Rangordning") | fokus Halland, kontext övriga, referens riket, markerad = fästa; i rangordningen även `grans` för topp 3 (ej för neutrala) |
 | Förväntat intervall (`yhat`) | `tid`: linje | – | fokus, forvantat (ett band, 80 %), punkter utanför markeras och etiketteras |
 | Summamått och ≤ 24 perioder utan regioner | `tid`: stapel | – | fokus, referens föregående period |
-| Underliggande enheter | – | `enheter`: små multiplar; `enheterRang`: rangordning av enheterna | panelens fokus = enheten; referens = överordnad nivå bara för andel och medel |
-| `dagar` | – | Dagfliken i figuren | – |
-| Översiktstabell | minidiagram | – | fokus |
+| Underliggande enheter | `tid` heter då nivåfliken, t.ex. "Region Halland" | `enheter`: små multiplar ("Per sjukhus"); `enheterRang`: enheterna rangordnade ("Sjukhusen rangordnade") | panelens fokus = enheten; referens = överordnad nivå bara för andel och medel; `borrbar` när enheterna kan bli fokus |
+| `dagar` | – | Dagfliken i figuren ("Per dag") | – |
+| Översiktstabell | minidiagram (`minidiagramSpec`) | – | fokus |
 
-Den bestämmer också titel och undertitel (stilguiden 6.2), vilka serier som etiketteras vid linjeslut, axlar (delad domän, noll för staplar), luckor som `null` per periodsteg, format, noter (seriebrott, luckor, undertryckt, index), källrad, sammanfattning och tabellrader. Den är en ren funktion utan DOM.
+Den bestämmer också titel och undertitel (stilguiden 6.2), vilka serier som etiketteras vid linjeslut, axlar (delad domän, noll för staplar), luckor som `null` per periodsteg, format, noter (seriebrott, luckor, undertryckt, index), källrad, sammanfattning, tabellrader, `jamforNiva` och rangordningens `period`. Den är en ren funktion utan DOM.
 
 ### 4.3 Renderare (`charts/register.ts`)
 
@@ -246,9 +272,10 @@ export interface Scen {
   plot: { x: number; y: number; b: number; h: number };
   xTicks: { v: number | string; x: number; text: string }[];
   yTicks: { v: number; y: number; text: string }[];
-  lager: Lager[];             // ritordning: zon, band, kontext, referens, markerad, fokus, punkter
+  lager: Lager[];             // ritordning: axel, zon, band, kontext, mal, referens, markerad, fokus, punkter
   etiketter: Etikett[];       // färdigplacerade efter kollisionslösning
   stopp: Stopp[];             // pekar- och tangentbordsmål per period och serie
+  paneler?: ScenPanel[];      // små multiplar: panelerna i visningsordning (WP3)
 }
 export interface Renderare {
   typ: DiagramTyp;
@@ -256,11 +283,12 @@ export interface Renderare {
   hojd(bredd: number, spec: ChartSpec): number;
   layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, tema: Tema): Scen;   // ren funktion
   Rita: React.ComponentType<{ scen: Scen; spec: ChartSpec; aktiv: AktivPunkt | null; fasta: string[] }>;
+  interaktion?: Interaktion;  // typens träffregel, tangentbord och tooltip (WP3); saknas = ingen interaktion
 }
 export const RENDERARE: Record<DiagramTyp, Renderare>;
 ```
 
-`Diagram.tsx` mäter bredd (efter `document.fonts.ready`), anropar `layout`, renderar `Rita` och äger interaktionslagret (pekare, tangentbord, tooltip, fästa). d3 används bara för skalor, `line`/`area` med `.defined()`, och ticks.
+`Diagram.tsx` mäter bredd (efter `document.fonts.ready`), anropar `layout`, renderar `Rita` och äger interaktionslagret: pekare, tangentbord, tooltip och fästa serier. Själva reglerna kommer från renderarens `interaktion` (`charts/karna/interaktion.ts`): tidsinteraktion för linje och stapel, radinteraktion för rangordning (i enheternas rangordning borrar klick och Enter ned när `spec.borrbar` och figuren har `onFokus`) och panelinteraktion för små multiplar (synkroniserad hjälplinje, Enter borrar ned). Minidiagrammet saknar interaktion och är en bild utan fokus. Hovring ritar bara överlägget; de statiska lagren är memoiserade på scenen. Tooltipen registrerar sig i lagerstapeln (4.6), så att Escape stänger den först. d3 används bara för skalor, `line`/`area` med `.defined()` och ticks.
 
 ### 4.4 Figur (`figur/Figur.tsx`)
 
@@ -273,8 +301,11 @@ export interface FigurProps {
   brodsmula?: { id: string; namn: string }[]; onFokus?(enhetId: string): void;
   fasta?: string[]; onFasta?(ids: string[]): void;
   atgarder?: ("tabell" | "ladda" | "forstora")[];      // förval alla tre
+  indikatornamn?: string;                              // kicker i förstoring och nedladdning
 }
 ```
+
+Plotytan klipper i sidled men ger svg:ns fokusring plats: ytan breddas med negativ marginal och lika mycket utfyllnad (fokusringens bredd och avstånd), så att diagrammets mätta bredd är oförändrad. `overflow-clip-margin` räcker inte, eftersom Chromium bara tillämpar den när båda axlarna klipps.
 
 ### 4.5 Begrepp (`begrepp/register.ts`)
 
@@ -289,26 +320,37 @@ export interface Begrepp {
   kategori: "metod" | "statistik" | "vard" | "ekonomi" | "rapport";
   undantag?: string[];       // fraser där termen inte ska länkas
 }
+export interface BegreppPost extends Begrepp { granskad: boolean }
+export const BEGREPP: BegreppPost[];          // innehall/begrepp.json, formkontrollerad
 export function lankaBegrepp(text: string, reg: Begrepp[], redan: Set<string>):
   (string | { id: string; text: string })[];
 ```
 
-Länkning: explicit `[[id|text]]` först, sedan längsta matchning först, ordgränser med `\p{L}`, skiftlägesokänslig, bara första förekomsten per omfång (`redan` delas inom en indikator), aldrig i rubriker, knappar eller tabeller.
+Länkning: explicit `[[id|text]]` först, sedan längsta matchning först, ordgränser med `\p{L}`, skiftlägesokänslig, bara första förekomsten per omfång (`redan` delas inom en indikator eller en del av en textsida), aldrig i rubriker, knappar eller tabeller. `Prosa` delar text i stycken och länkar; `Begrepp` är toggletipen (popover från 640 px, annars ark).
 
-### 4.6 Adresser (`nav/route.ts`)
+### 4.6 Adresser, lager och läsposition (`nav/*`)
 
 | Adress | Visar |
 |---|---|
 | `#/` | Startsidan |
 | `#/sammanfattning?vy=ar` | Sammanfattningen |
 | `#/kapitel/{id}?vy=manad&i={blockId}` | Kapitel, rullat till block |
-| `…&v={visning}&e={enhetId}` | Figurens visning och fokusenhet (bara via "Kopiera länk") |
+| `…&v={visning}&e={enhetId}` | Figurens visning och fokusenhet i blocket `i` |
 | `…&red=1` | Redigeringsläge |
 | `#/begrepp` · `#/begrepp/{id}` | Begreppslistan |
 | `#/las` | Så läser du rapporten |
+| `#/om` | Om rapporten |
 | `#rapport-{x}` (gammalt) | Skrivs om till motsvarande `#/kapitel/…?i=x` |
 
-`parse`/`format` är rena och testade. Kapitel- och vybyten använder `pushState`; läspositionen `i` uppdateras med fördröjd `replaceState`. Efter laddning och `document.fonts.ready` rullas sidan till `[data-block="{i}"]`. Escape hanteras av `nav/lager.ts` (en stapel av öppna lager); ingen komponent lyssnar på Escape på `document` för egen räkning.
+`parse`/`format` är rena och testade; okända adresser blir startsidan och ogiltiga parametrar faller bort. Kapitel- och vybyten använder `pushState`; läspositionen `i` uppdateras med fördröjd `replaceState`. Efter laddning och `document.fonts.ready` rullas sidan till `[data-block="{i}"]`.
+
+| Del | Hur |
+|---|---|
+| Vy saknas | `parse` ger `STANDARDVY` (årsvyn) när adressen saknar vy, och `harVy(hash)` säger om den hade en. Routern för vidare det som `RouteTillstand.utanVy`. Saknade adressen vy öppnar appen kapitlet enligt `KAPITELVY` (månadsvyn om kapitlet finns där, annars en vy som har det) med `vyForKapitel` och skriver om adressen med `replaceState`. Startsidans kapitelrader länkar till samma vy och räknar sina statussiffror där. |
+| Gamla ankare | Löses synkront bland laddade kapitel, annars genom att kapitlen laddas (årsvyn först). Kapitlet öppnas sedan enligt `KAPITELVY`. |
+| Figurens läge | Indikatorn skriver `v` och `e` med `replaceState` när läsaren byter flik eller nivå, och läser dem när kapitlet öppnas och vid bakåt och framåt. Registret `nav/figurlage.ts` håller varje blocks läge, så att läspositionen, länkar till indikatorn och "Kopiera länk till här" tar med det. |
+| Lagerstapel | `nav/lager.ts` är rapportens enda stapel (popover, ark, dialog, meny, innehållsförteckningens ark, tooltip). Den har den enda Escape-lyssnaren: `keydown` på `window` i fångstfasen. Escape stänger bara det översta lagret och navigerar aldrig. `arOverst(stang)` gör att klick utanför bara stänger det översta. Kroken `useLager` i `ui/lager.ts` registrerar exakt den funktion den får, så den ska vara stabil. |
+| Landmärken | Ramen (`rapport/Ram.tsx`) ger varje sida verktygsrad (`header`), innehållsförteckning och `main`. Startsidan har ingen verktygsrad och ritar själv `header` (brandlisten), `main` och `footer` (sidfoten). |
 
 ---
 
@@ -365,88 +407,117 @@ CSS-variablerna heter som tokens med bindestreck: `farg.diagram.fokus` → `--fa
 | Kommando (i `app/`) | Gör |
 |---|---|
 | `npm run check` | eslint + `tsc -b` + `vitest run` |
-| `npm run build` | produktionsbygge |
+| `npm run build` | produktionsbygge (bitarna i avsnitt 2) |
+| `npm run test:pptx` | röktest för PowerPoint-exporten: ett deck per kapitel och vy, hela rapporten och en bild per graftyp, uppackade och kontrollerade |
 | `npm run bank -- --baslinje` | tar baslinjebilder (sparas i `verktyg/bank/baslinje/`, gitignorerad) |
 | `npm run bank` | tar nya bilder, pixeldiff mot baslinjen, skriver `verktyg/bank/rapport.html` (kontaktark) |
-| `npm run a11y` | axe-core via CDP mot stilguiden och alla adresser |
-| `npm run test:pptx` | befintligt röktest för PowerPoint |
+| `npm run a11y` | axe-core mot stilguiden och rapportens alla adresser (startsidan, sammanfattningen per vy, varje kapitel per vy, begrepp, `#/las`, `#/om`), 1440 och 390 px; avslutskod 1 vid serious eller critical |
+| `node verktyg/graftyper.mjs` | graftyperna i stilguiden med riktiga mus-, tangent- och pekskärmshändelser |
+| `node verktyg/undernivaer.mjs` | nedborrningen i akutflödet: mus, tangentbord, adressens `v` och `e`, Kopiera länk |
 
-`bank.mjs` startar egen headless Edge (`--user-data-dir` i temp, port 9222) och avslutar bara den processen. Gamla vyn saknar adresser; banken klickar sig fram (startsidan → kapitel med `button.start-area`). Selektorer i nya vyer använder `data-*`-attribut eftersom CSS Modules hashar klassnamn.
+**Bänkens grupper:** `ny` (nya rapporten utan parametrar: startsidan, kapitel 2 Tillgänglighet och väntetider, akutflödet utan vy, sammanfattningen, `#/las` och `#/om`), `gammal` (gamla vyn på `/?gammal`; den saknar adresser, så bänken klickar sig fram med `button.start-area`), `grafprov` (`verktyg/grafprov.html`) och `stilguide` (en bild per sektion och galleriexempel). Selektorer i nya vyer använder `data-*`-attribut eftersom CSS Modules hashar klassnamnen.
+
+**Processer:** verktygen startar egen Vite och egen headless Edge (`webblasare.mjs`, profilmapp i temp) och avslutar bara det de startat. Portar via `BANK_PORT` (Vite) och `CDP_PORT` (Edge), så att flera agenter kan köra samtidigt. `BANK_URL` pekar mot en server som redan kör, till exempel `vite preview` av ett bygge (bygg då med `BASE_PATH=/`, eftersom preview serverar från roten).
 
 ---
 
 ## 8. Arbetspaket
 
-> **Prioritering 2026-10-05:** all data är än så länge exempeldata. Fokus ligger på det läsaren ser: grafer, rapportsidan, startsidan och begreppen. **WP8 är parkerat** tills riktig data kopplas in. **WP1 är bantat**: bara typerna, `normalisera` för dagens JSON (v1) och `kpiTillSpec`; inget v2-schema, ingen ajv. **WP10** byggs med en påhittad hierarki i appens fixturer, inte via R. WP2, WP4, WP5, WP6 och WP7 kan börja samtidigt med WP1 eftersom typerna i avsnitt 4 och stubbarna från WP0 räcker.
+> **Prioritering 2026-10-05:** all data är än så länge exempeldata. Fokus ligger på det läsaren ser: grafer, rapportsidan, startsidan och begreppen. **WP8 är parkerat** tills riktig data kopplas in. **WP1 är bantat**: bara typerna, `normalisera` för dagens JSON (v1) och `kpiTillSpec`; inget v2-schema, ingen ajv. **WP10** byggs med en påhittad hierarki i appen, inte via R.
 
-Varje paket: mål, äger, beror på, levererar, godkänt när. Ägarskap enligt avsnitt 3.
+| Paket | Status |
+|---|---|
+| WP0 Grund | sammanslaget |
+| WP1 Datamodell och spec (bantat) | sammanslaget |
+| WP2 Diagramkärna och linje | sammanslaget |
+| WP3 Fler graftyper | sammanslaget |
+| WP4 Figur och UI-delar | sammanslaget |
+| WP5 Begrepp | sammanslaget |
+| WP6 Navigering och ram | sammanslaget |
+| WP7 Levande stilguide och bänk | sammanslaget |
+| WP8 R-kontrakt v2 | **parkerat** |
+| WP9 Rapportsidan | sammanslaget |
+| WP10 Undernivåer | sammanslaget |
+| WP11 Startsida | sammanslaget |
+| WP12a PowerPoint | sammanslaget |
+| WP12b Bytet och städningen | levererat, väntar på granskning |
+| WP12c Radering | efter användarens granskning av nya appen |
+
+Varje paket: mål, levererar, godkänt när.
 
 ### WP0 Grund
 - **Mål:** verktyg, tokens och struktur utan synlig ändring av gamla vyn.
-- **Levererar:** devberoenden (vitest, ajv, pixelmatch, pngjs, axe-core, @fontsource-paket); Tailwind bort med preflight ersatt i `styles/reset.css`; `design/tema.ts` med alla värden ur stilguiden 2.1–2.6 och diagramvärden ur 6.4–6.5; `tema-css.ts` + vite-plugin `virtual:tema.css`; `design/format.ts` (svensk talformatering enligt stilguiden 3.2, ersätter senare `utils/format.ts`); `kontrast.test.ts` som prövar varje textpar ≥ 4,5:1 och varje budskapsbärande diagramfärg ≥ 3:1 mot `yta`; ESLint-regel mot hex-literaler utanför `design/` (varning, frysta filer undantagna); `styles/*`; självhostade typsnitt; `?ny`-flaggan som visar en tom ny ram; stubbar för alla nya filer i avsnitt 3; `bank.mjs` med baslinje och diff; npm-skript enligt avsnitt 7; borttagning av död kod som inte påverkar gamla vyn (`theme/tokens.ts`, oanvända konstanter, `.kpi-grid*`, `.board-row`, Merriweather).
-- **Godkänt när (G0):** `npm run check` och `build` gröna; banken visar 0 avvikande pixlar (tolerans 0,1 % för typsnittskantutjämning) för startsidan, kapitel 2 och Akutflöde i 1440 och 390 px; `test:pptx` 7/7.
+- **Levererade:** devberoenden (vitest, ajv, pixelmatch, pngjs, axe-core, @fontsource-paket); Tailwind bort med preflight ersatt i `styles/reset.css`; `design/tema.ts` med alla värden ur stilguiden; `tema-css.ts` + vite-plugin `virtual:tema.css`; `design/format.ts`; `kontrast.test.ts`; ESLint-regel mot hex-literaler utanför `design/` (varning, frysta filer undantagna); `styles/*`; självhostade typsnitt; `?ny`-flaggan (ersatt av `?gammal` i WP12b); stubbar för alla nya filer; `bank.mjs` med baslinje och diff.
+- **Godkänt när (G0):** `npm run check` och `build` gröna; banken visar 0 avvikande pixlar för gamla vyn; `test:pptx` gick.
 
-### WP1 Datamodell och spec
+### WP1 Datamodell och spec (bantat)
 - **Mål:** rena typer och funktioner från JSON till `ChartSpec`.
-- **Levererar:** `data/*` enligt 4.1 med `normalisera` för v1 och v2; `charts/spec.ts`, `kpiTillSpec.ts`, `text.ts` (titlar, undertitlar, sammanfattningar, enligt stilguiden 6.2 och 3.2); `schema/hos-data.schema.json` för v1 och v2; fixturer (utdrag ur verklig data + syntetiska fall: luckor, seriebrott, tre nivåer, undertryckt, kronor, neutralt mått). **Checka in typerna först** (egen commit) så WP8 kan börja.
-- **Godkänt när (G1):** vitest: `normalisera` över alla 12 datafiler (varje serie har en enhet, perioder sorterade, luckor `null`, inga `NaN`); snapshots av `kpiTillSpec` för alla indikatorer och visningar; inga em dash i genererade titlar; undertitlar ≤ 2 meningar; varje serieroll har färg, bredd och streckning i `tema.ts`; ingen spec har legend eller zon i linjediagram; schema validerar all data.
+- **Levererade:** `data/*` enligt 4.1 med `normalisera` för v1; `charts/spec.ts`, `kpiTillSpec.ts`, `text.ts`, `underlag.ts`; fixturer (utdrag ur verklig data och påhittad hierarki).
+- **Godkänt när (G1):** vitest för `normalisera` över alla datafiler; snapshots av `kpiTillSpec`; inga em dash i genererade titlar; undertitlar ≤ 2 meningar; varje serieroll har färg, bredd och streckning i `tema.ts`.
 
 ### WP2 Diagramkärna och linje
 - **Mål:** gemensamma delar och linjediagrammet enligt stilguiden 6.3–6.5 och 6.8.
-- **Levererar:** `charts/karna/*` (skalor, axlar, rutnät, etikettkollision, klipp, interaktionslager, tooltip), `typer/linje.tsx` (fokus, referens, kontext, markerad, förväntat, zon, mål, seriebrott), `Diagram.tsx`, `register.ts`, omskriven `grafprov` som renderar `Figur` + spec för valfri indikator, stilguidesektion `sektioner/diagram.stilguide.tsx`.
-- **Godkänt när (G2):** SSR-rendering av alla fixturer; layouttester (luckor bryter linjen, inget utanför plotytan, etiketterna i en kolumn utan krockar, ticks omsluter datan); träfftest mot verkligt avstånd till linjesegment med tröghet (lyft inom 8 px, släpp efter 14 px, byte först vid 4 px närmare) enligt stilguiden 6.8; hovring ritar bara överlägget, aldrig de statiska lagren (test: antalet `path` i statiska lagret oförändrat under en pekarsekvens); musklick ger inte fokus; tangentbord (← → ↑ ↓ Enter Escape), pekare och pekskärm fungerar; tooltip i plotytans överkant med `aria-live`; skärmdump av fem SKR-indikatorer och två akutflödesindikatorer i vila, med hovring och med två fästa regioner. Referens för utseende och beteende: linjediagrammet i granskningssidan för stilguiden (version 2).
+- **Levererade:** `charts/karna/*`, `typer/linje.tsx`, `Diagram.tsx`, `register.ts`, omskriven `grafprov`, stilguidesektion.
+- **Godkänt när (G2):** layout- och träfftester (lyft inom 8 px, släpp efter 14 px, byte vid 4 px närmare); hovring ritar bara överlägget; tangentbord, pekare och pekskärm; tooltip med `aria-live`.
 
 ### WP3 Fler graftyper
-- **Mål:** rangordning, stapel, små multiplar, minidiagram enligt stilguiden 6.6.
-- **Godkänt när:** rangordningens ordning = `rank` för alla SKR-indikatorer; lika värden får samma plats; staplar börjar på noll; små multiplar delar skala och följer kolumnreglerna; varje typ har hovring, tangentbord och pekskärm enligt tabellen "Alla graftyper är interaktiva" i stilguiden 6.8 (små multiplar med synkroniserad hjälplinje över panelerna, rangordning med fästa regioner delade med linjevyn); allt fungerar från 320 px; stilguidesektion per typ.
+- **Mål:** rangordning, stapel, små multiplar och minidiagram enligt stilguiden 6.6.
+- **Levererade:** typerna med `Renderare.interaktion`, `Scen.paneler`, `jamforNiva` och `period` i specen, `graftyper.mjs`.
+- **Godkänt när:** rangordningens ordning = `rank`; lika värden samma plats; staplar från noll; delad skala i små multiplar; hovring, tangentbord och pekskärm i varje typ; allt fungerar från 320 px.
 
 ### WP4 Figur och UI-delar
 - **Mål:** en figurram överallt (stilguiden 6.1, 6.8) och grundkomponenter (5.1–5.5, 5.9).
-- **Levererar:** `figur/*`, `ui/{StatusMarkor,Knapp,Flikar,Disclosure,Dialog,Meny,Tabell}`. Kan börja mot en stubbrenderare innan WP2 är klar.
-- **Godkänt när:** tabellvyn är en riktig `<table>` med `<caption>`; CSV öppnas rätt i svensk Excel; SVG och PNG har titel, undertitel och källa inbakade och rätt typsnitt; förstoringen är en dialog med fokusfälla; jämför-listan och chipsen byggs ur spec och delar tillstånd med grafen; axe utan allvarliga fel.
+- **Levererade:** `figur/*`, `ui/{StatusMarkor,Knapp,Flikar,Disclosure,Dialog,Meny,Tabell,lager}`. Menyn fick ikonläge och kryssval i WP12b.
+- **Godkänt när:** tabellvyn är en riktig `<table>` med `<caption>`; CSV öppnas rätt i svensk Excel; SVG och PNG med titel, undertitel och källa; förstoringen är en dialog med fokusfälla; axe utan allvarliga fel.
 
 ### WP5 Begrepp
 - **Mål:** begreppsregister och toggletips enligt stilguiden 5.7.
-- **Levererar:** `innehall/begrepp.json` med ~25 begrepp skrivna enligt stilguiden 5.7 och märkta `"granskad": false` tills sakkunnig granskat. Startlista: AI-analys, förväntat intervall, I fas, Bevaka, Avvikelse, topp 3, plats bland regionerna, rikssnitt, procentenhet, median, seriebrott, aggregat och enheter, vårdgaranti, tillgänglighetsgaranti, standardiserat vårdförlopp (SVF), DRG, KPP, strukturjusterad kostnad, behovsjusterad jämförelse, beläggningsgrad, medianväntetid, Kolada, Vården i siffror, nationellt kvalitetsregister, beskrivande mått. Dessutom `begrepp/*`, `ui/{Popover,Ark}`, `BegreppSida` för `#/begrepp`.
-- **Godkänt när:** tester för länkning (böjningsformer, ordgränser, bara första förekomsten, undantag, explicit `[[id|text]]`); alla `kort` ≤ 25 ord; popover och ark fungerar med mus, tangentbord och pekskärm; Escape stänger bara popovern.
+- **Levererade:** `innehall/begrepp.json` (26 begrepp, `"granskad": false` tills sakkunnig granskat), `begrepp/*`, `ui/{Popover,Ark}`, `BegreppSida` för `#/begrepp`.
+- **Godkänt när:** tester för länkning; alla `kort` ≤ 25 ord; popover och ark med mus, tangentbord och pekskärm; Escape stänger bara popovern.
 
 ### WP6 Navigering och ram
-- **Mål:** adresser och rapportens ram enligt stilguiden 4.5 och arkitektur 4.6.
-- **Levererar:** `nav/*`, ny gren i `App.tsx`, `rapport/{Ram,Verktygsrad,Positionsrad,Innehall,TidsupplosningVal}`.
-- **Godkänt när:** route-tester; uppdatera, bakåt, framåt och djuplänk fungerar; gamla ankare skrivs om; Escape-stapeln; ingen nedtoning; verktygsraden ryms i 360 px; innehållsförteckning som spalt ≥ 1200 px och ark under.
+- **Mål:** adresser och rapportens ram enligt stilguiden 4.5 och avsnitt 4.6.
+- **Levererade:** `nav/*`, `NyApp` i `App.tsx`, `rapport/{Ram,Verktygsrad,Positionsrad,Innehall,TidsupplosningVal,ramData,ramDisposition}`.
+- **Godkänt när:** route-tester; uppdatera, bakåt, framåt och djuplänk; gamla ankare skrivs om; Escape-stapeln; verktygsraden ryms i 360 px; innehållsförteckning som spalt från 1200 px och ark under.
 
 ### WP7 Levande stilguide och bänk
 - **Mål:** `verktyg/stilguide.html` som visar allt i stilguiden ur koden.
-- **Levererar:** sidor för färger (med kontrastvärden), typografi, avstånd, komponenter (globbar `sektioner/*.stilguide.tsx` från övriga paket), kontaktark och diffrapport i `bank.mjs`, `a11y.mjs`. Får justera värden i `tema.ts` om stilguiden och rendering visar sig skilja (rapporteras).
-- **Galleriet ska innehålla** varje graftyp med riktig data och full interaktion, minst: linje med alla 21 regioner och riket (spaghettigraf, t.ex. `kolada-n79179` med luckor och seriebrott, och en indikator utan luckor), linje med två fästa regioner, rangordning, linje mot förväntat (akutflöde, månad), stapel över tid, små multiplar per sjukhus, minidiagram i översiktstabell. Varje exempel i 1440 och 390 px.
-- **Godkänt när:** inga listor är hårdkodade (allt läses ur `tema.ts`); galleriet ovan finns och går att hovra; axe-körning ren; diffrapporten fungerar.
+- **Levererade:** sektioner för färger, typografi, avstånd och komponenter (globbar `sektioner/*.stilguide.tsx`), galleriet, kontaktark och diffrapport i `bank.mjs`, `a11y.mjs`, `webblasare.mjs`.
+- **Godkänt när:** inga listor hårdkodade (allt ur `tema.ts`); galleriet går att hovra; axe ren; diffrapporten fungerar.
 
 ### WP8 R-kontrakt v2 (parkerat)
 - **Mål:** dubbelskrivning av v1 och v2 enligt avsnitt 5.
-- **Levererar:** fälten i avsnitt 5; `huvudpunkter` och dekar med regler enligt stilguiden 3.4; seriebrottsnoter; kronor och per invånare rätt; undertryckning i demodata med `n`; verifiering och rättning av de tre kända bristerna i `kolada/bearbeta.R` (plats av antal med värde, jämförelseår över tomma år och källbyte, 3 %-klippan) med samtidig uppdatering av exemplet i `docs/tillganglighet-intern-kort.html`; `R/gemensam/begrepp.R`; em dash-kontroll; död R-kod bort (`ranking-tema.R` om oanvänd, `dept_config`, `avdelningar`).
-- **Godkänt när (G3):** R-körningen ger "kontrakt OK"; vitest (WP1:s schema och `normalisera`) passerar mot nya JSON; banken för gamla vyn är oförändrad.
+- **Levererar när det tas upp:** fälten i avsnitt 5; `huvudpunkter` och dekar enligt stilguiden 3.4; seriebrottsnoter; kronor och per invånare rätt; undertryckning i demodata med `n`; rättning av de tre kända bristerna i `kolada/bearbeta.R` (plats av antal med värde, jämförelseår över tomma år och källbyte, 3 %-klippan) med samtidig uppdatering av exemplet i `docs/tillganglighet-intern-kort.html`; `R/gemensam/begrepp.R`; em dash-kontroll; död R-kod bort.
+- **Godkänt när (G3):** R-körningen ger "kontrakt OK"; vitest passerar mot nya JSON; banken för gamla vyn oförändrad.
 
 ### WP9 Rapportsidan
 - **Mål:** kapitel, indikator och sammanfattning enligt stilguiden 4.2–4.4 och 5.6–5.8.
-- **Levererar:** filerna i `rapport/` som ägs av WP9; `content-visibility: auto` och lat montering av figurer utanför skärmen.
-- **Godkänt när (G4):** indikator ≤ 1,3 skärmhöjder i 1440 × 900 med stängd fördjupning; status en gång per indikator; sammanfattningen ≤ 3 skärmhöjder; djuplänk till varje indikator; bänk och axe för alla adresser i 1440 och 390 px.
+- **Levererade:** filerna i `rapport/` för sidorna och kapitlets delar; `content-visibility: auto` och lat montering av figurer utanför skärmen.
+- **Godkänt när (G4):** indikator ≤ 1,3 skärmhöjder i 1440 × 900 med stängd fördjupning; status en gång per indikator; sammanfattningen ≤ 3 skärmhöjder; djuplänk till varje indikator; bänk och axe för alla adresser.
 
 ### WP10 Undernivåer
 - **Mål:** nedborrning hela vägen enligt stilguiden 6.7.
-- **Levererar:** demohierarki i appens fixturer (region › sjukhus › avdelning, med `n` och undertryckning; ingen R), nivåfliken, brödsmula, `e=` i adressen.
-- **Godkänt när:** Region Halland / Per sjukhus / Per avdelning fungerar för alla akutflödesindikatorer; undertryckta värden visas som `..` med not; djuplänk med `e=` fungerar.
+- **Levererade:** `data/exempelhierarki.ts` (påhittade avdelningar och ambulansstationer, `n` och undertryckning), nivåerna `ambulansomrade` och `ambulansstation`, `ChartSpec.borrbar`, nivåfliken, brödsmulan, `rapport/nedborrning.ts`, `nav/figurlage.ts`, `v` och `e` i adressen, `undernivaer.mjs`.
+- **Godkänt när:** Region Halland / Per sjukhus / Per avdelning fungerar för alla akutflödesindikatorer; undertryckta värden som `..` med not; djuplänk med `e=` fungerar.
 
 ### WP11 Startsida
 - **Mål:** startsidan enligt stilguiden 4.1.
-- **Godkänt när:** inga ramar, linjer, taggar eller versala etiketter utom kickern; en metarad och en statusmätare per kapitel; länkar till sammanfattning, begrepp och läsanvisning; fungerar i 360 px; axe ren.
+- **Levererade:** `start/*`. Kapitelraderna leder sedan WP12b till vyn en adress utan vy öppnar (`KAPITELVY`) och Läget just nu är summan av raderna.
+- **Godkänt när:** inga ramar, linjer, taggar eller versala etiketter utom kickern; en metarad och en statusmätare per kapitel; länkar till sammanfattning, begrepp, läsanvisning och Om rapporten; fungerar i 360 px; axe ren.
 
 ### WP12a PowerPoint
 - **Mål:** exporten byggd på `ChartSpec` och `tema.ts` enligt stilguiden 6.9.
-- **Godkänt när:** `test:pptx` 7/7; riket har samma färg som på webben; varje graftyp har en definierad återgivning.
+- **Levererade:** `export/*`, laddas vid klick i Exportera-menyn; `pptx-smoke.mjs`.
+- **Godkänt när:** `test:pptx` grönt; riket har samma färg som på webben; varje graftyp har en definierad återgivning.
 
-### WP12b Städning
+### WP12b Bytet och städningen
+- **Mål:** nya appen som standard och en kodbas för det nya, med gamla appen kvar för granskning.
+- **Levererade:** nya appen utan parametrar och gamla bakom `?gammal` (lat laddad med sina stilar); bänken med grupperna `ny` och `gammal`; sidorna `#/las` och `#/om` med adress och test; en lagerstapel (`nav/lager.ts`, `ui/lagerLokal.ts` bort, `useLager` lindar inte stängfunktionen); `ui/Meny` med ikonläge, kryssval och högerjustering i verktygsraden; `.visuellt-dold` i `styles/bas.css`; `komponent.statusmatare` i `tema.ts`; figurens fokusring utanför svg:n; startsidans kapitelrader enligt `KAPITELVY` och landmärken; React i egen byggbit; denna arkitekturbeskrivning och `PROJEKT-METODIK.md`.
+- **Godkänt när:** `check`, `build` utan chunkvarning, `test:pptx` och `a11y` (0 serious eller critical) gröna; `/` visar nya startsidan och `/?gammal` gamla appen oförändrad (bänken mot baslinjen).
+
+### WP12c Radering (efter granskningen)
 - **Mål:** en kodbas.
-- **Levererar:** radering av frysta filer, `?ny`-flaggan, v1-fälten i R, v1-grenen i `normalisera` och schemat, Plex Mono och Lexend; hex-regeln på felnivå; uppdaterad `PROJEKT-METODIK.md`.
+- **Levererar:** radering av `GammalApp.tsx`, `?gammal`, gamla `index.css` och lagret `legacy`, frysta filer (`components/*`, `utils/*`, `charts/{tidsserie,constants,types}.ts`, `types.ts`, `taxonomy.ts`, `data/load.ts`, `stores/position.ts`), Plex Mono och Lexend Deca, gruppen `gammal` i bänken; hex-regeln på felnivå; v1-fälten i R, v1-grenen i `normalisera` och schemat när WP8 är gjort.
 - **Godkänt när (G5):** inga importer av raderade moduler; alla grindar ovan gröna.
 
 ---
@@ -459,7 +530,8 @@ Steg 1  WP0 ── G0
 Steg 2  WP1 (bantat) │ WP2 │ WP4 │ WP5 │ WP6 │ WP7
 Steg 3  WP3 │ WP11 ── du granskar graferna i levande stilguiden
 Steg 4  WP9 │ WP12a ── du granskar rapportsidan och startsidan
-Steg 5  WP10 → WP12b
+Steg 5  WP10 → WP12b ── du granskar nya appen (gamla finns bakom ?gammal)
+Steg 6  WP12c (radering)
 ```
 
-Sammanslagning i ordningen WP0, WP1, WP7, WP2, WP4, WP5, WP6, WP3, WP11, WP9, WP12a, WP10, WP12b. WP8 parkerat. Orkestreraren granskar varje paket (tester, skärmdumpar, kod) före sammanslagning.
+Sammanslaget i ordningen WP0, WP1, WP5, WP7, WP4, WP2, WP6, WP11, WP9, WP3, WP12a, WP10. WP12b väntar på granskning; WP8 är parkerat. Orkestreraren granskar varje paket (tester, skärmdumpar, kod) före sammanslagning.

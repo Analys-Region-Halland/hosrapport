@@ -1,12 +1,15 @@
 // rapport/Ram.tsx: nya rapportens ram (stilguiden 4.5): verktygsrad med
 // positionsrad och Exportera, innehållsförteckning som spalt (≥ 1200 px) eller
-// ark (under), och sidans innehåll. Visas när adressen har ?ny (App.tsx).
+// ark (under), och sidans innehåll. Rapportens standardvy (App.tsx).
 // Ägare: WP6.
 //
 // Ramen äger läspositionen: den rullar till i när innehållet är `klar`, kör
 // scroll-spionen på kapitelsidor och visar aktivt block i positionsraden och
 // innehållsförteckningen. Ingen nedtoning av andra block. Startsidan har ingen
-// verktygsrad (den har egen brandlist, stilguiden 4.1).
+// verktygsrad (den har egen brandlist, stilguiden 4.1) och ritar själv sina
+// landmärken: brandlisten som <header>, <main> och sidfoten som <footer>
+// (egnaLandmarken). Medan den inte kan visas lägger ramen <main> runt det
+// som visas i stället.
 //
 // Tillägg i WP10: ramen ger figurerna routerns tillstånd (FigurAdressKontext),
 // och "Kopiera länk till här" tar med figurens läge (v, e) för blocket.
@@ -22,7 +25,8 @@ import Positionsrad from "./Positionsrad";
 import { useBrytpunkt } from "./ramBrytpunkt";
 import { laddaAllaKapitel, laddaManifest } from "./ramData";
 import { byggDisposition, positionsdelar } from "./ramDisposition";
-import Verktygsrad, { type MenyVal } from "./Verktygsrad";
+import type { MenyVal } from "../ui/Meny";
+import Verktygsrad from "./Verktygsrad";
 import s from "./Ram.module.css";
 
 export interface RamProps {
@@ -32,12 +36,14 @@ export interface RamProps {
   klar?: boolean;
   /** Sidans namn i positionsraden när sidan inte är ett kapitel. */
   sidnamn?: string;
+  /** Startsidan: innehållet har egen header, main och footer. */
+  egnaLandmarken?: boolean;
   children?: ReactNode;
 }
 
 const RAPPORTTITEL = "Hälso- och sjukvården i Halland";
 
-export default function Ram({ kapitel = null, klar = true, sidnamn = "", children }: RamProps): ReactNode {
+export default function Ram({ kapitel = null, klar = true, sidnamn = "", egnaLandmarken = false, children }: RamProps): ReactNode {
   const t = useRouteTillstand();
   const { route } = t;
   const bp = useBrytpunkt();
@@ -58,7 +64,7 @@ export default function Ram({ kapitel = null, klar = true, sidnamn = "", childre
   if (route.sida === "start") {
     return (
       <div className={s.ram} data-ram="" data-sida="start">
-        <main id="innehall" className={s.start} tabIndex={-1}>{children}</main>
+        {egnaLandmarken ? children : <main id="innehall" className={s.start} tabIndex={-1}>{children}</main>}
       </div>
     );
   }

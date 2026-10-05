@@ -31,7 +31,7 @@ export default function Statusmatare({ status, storlek = "kapitel" }: Statusmata
           <Fragment key={st}>
             {i > 0 && (
               <>
-                <span className={s.osynlig}>,</span>
+                <span className="visuellt-dold">,</span>
                 <span className={s.skiljare} aria-hidden="true"> · </span>
               </>
             )}

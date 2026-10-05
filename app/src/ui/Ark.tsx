@@ -14,8 +14,9 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { arOverst } from "../nav/lager";
 import { FOKUSERBAR, tabbara } from "./fokus";
-import { arOverst, registreraLager } from "./lagerLokal";
+import { useLager } from "./lager";
 import s from "./Ark.module.css";
 
 export interface ArkProps {
@@ -63,7 +64,7 @@ function ArkYta({ onStang, etikett, children, ankare, id }: ArkProps) {
     };
   }, [ankare]);
 
-  useEffect(() => registreraLager(stangMedEscape), [stangMedEscape]);
+  useLager(true, stangMedEscape);
 
   useEffect(() => {
     const vidPekare = (e: PointerEvent) => {

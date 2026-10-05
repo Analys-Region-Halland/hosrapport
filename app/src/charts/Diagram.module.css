@@ -29,13 +29,12 @@
     outline: none;
   }
 
-  /* Ringen ritas på svg:ns innerkant: figurens plotyta klipper i sidled
-     (overflow-x: clip), så en ring utanför skulle bara synas upptill och
-     nedtill. Innehållet ligger minst 7 px innanför kanten, så avståndet
-     mellan ring och innehåll blir ändå större än fokusring.avstand. */
+  /* Ringen ritas utanför svg:n som alla andra fokusringar (stilguiden 2.1).
+     Figurens plotyta klipper i sidled men ger ringen plats med
+     overflow-clip-margin (Figur.module.css). */
   .svg:focus-visible {
     outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
-    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
+    outline-offset: var(--komponent-fokusring-avstand);
   }
 
   /* Små multiplar (WP3): panelens namn borrar ned när figuren kan det
@@ -49,17 +48,5 @@
     text-decoration: underline;
     text-decoration-thickness: var(--typ-lank-understrykning);
     text-underline-offset: var(--typ-lank-avstand);
-  }
-
-  .sr {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
   }
 }

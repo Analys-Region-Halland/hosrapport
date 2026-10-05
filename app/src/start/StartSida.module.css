@@ -41,11 +41,20 @@
     color: var(--farg-yta);
   }
 
-  /* ── Spalten ── */
-  .spalt {
+  /* ── Spalten: main och sidfoten är lika breda ── */
+  .bredd {
     max-width: var(--spalt);
     margin: 0 auto;
-    padding: var(--rum-8) var(--matt-marginal);
+    padding-inline: var(--matt-marginal);
+  }
+
+  .huvud {
+    padding-block-start: var(--rum-8);
+  }
+
+  /* main får fokus från adressen; själva ytan ritar ingen ring */
+  .huvud:focus {
+    outline: none;
   }
 
   /* ── Masthead ── */
@@ -141,6 +150,7 @@
   /* ── Sidfot ── */
   .sidfot {
     margin-top: var(--rum-9);
+    padding-block-end: var(--rum-8);
     font-family: var(--typ-not-familj);
     font-size: var(--typ-not-storlek);
     line-height: var(--typ-not-radhojd);
@@ -160,20 +170,6 @@
     color: var(--farg-text3);
   }
 
-  .om {
-    max-width: var(--matt-text);
-    margin-top: var(--rum-3);
-    color: var(--farg-text2);
-  }
-
-  .om > p {
-    margin: 0;
-  }
-
-  .om > p + p {
-    margin-top: var(--rum-2);
-  }
-
   .laddar {
     margin: var(--rum-8) 0 0;
     font-family: var(--typ-granssnitt-familj);
@@ -182,15 +178,11 @@
     color: var(--farg-text2);
   }
 
-  /* ── Länkar (stilguiden 2.4) och sidfotens textknapp i samma form ── */
+  /* ── Länkar (stilguiden 2.4), med klickyta komponent.klickyta ── */
   .lank {
     display: inline-flex;
     align-items: center;
     min-block-size: var(--komponent-klickyta);
-    padding: 0;
-    border: 0;
-    background: none;
-    font: inherit;
     color: var(--farg-fokus);
     text-decoration-line: underline;
     text-decoration-thickness: var(--typ-lank-understrykning);

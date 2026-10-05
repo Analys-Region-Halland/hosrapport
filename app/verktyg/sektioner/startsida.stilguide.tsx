@@ -9,6 +9,7 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import type { RaManifest, RaSektionSummering } from "../../src/data/kontrakt";
 import { TEMAN } from "../../src/data/kapitelinfo";
+import { tema } from "../../src/design/tema";
 import Kapitelrad from "../../src/start/Kapitelrad";
 import Statusmatare from "../../src/start/Statusmatare";
 import { byggStartModell, type StatusRakning } from "../../src/start/startModell";
@@ -77,12 +78,13 @@ export function Sektion() {
 
       <Underrubrik>Statusmätare</Underrubrik>
       <Prosa>
-        Ett segment per status i statusmarkörens färger, 6 px högt med 2 px mellanrum, och alltid räkningen i text
-        under. Stapeln är dold för skärmläsare; texten bär innehållet. Segment med noll ritas inte.
+        Ett segment per status i statusmarkörens färger, {tema.komponent.statusmatare.hojd} px högt med{" "}
+        {tema.komponent.statusmatare.mellanrum} px mellanrum (<Kod>komponent.statusmatare</Kod>), och alltid räkningen i
+        text under. Stapeln är dold för skärmläsare; texten bär innehållet. Segment med noll ritas inte.
       </Prosa>
       <Exempel bild="matare">
         <div style={stil.matare}>
-          <Not>Läget just nu (alla indikatorer med status i årsvyn)</Not>
+          <Not>Läget just nu (summan av kapitelraderna)</Not>
           <Statusmatare status={{ gron: 29, gul: 20, rod: 31 }} storlek="lage" />
           <Not>Kapitelrad</Not>
           <div style={stil.smal}>

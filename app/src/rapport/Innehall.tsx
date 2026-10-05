@@ -207,7 +207,7 @@ function Indikator({ x }: { x: DispIndikator }) {
       <span className={s.nr}>{x.nummer}</span>
       <span className={s.namn}>
         {x.namn}
-        {x.status && <span className={s.osynlig}>, {STATUSORD[x.status]}</span>}
+        {x.status && <span className="visuellt-dold">, {STATUSORD[x.status]}</span>}
       </span>
     </>
   );

@@ -1,5 +1,6 @@
 /* Verktygsrad.module.css: stilguiden 4.5 och 5.3. Alla värden ur tema-variablerna.
-   Hårlinjer med matt.harlinje; menyknappens ram har en egen token. */
+   Hårlinjer med matt.harlinje. Exportmenyn är ui/Meny; här bara dess plats
+   och ikonens streck. */
 @layer komponent {
   .verktygsrad {
     position: sticky;
@@ -71,41 +72,7 @@
     flex: none;
   }
 
-  /* Menyknapp: enda inramade knappen (5.3) */
-  .menyknapp {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: var(--komponent-menyknapp-hojd);
-    padding: 0 var(--rum-4);
-    border: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
-    background: var(--farg-papper);
-    font-family: var(--typ-granssnitt-familj);
-    font-size: var(--typ-granssnitt-storlek);
-    line-height: var(--typ-granssnitt-radhojd);
-    font-weight: var(--typ-granssnitt-viktStark);
-    color: var(--farg-black);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .menyknapp[data-ikon] {
-    width: var(--komponent-menyknapp-hojd);
-    padding: 0;
-  }
-
-  .menyknapp:hover {
-    text-decoration-line: underline;
-    text-decoration-thickness: var(--typ-lank-understrykning);
-    text-underline-offset: var(--typ-lank-avstand);
-  }
-
-  .menyknapp[data-ikon]:hover {
-    color: var(--farg-fokus);
-  }
-
-  .tillbaka:focus-visible,
-  .menyknapp:focus-visible {
+  .tillbaka:focus-visible {
     outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
     outline-offset: var(--komponent-fokusring-avstand);
   }
@@ -118,50 +85,6 @@
     stroke-width: 1.6;
     stroke-linecap: round;
     stroke-linejoin: round;
-  }
-
-  .menylista {
-    position: absolute;
-    top: calc(100% + var(--rum-1));
-    right: 0;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: max-content;
-    padding: var(--rum-1) 0;
-    background: var(--farg-yta);
-    border: var(--matt-harlinje) solid var(--farg-harlinje);
-  }
-
-  .menyval {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--rum-6);
-    min-height: var(--komponent-menyknapp-hojd);
-    padding: 0 var(--rum-4);
-    font-family: var(--typ-granssnitt-familj);
-    font-size: var(--typ-granssnitt-storlek);
-    line-height: var(--typ-granssnitt-radhojd);
-    font-weight: var(--typ-granssnitt-vikt);
-    color: var(--farg-black);
-    text-align: left;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-
-  .menyval:hover,
-  .menyval:focus {
-    background: var(--farg-fokusLjus);
-  }
-
-  .menyval:focus-visible {
-    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
-    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
-  }
-
-  .lage {
-    color: var(--farg-text2);
   }
 
   .status {

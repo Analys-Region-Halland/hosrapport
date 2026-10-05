@@ -5,22 +5,14 @@
 // först när sidan rullats. Ryms i 360 px: positionsraden kortas och
 // exportmenyn blir en ikon med etikett för skärmläsare (ikonmeny).
 //
-// Exportmenyn är egen här eftersom ui/Meny (WP4) saknar ikonläge och kryssval
-// (Redigeringsläge på/av). Escape går via nav/lager.ts.
+// Exportmenyn är ui/Meny (menyknapp, ikonläge och kryssval för
+// Redigeringsläge på/av). Escape går via lagerstapeln i nav/lager.ts.
 
-import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import Lank from "../nav/Lank";
-import { arOverst, registreraLager } from "../nav/lager";
 import { START } from "../nav/route";
+import Meny, { type MenyVal } from "../ui/Meny";
 import s from "./Verktygsrad.module.css";
-
-export interface MenyVal {
-  id: string;
-  etikett: string;
-  /** Kryssval (menuitemcheckbox), t.ex. redigeringsläget. undefined = vanligt val. */
-  kryssad?: boolean;
-  onVal(): void;
-}
 
 export interface VerktygsradProps {
   /** Positionsraden. */
@@ -44,6 +36,13 @@ function prenumereraRullning(f: () => void): () => void {
   return () => removeEventListener("scroll", f);
 }
 
+// Exportmenyns ikon i mobil (pil upp ur en låda)
+const EXPORTIKON = (
+  <svg className={s.ikon} viewBox="0 0 16 16" aria-hidden="true">
+    <path d="M8 10.5V2.5M5 5.5l3-3 3 3M3 9v4.5h10V9" />
+  </svg>
+);
+
 export default function Verktygsrad({ children, meny = [], ikonmeny = false, status = "", spalt = false, statisk = false }: VerktygsradProps): ReactNode {
   const rullad = useSyncExternalStore(prenumereraRullning, arRullad, () => false);
   return (
@@ -59,117 +58,13 @@ export default function Verktygsrad({ children, meny = [], ikonmeny = false, sta
           <span aria-hidden="true">←</span>Alla kapitel
         </Lank>
         <div className={s.mitt}>{children}</div>
-        {meny.length > 0 && <ExportMeny val={meny} ikon={ikonmeny} />}
+        {meny.length > 0 && (
+          <div className={s.meny} data-exportera="">
+            <Meny etikett="Exportera" val={meny} ikon={ikonmeny ? EXPORTIKON : undefined} justera="slut" />
+          </div>
+        )}
       </div>
       <p className={s.status} role="status">{status}</p>
     </header>
-  );
-}
-
-// ════════════════════════════════════════════════════════════
-//  Exportera: menyknapp med val (menu, menuitem, menuitemcheckbox)
-// ════════════════════════════════════════════════════════════
-
-function ExportMeny({ val, ikon }: { val: MenyVal[]; ikon: boolean }) {
-  const [oppen, setOppen] = useState(false);
-  const knapp = useRef<HTMLButtonElement>(null);
-  const lista = useRef<HTMLDivElement>(null);
-  const menyId = useId();
-
-  const stang = useCallback((fokusTillbaka: boolean) => {
-    setOppen(false);
-    if (fokusTillbaka) knapp.current?.focus();
-  }, []);
-
-  // Escape stänger menyn (lagerstapeln), klick utanför stänger utan att flytta
-  // fokus. Båda bara när menyn är det översta lagret.
-  useEffect(() => {
-    if (!oppen) return;
-    const stangLager = () => stang(true);
-    const taBort = registreraLager(stangLager);
-    const utanfor = (e: PointerEvent) => {
-      const mal = e.target as Node;
-      if (!arOverst(stangLager) || lista.current?.contains(mal) || knapp.current?.contains(mal)) return;
-      stang(false);
-    };
-    document.addEventListener("pointerdown", utanfor, true);
-    return () => {
-      taBort();
-      document.removeEventListener("pointerdown", utanfor, true);
-    };
-  }, [oppen, stang]);
-
-  // Första valet får fokus när menyn öppnas
-  useEffect(() => {
-    if (oppen) lista.current?.querySelector<HTMLElement>("[role^='menuitem']")?.focus();
-  }, [oppen]);
-
-  const tangent = (e: KeyboardEvent<HTMLDivElement>) => {
-    const poster = Array.from(lista.current?.querySelectorAll<HTMLElement>("[role^='menuitem']") ?? []);
-    const i = poster.indexOf(document.activeElement as HTMLElement);
-    const ga = (n: number) => {
-      e.preventDefault();
-      poster[(n + poster.length) % poster.length]?.focus();
-    };
-    if (e.key === "ArrowDown") ga(i + 1);
-    else if (e.key === "ArrowUp") ga(i - 1);
-    else if (e.key === "Home") ga(0);
-    else if (e.key === "End") ga(poster.length - 1);
-    else if (e.key === "Tab") stang(false);
-  };
-
-  return (
-    <div className={s.meny}>
-      <button
-        ref={knapp}
-        type="button"
-        className={s.menyknapp}
-        data-ikon={ikon || undefined}
-        aria-haspopup="menu"
-        aria-expanded={oppen}
-        aria-controls={oppen ? menyId : undefined}
-        aria-label={ikon ? "Exportera" : undefined}
-        onClick={() => setOppen((o) => !o)}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown" && !oppen) {
-            e.preventDefault();
-            setOppen(true);
-          }
-        }}
-        data-exportera=""
-      >
-        {ikon ? (
-          <svg className={s.ikon} viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M8 10.5V2.5M5 5.5l3-3 3 3M3 9v4.5h10V9" />
-          </svg>
-        ) : (
-          "Exportera"
-        )}
-      </button>
-      {oppen && (
-        <div ref={lista} id={menyId} role="menu" aria-label="Exportera" className={s.menylista} onKeyDown={tangent} data-exportmeny="">
-          {val.map((v) => (
-            <button
-              key={v.id}
-              type="button"
-              role={v.kryssad === undefined ? "menuitem" : "menuitemcheckbox"}
-              aria-checked={v.kryssad}
-              tabIndex={-1}
-              className={s.menyval}
-              data-menyval={v.id}
-              onClick={() => {
-                stang(true);
-                v.onVal();
-              }}
-            >
-              <span>{v.etikett}</span>
-              {v.kryssad !== undefined && (
-                <span className={s.lage} aria-hidden="true">{v.kryssad ? "på" : "av"}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
