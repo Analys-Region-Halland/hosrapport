@@ -2,20 +2,35 @@
   {
     "id": "ai-analys",
     "term": "AI-analys",
-    "former": ["AI-analysen", "AI-analyser", "AI-analyserna"],
+    "former": [
+      "AI-analysen",
+      "AI-analyser",
+      "AI-analyserna"
+    ],
     "kort": "Text som skrivs automatiskt med fasta regler ur rapportens data, till exempel indikatorernas analyser och punkterna under Det viktigaste.",
     "lang": "Reglerna bestämmer vad texten tar upp och i vilken ordning: läget och målet, utvecklingen över tid och jämförelsen med riket och övriga regioner. Samma läge beskrivs därför alltid på samma sätt, och texten formuleras inte fritt från fall till fall. Den beskriver vad datan visar, inte varför. Förklaringar och sammanhang står i fördjupningen och i verksamhetens kommentar.",
-    "se_aven": ["plats-bland-regionerna", "rikssnitt"],
+    "se_aven": [
+      "plats-bland-regionerna",
+      "rikssnitt"
+    ],
     "kategori": "rapport",
     "granskad": false
   },
   {
     "id": "forvantat-intervall",
     "term": "Förväntat intervall",
-    "former": ["förväntade intervallet", "förväntade intervall", "förväntade intervallen"],
+    "former": [
+      "förväntade intervallet",
+      "förväntade intervall",
+      "förväntade intervallen"
+    ],
     "kort": "Spann där ett värde väntas hamna om inget ovanligt har hänt, beräknat ur tidigare perioder med hänsyn till trend, säsong, veckodag och helgdagar.",
     "lang": "Intervallet tas fram med en statistisk modell som har lärt sig verksamhetens vanliga mönster. Det är kalibrerat så att ungefär fyra av fem perioder hamnar inom intervallet när inget har förändrats. Det är det bandet som diagrammet visar. Ett värde utanför bandet ger status Bevaka. Ett värde utanför det bredare intervall som rymmer 95 procent ger Avvikelse. Bandet är bredare där variationen brukar vara stor, till exempel kring helger.",
-    "se_aven": ["i-fas", "bevaka", "avvikelse"],
+    "se_aven": [
+      "i-fas",
+      "bevaka",
+      "avvikelse"
+    ],
     "kategori": "metod",
     "granskad": false
   },
@@ -25,17 +40,28 @@
     "former": [],
     "kort": "Status som betyder att indikatorn ligger där den ska: bland de tre bästa regionerna, eller inom det förväntade intervallet i den interna uppföljningen.",
     "lang": "För indikatorer som jämför regioner betyder i fas plats 1–3 bland de regioner som har ett värde det året, alltså topp 3. Placeringen säger att regionen hör till de bästa, inte att ett nationellt mål är nått. I den interna uppföljningen, som akutflödet, betyder i fas att värdet ligger inom det förväntade intervallet. Där hamnar ungefär fyra av fem perioder när inget har förändrats.",
-    "se_aven": ["bevaka", "avvikelse", "topp-3", "forvantat-intervall"],
+    "se_aven": [
+      "bevaka",
+      "avvikelse",
+      "topp-3",
+      "forvantat-intervall"
+    ],
     "kategori": "rapport",
     "granskad": false
   },
   {
     "id": "bevaka",
     "term": "Bevaka",
-    "former": ["under bevakning"],
+    "former": [
+      "under bevakning"
+    ],
     "kort": "Status som betyder att indikatorn ligger nära men utanför det önskade läget: plats 4–7 bland regionerna, eller strax utanför det förväntade intervallet.",
     "lang": "För indikatorer som jämför regioner betyder bevaka plats 4–7 bland de regioner som har ett värde det året. I den interna uppföljningen betyder det att värdet ligger utanför det förväntade intervallet men inom det bredare intervall som rymmer 95 procent. Även när inget har förändrats hamnar omkring 15 procent av perioderna där. Ett enstaka utfall är därför ett skäl att följa utvecklingen, inte att dra slutsatser.",
-    "se_aven": ["i-fas", "avvikelse", "forvantat-intervall"],
+    "se_aven": [
+      "i-fas",
+      "avvikelse",
+      "forvantat-intervall"
+    ],
     "kategori": "rapport",
     "granskad": false
   },
@@ -45,45 +71,80 @@
     "former": [],
     "kort": "Status som betyder att indikatorn ligger långt från det önskade läget: plats 8 eller lägre bland regionerna, eller utanför det breda förväntade intervallet.",
     "lang": "För indikatorer som jämför regioner betyder avvikelse plats 8 eller lägre bland de regioner som har ett värde det året. Det betyder att andra regioner når längre, inte med nödvändighet att nivån i sig är otillräcklig. I den interna uppföljningen betyder det att värdet ligger utanför det intervall som rymmer 95 procent. När inget har förändrats händer det ungefär en period av tjugo.",
-    "se_aven": ["i-fas", "bevaka", "plats-bland-regionerna"],
+    "se_aven": [
+      "i-fas",
+      "bevaka",
+      "plats-bland-regionerna"
+    ],
     "kategori": "rapport",
-    "undantag": ["avvikelse mot", "avvikelse från"],
+    "undantag": [
+      "avvikelse mot",
+      "avvikelse från"
+    ],
     "granskad": false
   },
   {
     "id": "topp-3",
     "term": "Topp 3",
-    "former": ["topp tre", "de tre främsta", "de tre bästa"],
+    "former": [
+      "topp tre",
+      "de tre främsta",
+      "de tre bästa"
+    ],
     "kort": "Placering bland de tre bästa av de regioner som har ett värde. Det är rapportens mål för indikatorer med målriktning.",
     "lang": "Målet är relativt. Det säger hur Halland står sig mot övriga regioner, inte om en nationell målnivå är nådd. En region kan ligga i topp 3 och ändå långt från ett nationellt mål, om alla regioner ligger lågt. I rangordningen markeras gränsen med en linje under den tredje raden. Beskrivande mått har ingen topp 3.",
-    "se_aven": ["plats-bland-regionerna", "i-fas", "beskrivande-matt"],
+    "se_aven": [
+      "plats-bland-regionerna",
+      "i-fas",
+      "beskrivande-matt"
+    ],
     "kategori": "rapport",
     "granskad": false
   },
   {
     "id": "plats-bland-regionerna",
     "term": "Plats bland regionerna",
-    "former": ["placering bland regionerna", "placeringen bland regionerna", "placeringen", "placering"],
+    "former": [
+      "placering bland regionerna",
+      "placeringen bland regionerna"
+    ],
     "kort": "Ordningsnummer som regionen får när alla regioner med ett värde det året ordnas från bäst till sämst efter indikatorns riktning.",
     "lang": "Skrivs plats 8 av 21, där 21 är antalet regioner som har ett värde det året. Riket räknas inte med och lika värden får samma plats. Riktningen avgör ordningen: för vissa indikatorer är ett högt värde bäst, för andra ett lågt. Beskrivande mått rangordnas inte. När regionerna ligger tätt kan små skillnader i värde ge stora skillnader i placering.",
-    "se_aven": ["topp-3", "rikssnitt", "beskrivande-matt"],
+    "se_aven": [
+      "topp-3",
+      "rikssnitt",
+      "beskrivande-matt"
+    ],
     "kategori": "rapport",
     "granskad": false
   },
   {
     "id": "rikssnitt",
     "term": "Rikssnitt",
-    "former": ["rikssnittet", "rikssnittets", "riksgenomsnitt", "riksgenomsnittet"],
+    "former": [
+      "rikssnittet",
+      "rikssnittets",
+      "riksgenomsnitt",
+      "riksgenomsnittet"
+    ],
     "kort": "Värdet för Sverige som helhet för samma indikator och år, som Halland jämförs med. I diagrammen heter linjen Riket och är streckad.",
     "lang": "Rikssnittet hämtas ur Kolada tillsammans med regionernas värden. Det är en jämförelsepunkt och inte ett mål: rapportens mål för rankade indikatorer är topp 3. Att ligga bättre än rikssnittet och att ligga högt bland regionerna är därför inte samma sak.",
-    "se_aven": ["topp-3", "plats-bland-regionerna", "kolada"],
+    "se_aven": [
+      "topp-3",
+      "plats-bland-regionerna",
+      "kolada"
+    ],
     "kategori": "statistik",
     "granskad": false
   },
   {
     "id": "procentenhet",
     "term": "Procentenhet",
-    "former": ["procentenheter", "procentenheten", "procentenheterna"],
+    "former": [
+      "procentenheter",
+      "procentenheten",
+      "procentenheterna"
+    ],
     "kort": "Mått på skillnaden mellan två procenttal. Från 80 till 82 procent är en ökning med 2 procentenheter, men med 2,5 procent.",
     "lang": "Procentenheter används när två andelar jämförs, till exempel ett år med ett annat eller Halland med riket. Procent anger i stället en relativ förändring. Skillnaden blir stor vid låga nivåer: från 4 till 6 procent är 2 procentenheter men en ökning med 50 procent. I tabeller och diagram förkortas procentenheter p.e.",
     "kategori": "statistik",
@@ -92,17 +153,30 @@
   {
     "id": "median",
     "term": "Median",
-    "former": ["medianen", "medianer", "medianerna", "medianvärde", "medianvärdet"],
+    "former": [
+      "medianen",
+      "medianer",
+      "medianerna",
+      "medianvärde",
+      "medianvärdet"
+    ],
     "kort": "Mittersta värdet när alla värden ordnas efter storlek. Hälften av värdena ligger under och hälften över.",
     "lang": "Medianen påverkas inte av ett fåtal mycket stora eller mycket små värden, till skillnad från medelvärdet. Därför används den ofta för väntetider, där några få patienter kan vänta mycket länge. Medianen säger däremot inget om hur långa de längsta väntetiderna är.",
-    "se_aven": ["medianvantetid"],
+    "se_aven": [
+      "medianvantetid"
+    ],
     "kategori": "statistik",
     "granskad": false
   },
   {
     "id": "seriebrott",
     "term": "Seriebrott",
-    "former": ["seriebrottet", "seriebrotten", "brott i tidsserien", "brott i serien"],
+    "former": [
+      "seriebrottet",
+      "seriebrotten",
+      "brott i tidsserien",
+      "brott i serien"
+    ],
     "kort": "Ändring i hur ett mått räknas, mäts eller rapporteras, som gör att värden före och efter ändringen inte är helt jämförbara.",
     "lang": "Seriebrott uppstår till exempel när en källa byter mätmetod, när en definition ändras eller när en region byter journalsystem. I diagrammen markeras brottet med ett kort streck på tidsaxeln och texten ny metod, och noten under figuren förklarar vad som har ändrats. Jämför värden över ett seriebrott med försiktighet, eftersom förändringen kan bero på mätningen och inte på vården.",
     "kategori": "statistik",
@@ -111,118 +185,225 @@
   {
     "id": "aggregat-och-enheter",
     "term": "Aggregat och enheter",
-    "former": ["aggregat", "aggregatet", "aggregaten"],
+    "former": [
+      "aggregat",
+      "aggregatet",
+      "aggregaten"
+    ],
     "kort": "Förhållandet mellan en helhet, som Region Halland, och delarna den består av, som sjukhus eller avdelningar. Helheten kan visa ett annat mönster än delarna.",
     "lang": "För antal, som besök, är helheten summan av enheterna. För andelar och medelvärden, som beläggningsgrad, räknas helheten på hela underlaget och är inte ett snitt av enheternas värden. Varje enhet bedöms för sig, så ett sjukhus kan ha status Avvikelse medan regionen som helhet ligger i fas. Därför visas helheten aldrig som en panel bland enheterna, utan som referenslinje eller i undertiteln.",
-    "se_aven": ["forvantat-intervall", "belaggningsgrad"],
+    "se_aven": [
+      "forvantat-intervall",
+      "belaggningsgrad"
+    ],
     "kategori": "metod",
     "granskad": false
   },
   {
     "id": "vardgaranti",
     "term": "Vårdgaranti",
-    "former": ["vårdgarantin", "vårdgarantins", "vårdgarantier", "vårdgarantierna"],
+    "former": [
+      "vårdgarantin",
+      "vårdgarantins",
+      "vårdgarantier",
+      "vårdgarantierna"
+    ],
     "kort": "Lagstadgad rätt att få vård inom bestämda tidsgränser, både i primärvården och i den specialiserade vården.",
     "lang": "Gränserna är fyra. Den som söker ska få kontakt med primärvården samma dag och vid behov en medicinsk bedömning av legitimerad personal inom tre dagar. I den specialiserade vården ska första besöket ske inom 90 dagar och behandling eller operation inom 90 dagar efter beslut. Kan regionen inte hålla gränsen ska patienten erbjudas vård hos en annan vårdgivare utan extra kostnad. Regioner får ha kortare tidsgränser men inte längre.",
-    "kalla": { "namn": "Om vårdgarantin, SKR", "url": "https://extra.skr.se/vantetiderivarden/omvantetider/omvardgaranti.43558.html" },
-    "se_aven": ["tillganglighetsgaranti", "svf"],
+    "kalla": {
+      "namn": "Om vårdgarantin, SKR",
+      "url": "https://extra.skr.se/vantetiderivarden/omvantetider/omvardgaranti.43558.html"
+    },
+    "se_aven": [
+      "tillganglighetsgaranti",
+      "svf"
+    ],
     "kategori": "vard",
     "granskad": false
   },
   {
     "id": "tillganglighetsgaranti",
     "term": "Tillgänglighetsgaranti",
-    "former": ["tillgänglighetsgarantin", "tillgänglighetsgarantins"],
+    "former": [
+      "tillgänglighetsgarantin",
+      "tillgänglighetsgarantins"
+    ],
     "kort": "Den del av vårdgarantin som ger rätt att få kontakt med primärvården samma dag som man söker.",
     "lang": "Garantin gäller att komma i kontakt, inte vad kontakten leder till. Sedan den 1 juli 2022 gäller den hos den utförare där personen är listad. Rapporten följer den med andelen telefonsamtal till primärvården som besvaras samma dag. Från 2024 mäts telefontillgängligheten på ett nytt sätt, vilket ger ett seriebrott i tidsserien.",
-    "kalla": { "namn": "Om vårdgarantin, SKR", "url": "https://extra.skr.se/vantetiderivarden/omvantetider/omvardgaranti.43558.html" },
-    "se_aven": ["vardgaranti", "seriebrott"],
+    "kalla": {
+      "namn": "Om vårdgarantin, SKR",
+      "url": "https://extra.skr.se/vantetiderivarden/omvantetider/omvardgaranti.43558.html"
+    },
+    "se_aven": [
+      "vardgaranti",
+      "seriebrott"
+    ],
     "kategori": "vard",
     "granskad": false
   },
   {
     "id": "svf",
     "term": "Standardiserat vårdförlopp (SVF)",
-    "former": ["standardiserat vårdförlopp", "standardiserade vårdförlopp", "standardiserade vårdförloppet", "standardiserade vårdförloppen", "SVF"],
+    "former": [
+      "standardiserat vårdförlopp",
+      "standardiserade vårdförlopp",
+      "standardiserade vårdförloppet",
+      "standardiserade vårdförloppen",
+      "SVF"
+    ],
     "kort": "Nationellt arbetssätt i cancervården med bestämda utredningar och längsta tider från välgrundad misstanke om cancer till start av behandling.",
     "lang": "Varje cancerdiagnos har ett eget förlopp. Det anger vad som räknas som välgrundad misstanke, vilka utredningar som ska göras och hur lång tid de får ta. Tiden mäts på samma sätt i hela landet. Rapporten följer två mått. Det ena är hur stor del av de nya cancerfallen som utreds i ett förlopp, där målet är 70 procent. Det andra är hur stor del som får behandling inom förloppets ledtid, där målet är 80 procent.",
-    "kalla": { "namn": "Standardiserade vårdförlopp, Regionala cancercentrum i samverkan", "url": "https://cancercentrum.se/samverkan/vara-uppdrag/kunskapsstyrning/vardforlopp/" },
-    "se_aven": ["vardgaranti", "kvalitetsregister"],
+    "kalla": {
+      "namn": "Standardiserade vårdförlopp, Regionala cancercentrum i samverkan",
+      "url": "https://cancercentrum.se/samverkan/vara-uppdrag/kunskapsstyrning/vardforlopp/"
+    },
+    "se_aven": [
+      "vardgaranti",
+      "kvalitetsregister"
+    ],
     "kategori": "vard",
     "granskad": false
   },
   {
     "id": "drg",
     "term": "DRG",
-    "former": ["DRG-poäng", "DRG-poängen", "diagnosrelaterade grupper", "diagnosrelaterad grupp"],
+    "former": [
+      "DRG-poäng",
+      "DRG-poängen",
+      "diagnosrelaterade grupper",
+      "diagnosrelaterad grupp"
+    ],
     "kort": "Indelning av vårdkontakter i grupper efter diagnos och resursåtgång, där medicinskt likartade och ungefär lika kostsamma kontakter hamnar i samma grupp.",
     "lang": "DRG står för diagnosrelaterade grupper. Varje grupp har en vikt som speglar den genomsnittliga resursåtgången, och vikterna summeras till DRG-poäng. Genom att räkna vårdens produktion i DRG-poäng går det att jämföra produktiviteten trots att regionerna har olika patienter. Kostnad per DRG-poäng är ett sådant mått, där en lägre kostnad betyder högre produktivitet. I Sverige används NordDRG, som Socialstyrelsen förvaltar.",
-    "kalla": { "namn": "Diagnosrelaterade grupper (DRG), Socialstyrelsen", "url": "https://www.socialstyrelsen.se/statistik-och-data/klassifikationer-och-koder/drg/" },
-    "se_aven": ["kpp"],
+    "kalla": {
+      "namn": "Diagnosrelaterade grupper (DRG), Socialstyrelsen",
+      "url": "https://www.socialstyrelsen.se/statistik-och-data/klassifikationer-och-koder/drg/"
+    },
+    "se_aven": [
+      "kpp"
+    ],
     "kategori": "ekonomi",
     "granskad": false
   },
   {
     "id": "kpp",
     "term": "KPP",
-    "former": ["kostnad per patient", "KPP-databasen", "KPP-databaserna"],
+    "former": [
+      "kostnad per patient",
+      "KPP-databasen",
+      "KPP-databaserna"
+    ],
     "kort": "Metod där regionen räknar fram kostnaden för varje enskild vårdkontakt i den egna verksamheten. Förkortningen står för kostnad per patient.",
     "lang": "KPP visar vad en viss vårdkontakt eller patientgrupp kostar, i stället för vad en klinik kostar som helhet. Kostnaderna kopplas till DRG, så att produktiviteten kan jämföras mellan regioner trots olika patientsammansättning. SKR samlar in regionernas KPP-databaser en gång per år. Måtten avser den vård som regionerna har beräknat med KPP och skickat in.",
-    "kalla": { "namn": "Kostnad per patient (KPP), SKR", "url": "https://skr.se/halsaochsjukvard/ekonomiochavgiftersjukvard/kostnadperpatientkpp.7873.html" },
-    "se_aven": ["drg"],
+    "kalla": {
+      "namn": "Kostnad per patient (KPP), SKR",
+      "url": "https://skr.se/halsaochsjukvard/ekonomiochavgiftersjukvard/kostnadperpatientkpp.7873.html"
+    },
+    "se_aven": [
+      "drg"
+    ],
     "kategori": "ekonomi",
     "granskad": false
   },
   {
     "id": "strukturjusterad-kostnad",
     "term": "Strukturjusterad kostnad",
-    "former": ["strukturjusterade kostnaden", "strukturjusterad nettokostnad", "strukturjusterade nettokostnaden", "strukturjusterad", "strukturjusterade", "strukturjusterat"],
+    "former": [
+      "strukturjusterade kostnaden",
+      "strukturjusterad nettokostnad",
+      "strukturjusterade nettokostnaden",
+      "strukturjusterad",
+      "strukturjusterade",
+      "strukturjusterat"
+    ],
     "kort": "Regionens nettokostnad för hälso- och sjukvård per invånare, justerad för förhållanden som regionen inte kan påverka, så att kostnadsnivån går att jämföra.",
     "lang": "Justeringen bygger på standardkostnaden i kostnadsutjämningens hälso- och sjukvårdsmodell, som väger in vårdbehov, vård och bemanning i glesbygd samt lönekostnader. En region med större vårdbehov väntas kosta mer, och måttet visar om kostnaden är hög eller låg givet de förutsättningarna. Privat vård och vård i andra regioner ingår. Utjämningssystemet har ändrats, vilket bryter jämförbarheten mellan 2013 och 2014 samt mellan 2018 och 2019.",
-    "kalla": { "namn": "Kolada, nyckeltal U70020 (SCB och SKR)", "url": "https://www.kolada.se/verktyg/fri-sokning/?kpis=U70020" },
-    "se_aven": ["behovsjusterad-jamforelse", "seriebrott"],
+    "kalla": {
+      "namn": "Kolada, nyckeltal U70020 (SCB och SKR)",
+      "url": "https://www.kolada.se/verktyg/fri-sokning/?kpis=U70020"
+    },
+    "se_aven": [
+      "behovsjusterad-jamforelse",
+      "seriebrott"
+    ],
     "kategori": "ekonomi",
     "granskad": false
   },
   {
     "id": "behovsjusterad-jamforelse",
     "term": "Behovsjusterad jämförelse",
-    "former": ["behovsjusterade jämförelsen", "behovsjusterade jämförelser", "behovsjusterad", "behovsjusterade", "behovsjusterat", "behovsjustering", "behovsjusteringen"],
+    "former": [
+      "behovsjusterade jämförelsen",
+      "behovsjusterade jämförelser",
+      "behovsjusterad",
+      "behovsjusterade",
+      "behovsjusterat",
+      "behovsjustering",
+      "behovsjusteringen"
+    ],
     "kort": "Jämförelse där värdena först justeras för skillnader i befolkningens vårdbehov, så att regioner med olika förutsättningar kan jämföras rättvisare.",
     "lang": "Utan justering kan en region se dyr eller sjuk ut bara för att befolkningen är äldre eller bor glest. Rapporten använder två sätt. Strukturjusterad kostnad räknar om kostnadsnivån med kostnadsutjämningens modell. Åldersstandardisering räknar om sjukdomsförekomst och dödlighet till en gemensam åldersfördelning. Justeringen tar bort kända skillnader i förutsättningar, men inte alla.",
-    "se_aven": ["strukturjusterad-kostnad", "aldersstandardisering"],
+    "se_aven": [
+      "strukturjusterad-kostnad",
+      "aldersstandardisering"
+    ],
     "kategori": "metod",
     "granskad": false
   },
   {
     "id": "belaggningsgrad",
     "term": "Beläggningsgrad",
-    "former": ["beläggningsgraden", "beläggningsgrader", "beläggning", "beläggningen"],
+    "former": [
+      "beläggningsgraden",
+      "beläggningsgrader",
+      "beläggning",
+      "beläggningen"
+    ],
     "kort": "Andel av de disponibla vårdplatserna som är belagda med patienter, i procent. Över 100 procent betyder fler inskrivna patienter än platser.",
     "lang": "En disponibel vårdplats är en plats i sluten vård med den utformning, utrustning och bemanning som säkerställer patientsäkerhet och arbetsmiljö. Hög beläggning ger liten marginal för nya patienter och ökar risken för överbeläggningar och utlokaliserade patienter. När platser stängs minskar antalet disponibla platser, så beläggningsgraden kan stiga utan att antalet patienter har ökat.",
-    "kalla": { "namn": "Disponibel vårdplats, Socialstyrelsens termbank", "url": "https://termbank.socialstyrelsen.se/" },
-    "se_aven": ["aggregat-och-enheter", "forvantat-intervall"],
+    "kalla": {
+      "namn": "Disponibel vårdplats, Socialstyrelsens termbank",
+      "url": "https://termbank.socialstyrelsen.se/"
+    },
+    "se_aven": [
+      "aggregat-och-enheter",
+      "forvantat-intervall"
+    ],
     "kategori": "vard",
     "granskad": false
   },
   {
     "id": "medianvantetid",
     "term": "Medianväntetid",
-    "former": ["medianväntetiden", "medianväntetider", "medianväntetiderna"],
+    "former": [
+      "medianväntetiden",
+      "medianväntetider",
+      "medianväntetiderna"
+    ],
     "kort": "Väntetid som delar patienterna i två lika stora grupper: hälften väntade kortare tid och hälften längre.",
     "lang": "Medianväntetiden används i stället för den genomsnittliga väntetiden eftersom några få patienter med mycket lång väntan annars drar upp talet. Den beskriver hur länge en vanlig patient väntar, men säger inget om hur länge de som väntade längst fick vänta. I akutflödet redovisas den i minuter.",
-    "se_aven": ["median"],
+    "se_aven": [
+      "median"
+    ],
     "kategori": "vard",
     "granskad": false
   },
   {
     "id": "kolada",
     "term": "Kolada",
-    "former": ["Koladas"],
+    "former": [
+      "Koladas"
+    ],
     "kort": "Öppen databas med nyckeltal för kommuner och regioner, som rapporten hämtar sina SKR-indikatorer ur.",
     "lang": "Kolada drivs av Rådet för främjande av kommunala analyser (RKA), en ideell förening som bildats av staten och SKR. Kolada lagrar och tillgängliggör siffrorna men tar inte fram dem: de kommer från kvalitetsregister, hälsodataregister, enkäter och regionernas egen rapportering, oftast via Vården i siffror. Rapporten hämtar indikatorerna maskinellt ur den grupp av nyckeltal som SKR publicerar för Hälso- och sjukvårdsrapporten.",
-    "kalla": { "namn": "Kolada", "url": "https://www.kolada.se/" },
-    "se_aven": ["varden-i-siffror", "kvalitetsregister"],
+    "kalla": {
+      "namn": "Kolada",
+      "url": "https://www.kolada.se/"
+    },
+    "se_aven": [
+      "varden-i-siffror",
+      "kvalitetsregister"
+    ],
     "kategori": "statistik",
     "granskad": false
   },
@@ -232,40 +413,77 @@
     "former": [],
     "kort": "Webbplats där regionerna och SKR samlar och publicerar jämförbara indikatorer om hälso- och sjukvårdens kvalitet och effektivitet.",
     "lang": "Plattformen hämtar uppgifter från nationella kvalitetsregister, Socialstyrelsens hälsodataregister och regionala databaser och publicerar dem på ett enhetligt sätt. Vissa indikatorer uppdateras varje månad eller kvartal, andra en gång per år. De flesta av rapportens SKR-indikatorer går vägen från plattformen via Kolada till rapporten.",
-    "kalla": { "namn": "Vården i siffror", "url": "https://vardenisiffror.se/" },
-    "se_aven": ["kolada", "kvalitetsregister"],
+    "kalla": {
+      "namn": "Vården i siffror",
+      "url": "https://vardenisiffror.se/"
+    },
+    "se_aven": [
+      "kolada",
+      "kvalitetsregister"
+    ],
     "kategori": "statistik",
     "granskad": false
   },
   {
     "id": "kvalitetsregister",
     "term": "Nationellt kvalitetsregister",
-    "former": ["nationella kvalitetsregister", "nationella kvalitetsregistren", "nationella kvalitetsregistret", "kvalitetsregister", "kvalitetsregistret", "kvalitetsregistren", "kvalitetsregistrets"],
+    "former": [
+      "nationella kvalitetsregister",
+      "nationella kvalitetsregistren",
+      "nationella kvalitetsregistret",
+      "kvalitetsregister",
+      "kvalitetsregistret",
+      "kvalitetsregistren",
+      "kvalitetsregistrets"
+    ],
     "kort": "Samling av uppgifter om enskilda patienters diagnos, behandling och resultat, som vårdgivare i hela landet rapporterar in för att utveckla och säkra vårdens kvalitet.",
     "lang": "Exempel är Riksstroke, SWEDEHEART och Nationella diabetesregistret. Registren bygger på att vårdenheterna själva registrerar, och patienten kan motsätta sig att vara med. Därför är täckningsgraden en del av resultatet. En region som registrerar färre patienter kan se både bättre och sämre ut än den är, beroende på vilka som faller bort. Registren regleras i patientdatalagen.",
-    "kalla": { "namn": "Patientdatalagen (2008:355), 7 kap. 1 §", "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/patientdatalag-2008355_sfs-2008-355/" },
-    "se_aven": ["varden-i-siffror", "kolada"],
+    "kalla": {
+      "namn": "Patientdatalagen (2008:355), 7 kap. 1 §",
+      "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/patientdatalag-2008355_sfs-2008-355/"
+    },
+    "se_aven": [
+      "varden-i-siffror",
+      "kolada"
+    ],
     "kategori": "statistik",
     "granskad": false
   },
   {
     "id": "beskrivande-matt",
     "term": "Beskrivande mått",
-    "former": ["beskrivande måttet", "beskrivande måtten"],
+    "former": [
+      "beskrivande måttet",
+      "beskrivande måtten"
+    ],
     "kort": "Indikator utan målriktning, där ett högre eller lägre värde inte i sig är bättre. Den får varken status eller placering.",
     "lang": "Hit hör volym- och strukturmått som antal vårdtillfällen och antal disponibla vårdplatser. Fler vårdplatser är inte självklart bättre och färre vårdtillfällen är inte självklart sämre. Måtten redovisas som underlag för att tolka de indikatorer som har en riktning. Där andra indikatorer visar sin plats bland regionerna står det beskrivande mått.",
-    "se_aven": ["plats-bland-regionerna", "topp-3"],
+    "se_aven": [
+      "plats-bland-regionerna",
+      "topp-3"
+    ],
     "kategori": "rapport",
     "granskad": false
   },
   {
     "id": "aldersstandardisering",
     "term": "Åldersstandardisering",
-    "former": ["åldersstandardiseringen", "åldersstandardiserad", "åldersstandardiserade", "åldersstandardiserat", "åldersstandardiseras"],
+    "former": [
+      "åldersstandardiseringen",
+      "åldersstandardiserad",
+      "åldersstandardiserade",
+      "åldersstandardiserat",
+      "åldersstandardiseras"
+    ],
     "kort": "Omräkning av till exempel sjuklighet eller dödlighet till en gemensam åldersfördelning, så att regioner med olika åldersstruktur kan jämföras.",
     "lang": "Utan standardisering skulle en region med äldre befolkning nästan alltid få fler sjukdomsfall och dödsfall per invånare, bara på grund av åldern. Efter standardiseringen visar talen hur regionerna skulle stå sig om alla hade samma åldersfördelning. Talen är därför jämförelsetal och inte det faktiska antalet fall i regionen.",
-    "kalla": { "namn": "Statistik om hälso- och sjukvård, Socialstyrelsen", "url": "https://www.socialstyrelsen.se/statistik-och-data/statistik/" },
-    "se_aven": ["behovsjusterad-jamforelse"],
+    "kalla": {
+      "namn": "Statistik om hälso- och sjukvård, Socialstyrelsen",
+      "url": "https://www.socialstyrelsen.se/statistik-och-data/statistik/"
+    },
+    "se_aven": [
+      "behovsjusterad-jamforelse"
+    ],
     "kategori": "metod",
     "granskad": false
   }
