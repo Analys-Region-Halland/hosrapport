@@ -1,7 +1,8 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
+import { temaCssPlugin } from "./src/design/tema-css";
 
 // Repo-rotens data/-mapp är ENDA kanoniska källan för hos-data.json.
 // Tidigare fanns en manuellt kopierad dubblett i app/src/data/ — den är borttagen.
@@ -25,7 +26,8 @@ export default defineConfig(({ command }) => ({
   define: {
     __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
   },
-  plugins: [react(), tailwindcss()],
+  // temaCssPlugin exponerar virtual:tema.css (CSS-variablerna ur design/tema.ts).
+  plugins: [react(), temaCssPlugin()],
   resolve: {
     alias: {
       "@data": dataDir,
@@ -34,5 +36,10 @@ export default defineConfig(({ command }) => ({
   server: {
     // Tillåt dev-servern att läsa JSON från repo-roten (utanför app/)
     fs: { allow: [repoRoot] },
+  },
+  // Enhetstester (npm run check). Rena funktioner, ingen DOM.
+  test: {
+    environment: "node",
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 }));

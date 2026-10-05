@@ -15,6 +15,9 @@
 
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+// Samma stilordning som main.tsx: reset och självhostade typsnitt, tema, gamla vyn.
+import "../src/styles/index.css";
+import "virtual:tema.css";
 import "../src/index.css";
 import FacetedChart from "../src/components/FacetedChart";
 import type { KpiData } from "../src/types";

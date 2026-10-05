@@ -31,8 +31,8 @@ Det nya byggs bredvid det gamla och slås på med en flagga tills bytet.
 | Flagga | `App.tsx` renderar den nya appen när adressen har `?ny` (`location.search`), annars den gamla. WP0 lägger in flaggan, WP6 äger den nya grenen. |
 | Byte | När WP9 och WP11 är godkända blir den nya appen standard och `?gammal` visar den gamla. |
 | Radering | WP12b raderar den gamla appen, flaggan, v1-kontraktet och frysta filer. |
-| CSS | Gamla `index.css` importeras i `@layer legacy` (lägst prioritet) så att nya lager alltid vinner. Tailwinds preflight ersätts av `styles/reset.css` med samma regler, så att gamla vyn är pixelidentisk. |
-| Typsnitt | Självhostade via `@fontsource-variable/source-serif-4` och `@fontsource/ibm-plex-sans` (400, 600). Plex Mono och Lexend Deca självhostas också tills WP12b eftersom gamla vyn använder dem. Google Fonts-länken i `App.tsx` tas bort. |
+| CSS | Gamla `index.css` importeras i `@layer legacy` (under alla nya lager) så att nya lager alltid vinner. Tailwinds preflight ersätts av `styles/reset.css` med samma regler, så att gamla vyn är pixelidentisk. |
+| Typsnitt | Självhostade via `@fontsource-variable/source-serif-4` och `@fontsource/ibm-plex-sans` (400, 600). Plex Mono och Lexend Deca självhostas också tills WP12b eftersom gamla vyn använder dem. Google Fonts-länken i `App.tsx` tas bort. Avvikelse (WP0): Plex Sans och Lexend Deca kommer från `@fontsource-variable/*`, som är samma filer som Google Fonts serverade; de statiska paketen gav upp till 1,7 % avvikande pixlar i banken. |
 
 ---
 
@@ -344,7 +344,7 @@ Validering: `R/gemensam/kontrakt.R` (R-sidan, båda versionerna), `schema/hos-da
 
 ```css
 /* styles/index.css (importeras först i main.tsx) */
-@layer legacy, reset, tema, bas, layout, komponent, utskrift;
+@layer reset, legacy, tema, bas, layout, komponent, utskrift;
 @import "./reset.css" layer(reset);
 @import "./typsnitt.css";
 @import "./bas.css" layer(bas);
@@ -352,6 +352,7 @@ Validering: `R/gemensam/kontrakt.R` (R-sidan, båda versionerna), `schema/hos-da
 @import "./utskrift.css" layer(utskrift);
 ```
 
+- Avvikelse (WP0): `reset` ligger under `legacy`, som preflight låg under gamla `index.css`; ovanför skulle återställningen vinna över gamla vyns regler.
 - `main.tsx` importerar i ordning: `styles/index.css`, `virtual:tema.css` (genereras av vite-pluginet i `design/tema-css.ts`; innehållet är redan inslaget i `@layer tema { :root { … } }`), gamla `index.css`.
 - Gamla `index.css`: raden `@import "tailwindcss";` tas bort och resten av filen slås in i `@layer legacy { … }`. Det är den enda ändring WP0 gör i den frysta filen. Fungerar `@import … layer()` i Vite 8 utan omskrivning får WP0 välja den vägen i stället; kontrollera i byggd CSS att lagerordningen blev rätt.
 

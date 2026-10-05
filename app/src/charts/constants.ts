@@ -1,6 +1,6 @@
 // Signalpalett: trafikljus (grön/gul/röd). Datanycklarna heter gron/gul/rod
 // (semantiska, från R). Färg är ALDRIG enda informationsbäraren: kombineras
-// alltid med form (SIGNAL_SHAPES) och textetikett (SIGNAL_LABELS), så att även
+// alltid med form och textetikett (SIGNAL_LABELS), så att även
 // röd-grön färgblindhet kan särskilja status. Dämpade toner för rapportkänsla.
 export const SIGNAL_COLORS: Record<string, string> = {
   gron: "#2E7D52", // I fas
@@ -22,13 +22,6 @@ export const SIGNAL_TEXT: Record<string, string> = {
   gron: "#1F6A43",
   gul:  "#8A5E12",
   rod:  "#9A2E22",
-};
-
-// Formredundans — för datapunkter (d3.symbol)
-export const SIGNAL_SHAPES: Record<string, "circle" | "triangle" | "diamond"> = {
-  gron: "circle",
-  gul: "triangle",
-  rod: "diamond",
 };
 
 export const SIGNAL_LABELS: Record<string, string> = {
@@ -63,7 +56,3 @@ export function signalColor(sig?: string): string {
 export const FONT = "'IBM Plex Sans', system-ui, sans-serif";
 export const FONT_MONO = "'IBM Plex Mono', monospace";
 export const FONT_TITEL = "'Source Serif 4', Georgia, serif";
-
-export const DEPT_COLORS = [
-  "#2DB8F6", "#6473D9", "#FF5F4A", "#FFD939", "#895B42", "#00AB60",
-];

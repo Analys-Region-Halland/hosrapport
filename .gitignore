@@ -34,3 +34,6 @@ _tmp_*
 
 # Utdata från PowerPoint-röktestet (npm run test:pptx)
 app/.pptx-smoke/
+
+# Skärmdumpsbänken (npm run bank): baslinje, senaste, diff och rapport
+app/verktyg/bank/

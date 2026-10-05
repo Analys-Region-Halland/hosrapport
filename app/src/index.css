@@ -1,4 +1,6 @@
-@import "tailwindcss";
+/* Gamla vyns stilar, inslagna i @layer legacy av WP0 (se docs/arkitektur.md avsnitt 6).
+   Tailwinds preflight har ersatts av styles/reset.css. Filen raderas i WP12b. */
+@layer legacy {
 
 /* ── Reset ── */
 *, *::before, *::after {
@@ -87,26 +89,6 @@
   color: #c4c4be;
   cursor: not-allowed;
   background: transparent;
-}
-
-/* ════════════════════════════════════════════
-   KPI-grid (ersätter sköra substring-selektorer)
-   ════════════════════════════════════════════ */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-3);
-  align-items: start;
-}
-.kpi-grid--report { grid-template-columns: repeat(3, 1fr); }
-.kpi-grid--report[data-count="2"] { grid-template-columns: repeat(2, 1fr); }
-.kpi-grid--report[data-count="1"] { grid-template-columns: 1fr; }
-
-@media (max-width: 900px) {
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 560px) {
-  .kpi-grid, .kpi-grid--report { grid-template-columns: 1fr; }
 }
 
 /* ════════════════════════════════════════════
@@ -1076,10 +1058,6 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
   box-shadow: inset 2px 0 0 #d9e7e1;
 }
 
-/* Indikator-board: radhover */
-.board-row { transition: background .12s; }
-.board-row:hover { background: #f6f7f6; }
-
 /* "+ Skriv här" — diskret rad som framträder vid hover/fokus */
 .report-insert {
   display: flex;
@@ -1295,4 +1273,4 @@ a.fakta-kalla:hover { color: var(--brand-700); text-decoration: underline; }
   .sig-row { break-inside: avoid; }
   .sig__chip { opacity: 1 !important; }
 }
-
+}
