@@ -165,7 +165,7 @@ export function temaForKapitel(kapitelId: string): KategoriDef | undefined {
 
 /** Områdesdefinition för ett id, eller undefined. */
 export function kapitelInfo(kapitelId: string): OmradeDef | undefined {
-  for (const k of TAXONOMI) {
+  for (const k of TEMAN) {
     const o = k.omraden.find((o) => o.id === kapitelId);
     if (o) return o;
   }
