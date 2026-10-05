@@ -72,9 +72,12 @@ function ArkYta({ onStang, etikett, children, ankare, id }: ArkProps) {
       if (!arOverst(stangMedEscape)) return;
       stang(false);
       if (!(mal instanceof Element && mal.closest(FOKUSERBAR))) {
-        window.addEventListener("click", () => {
+        // Fokus återgår efter klicket, om klicket inte gav något annat element fokus.
+        const efterKlick = () => {
           if (document.activeElement === document.body) aterstall();
-        }, { once: true, capture: true });
+        };
+        window.addEventListener("click", efterKlick, { once: true, capture: true });
+        setTimeout(() => window.removeEventListener("click", efterKlick, true), 1000);
       }
     };
     document.addEventListener("pointerdown", vidPekare, true);
