@@ -60,6 +60,8 @@ export default function Ram({ kapitel = null, klar = true, sidnamn = "", childre
   }
 
   const spalt = disp !== null && bp === "desktop";
+  const kapitelVy = route.sida === "kapitel" ? route.vy : STANDARDVY;
+  const red = route.sida === "kapitel" && route.red === true;
   const ark = disp !== null && bp !== "desktop";
   const delar = disp ? positionsdelar(disp, aktivt) : [{ id: route.sida, text: sidnamn }];
 
@@ -75,11 +77,11 @@ export default function Ram({ kapitel = null, klar = true, sidnamn = "", childre
         />
       </Verktygsrad>
       <div className={s.sida}>
-        {spalt && kapitel && <Innehall kapitel={kapitel} aktivt={aktivt} variant="spalt" />}
+        {spalt && kapitel && <Innehall kapitel={kapitel} aktivt={aktivt} variant="spalt" vy={kapitelVy} red={red} />}
         <main id="innehall" className={s.innehall} tabIndex={-1}>{children}</main>
       </div>
       {ark && kapitel && (
-        <Innehall kapitel={kapitel} aktivt={aktivt} variant="ark" oppen={arkOppet} onStang={() => setArkOppet(false)} />
+        <Innehall kapitel={kapitel} aktivt={aktivt} variant="ark" oppen={arkOppet} onStang={() => setArkOppet(false)} vy={kapitelVy} red={red} />
       )}
     </div>
   );

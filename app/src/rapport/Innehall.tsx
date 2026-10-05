@@ -17,7 +17,6 @@ import type { KapitelModell, Status, VyId } from "../data/modell";
 import Lank from "../nav/Lank";
 import { arOverst, registreraLager } from "../nav/lager";
 import { STANDARDVY, type Route } from "../nav/route";
-import { useRoute } from "../nav/useRoute";
 import { byggDisposition, hittaPosition, type Disposition, type DispIndikator } from "./ramDisposition";
 import s from "./Innehall.module.css";
 
@@ -31,20 +30,20 @@ export interface InnehallProps {
   oppen?: boolean;
   /** Arket: stäng (Escape, stängknapp, klick utanför, val av länk). */
   onStang?(): void;
-  /** Vyn länkarna ska ha när adressen inte är kapitlets egen (t.ex. i stilguiden). */
+  /** Kapitlets vy; länkarna behåller den. Förval STANDARDVY. */
   vy?: VyId;
+  /** Redigeringsläget; länkarna behåller det. */
+  red?: boolean;
 }
 
 const STATUSORD: Record<Status, string> = { gron: "I fas", gul: "Bevaka", rod: "Avvikelse" };
 
-export default function Innehall({ kapitel, aktivt = "", variant = "spalt", oppen = false, onStang, vy }: InnehallProps): ReactNode {
-  const [route] = useRoute();
+export default function Innehall({ kapitel, aktivt = "", variant = "spalt", oppen = false, onStang, vy = STANDARDVY, red = false }: InnehallProps): ReactNode {
   const d = useMemo(() => byggDisposition(kapitel), [kapitel]);
-  // Länkarna behåller kapitlets vy och redigeringsläge; figurläget (v, e) hör till ett annat block.
-  const bas: Extract<Route, { sida: "kapitel" }> =
-    route.sida === "kapitel" && route.id === kapitel.id
-      ? { sida: "kapitel", id: kapitel.id, vy: route.vy, ...(route.red ? { red: true } : {}) }
-      : { sida: "kapitel", id: kapitel.id, vy: vy ?? STANDARDVY };
+  // Länkarna behåller kapitlets vy och redigeringsläge; figurläget (v, e) hör
+  // till ett annat block. Komponenten prenumererar inte på routern, så att den
+  // kan visas i den levande stilguiden utan att röra sidans adress.
+  const bas: Extract<Route, { sida: "kapitel" }> = { sida: "kapitel", id: kapitel.id, vy, ...(red ? { red: true } : {}) };
   const till = (i: string): Route => ({ ...bas, i });
 
   if (variant === "ark") {
