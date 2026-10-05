@@ -473,6 +473,7 @@ Målet är att hovring ska kännas lugn: linjen man pekar på ska fastna och ing
 | Stapel över tid | Period; värde, förändring mot föregående period och mot samma period året innan; stapeln under pekaren mörkas | – |
 | Små multiplar | Synkroniserad hjälplinje i alla paneler samtidigt; tooltip i panelen under pekaren med enhetens värde och överordnad nivå | Panel (klick på namnet borrar ned, 6.7) |
 | Rangordning | Rad under pekaren: namn och värde, plats av antal, skillnad mot riket | Region (klick på raden), samma fästa som i linjevyn |
+| Rangordning av enheter | Rad under pekaren: namn och värde, plats av antal, skillnad mot överordnad nivå | Klick på raden borrar ned till enheten (6.7) |
 | Minidiagram | Inget eget; raden i tabellen är länk till indikatorn | – |
 
 | Del | Spec |
