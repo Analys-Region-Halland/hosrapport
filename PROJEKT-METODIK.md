@@ -2,11 +2,11 @@
 
 ## Syfte
 
-Hälso- och sjukvårdens (HoS) analysrapport för Region Halland. En React-dashboard som visualiserar nyckeltal (KPI:er) med statistisk anomalidetektering (conformal prediction) i realtid. Verktyget ger beslutsfattare snabb överblick av läget och möjlighet att generera strukturerade rapporter.
+Hälso- och sjukvårdens (HoS) analysrapport för Region Halland: en webbrapport i fristående kapitel som visar läget indikator för indikator, med statistisk avvikelsedetektering (conformal prediction) för de interna måtten och placering bland regionerna för de öppna jämförelserna. Rapporten kan läsas på webben, skrivas ut och exporteras till PowerPoint.
 
 ## Projekttyp
 
-**Typ B: React/Vite-app** — R sköter datapipeline, React/TypeScript/D3 sköter frontend.
+**Typ B: React/Vite-app.** R sköter datapipelinen; React och TypeScript (d3 för skalor och linjer) sköter webbrapporten i `app/`.
 
 ## R-pipeline — Struktur och moduler
 
@@ -84,7 +84,7 @@ Alla filer som behöver KPI-metadata sourcar `register.R` — ingen duplicering.
 ## Datapipeline
 
 R-skripten i `R/` hämtar data, bearbetar, kör conformal prediction och exporterar till JSON.
-Frontend **lazy-laddar data per vy** (`app/src/data/load.ts`): ett manifest (`app/public/data/index.json` med vy-metadata + sektionslista) och en fil per `{vy}-{sektion}.json`. Endast den aktiva vyns sektioner hämtas (parallellt, cachat) — t.ex. Dag-vyn ≈ 68 KB i stället för 3 MB; tunga årsvyn laddas först vid klick. Datan bakas **inte** in i JS-bunten (~320 KB i stället för ~3,4 MB). Delningsgränsen är vald där UI:t faktiskt väntar med att ladda (vy-byte).
+Webbrapporten laddar data per vy (`app/src/data/laddning.ts`, som normaliserar och cachar): ett manifest (`app/public/data/index.json` med vymetadata och kapitellista) och en fil per `{vy}-{kapitel}.json`. Bara de kapitel som visas hämtas, och datan bakas inte in i JS-bunten. Fälten nedan är kontrakt v1, som appen läser via `app/src/data/kontrakt.ts` och `normalisera.ts` (docs/arkitektur.md 4.1 och 5).
 
 ### Tidsupplösningar (vyer)
 
@@ -150,75 +150,11 @@ Fältnamnen nedan är verifierade mot `data/hos-data.json` och `app/src/types.ts
 }
 ```
 
-## Frontend-arkitektur
-
-### Aggregerat / Dag toggle
-
-En toggle-switch **Aggregerat | Dag** finns på tre platser:
-
-1. **Dashboard** (App.tsx) — under vy-väljaren, visas bara för vecka/månad/kvartal/år
-2. **ChartModal** (popup-graf) — i toolbaren
-3. **ReportView** (rapport) — per indikator, ovanför FacetedChart
-
-Vid dag-toggle:
-- KPI-kort visar `kpi.dagar` istället för `kpi.tidsserie`
-- Underavdelningar byter också till `sub.dagar`
-- Graferna anpassas automatiskt (tunnare linjer, inga individuella punkter vid >30 datapunkter)
-
-### KPI-kort (KpiCard)
-
-Kortet har en fast struktur: signalband, titel, storsiffra, tre inforader och minigraf. Inforadernas innehåll varierar beroende på indikatortyp.
-
-**Gemensam struktur (alla varianter):**
-- **Signalband** (3px topp) — färg baserat på conformal signal
-- **Titel** med hover-tooltip (indikatorns definition)
-- **Hero-värde** (28px, bold mono)
-- **Tre inforader** — se varianter nedan
-- **MiniChart** (90px) — D3-graf med prediktionsband, adaptiv linjestyrka
-- **Ingen information under grafen**
-- **Avdelningar** — expanderbar grid, klick öppnar ChartModal
-
-#### Variant 1: Standard-KPI (dygnsdata)
-
-Indikatorer med dygnsdata och conformal prediction (beläggning, väntetid, akutbesök etc.).
-
-| Rad | Label | Innehåll |
-|-----|-------|----------|
-| 1 | Förväntat läge | yhat + 95%-intervall + signalchip |
-| 2 | Målläge | yhat + 80%-intervall + signalchip |
-| 3 | Förändring | vs samma period föregående år, färgkodad riktning |
-
-**Förväntat läge** är det statistiska måttet — modellens prediktion med konfidensintervall. Det behöver inte nödvändigtvis vara samma som målläge. Förväntat läge svarar på "vad förutspår modellen?", målläge svarar på "var vill vi vara?". I dagsläget härleds båda från conformal prediction (95%- resp 80%-bandet), men målläge kan framöver sättas till verksamhetens egna riktvärden oberoende av den statistiska modellen.
-
-#### Variant 2: Jämförelseindikatorer (Patientenkäten m.fl.)
-
-Årsindikatorer utan dygnsdata, med jämförelser mot andra regioner (`kontext_serier`). Visas bara i årsvyn.
-
-| Rad | Label | Innehåll |
-|-----|-------|----------|
-| 1 | Ranking | Plats X av Y, med signalchip |
-| 2 | Målläge | Signalchip (baserat på ranking: topp 3 = grön, 4–7 = gul, 8+ = röd) |
-| 3 | Förändring | vs föregående år, färgkodad riktning |
-
-Ranking beräknas i frontend från `kontext_serier` (alla andra regioner). MiniChart visar Hallands tidsserie med kontextlinjer (gråa, alla regioner) och rikssnitt (streckad).
-
-#### Variant 3: Dagvy (dag-toggle aktiv)
-
-Visas när användaren slår på dag-toggle i vecka/månad/kvartal/år.
-
-| Rad | Label | Innehåll |
-|-----|-------|----------|
-| 1 | Historiskt läge | X/Y i fas (dagar inom 80%-bandet) |
-| 2 | Målläge | X/Y dagar (dagar inom 95%-bandet, dvs ej avvikelse) |
-| 3 | Förändring | – (ej applicerbart) |
-
-Dag-vyn (standalone) visar referenslinje från föregående år (streckad grå) med y-domän som inkluderar referensvärden.
-
-### Särskilda årsindikatorer
+### Särskilda årsindikatorer (SKR-kapitlen)
 
 Vissa indikatorer har bara årsdata och saknar dygnsunderlag. Sedan 2026-06 är det **Koladas Hälso- och sjukvårdsrapport** (KPI-grupp `G2KPI138906`, 76 indikatorer) som utgör helårsdelen. **Sedan 2026-08-19 ÄR den rapporten:** dess sex kapitel är uppdelade i sex egna sektioner som ersatte de tidigare områdena (befolkning, folkhälsa, ekonomi → `R/arkiv/`). Dessa indikatorer:
 
-- Finns bara i **årsvyn** (`ar`), som **SEX sektioner** (ett kort var på
+- Finns bara i **årsvyn** (`ar`), som **SEX sektioner** (en kapitelrad var på
   startsidan): `skr-syn-pa-varden`, `skr-tillganglighet`, `skr-saker-vard`,
   `skr-kunskapsbaserad`, `skr-sjukdomsforekomst`, `skr-kostnader`. Akutflödet
   ligger sist i sektionsordningen som enda interna område.
@@ -226,10 +162,9 @@ Vissa indikatorer har bara årsdata och saknar dygnsunderlag. Sedan 2026-06 är 
   kapitel: stroke, hjärta, diabetes, cancer och så vidare), var och en med egen
   bedömning (`delar[].analys`).
 - Varje kapitel har dessutom tre redaktionella fält som kontraktet validerar:
-  - `inledning` — array av stycken. Byggs i `bearbeta.R` som
+  - `inledning`: array av stycken. Byggs i `bearbeta.R` som
     `SKR_RAM` + kapitlets egna stycken + `SKR_LASANVISNING` (de två gemensamma
-    ligger i `config.R`). Renderas som `.report-lead` **bara i den fristående
-    rapporten**; i helhetsvyn skulle sex inledningar upprepa samma ram.
+    ligger i `config.R`). Visas sist i kapitlet, under Om statistiken.
   - `kallor` — primärkällorna kapitlet vilar på, en post per källa med antal
     indikatorer, från `kallforteckning()` i `kallor.R`.
   - `leverans` — leveranskedjan (Vården i siffror, Kolada), samma form.
@@ -238,16 +173,13 @@ Vissa indikatorer har bara årsdata och saknar dygnsunderlag. Sedan 2026-06 är 
   därmed alltid att granska mot ursprungstexten. Tilldelningarna finns i
   `SKR_KPI_KALLA` (`R/teman/kolada/kallor.R`), där de som går utöver Koladas
   text är märkta `TOLKAD`.
-- Frontend renderar per kapitel: inledning → **en** signalöversikt på
-  kapitelnivå (räknare + bedömning + remsa grupperad per avsnitt,
-  `KapitelOversikt`) → avsnitt (`.del-plate` + bedömning + indikatorkort) →
-  källförteckning. Signalremsan bor på kapitelnivå och **inte** per avsnitt,
-  annars upprepas samma remsa fyra gånger i rad. TOC:n nästlas via
-  `delSektioner()` i `ReportView.tsx`; den stora heatmapen överst utelämnar
-  sektioner med delar.
+- Webbrapporten visar kapitlet enligt `docs/stilguide.md` 4.3: Det viktigaste,
+  Läget i korthet (översiktstabellen grupperad per avsnitt), avsnitten med sina
+  indikatorer och sist Om statistiken med inledningen, källorna och
+  leveranskedjan. Innehållsförteckningen följer avsnitten.
 - Indikatornamn förkortas för visning (enhets-/årssuffix trimmas i
   `kort_namn()`, manuella undantag i config `kortnamn`); fullständig
-  Kolada-titel + definition ligger i `beskrivning` (infoknappen)
+  Kolada-titel + definition ligger i `beskrivning` (fördjupningen under figuren)
 - Jämförarens grupperingsträd är **inte** åtkomligt via öppna API:t (403) —
   tilldelningen indikator → kapitel och avsnitt underhålls manuellt i
   `R/teman/kolada/config.R`; oklassade indikatorer hamnar i ett automatiskt
@@ -264,136 +196,24 @@ Vissa indikatorer har bara årsdata och saknar dygnsunderlag. Sedan 2026-06 är 
 - Datakälla: `data/kolada-hos.rds`, hämtas med `R/hamta/kolada-hos.R`
   (rKolada 0.3.1 mot Kolada API v3 — v2-API:t är nedstängt)
 
-### PowerPoint-export
+## Webbrapporten (frontend)
 
-Knappen i rapportens verktygsfält laddar ner det som visas som en `.pptx`:
-titelbild, kapitelöversikt (räknare + bedömning), ett blad per avsnitt med
-indikatortabell, en bild per indikator (utfall, placering, bedömning, graf) och
-en källförteckning. Egna anteckningar från localStorage följer med.
+Webbrapporten i `app/` är omgjord 2026 (omtaget, arbetspaketen WP0 till WP12b). Hur koden hänger ihop (moduler, typer, adresser, verktyg och arbetspaket) står i `docs/arkitektur.md`. Hur rapporten ska se ut och skrivas (färger, typografi, sidmallar, komponenter, diagram och tillgänglighet) står i `docs/stilguide.md`; den levande stilguiden `app/verktyg/stilguide.html` visar allt ur koden.
 
-- Kod: `app/src/utils/pptx.ts`, byggd på `pptxgenjs`. Modulen **dynamiskt
-  importeras** vid klick (`await import(...)`) så att de ~375 KB hamnar i en
-  egen chunk i stället för i huvudbunten.
-- **Nativa PowerPoint-diagram, inte skärmbilder.** Ett underlag som klistras in
-  i andras presentationer måste gå att redigera och skala om. Priset är att de
-  tjugo gråa kontextlinjerna utelämnas (tjugotre serier i en legend blir
-  oläsligt); i stället ritas gränsen till topp 3 som en egen serie, så att
-  målet syns. Hela regionfältet finns kvar i webbrapporten, och sidfoten säger
-  det.
-- Röktest: `npm run test:pptx` bygger ett deck per kapitel ur den exporterade
-  JSON:en och failar om något kapitel inte går igenom. Körs med `jiti` (läser
-  TypeScript direkt); `localStorage` saknas i Node men fångas av try/catch i
-  `stores/blocks.ts`. Utdata i `app/.pptx-smoke/` (gitignorerad).
+| Del | Var | Vad |
+|---|---|---|
+| Startsida | `app/src/start/` | Läget just nu och kapitlen per tema, med statusmätare och länk till kapitlet |
+| Kapitel | `app/src/rapport/KapitelSida.tsx` | Masthead, Det viktigaste, Läget i korthet, avsnitt med indikatorer, Om statistiken |
+| Indikator | `app/src/rapport/Indikator.tsx` | Rubrikrad med status, nyckeltalsrad, AI-analys, figur, fördjupning och verksamhetens kommentar |
+| Sammanfattning | `app/src/rapport/Sammanfattning.tsx` | Det viktigaste över alla kapitel och kapitel för kapitel |
+| Textsidor | `app/src/begrepp/BegreppSida.tsx`, `rapport/SaLaserDu.tsx`, `rapport/OmRapporten.tsx` | Begrepp, Så läser du rapporten, Om rapporten |
+| Ram | `app/src/rapport/Ram.tsx` med flera | Verktygsrad med positionsrad och Exportera, innehållsförteckning |
+| Grafer | `app/src/charts/`, `app/src/figur/` | `kpiTillSpec` gör en `ChartSpec` av en indikator, en renderare per graftyp (linje, rangordning, stapel, små multiplar, minidiagram) ritar den och `Figur` ger titel, flikar, jämförelse, noter, källa, tabell, nedladdning och förstoring |
+| Adresser | `app/src/nav/` | Varje kapitel, indikator och begrepp har en adress (`#/kapitel/{id}?vy=…&i=…`); gamla `#rapport-{x}` skrivs om |
+| PowerPoint | `app/src/export/` | Kapitlet eller hela rapporten med nativa diagram ur samma `ChartSpec` och tema som webben; laddas vid klick i Exportera |
+| Design | `app/src/design/tema.ts`, `app/src/styles/` | Alla färger, typsnitt och mått som tokens; CSS-variablerna genereras därifrån |
 
-### Grafarkitektur — charts/
-
-All D3-ritlogik ligger i `app/src/charts/` som rena funktioner utan React-beroende. Komponenterna i `components/` är tunna wrappers (ResizeObserver + ref → anropa chart-funktion → returnera cleanup).
-
-```
-app/src/charts/
-├── types.ts          # Pt, BandPt, TidsserieSeries, TidsserieOpts, Margins
-├── constants.ts      # SIGNAL_COLORS, SIGNAL_LABELS, FONT, FONT_MONO, DEPT_COLORS
-├── tidsserie.ts      # tidsserie(container, series, opts) — gemensam D3-ritfunktion
-└── sparkline.ts      # computeSparkline(data, height) — ren geometri (ingen D3)
-```
-
-**tidsserie()** är den centrala ritfunktionen. Den ritar linje, prediktionsband (95%/80%), gridlines, kontextlinjer, riket-linje, referenslinje, crosshair + tooltip. Beteendet styrs via `TidsserieOpts`:
-
-| Flagga | Effekt | Används av |
-|--------|--------|------------|
-| `compact: true` | Mindre typsnitt, tunnare linjer, 3 y-ticks | MiniChart |
-| `showEndLabels: true` | Slutetiketter med anti-collision | ChartModal |
-| `showBrackets: true` | Bracket-stil på x-axeln | FacetedChart |
-| `showTitle: true` | Panelrubrik i SVG | FacetedChart (grid) |
-| `tooltipAccentBorder: true` | Tooltip med signalfärgad vänsterkant | MiniChart |
-| `denseThreshold: N` | Tröskel för adaptiv stil (tunna linjer, inga prickar) | Alla |
-
-**parseTidsserie()** och **parseSimpleSerie()** konverterar från `TidsseriePoint[]` till D3-redo `Pt[]`/`BandPt[]`.
-
-**computeSparkline()** returnerar ren geometri (polyline-sträng, polygon-strängar, punktkoordinater) utan DOM-åtkomst — React-komponenten hanterar rendering och hover.
-
-### Grafkomponenter (wrappers)
-
-| Komponent | Fil | Chart-funktion | Beskrivning |
-|-----------|-----|---------------|-------------|
-| **MiniChart** | `KpiCard.tsx` | `tidsserie()` | 90px inline-graf. `compact: true`, `denseThreshold: 60`. |
-| **ChartModal** | `ChartModal.tsx` | `tidsserie()` | Popup-graf. `showEndLabels: true`, `margins.r: 100`. |
-| **FacetedChart** | `FacetedChart.tsx` | `tidsserie()` | 2x2 grid. `showBrackets: true`, `showTitle: true` i grid-läge. |
-| **Sparkline** | `Sparkline.tsx` | `computeSparkline()` | SVG sparkline med React-hover/tooltip. |
-| **TufteStrip** | `TufteStrip.tsx` | (via Sparkline) | Grid med sparkline-paneler. |
-
-### ChartModal design
-
-- **Titel**: KPI-namn + avdelning om tillämpligt (t.ex. "Beläggningsgrad, Halmstad")
-- **Undertitel**: Vy + period + Region Halland
-- **Slutetiketter** vid linjeslut: "Faktiskt", "Förväntat", "Föreg. år" — med `resolveOverlap` anti-collision (iterativ relaxering, H→V→H connectors)
-- **Ingen text under grafen** — analystext och legend borttagna
-- **Hover**: crosshair + tooltip med faktiskt/förväntat per tidpunkt
-
-### FacetedChart design
-
-- **2x2 grid** med individuella y-axlar per panel
-- **Panelrubrik**: serienamn i färg (inget värde)
-- **Vy-etiketter** på x-axeln: använder `etikett`-fältet från data (V1, jan 21, Q1 21 etc.)
-- **Adaptiv**: inga individuella punkter vid >30 datapunkter, tunnare linje
-- **Aggregerat/Dag toggle** per indikator i rapporten
-
-### Vyer och rapporter
-
-| Komponent | Fil | Beskrivning |
-|-----------|-----|-------------|
-| **App** | `App.tsx` | Huvudvy med vy-väljare + Aggregerat/Dag toggle + stats-bar |
-| **Section** | `Section.tsx` | Sektionsblock med KpiCard-grid + "Generera delrapport" |
-| **ReportView** | `ReportView.tsx` | Fullskärmsrapport. Används för BÅDE huvudrapport och delrapport (med `sectionId`-prop). |
-
-### Huvudrapport vs Delrapport
-
-Samma komponent (`ReportView`) — delrapport filtreras med `sectionId`:
-
-- **Huvudrapport**: alla sektioner, innehållsförteckning, global analys, titel "Hälso- och sjukvården"
-- **Delrapport**: en sektion, titel = sektionsnamn, ingen TOC, ingen global analys, inget "Kapitel X"
-
-Redigeringar delas via samma `localStorage`-nycklar (`${vy}:${targetId}`).
-
-### Rapportens dokumentstruktur
-
-```
-Logo (Region Halland)
-VY-ETIKETT (Daglig analys)
-Hälso- och sjukvården / Sektionsnamn     ← h1, Source Serif 4, 36px
-Dagsöversikt — 31 mars 2026              ← undertitel
-──── (accentlinje 48px)
-
-[Sammanfattning: antal indikatorer, inom/utanför förväntat]
-[Innehållsförteckning]                    ← bara huvudrapport
-[Global AI-analys + kommentarer]          ← bara huvudrapport
-
-KAPITEL 1                                 ← bara huvudrapport
-Kapacitet och flöden                      ← h2, Source Serif 4, 28px
-[Sektionsanalys]
-
-Beläggningsgrad                           ← h3, Source Serif 4, 20px
-────────────────────────── (tunn linje)
-96,3% · förväntat 96,5% · V1 2021–V13 2026
-[AI-analys + kommentarer]
-┌────────────────────────────────────┐
-│ [Aggregerat | Dag]  toggle         │
-│ [FacetedChart — 2x2 grid]          │
-└────────────────────────────────────┘
-```
-
-### Anti-collision (slutetiketter)
-
-Används i ChartModal. Baserat på kommundata-projektets `resolveOverlap`:
-
-```typescript
-function resolveOverlap(labels, minGap, yMin, yMax) {
-  // Iterativ relaxering (max 20 iterationer)
-  // Symmetrisk shift: (minGap - gap) / 2
-  // Boundary clamp: [yMin + 6, yMax - 6]
-  // Connector: H→V→H linje från naturalY till yPos
-}
-```
+Gamla appen (KPI-kort, ChartModal, FacetedChart, ReportView med flera) finns kvar bakom `?gammal` tills användaren har granskat den nya. Den laddas för sig och raderas sedan (docs/arkitektur.md avsnitt 2 och 8, WP12c).
 
 ## Anomalidetektering
 
@@ -407,33 +227,12 @@ GLM + **villkorlig** conformal prediction ger ett inre 80 %- och ett yttre 95 %-
 - Signaler beräknas separat per aggregeringsnivå (egen conformal-kalibrering, inte hopräknade dagssignaler) OCH per avdelning.
 - Implementation: `R/gemensam/signal-modell.R` — huvudfunktion `kor_kpi_signal()`.
 
-## Typsnitt
-
-| Typsnitt | Användning |
-|----------|-----------|
-| Source Serif 4 | Rapportrubriker (h1–h3), graftitlar, ChartModal-titel |
-| IBM Plex Sans | Brödtext, etiketter, tooltip-text |
-| IBM Plex Mono | Siffervärden, hero-värden i KPI-kort |
-| Lexend Deca | App-rubrik (topbar), sektionsrubriker i dashboard |
-
-## Färger
-
-Conformal signal:
-- Grön (#16a34a): Inom förväntat intervall
-- Röd (#dc2626): Utanför förväntat intervall
-
-Accent:
-- #00664D (Grön 1): Rubriker, accentlinjer
-- #00AB60 (Grön 2): Vy-etiketter, kapitel-overlines
-
-Avdelningsfärger: `#2DB8F6`, `#6473D9`, `#FF5F4A`, `#FFD939`, `#895B42`, `#00AB60`
-
 ## Teknikstack
 
-- **Frontend**: React 19, TypeScript, Vite, D3.js
+- **Frontend**: React 19, TypeScript, Vite 8, d3 (skalor, linjer och ticks), pptxgenjs (PowerPoint)
 - **Datapipeline**: R med tidyverse, lubridate, jsonlite
 - **Signalmodell**: GLM (gaussian/nb/gamma) + split conformal prediction
-- **Typsnitt**: Google Fonts
+- **Typsnitt**: självhostade (Source Serif 4, IBM Plex Sans), se `docs/stilguide.md` 2.4
 - **Lagring**: localStorage för redigeringar (vy-specifik med prefix)
 - **Export**: Minifierad JSON (~3 MB) via `jsonlite::toJSON(auto_unbox = TRUE, na = "null", force = TRUE)`
 
@@ -447,12 +246,15 @@ Producerar **split-JSON** i `app/public/data/` (manifest `index.json` + en fil p
 
 **Frontend (i `app/`):**
 ```bash
-npm install
-npm run dev      # Vite dev-server
-npm run build    # tsc + vite build → app/dist/
-npm run lint
+npm ci
+npm run dev          # Vite dev-server; gamla appen på /?gammal, stilguiden på /verktyg/stilguide.html
+npm run check        # eslint + tsc + vitest
+npm run build        # tsc + vite build → app/dist/
+npm run test:pptx    # röktest för PowerPoint-exporten
+npm run bank         # skärmdumpar mot baslinjen (verktyg/bank/)
+npm run a11y         # axe mot stilguiden och rapportens alla adresser
 ```
-Deploy-bas är `/hosrapport/` (se `app/vite.config.ts`) — anpassat för GitHub Pages-liknande subkatalog.
+Deploy-bas är `/hosrapport/` (se `app/vite.config.ts`), anpassad för en underkatalog som på GitHub Pages. Verktygen och portarna står i `docs/arkitektur.md` avsnitt 7.
 
 **Lokal hostning (stabil, utanför OneDrive):**
 ```powershell
@@ -483,9 +285,9 @@ source("R/test-signal.R")         # fristående signaltest → data/signal-test-
 
 - **All KPI-metadata har EN källa**: `R/teman/register.R` bygger `kpi_meta`. Lägg aldrig till KPI-fält genom att duplicera — utöka tema-config + register.
 - **Metodik före kod**: ändringar i signalmetodik dokumenteras i `SIGNAL-METODIK.md` först, sedan i `R/gemensam/signal-modell.R`.
-- **D3-ritlogik är ren**: all ritlogik bor i `app/src/charts/` (utan React). Komponenter i `components/` är tunna wrappers. Lägg inte D3-kod i komponenter.
-- **En ritfunktion**: `tidsserie()` ritar allt; styr beteende via `TidsserieOpts`-flaggor, skapa inte parallella ritfunktioner.
-- **Språk**: kod, kommentarer och UI är på svenska. Behåll det.
+- **Utseende ur tokens**: inga hex-färger, px-storlekar eller typsnittsnamn i komponenter; allt ur `app/src/design/tema.ts` eller CSS-variablerna därifrån (`docs/stilguide.md`, `docs/arkitektur.md` 1 och 6).
+- **En väg till grafen**: indikator, `kpiTillSpec`, `ChartSpec`, renderare i `app/src/charts/typer/`, `Figur`. En ny graftyp blir en renderare, inte en egen komponent (`docs/arkitektur.md` 4.2–4.4).
+- **Språk**: kod, kommentarer och UI är på svenska. Inga em dash i någon text (`docs/stilguide.md` 3.1).
 
 ### Känd dokumentations-drift (åtgärda gärna)
 
@@ -505,15 +307,16 @@ source("R/test-signal.R")         # fristående signaltest → data/signal-test-
 
 ### Känd teknisk skuld (frontend)
 
-- ✅ **Åtgärdat (Fas 0):** ~~Oanvänd kod~~ — `CommentBlock.tsx`, `TufteStrip.tsx`, `SummaryModal.tsx`, `Sparkline.tsx`, `charts/sparkline.ts`, `stores/comments.ts`, `VComment`-typen, `demo-dag.json` (båda) och oanvänd `App.css` är borttagna.
-- ✅ **Åtgärdat (Fas 0):** ~~Död prop `editMode`~~ — borttagen ur `App.tsx` och `Section.tsx`.
-- **KPI-definitioner**: `KpiData.beskrivning` finns i typen och datan, men `KpiCard.tsx` har även en egen hårdkodad `DEFINITIONS`-tabell. Bör enhetligt komma från datan.
+- **Gamla appen** ligger kvar bakom `?gammal` med sina frysta filer (`app/src/components/*`, `utils/*` med flera) tills användaren har granskat den nya; raderas i WP12c (`docs/arkitektur.md` 8).
+- **Begreppen** i `innehall/begrepp.json` är märkta `"granskad": false` tills en sakkunnig har läst dem.
+- **Exempeldata**: akutflödet är syntetiskt, och avdelningar och ambulansstationer skapas i `app/src/data/exempelhierarki.ts` tills R levererar riktiga enheter.
+- **Kontrakt v2 (WP8) är parkerat**: appen läser v1-fälten.
 - **Generisk README**: `app/README.md` är fortfarande Vite-mallen.
 
 ### Naturliga utvecklingsspår
 
 1. **Riktig datakälla** — ersätt `R/hamta/demo-data.R` med API/databas; behåll samma `radata-hos.rds`/`radata-dept.rds`-kontrakt så resten av pipelinen är oförändrad.
-2. **Målläge frikopplat från statistik** — i dag härleds både "förväntat läge" (95 %) och "målläge" (80 %) ur conformal-modellen. Verksamhetens egna riktvärden kan läggas som separat fält per KPI (se KpiCard variant 1).
+2. **Målläge frikopplat från statistik** — i dag härleds både "förväntat läge" (95 %) och "målläge" (80 %) ur conformal-modellen. Verksamhetens egna riktvärden kan läggas som separat fält per indikator.
 3. **Fler sektioner/KPI:er** — följ "Ny sektion — steg för steg" ovan.
 4. **Automatiserad validering** — koppla `granskningsrapport.R`-kvalitetskrav (se `SIGNAL-METODIK.md` §7.2) till ett test som failar pipelinen vid otillräcklig täckning.
 5. **Persistens av redigeringar** — i dag `localStorage` per webbläsare (`hos-rapport-content-blocks`, nyckel `${vy}:${targetId}`). För delning mellan användare krävs backend.
@@ -528,7 +331,9 @@ source("R/test-signal.R")         # fristående signaltest → data/signal-test-
 | Aggregering/perioder | `R/gemensam/aggregering.R` |
 | Etiketter/talformat | `R/gemensam/formatering.R` |
 | Analystexter | `R/gemensam/analystext.R` |
-| Grafritning (all) | `app/src/charts/tidsserie.ts` |
-| KPI-kortets layout | `app/src/components/KpiCard.tsx` |
-| Rapportvy | `app/src/components/ReportView.tsx` |
-| Datatyper (kontrakt R↔TS) | `app/src/types.ts` |
+| Grafernas innehåll (titlar, roller, visningar) | `app/src/charts/kpiTillSpec.ts`, `charts/text.ts` |
+| Grafernas ritning | `app/src/charts/typer/*`, `charts/karna/*` |
+| Kapitel och indikator | `app/src/rapport/KapitelSida.tsx`, `rapport/Indikator.tsx` |
+| Startsidan | `app/src/start/StartSida.tsx` |
+| Färger, typsnitt, mått | `app/src/design/tema.ts` |
+| Datatyper (kontrakt R↔TS) | `app/src/data/kontrakt.ts` (JSON), `app/src/data/modell.ts` (efter normalisering) |
