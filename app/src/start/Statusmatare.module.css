@@ -1,0 +1,72 @@
+/* Statusmatare: stapel och räkning (stilguiden 4.1). Höjd 6 px och 2 px mellan
+   segmenten, härledda ur rum.1 tills tema.ts har egna mått för mätaren.
+   Färgerna är statusmarkörens (farg.status.*.markor). Inga rundade hörn. */
+@layer komponent {
+  .matare {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--rum-2);
+    min-inline-size: 0;
+  }
+
+  .stapel {
+    display: flex;
+    gap: calc(var(--rum-1) / 2);
+    block-size: calc(var(--rum-1) * 1.5);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .segment {
+    flex-basis: 0;
+    flex-shrink: 1;
+    min-inline-size: calc(var(--rum-1) / 2);
+  }
+
+  .gron { background: var(--farg-status-gron-markor); }
+  .gul { background: var(--farg-status-gul-markor); }
+  .rod { background: var(--farg-status-rod-markor); }
+
+  .rakning {
+    margin: 0;
+    color: var(--farg-text2);
+  }
+
+  .lage .rakning {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+  }
+
+  .kapitel .rakning {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+  }
+
+  .post {
+    white-space: nowrap;
+  }
+
+  .tal {
+    color: var(--farg-black);
+    font-weight: var(--typ-granssnitt-viktStark);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .skiljare {
+    color: var(--farg-text3);
+  }
+
+  .osynlig {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

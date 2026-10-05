@@ -35,7 +35,10 @@ skriv_json <- function(obj, fil) {
 # ── Sammanfattning av en sektion, för manifestet ──
 # Håll den liten: bara det startsidans områdeskort faktiskt visar.
 sammanfatta_sektion <- function(s) {
-  status <- vapply(s$kpier, function(k) k$status, character(1))
+  # Beskrivande mått (utan_mal) har ingen målriktning och ska inte räknas i
+  # statusfördelningen, även om R ger dem status "gron".
+  rankade <- Filter(function(k) !isTRUE(k$utan_mal), s$kpier)
+  status <- vapply(rankade, function(k) k$status, character(1))
   list(
     id       = s$id,
     namn     = s$namn,
