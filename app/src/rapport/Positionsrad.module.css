@@ -1,0 +1,88 @@
+/* Positionsrad.module.css: stilguiden 4.5. Alla värden ur tema-variablerna. */
+@layer komponent {
+  .rad,
+  .knapp {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text2);
+  }
+
+  .knapp {
+    gap: var(--rum-1);
+    min-height: var(--komponent-klickyta);
+    padding: var(--rum-1) 0;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .knapp:hover .aktuell {
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .knapp:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  /* Delarna står på en rad. Tidigare delar kortas före den aktuella. */
+  .spar {
+    display: flex;
+    align-items: baseline;
+    gap: var(--rum-2);
+    min-width: 0;
+  }
+
+  .del,
+  .aktuell {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .del {
+    flex: 0 10 auto;
+  }
+
+  .aktuell {
+    flex: 0 1 auto;
+    color: var(--farg-black);
+    font-weight: var(--typ-not-viktStark);
+  }
+
+  .skiljare {
+    flex: none;
+    color: var(--farg-text3);
+  }
+
+  .ikon {
+    flex: none;
+    width: 1.25em;
+    height: 1.25em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .osynlig {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}

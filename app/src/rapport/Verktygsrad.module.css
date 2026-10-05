@@ -1,0 +1,188 @@
+/* Verktygsrad.module.css: stilguiden 4.5 och 5.3. Alla värden ur tema-variablerna.
+   Hårlinjer skrivs `thin` (1 px i alla webbläsare); menyknappens ram har en egen token. */
+@layer komponent {
+  .verktygsrad {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: var(--matt-verktygsrad);
+    background: var(--farg-papper);
+    border-bottom: thin solid transparent;
+  }
+
+  /* Hårlinjen först när sidan rullats */
+  .verktygsrad[data-rullad] {
+    border-bottom-color: var(--farg-harlinje);
+  }
+
+  .verktygsrad[data-statisk] {
+    position: relative;
+    z-index: auto;
+  }
+
+  .inre {
+    display: flex;
+    align-items: center;
+    gap: var(--rum-4);
+    height: 100%;
+    max-width: var(--matt-sida);
+    margin: 0 auto;
+    padding: 0 var(--matt-marginal);
+  }
+
+  /* Desktop med innehållsförteckning: samma spalter som sidan, så att
+     positionsraden börjar där texten börjar. */
+  .verktygsrad[data-spalt] .inre {
+    display: grid;
+    grid-template-columns: var(--matt-toc) minmax(0, 1fr) auto;
+    column-gap: var(--rum-7);
+  }
+
+  .tillbaka {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rum-1);
+    min-height: var(--komponent-klickyta);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-fokus);
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .tillbaka:hover {
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykningHover);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .mitt {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .meny {
+    position: relative;
+    flex: none;
+  }
+
+  /* Menyknapp: enda inramade knappen (5.3) */
+  .menyknapp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--komponent-menyknapp-hojd);
+    padding: 0 var(--rum-4);
+    border: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
+    background: var(--farg-papper);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-black);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .menyknapp[data-ikon] {
+    width: var(--komponent-menyknapp-hojd);
+    padding: 0;
+  }
+
+  .menyknapp:hover {
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .menyknapp[data-ikon]:hover {
+    color: var(--farg-fokus);
+  }
+
+  .tillbaka:focus-visible,
+  .menyknapp:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  .ikon {
+    width: 1.25em;
+    height: 1.25em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .menylista {
+    position: absolute;
+    top: calc(100% + var(--rum-1));
+    right: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: max-content;
+    padding: var(--rum-1) 0;
+    background: var(--farg-yta);
+    border: thin solid var(--farg-harlinje);
+  }
+
+  .menyval {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rum-6);
+    min-height: var(--komponent-menyknapp-hojd);
+    padding: 0 var(--rum-4);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-black);
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .menyval:hover,
+  .menyval:focus {
+    background: var(--farg-fokusLjus);
+  }
+
+  .menyval:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
+  }
+
+  .lage {
+    color: var(--farg-text2);
+  }
+
+  .status {
+    position: absolute;
+    top: 100%;
+    right: var(--matt-marginal);
+    padding: var(--rum-1) var(--rum-2);
+    background: var(--farg-papper);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+
+  .status:empty {
+    padding: 0;
+  }
+
+  @media print {
+    .verktygsrad {
+      display: none;
+    }
+  }
+}
