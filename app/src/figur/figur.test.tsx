@@ -4,12 +4,15 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { kpiTillSpec, visningar } from "../charts/kpiTillSpec";
 import type { ChartSpec } from "../charts/spec";
+import { akutflodeUtdrag, hierarki, skrUtdrag } from "../data/fixturer";
 import Tabell from "../ui/Tabell";
 import StatusMarkor from "../ui/StatusMarkor";
 import { begransaFasta, jamforNamn, markeringsIndex, vaxlaFast } from "./fasta";
 import Figur from "./Figur";
 import JamforRad from "./JamforRad";
+import { tillCsv } from "./nedladdning";
 import Noter from "./Noter";
 import TabellVy from "./TabellVy";
 
@@ -39,7 +42,7 @@ function spec(over: Partial<ChartSpec> = {}): ChartSpec {
     tabell: {
       caption: "Halland jämfört med övriga regioner",
       kolumner: ["Region", "2016", "2017", "Plats"],
-      rader: [["Halland", 87.6, 95, 7], ["Skåne", 85.1, null, 3], ["Riket", 87.4, 88.3, null], ["Övriga", "..", "..", null]],
+      rader: [["Halland", 87.6, 95, "7"], ["Skåne", 85.1, null, "3"], ["Riket", 87.4, 88, null], ["Övriga", "..", "..", null]],
       fokusRad: 0,
     },
     hojdklass: "standard",
@@ -74,13 +77,22 @@ describe("tabellen", () => {
 
   it("formaterar tal per kolumn och markerar fokusraden", () => {
     expect(html).toContain(">87,6<");
-    expect(html).toContain(">95,0<");          // samma decimaler i kolumnen
-    expect(html).toContain(">7<");             // heltalskolumn utan decimaler
+    expect(html).toContain(">95,0<");          // y.format: en decimal även för heltal
+    expect(html).toContain(">88,0<");
+    expect(html).toMatch(/class="[^"]*tal[^"]*">7</);  // plats som text, högerställd
     expect(html).toContain("data-fokus");
     expect(html).toContain(">–<");        // saknas
     expect(html).toContain(">..<");            // för få fall
     expect(html).toContain("betyder att värde saknas");
     expect(html).toContain("för få fall");
+  });
+
+  it("radrubrikerna är första textkolumnen (rangordningens Plats · Region · Värde)", () => {
+    const t = renderToStaticMarkup(
+      <Tabell caption="R" kolumner={["Plats", "Region", "Värde"]} rader={[["1", "Kalmar", 96.1], ["2", "Skåne", 95.2]]} format={procent} />,
+    );
+    expect(t).toContain('<th scope="row">Kalmar</th>');
+    expect(t).toContain(">96,1<");
   });
 
   it("tusental med hårt mellanslag och typografiskt minus", () => {
@@ -151,6 +163,13 @@ describe("figuren", () => {
     expect(html).toContain('<span aria-current="location">Halmstad</span>');
   });
 
+  it("jämför med enhet när de jämförbara inte är regioner", () => {
+    const html = renderToStaticMarkup(
+      <Figur spec={spec({ jamforbara: [{ enhetId: "varberg", namn: "Varberg", senaste: 95.1 }] })} />,
+    );
+    expect(html).toContain("+ Jämför med enhet");
+  });
+
   it("visar kicker bara när spec har en", () => {
     expect(full).not.toContain("data-kicker");
     const fri = renderToStaticMarkup(<Figur spec={spec({ kicker: "Telefonsamtal besvarade samma dag" })} />);
@@ -168,5 +187,27 @@ describe("små delar", () => {
     expect(renderToStaticMarkup(<StatusMarkor status="gul" />)).toContain(">Bevaka<");
     expect(renderToStaticMarkup(<StatusMarkor status="gron" />)).toContain(">I fas<");
     expect(renderToStaticMarkup(<StatusMarkor status="rod" />)).toContain(">Avvikelse<");
+  });
+});
+
+describe("med WP1:s specar ur fixturerna", () => {
+  const kapitel = [
+    { kap: skrUtdrag(), vy: "ar" as const },
+    { kap: akutflodeUtdrag(), vy: "manad" as const },
+    { kap: hierarki(), vy: "manad" as const },
+  ];
+  const fall = kapitel.flatMap(({ kap, vy }) => kap.kpier.flatMap((kpi) =>
+    visningar(kpi, kap, { vy }).map((v) => ({ namn: `${kpi.id} ${v.id}`, spec: kpiTillSpec(kpi, kap, { vy, fasta: ["0001"] }, v.id) }))));
+
+  it.each(fall)("$namn: figur, tabell och CSV", ({ spec: s }) => {
+    const html = renderToStaticMarkup(<Figur spec={s} rubrikniva={4} />);
+    expect(html).toContain(`>${s.titel}</h4>`);
+    const tabell = renderToStaticMarkup(<TabellVy tabell={s.tabell} format={s.y.format} />);
+    expect(tabell).toContain(`<caption`);
+    expect(tabell.match(/<tr/g)).toHaveLength(s.tabell.rader.length + 1);
+    const csv = tillCsv(s);
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    expect(csv.split("\r\n")).toHaveLength(s.tabell.rader.length + 2);
+    expect(csv).not.toMatch(/\d\.\d/);       // inga decimalpunkter
   });
 });

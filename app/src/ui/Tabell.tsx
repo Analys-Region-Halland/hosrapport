@@ -3,13 +3,15 @@
 //
 // - Riktig <table> med <caption>; `captionDold` döljer den visuellt men inte för
 //   skärmläsare (i figuren står titeln redan ovanför).
-// - En kolumn räknas som tal när alla celler är tal eller saknade värden
-//   (null, "–", ".."). Talkolumner högerställs med tabulära siffror och samma
-//   antal decimaler i hela kolumnen: `format.decimaler` om kolumnen har
-//   decimaltal, annars 0.
-// - Första kolumnen blir radrubriker (<th scope="row">) när den är text.
+// - Talkolumner (bara tal, heltal skrivna som text, t.ex. plats "7", eller
+//   saknade värden) högerställs med tabulära siffror.
+// - Decimaler: med `format` (figurens y.format) får alla tal format.decimaler,
+//   som WP1:s spec.tabell förutsätter. Utan format får varje kolumn lika många
+//   decimaler som dess mest exakta tal (högst tre); heltalskolumner inga.
+// - Radrubriker (<th scope="row">): första kolumnen som inte är en talkolumn,
+//   t.ex. Region i rangordningens Plats · Region · Värde.
 // - `fokusRad` (fokusenhetens rad) sätts i 600.
-// - Saknade värden skrivs "–"; ".." lämnas som det står (stilguiden 3.2).
+// - null skrivs "–" (saknas); ".." står kvar (undertryckt), stilguiden 3.2.
 // Celler får även vara React-noder (t.ex. länkar eller statusmarkörer).
 
 import type { ReactNode } from "react";
@@ -26,31 +28,29 @@ export interface TabellProps {
   fokusRad?: number;
   format?: Pick<TalFormat, "decimaler">;
   captionDold?: boolean;
-  radrubriker?: boolean;    // första kolumnen som radrubriker (förval: ja när den är text)
+  radrubrik?: number | null;   // kolumnen med radrubriker; null = inga (förval: första textkolumnen)
 }
 
 const arSaknad = (v: Cell) => v === null || v === undefined || v === "" || v === SAKNAS || v === UNDERTRYCKT;
+const HELTAL_SOM_TEXT = /^[−-]?\d+$/;
 
-/** Kolumnens talformat: null om kolumnen inte är en talkolumn, annars antal decimaler. */
+/** null om kolumnen inte är en talkolumn, annars antal decimaler för dess tal. */
 function kolumnDecimaler(rader: Cell[][], j: number, format?: Pick<TalFormat, "decimaler">): number | null {
-  let tal = 0;
-  let decimal = false;
+  let antal = 0;
   let flest = 0;
   for (const rad of rader) {
     const v = rad[j];
     if (typeof v === "number" && Number.isFinite(v)) {
-      tal++;
-      if (!Number.isInteger(v)) {
-        decimal = true;
-        const d = String(v).split(".")[1]?.length ?? 0;
-        flest = Math.max(flest, Math.min(d, 3));
-      }
+      antal++;
+      if (!Number.isInteger(v)) flest = Math.max(flest, Math.min(String(v).split(".")[1]?.length ?? 0, 3));
+    } else if (typeof v === "string" && HELTAL_SOM_TEXT.test(v)) {
+      antal++;
     } else if (!arSaknad(v)) {
       return null;
     }
   }
-  if (tal === 0) return null;
-  return decimal ? (format?.decimaler ?? flest) : 0;
+  if (antal === 0) return null;
+  return format?.decimaler ?? flest;
 }
 
 function cellText(v: Cell, decimaler: number | null): ReactNode {
@@ -60,10 +60,13 @@ function cellText(v: Cell, decimaler: number | null): ReactNode {
 }
 
 export default function Tabell({
-  caption, kolumner, rader, fokusRad, format, captionDold = false, radrubriker,
+  caption, kolumner, rader, fokusRad, format, captionDold = false, radrubrik,
 }: TabellProps) {
   const decimaler = kolumner.map((_, j) => kolumnDecimaler(rader, j, format));
-  const medRubriker = radrubriker ?? (kolumner.length > 1 && decimaler[0] === null);
+  const rubrikKolumn = radrubrik !== undefined ? radrubrik : (() => {
+    const j = decimaler.findIndex((d) => d === null);
+    return kolumner.length > 1 && j >= 0 ? j : null;
+  })();
   return (
     <table className={s.tabell} data-tabell="">
       <caption className={captionDold ? `${s.caption} ${s.dold}` : s.caption}>{caption}</caption>
@@ -80,7 +83,7 @@ export default function Tabell({
             {rad.map((v, j) => {
               const klass = decimaler[j] !== null ? s.tal : undefined;
               const innehall = cellText(v, decimaler[j]);
-              return j === 0 && medRubriker
+              return j === rubrikKolumn
                 ? <th key={j} scope="row" className={klass}>{innehall}</th>
                 : <td key={j} className={klass}>{innehall}</td>;
             })}

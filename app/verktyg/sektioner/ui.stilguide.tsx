@@ -199,7 +199,6 @@ export function Sektion() {
                 ["Övriga", "..", "..", ".."],
               ]}
               fokusRad={0}
-              format={{ decimaler: 1 }}
             />
           </div>
         </div>

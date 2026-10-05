@@ -45,6 +45,13 @@ export interface FigurProps {
 }
 
 const ALLA: Atgard[] = ["tabell", "ladda", "forstora"];
+
+// Nivånamnet i "+ Jämför med …". ChartSpec säger inte vilken nivå de jämförbara
+// serierna har; Kolada-koder (fyra siffror) är regioner, annat är underliggande
+// enheter. Ersätts när spec får nivån (behov till WP1).
+const KOLADA_KOD = /^\d{4}$/;
+const jamforNiva = (spec: ChartSpec) =>
+  (spec.jamforbara ?? []).every((j) => KOLADA_KOD.test(j.enhetId)) ? "region" : "enhet";
 const DAG = "dag";
 
 export default function Figur(props: FigurProps) {
@@ -165,7 +172,7 @@ export default function Figur(props: FigurProps) {
 
       {!tabell && (spec.jamforbara?.length ?? 0) > 0 && (
         <div className={`${s.hel} ${s.jamfor}`}>
-          <JamforRad spec={spec} fasta={fasta} onFasta={satFasta} />
+          <JamforRad spec={spec} fasta={fasta} onFasta={satFasta} nivanamn={jamforNiva(spec)} />
         </div>
       )}
 

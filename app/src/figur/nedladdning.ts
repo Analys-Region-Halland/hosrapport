@@ -74,12 +74,19 @@ export function periodspann(spec: ChartSpec): { fran: string; till: string } | n
   return fran && till ? { fran, till } : null;
 }
 
-/** Filnamnet för figurens nuvarande innehåll: vy och period ur serierna, annars visningen. */
+/**
+ * Filnamnet för figurens nuvarande innehåll: vy och period ur serierna, annars
+ * visningen. kpiTillSpec (WP1) sätter spec.id = `{indikator}:{visning}[:{fokus}][:dagar]`;
+ * indikatordelen blir indikatorns id, med fokusenheten efter när den inte är
+ * indikatorns egen (så att Halmstad och regionen inte får samma namn).
+ */
 export function figurFilnamn(spec: ChartSpec, visning: VisningId | string, andelse: Andelse): string {
   const vy = tidsupplosning(spec);
   const spann = periodspann(spec);
   const period = vy && spann ? periodIntervall(spann.fran, spann.till, vy, "kort") : "";
-  return filnamn(spec, vy ?? visning, period, andelse);
+  const [kpiId, , ...ovrigt] = spec.id.split(":");
+  const indikator = [kpiId, ...ovrigt.filter((d) => d !== "dagar")].join("-");
+  return filnamn({ ...spec, id: indikator }, vy ?? visning, period, andelse);
 }
 
 // ════════════════════════════════════════════════════════════

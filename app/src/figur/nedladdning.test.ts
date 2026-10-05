@@ -71,6 +71,13 @@ describe("filnamn", () => {
     expect(figurFilnamn(manad, "tid", "svg")).toBe("kolada-n79179-manad-jan-2021-mar-2026.svg");
   });
 
+  it("läser indikator och fokus ur spec.id från kpiTillSpec ({indikator}:{visning}[:{fokus}][:dagar])", () => {
+    expect(figurFilnamn(exempel({ id: "kolada-n79179:tid" }), "tid", "csv")).toBe("kolada-n79179-ar-2016-2025.csv");
+    expect(figurFilnamn(exempel({ id: "belaggning:tid:halmstad" }), "tid", "png")).toBe("belaggning-halmstad-ar-2016-2025.png");
+    const rang = exempel({ id: "kolada-n79179:rang", typ: "rangordning", serier: [{ id: "a", namn: "a", roll: "kontext", varde: 3 }] });
+    expect(figurFilnamn(rang, "rang", "csv")).toBe("kolada-n79179-rang.csv");
+  });
+
   it("faller tillbaka på visningen när serierna saknar punkter", () => {
     const rang = exempel({ typ: "rangordning", serier: [{ id: "a", namn: "a", roll: "kontext", varde: 3 }] });
     expect(figurFilnamn(rang, "rang", "csv")).toBe("kolada-n79179-rang.csv");
