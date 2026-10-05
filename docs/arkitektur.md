@@ -8,7 +8,7 @@ Version 1.0 · 2026-10-05. Tekniskt underlag för arbetspaketen (WP0–WP12). Ut
 
 | Regel | Spec |
 |---|---|
-| Arbetskatalog | Egen git worktree utanför OneDrive: `C:\dev\hos-wt\wpN` (gren `omtag/wpN-kortnamn`). `npm ci` i `app/` efter skapandet. |
+| Arbetskatalog | Egen git worktree utanför OneDrive: `C:\dev\hos-wt\wpN` (gren `wp/N-kortnamn`, utgår från integrationsgrenen `omtag`). `npm ci` i `app/` efter skapandet. |
 | Ägarskap | Ändra bara filer som ditt paket äger (avsnitt 3). Behöver du något i en annan fil: skriv det i din slutrapport, ändra inte. |
 | Gammal kod | `app/src/components/*`, `app/src/charts/{tidsserie,constants,types}.ts`, `app/src/types.ts`, `app/src/utils/*`, `app/src/theme/*` och `app/src/index.css` är **frysta** tills WP12b (enda undantaget: WP0:s lagerinslagning av `index.css`, avsnitt 6). Ny kod importerar aldrig från dem (undantag: `stores/*`). |
 | Beroenden | Bara WP0 ändrar `package.json` och låsfilen. |
