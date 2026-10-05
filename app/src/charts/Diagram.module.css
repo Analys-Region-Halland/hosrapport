@@ -1,0 +1,37 @@
+/* Diagrammets ram: plats för svg, tooltip och uppläsning. Ägare: WP2. */
+@layer komponent {
+  .ram {
+    position: relative;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .svg {
+    display: block;
+    overflow: visible;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  /* Musklick ger inte fokus; Tab ger synlig fokusring (stilguiden 2.1, 6.8) */
+  .svg:focus {
+    outline: none;
+  }
+
+  .svg:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

@@ -1,0 +1,84 @@
+/* Tooltip i plotytans överkant (stilguiden 6.8): farg.yta, 1 px ram
+   farg.harlinje, ingen skugga, typ.roll.not. Ägare: WP2. */
+@layer komponent {
+  .tooltip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+    background: var(--farg-yta);
+    border: 1px solid var(--farg-harlinje); /* hårlinje */
+    padding: var(--rum-2) var(--rum-3);
+    font-family: var(--typ-familj-sans);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-black);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: tona-in var(--rorelse-kort) ease-out;
+  }
+
+  @keyframes tona-in {
+    from { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tooltip { animation: none; }
+  }
+
+  .rubrik {
+    font-weight: var(--typ-not-viktStark);
+    margin-bottom: var(--rum-1);
+  }
+
+  .tillagg {
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text3);
+  }
+
+  .tabell {
+    border-collapse: collapse;
+    font: inherit;
+  }
+
+  .tabell td {
+    padding: calc(var(--rum-1) / 2) var(--rum-3) calc(var(--rum-1) / 2) 0;
+    vertical-align: middle;
+  }
+
+  .tabell td:last-child {
+    padding-right: 0;
+  }
+
+  .namn {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--rum-1) * 1.5);
+  }
+
+  .prick,
+  .ingenPrick {
+    display: inline-block;
+    flex: none;
+  }
+
+  .varde {
+    text-align: right;
+    color: var(--farg-black);
+  }
+
+  .plats {
+    color: var(--farg-text3);
+  }
+
+  .fet {
+    font-weight: var(--typ-not-viktStark);
+  }
+
+  .not {
+    margin-top: calc(var(--rum-1) * 1.5);
+    color: var(--farg-text3);
+  }
+}
