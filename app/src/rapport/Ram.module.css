@@ -1,0 +1,44 @@
+/* Ram.module.css: platshållare för nya ramen (WP6 skriver om). Alla värden
+   hämtas ur CSS-variablerna från design/tema.ts. */
+@layer komponent {
+  .ram {
+    min-height: 100vh;
+    background: var(--farg-papper);
+    color: var(--farg-black);
+  }
+
+  .sida {
+    max-width: var(--matt-sida);
+    margin: 0 auto;
+    padding: var(--rum-8) var(--matt-marginal);
+  }
+
+  .kicker {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    letter-spacing: var(--typ-kicker-sparr);
+    text-transform: uppercase;
+    color: var(--farg-fokus);
+  }
+
+  .titel {
+    margin-top: var(--rum-3);
+    font-family: var(--typ-titel-familj);
+    font-size: var(--typ-titel-storlek);
+    line-height: var(--typ-titel-radhojd);
+    font-weight: var(--typ-titel-vikt);
+    letter-spacing: var(--typ-titel-sparr);
+  }
+
+  .ingress {
+    margin-top: var(--rum-5);
+    max-width: var(--matt-text);
+    font-family: var(--typ-ingress-familj);
+    font-size: var(--typ-ingress-storlek);
+    line-height: var(--typ-ingress-radhojd);
+    font-weight: var(--typ-ingress-vikt);
+    color: var(--farg-text2);
+  }
+}
