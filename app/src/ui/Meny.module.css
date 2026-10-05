@@ -1,6 +1,7 @@
 /* Meny: menyknapp med en lista av val (stilguiden 4.5 och 5.3). Listan ligger i
    WP5:s popover (farg.yta, 1 px hårlinje, ingen skugga, luft rum.4); raderna
-   går ut till popoverns kanter så att markeringen fyller hela bredden. */
+   går ut till popoverns kanter så att markeringen fyller hela bredden.
+   Kryssval visar läget ("på", "av") längst till höger i farg.text2. */
 @layer komponent {
   .meny {
     position: relative;
@@ -15,6 +16,8 @@
   .val {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: var(--rum-6);
     min-block-size: var(--komponent-klickyta);
     margin: 0;
     padding: var(--rum-2) var(--rum-4);
@@ -35,4 +38,5 @@
     outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
     outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
   }
+  .lage { color: var(--farg-text2); }
 }

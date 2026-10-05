@@ -3,7 +3,7 @@
 //
 // Beteende
 // - Renderas i en portal i <body> och placeras under ankaret (över om det inte
-//   får plats), inom fönstret. Portalen gör att popovern inte klipps av
+//   får plats), inom fönstret, med vänster- eller högerkanten mot ankarets. Portalen gör att popovern inte klipps av
 //   `overflow` eller `content-visibility` i omgivande block. Ligger ankaret i
 //   en modal dialog (ett ark) hamnar portalen i den, så att popovern inte blir
 //   osynlig för skärmläsare bakom aria-modal.
@@ -36,6 +36,9 @@ export interface PopoverProps {
   beskrivningId?: string;
   /** id på popovern, för aria-controls på ankaret. */
   id?: string;
+  /** Vänsterkanten mot ankarets vänsterkant (start, förval) eller högerkanten
+   *  mot ankarets högerkant (slut, t.ex. Exportera längst till höger). */
+  justera?: "start" | "slut";
 }
 
 export default function Popover(props: PopoverProps): ReactNode {
@@ -46,7 +49,7 @@ export default function Popover(props: PopoverProps): ReactNode {
 
 type YtaProps = PopoverProps & { ankare: HTMLElement; behallare: HTMLElement };
 
-function PopoverYta({ onStang, ankare, behallare, children, etikett, beskrivningId, id }: YtaProps) {
+function PopoverYta({ onStang, ankare, behallare, children, etikett, beskrivningId, id, justera = "start" }: YtaProps) {
   const ref = useRef<HTMLDivElement>(null);
   const onStangRef = useRef(onStang);
   useLayoutEffect(() => { onStangRef.current = onStang; });
@@ -73,7 +76,8 @@ function PopoverYta({ onStang, ankare, behallare, children, etikett, beskrivning
       const glapp = tema.rum[2];
       const bredd = document.documentElement.clientWidth;
       const hojd = window.innerHeight;
-      const left = Math.max(kant, Math.min(a.left, bredd - kant - p.width));
+      const onskad = justera === "slut" ? a.right - p.width : a.left;
+      const left = Math.max(kant, Math.min(onskad, bredd - kant - p.width));
       let top = a.bottom + glapp;
       if (top + p.height > hojd - kant && a.top - glapp - p.height >= kant) top = a.top - glapp - p.height;
       el.style.top = `${fast ? top : top + window.scrollY}px`;
@@ -86,7 +90,7 @@ function PopoverYta({ onStang, ankare, behallare, children, etikett, beskrivning
       window.removeEventListener("resize", placera);
       window.removeEventListener("scroll", placera, true);
     };
-  }, [ankare, fast]);
+  }, [ankare, fast, justera]);
 
   // Fokus in vid öppning. Stängs popovern medan fokus är i den återgår fokus till ankaret.
   useEffect(() => {

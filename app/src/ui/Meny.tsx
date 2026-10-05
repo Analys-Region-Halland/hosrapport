@@ -9,19 +9,40 @@
 //   Skift+Tab stänger och lämnar fokus på knappen.
 // `typ` styr knappens utseende: "meny" (inramad, Exportera) eller "text"
 // (figurens Ladda ner).
+//
+// Tillägg i WP12b (ersätter verktygsradens egen meny):
+// - Ikonläge: med `ikon` visas ikonen i en kvadratisk menyknapp och etiketten
+//   blir knappens tillgängliga namn (verktygsraden i mobil, stilguiden 4.5).
+// - Kryssval: ett val med `kryssad` är en menuitemcheckbox med aria-checked och
+//   läget ("på" eller "av") efter etiketten, t.ex. Redigeringsläge.
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import Knapp from "./Knapp";
 import Popover from "./Popover";
 import s from "./Meny.module.css";
 
-export interface MenyProps {
+export interface MenyVal {
+  id: string;
   etikett: string;
-  val: { id: string; etikett: string; onVal(): void }[];
-  typ?: "text" | "meny";
+  /** Kryssval (menuitemcheckbox), t.ex. redigeringsläget. undefined = vanligt val. */
+  kryssad?: boolean;
+  onVal(): void;
 }
 
-export default function Meny({ etikett, val, typ = "meny" }: MenyProps) {
+export interface MenyProps {
+  etikett: string;
+  val: MenyVal[];
+  typ?: "text" | "meny";
+  /** Ikon i stället för etiketten (dold för skärmläsare); etiketten blir knappens namn. */
+  ikon?: ReactNode;
+  /** Listans kant mot knappens: start (förval) eller slut (knapp längst till höger). */
+  justera?: "start" | "slut";
+}
+
+/** Valen i listan: vanliga val och kryssval. */
+const VAL = '[role="menuitem"], [role="menuitemcheckbox"]';
+
+export default function Meny({ etikett, val, typ = "meny", ikon, justera }: MenyProps) {
   const [oppen, setOppen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
   const [knapp, setKnapp] = useState<HTMLButtonElement | null>(null);
@@ -39,7 +60,7 @@ export default function Meny({ etikett, val, typ = "meny" }: MenyProps) {
   useEffect(() => {
     if (!oppen) return;
     const r = requestAnimationFrame(() => {
-      const knappar = lista.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+      const knappar = lista.current?.querySelectorAll<HTMLButtonElement>(VAL);
       if (knappar?.length) knappar[(startIndex + knappar.length) % knappar.length].focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(r);
@@ -51,7 +72,7 @@ export default function Meny({ etikett, val, typ = "meny" }: MenyProps) {
   };
 
   const vidListTangent = (e: KeyboardEvent<HTMLDivElement>) => {
-    const knappar = [...(lista.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])];
+    const knappar = [...(lista.current?.querySelectorAll<HTMLButtonElement>(VAL) ?? [])];
     const i = knappar.indexOf(document.activeElement as HTMLButtonElement);
     let mal = -1;
     if (e.key === "ArrowDown") mal = (i + 1) % knappar.length;
@@ -74,28 +95,35 @@ export default function Meny({ etikett, val, typ = "meny" }: MenyProps) {
       <Knapp
         ref={setKnapp}
         typ={typ}
+        ikon={ikon !== undefined}
         id={knappId}
+        aria-label={ikon !== undefined ? etikett : undefined}
         aria-haspopup="menu"
         aria-expanded={oppen}
         aria-controls={oppen ? ytaId : undefined}
         onClick={() => (oppen ? setOppen(false) : oppna(0))}
         onKeyDown={vidKnappTangent}
+        data-menyknapp=""
       >
-        {etikett}
+        {ikon ?? etikett}
       </Knapp>
-      <Popover oppen={oppen} onStang={() => setOppen(false)} ankare={knapp} etikett={etikett} id={ytaId}>
+      <Popover oppen={oppen} onStang={() => setOppen(false)} ankare={knapp} etikett={etikett} id={ytaId} justera={justera}>
         <div ref={lista} role="menu" aria-labelledby={knappId} className={s.lista} onKeyDown={vidListTangent}>
           {val.map((v) => (
             <button
               key={v.id}
               type="button"
-              role="menuitem"
+              role={v.kryssad === undefined ? "menuitem" : "menuitemcheckbox"}
+              aria-checked={v.kryssad}
               tabIndex={-1}
               className={s.val}
               data-val={v.id}
               onClick={() => { setOppen(false); v.onVal(); }}
             >
-              {v.etikett}
+              <span>{v.etikett}</span>
+              {v.kryssad !== undefined && (
+                <span className={s.lage} aria-hidden="true">{v.kryssad ? "på" : "av"}</span>
+              )}
             </button>
           ))}
         </div>

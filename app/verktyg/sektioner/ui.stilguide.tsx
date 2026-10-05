@@ -84,11 +84,19 @@ function Lage({ namn, children }: { namn: string; children: ReactNode }) {
 
 const STATUSAR: Status[] = ["gron", "gul", "rod"];
 
+// Samma ikon som verktygsraden i mobil (rapport/Verktygsrad.tsx)
+const EXPORTIKON = (
+  <svg viewBox="0 0 16 16" aria-hidden="true" style={{ width: "1.25em", height: "1.25em", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" }}>
+    <path d="M8 10.5V2.5M5 5.5l3-3 3 3M3 9v4.5h10V9" />
+  </svg>
+);
+
 export function Sektion() {
   const [vy, setVy] = useState("tid");
   const [niva, setNiva] = useState("region");
   const [dialog, setDialog] = useState(false);
   const [valt, setValt] = useState("");
+  const [redigera, setRedigera] = useState(false);
 
   const valj = (namn: string) => () => setValt(`Valt: ${namn}`);
 
@@ -108,7 +116,7 @@ export function Sektion() {
         </div>
       </Exempel>
 
-      <Exempel id="meny" rubrik="Meny" text="Menyknapp med val. Pilarna flyttar, Enter väljer, Escape stänger och lämnar fokus på knappen.">
+      <Exempel id="meny" rubrik="Meny" text="Menyknapp med val. Pilarna flyttar, Enter väljer, Escape stänger och lämnar fokus på knappen. Ett kryssval visar sitt läge, på eller av. I mobil är menyknappen en ikon med etiketten som namn för skärmläsare.">
         <div style={stil.rad}>
           <Lage namn="Exportera (menyknapp)">
             <Meny
@@ -118,6 +126,17 @@ export function Sektion() {
                 { id: "pptx-allt", etikett: "PowerPoint, hela rapporten", onVal: valj("PowerPoint, hela rapporten") },
                 { id: "skriv", etikett: "Skriv ut", onVal: valj("Skriv ut") },
                 { id: "lank", etikett: "Kopiera länk till här", onVal: valj("Kopiera länk till här") },
+                { id: "redigera", etikett: "Redigeringsläge", kryssad: redigera, onVal: () => setRedigera((r) => !r) },
+              ]}
+            />
+          </Lage>
+          <Lage namn="Exportera (ikonläge)">
+            <Meny
+              etikett="Exportera"
+              ikon={EXPORTIKON}
+              val={[
+                { id: "skriv", etikett: "Skriv ut", onVal: valj("Skriv ut") },
+                { id: "redigera", etikett: "Redigeringsläge", kryssad: redigera, onVal: () => setRedigera((r) => !r) },
               ]}
             />
           </Lage>

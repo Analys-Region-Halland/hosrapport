@@ -14,7 +14,8 @@ import Innehall from "../../src/rapport/Innehall";
 import Positionsrad from "../../src/rapport/Positionsrad";
 import { byggDisposition, positionsdelar } from "../../src/rapport/ramDisposition";
 import TidsupplosningVal from "../../src/rapport/TidsupplosningVal";
-import Verktygsrad, { type MenyVal } from "../../src/rapport/Verktygsrad";
+import Verktygsrad from "../../src/rapport/Verktygsrad";
+import type { MenyVal } from "../../src/ui/Meny";
 import { Dek, Not, Prosa, Underrubrik } from "./delar";
 
 export const id = "ram";

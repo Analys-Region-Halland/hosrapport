@@ -22,7 +22,8 @@ import Positionsrad from "./Positionsrad";
 import { useBrytpunkt } from "./ramBrytpunkt";
 import { laddaAllaKapitel, laddaManifest } from "./ramData";
 import { byggDisposition, positionsdelar } from "./ramDisposition";
-import Verktygsrad, { type MenyVal } from "./Verktygsrad";
+import type { MenyVal } from "../ui/Meny";
+import Verktygsrad from "./Verktygsrad";
 import s from "./Ram.module.css";
 
 export interface RamProps {

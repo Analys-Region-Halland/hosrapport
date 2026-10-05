@@ -360,9 +360,9 @@ async function adress(bredd, hojd) {
     await u(k, `visa(${q})`);
     await k.utvardera(`window.dispatchEvent(new Event("scroll"))`);
     await sov(300);
-    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector("[data-exportera]").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
-    await k.utvardera(vantaUttryck('[data-menyval="kopiera-lank"]'));
-    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector('[data-menyval="kopiera-lank"]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
+    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector("[data-exportera] button").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
+    await k.utvardera(vantaUttryck('[data-val="kopiera-lank"]'));
+    await klicka(k, await k.utvardera(`(() => { const r = document.querySelector('[data-val="kopiera-lank"]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`));
     await sov(300);
     const kopierat = await k.utvardera("window.__kopierat");
     kolla(`${bredd} Kopiera länk: i, v och e för figuren`, typeof kopierat === "string" && kopierat.includes("#/kapitel/akutflode?vy=manad&i=vantetid&v=enheter&e=varberg"), String(kopierat));
