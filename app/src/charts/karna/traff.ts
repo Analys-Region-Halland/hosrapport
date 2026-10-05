@@ -5,7 +5,8 @@
 //   lyft   en linje lyfts när pekaren är högst 8 px från den
 //   slapp  en lyft linje släpps först när pekaren är mer än 14 px bort
 //   byte   ... eller när en annan linje är minst 4 px närmare
-// Fokus, referens och fästa serier får 2 px företräde (räknas som närmare).
+// Fokus, referens och fästa serier får 2 px företräde (traffyta.foretrade,
+// räknas som närmare).
 
 import { tema } from "../../design/tema";
 import type { Stopp } from "../register";
@@ -25,8 +26,10 @@ export interface Traffregler {
 }
 
 export const STANDARDREGLER: Traffregler = {
-  ...tema.diagram.traffyta,
-  foretrade: 2,
+  lyft: tema.diagram.traffyta.lyft,
+  slapp: tema.diagram.traffyta.slapp,
+  byte: tema.diagram.traffyta.byte,
+  foretrade: tema.diagram.traffyta.foretrade,
 };
 
 /**
