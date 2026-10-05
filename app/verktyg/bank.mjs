@@ -13,8 +13,8 @@
 //   npm run bank -- --bredder 1440      bara angivna bredder
 //   npm run bank -- --tolerans 0.1      största tillåtna andel avvikande pixlar i procent
 //
-// Grupper: ny (nya rapporten utan parametrar: startsidan, kapitel 2, akutflödet
-// och sammanfattningen), gammal (gamla vyn bakom ?gammal), grafprov
+// Grupper: ny (nya rapporten utan parametrar: startsidan, kapitel 2, akutflödet,
+// sammanfattningen och textsidorna), gammal (gamla vyn bakom ?gammal), grafprov
 // (verktyg/grafprov.html), stilguide (en bild per sektion och per
 // galleriexempel i verktyg/stilguide.html).
 //
@@ -101,6 +101,9 @@ export const VYER = [
     id: "ny-sammanfattning", grupp: "ny", adress: "/#/sammanfattning?vy=ar",
     steg: [{ vanta: "[data-sammanfattning]" }], skivor: 4,
   },
+  // Textsidorna Så läser du rapporten och Om rapporten (WP12b)
+  { id: "ny-las", grupp: "ny", adress: "/#/las", steg: [{ vanta: "[data-las-sida]" }], skivor: 8 },
+  { id: "ny-om", grupp: "ny", adress: "/#/om", steg: [{ vanta: "[data-om-kallor] ol" }], skivor: 6 },
   // Gamla vyn bakom ?gammal. Den saknar adresser; bänken klickar sig fram.
   { id: "start", grupp: "gammal", adress: GAMMAL, steg: [{ vanta: "button.start-area" }], skivor: 6 },
   {

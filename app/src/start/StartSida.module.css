@@ -170,20 +170,6 @@
     color: var(--farg-text3);
   }
 
-  .om {
-    max-width: var(--matt-text);
-    margin-top: var(--rum-3);
-    color: var(--farg-text2);
-  }
-
-  .om > p {
-    margin: 0;
-  }
-
-  .om > p + p {
-    margin-top: var(--rum-2);
-  }
-
   .laddar {
     margin: var(--rum-8) 0 0;
     font-family: var(--typ-granssnitt-familj);
@@ -192,15 +178,11 @@
     color: var(--farg-text2);
   }
 
-  /* ── Länkar (stilguiden 2.4) och sidfotens textknapp i samma form ── */
+  /* ── Länkar (stilguiden 2.4), med klickyta komponent.klickyta ── */
   .lank {
     display: inline-flex;
     align-items: center;
     min-block-size: var(--komponent-klickyta);
-    padding: 0;
-    border: 0;
-    background: none;
-    font: inherit;
     color: var(--farg-fokus);
     text-decoration-line: underline;
     text-decoration-thickness: var(--typ-lank-understrykning);

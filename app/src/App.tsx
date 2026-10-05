@@ -3,6 +3,7 @@ import BegreppSida from "./begrepp/BegreppSida";
 import { KAPITELVY, skrivOmGammalt, START, STANDARDVY, type Route } from "./nav/route";
 import { navigera, registreraAnkarUppslag, useRouteTillstand } from "./nav/useRoute";
 import KapitelSida from "./rapport/KapitelSida";
+import OmRapporten from "./rapport/OmRapporten";
 import Ram from "./rapport/Ram";
 import {
   hittaKapitelForBlock, kapitelForBlockICache, useAllaKapitel, useKapitel, useKapitelIndex, vyForKapitel,
@@ -42,6 +43,7 @@ export default function App() {
 //    #/kapitel/{id}?vy=&i=   kapitlet (WP9), rullat till blocket i
 //    #/begrepp, #/begrepp/x  begreppslistan (WP5)
 //    #/las                   så läser du rapporten
+//    #/om                    om rapporten
 //  Startsidan ritar egna landmärken (header, main, footer); ramen lägger
 //  main runt övriga sidor. Kapitelraderna på startsidan är länkar.
 //  Saknar adressen vy öppnas ett kapitel i månadsvyn om den finns, annars i
@@ -125,6 +127,9 @@ function NyApp() {
       case "las":
         sida = <LasPlatshallare />;
         break;
+      case "om":
+        sida = <OmRapporten key="om" />;
+        break;
     }
   }
 
@@ -148,6 +153,8 @@ function titelFor(route: Route, index: KapitelIndex | null): string {
       return "Begrepp";
     case "las":
       return "Så läser du rapporten";
+    case "om":
+      return "Om rapporten";
   }
 }
 

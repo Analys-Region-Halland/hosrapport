@@ -23,6 +23,7 @@ const ADRESSER: [string, Route][] = [
   ["#/begrepp", { sida: "begrepp" }],
   ["#/begrepp/forvantat-intervall", { sida: "begrepp", id: "forvantat-intervall" }],
   ["#/las", { sida: "las" }],
+  ["#/om", { sida: "om" }],
 ];
 
 describe("parse och format", () => {
@@ -92,6 +93,7 @@ describe("saknade och ogiltiga parametrar", () => {
   it("parametrar på sidor som inte har några ignoreras", () => {
     expect(parse("#/begrepp?vy=manad")).toEqual({ sida: "begrepp" });
     expect(parse("#/las?i=x")).toEqual({ sida: "las" });
+    expect(parse("#/om?vy=ar&i=x")).toEqual({ sida: "om" });
     expect(parse("#/?vy=manad")).toEqual(START);
   });
 });
@@ -108,6 +110,8 @@ describe("felaktiga adresser blir startsidan", () => {
     "#/sammanfattning/x",
     "#/begrepp/a/b",
     "#/las/mer",
+    "#/om/x",
+    "#/Om",
     "#/kapitel/%E0%A4%A",
     "#/kapitel/%",
     "#rapport-",
@@ -203,5 +207,7 @@ describe("jämförelser", () => {
     expect(sammaSida({ sida: "las" }, { sida: "las" })).toBe(true);
     expect(sammaSida({ sida: "begrepp" }, { sida: "begrepp", id: "x" })).toBe(false);
     expect(sammaSida({ sida: "start" }, { sida: "las" })).toBe(false);
+    expect(sammaSida({ sida: "om" }, { sida: "om" })).toBe(true);
+    expect(sammaSida({ sida: "om" }, { sida: "las" })).toBe(false);
   });
 });

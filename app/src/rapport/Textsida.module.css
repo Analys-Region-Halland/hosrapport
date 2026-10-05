@@ -1,0 +1,88 @@
+/* Textsida.module.css: sidmallen för textsidorna Om rapporten och Så läser du
+   rapporten (rapport/OmRapporten.tsx, rapport/SaLaserDu.tsx). Samma mall som
+   kapitlet: masthead, delar på kapitelnivå med rubrik i typ.roll.avsnitt och
+   löptext i typ.roll.brod. Inga ramar eller linjer; avstånd grupperar
+   (stilguiden 1 princip 9 och 2.5). Alla värden ur tema-variablerna.
+   Marginalerna är redan noll (styles/reset.css); här sätts bara avstånden
+   mellan delarna, så att de inte skrivs över. */
+@layer komponent {
+  .sida {
+    max-inline-size: var(--matt-figur);
+  }
+
+  /* Masthead och första delen rum.8, delarna rum.9 isär, rubrik och innehåll
+     rum.4 (block på kapitelnivå, stilguiden 2.5) */
+  .sida > [data-masthead] + * {
+    margin-block-start: var(--rum-8);
+  }
+
+  .del + .del {
+    margin-block-start: var(--rum-9);
+  }
+
+  .del > * + * {
+    margin-block-start: var(--rum-4);
+  }
+
+  /* Grupp inne i en del: underrubrik (typ.roll.figurtitel) och innehåll,
+     rum.6 ovanför och rum.3 mellan rubrik och innehåll */
+  .del > .grupp {
+    margin-block-start: var(--rum-6);
+  }
+
+  .grupp > * + * {
+    margin-block-start: var(--rum-3);
+  }
+
+  /* Term och förklaring: termen (typ.roll.granssnitt 600) över löptexten */
+  .lista {
+    display: grid;
+    row-gap: var(--rum-5);
+    max-inline-size: var(--matt-text);
+  }
+
+  .lista dd {
+    margin: var(--rum-1) 0 0;
+  }
+
+  /* Status: markören bredvid förklaringen, under varandra i mobil */
+  .status {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: var(--rum-4);
+    row-gap: var(--rum-3);
+    max-inline-size: var(--matt-text);
+  }
+
+  .statusrad {
+    display: contents;
+  }
+
+  /* Kapitlen och deras källor */
+  .kapitel {
+    display: grid;
+    row-gap: var(--rum-5);
+    max-inline-size: var(--matt-text);
+    list-style: none;
+  }
+
+  .kapitel > li > * + * {
+    margin-block-start: var(--rum-1);
+  }
+
+  .kalla {
+    color: var(--farg-text2);
+  }
+
+  @media (max-width: 639px) {
+    .status {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--rum-1);
+    }
+
+    .statusrad + .statusrad dt {
+      margin-block-start: var(--rum-3);
+    }
+  }
+}
