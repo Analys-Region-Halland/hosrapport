@@ -1,0 +1,12 @@
+/* Noter: "Not: …" under plotytan (stilguiden 6.1). */
+@layer komponent {
+  .noter {
+    margin: 0;
+    max-inline-size: 46em;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text3);
+  }
+}
