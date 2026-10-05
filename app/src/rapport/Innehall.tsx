@@ -34,11 +34,14 @@ export interface InnehallProps {
   vy?: VyId;
   /** Redigeringsläget; länkarna behåller det. */
   red?: boolean;
+  /** Tillgängligt namn för navigeringen. Förval "Innehåll"; ett annat namn behövs
+   *  bara när sidan redan har en navigering med det namnet (t.ex. stilguiden). */
+  etikett?: string;
 }
 
 const STATUSORD: Record<Status, string> = { gron: "I fas", gul: "Bevaka", rod: "Avvikelse" };
 
-export default function Innehall({ kapitel, aktivt = "", variant = "spalt", oppen = false, onStang, vy = STANDARDVY, red = false }: InnehallProps): ReactNode {
+export default function Innehall({ kapitel, aktivt = "", variant = "spalt", oppen = false, onStang, vy = STANDARDVY, red = false, etikett = "Innehåll" }: InnehallProps): ReactNode {
   const d = useMemo(() => byggDisposition(kapitel), [kapitel]);
   // Länkarna behåller kapitlets vy och redigeringsläge; figurläget (v, e) hör
   // till ett annat block. Komponenten prenumererar inte på routern, så att den
@@ -47,16 +50,16 @@ export default function Innehall({ kapitel, aktivt = "", variant = "spalt", oppe
   const till = (i: string): Route => ({ ...bas, i });
 
   if (variant === "ark") {
-    return <InnehallArk d={d} aktivt={aktivt} till={till} oppen={oppen} onStang={onStang} />;
+    return <InnehallArk d={d} aktivt={aktivt} till={till} oppen={oppen} onStang={onStang} etikett={etikett} />;
   }
-  return <InnehallSpalt d={d} aktivt={aktivt} till={till} />;
+  return <InnehallSpalt d={d} aktivt={aktivt} till={till} etikett={etikett} />;
 }
 
 // ════════════════════════════════════════════════════════════
 //  Spalt
 // ════════════════════════════════════════════════════════════
 
-function InnehallSpalt({ d, aktivt, till }: { d: Disposition; aktivt: string; till(i: string): Route }) {
+function InnehallSpalt({ d, aktivt, till, etikett }: { d: Disposition; aktivt: string; till(i: string): Route; etikett: string }) {
   const nav = useRef<HTMLElement>(null);
 
   // Den aktiva posten hålls synlig i spaltens egen rullning (aldrig dokumentets)
@@ -72,7 +75,7 @@ function InnehallSpalt({ d, aktivt, till }: { d: Disposition; aktivt: string; ti
   }, [aktivt]);
 
   return (
-    <nav ref={nav} className={s.spalt} aria-label="Innehåll" data-innehall="spalt">
+    <nav ref={nav} className={s.spalt} aria-label={etikett} data-innehall="spalt">
       <Lista d={d} aktivt={aktivt} till={till} allaUtfallda={false} />
     </nav>
   );
@@ -82,8 +85,8 @@ function InnehallSpalt({ d, aktivt, till }: { d: Disposition; aktivt: string; ti
 //  Ark
 // ════════════════════════════════════════════════════════════
 
-function InnehallArk({ d, aktivt, till, oppen, onStang }: {
-  d: Disposition; aktivt: string; till(i: string): Route; oppen: boolean; onStang?(): void;
+function InnehallArk({ d, aktivt, till, oppen, onStang, etikett }: {
+  d: Disposition; aktivt: string; till(i: string): Route; oppen: boolean; onStang?(): void; etikett: string;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const rubrikId = useId();
@@ -136,7 +139,7 @@ function InnehallArk({ d, aktivt, till, oppen, onStang }: {
           </svg>
         </button>
       </div>
-      <nav className={s.arkinnehall} aria-label="Innehåll">
+      <nav className={s.arkinnehall} aria-label={etikett}>
         <Lista d={d} aktivt={aktivt} till={till} allaUtfallda onValj={onStang} />
       </nav>
     </dialog>

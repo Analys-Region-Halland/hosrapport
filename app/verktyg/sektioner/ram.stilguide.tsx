@@ -120,7 +120,7 @@ export function Sektion() {
         text="Från 1200 px, 220 px bred. Avsnittet fälls ut när läsaren är i det. Statusprick 6 px före indikatorn, aktiv indikator på fokusLjus. Klicka för att byta aktiv post."
       >
         <div style={stil.spalt}>
-          <Innehall kapitel={kapitel} aktivt={aktivt} variant="spalt" />
+          <Innehall kapitel={kapitel} aktivt={aktivt} variant="spalt" etikett="Innehåll, exempel som spalt" />
         </div>
       </Del>
 
@@ -130,7 +130,7 @@ export function Sektion() {
         text="Under 1200 px öppnar positionsraden innehållet som ark nedifrån, med alla avsnitt utfällda. Escape, stängknappen och klick utanför stänger."
       >
         <Positionsrad delar={delar} onOppnaInnehall={() => setArkOppet(true)} innehallOppet={arkOppet} />
-        <Innehall kapitel={kapitel} aktivt={aktivt} variant="ark" oppen={arkOppet} onStang={() => setArkOppet(false)} />
+        <Innehall kapitel={kapitel} aktivt={aktivt} variant="ark" oppen={arkOppet} onStang={() => setArkOppet(false)} etikett="Innehåll, exempel som ark" />
       </Del>
 
       <Del
