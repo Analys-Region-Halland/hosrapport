@@ -41,8 +41,9 @@
     display: grid;
     row-gap: var(--rum-4);
     max-inline-size: var(--matt-text);
-    margin: 0;
+    margin: var(--rum-4) 0 0;
     padding-inline-start: var(--rum-5);
+    list-style: decimal;
     font-family: var(--typ-brod-familj);
     font-size: var(--typ-brod-storlek);
     line-height: var(--typ-brod-radhojd);
