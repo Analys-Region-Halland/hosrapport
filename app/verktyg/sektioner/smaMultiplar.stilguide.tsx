@@ -56,6 +56,9 @@ function Exempel({ namn, rubrik, bild }: { namn: ExempelNamn; rubrik: string; bi
   );
 }
 
+/** Delens namn i tabellen, på en rad (bryts inte mitt i ordet). */
+const del = (text: string) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>;
+
 export function Sektion() {
   const d = tema.diagram;
   const s = d.smaMultiplar;
@@ -76,11 +79,11 @@ export function Sektion() {
         caption="Små multiplars delar"
         kolumner={["Del", "Spec"]}
         rader={[
-          ["Kolumner", `${smaMultiplarKolumner(s.tre)} när diagrammet är minst ${s.tre} px, ${smaMultiplarKolumner(s.tva)} vid ${s.tva}–${s.tre - 1}, 1 under ${s.tva}. Högst ${s.maxPaneler} paneler.`],
-          ["Panel", `Höjd clamp(${k.min}, ${svTal(k.andel)} × panelbredd, ${k.max}) px plus rubriken. Rubrik: namnet i typ.roll.granssnitt 600, senaste värdet och enhetens statusmarkör; på två rader i alla paneler när det inte ryms på en.`],
-          ["Skala", "Delad y-skala i alla paneler, tickvärden en gång till vänster. Mycket olika storlek: index med första perioden som 100, och det står i noten."],
-          ["Ordning", "Bäst först enligt indikatorns riktning, efter värde för neutrala mått."],
-          ["Referens", "Överordnad nivå streckad i varje panel för andels- och medelmått, med etikett bara i första panelen. Summamått har ingen referens."],
+          [del("Kolumner"), `${smaMultiplarKolumner(s.tre)} när diagrammet är minst ${s.tre} px, ${smaMultiplarKolumner(s.tva)} vid ${s.tva}–${s.tre - 1}, 1 under ${s.tva}. Högst ${s.maxPaneler} paneler.`],
+          [del("Panel"), `Höjd clamp(${k.min}, ${svTal(k.andel)} × panelbredd, ${k.max}) px plus rubriken. Rubrik: namnet i typ.roll.granssnitt 600, senaste värdet och enhetens statusmarkör; på två rader i alla paneler när det inte ryms på en.`],
+          [del("Skala"), "Delad y-skala i alla paneler, tickvärden en gång till vänster. Mycket olika storlek: index med första perioden som 100, och det står i noten."],
+          [del("Ordning"), "Bäst först enligt indikatorns riktning, efter värde för neutrala mått."],
+          [del("Referens"), "Överordnad nivå streckad i varje panel för andels- och medelmått, med etikett bara i första panelen. Summamått har ingen referens."],
         ]}
       />
 

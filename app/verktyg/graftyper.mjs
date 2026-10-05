@@ -386,6 +386,10 @@ async function smal() {
         const r = await js(k, `__gt.ryms(${JSON.stringify(e)})`);
         kontroll(`${bredd} px ${e}: inget sticker ut till höger`, r.hoger <= bredd + 0.5 && r.overflow <= 0, r);
       }
+      for (const s of ["rangordning", "stapel", "smaMultiplar", "minidiagram"]) {
+        const r = await js(k, `(() => { const el = document.querySelector('[data-sektion="${s}"]'); const h = Math.max(...[...el.querySelectorAll("*")].map((x) => x.getBoundingClientRect().right)); return { hoger: Math.round(h), fonster: innerWidth, overflow: el.scrollWidth - el.clientWidth }; })()`);
+        kontroll(`${bredd} px sektionen ${s}: inget sticker ut till höger`, r.hoger <= bredd + 0.5 && r.overflow <= 0, r);
+      }
       for (const e of ["rangordning-regioner", "stapel-manad", "sma-avdelning"]) {
         await js(k, `__gt.visa(${JSON.stringify(e)})`); await sov(200);
         await bild(k, e, `${e}-vila-${bredd}`);

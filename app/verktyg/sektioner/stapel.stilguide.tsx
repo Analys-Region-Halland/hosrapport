@@ -17,6 +17,9 @@ export const id = "stapel";
 export const rubrik = "Stapel över tid";
 export const ordning = 66;
 
+/** Delens namn i tabellen, på en rad (bryts inte mitt i ordet). */
+const del = (text: string) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>;
+
 export function Sektion() {
   const spec = useMemo(() => exempelSpec("stapel"), []);
   const d = tema.diagram;
@@ -39,10 +42,10 @@ export function Sektion() {
         caption="Stapeldiagrammets delar"
         kolumner={["Del", "Spec"]}
         rader={[
-          ["Staplar", `farg.diagram.fokus, stapelbredd = ${svTal(d.stapel.breddPerMellanrum)} × mellanrum. Högst 24 staplar, annars linje. Saknad period: ingen stapel.`],
-          ["Nollbaslinje", `${svTal(d.nollinje)} px i farg.diagram.nollinje, ovanpå staplarnas underkant. Värdeaxeln börjar alltid på noll.`],
-          ["Rutnät och axlar", `Vågrätt, ${svTal(d.rutnat.bredd)} px streckat ${d.rutnat.streck}. Tickvärden och tidsaxel som i linjediagrammet.`],
-          ["Hovring", `Stapeln mörkas med farg.black i opacitet ${svTal(d.stapel.morkning)}; hjälplinjen går från plotytans överkant ned till stapeln.`],
+          [del("Staplar"), `farg.diagram.fokus, stapelbredd = ${svTal(d.stapel.breddPerMellanrum)} × mellanrum. Högst 24 staplar, annars linje. Saknad period: ingen stapel.`],
+          [del("Nollbaslinje"), `${svTal(d.nollinje)} px i farg.diagram.nollinje, ovanpå staplarnas underkant. Värdeaxeln börjar alltid på noll.`],
+          [del("Rutnät och axlar"), `Vågrätt, ${svTal(d.rutnat.bredd)} px streckat ${d.rutnat.streck}. Tickvärden och tidsaxel som i linjediagrammet.`],
+          [del("Hovring"), `Stapeln mörkas med farg.black i opacitet ${svTal(d.stapel.morkning)}; hjälplinjen går från plotytans överkant ned till stapeln.`],
         ]}
       />
 

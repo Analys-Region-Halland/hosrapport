@@ -27,6 +27,9 @@ function Mini({ spec }: { spec: ChartSpec }) {
   return <Rita scen={scen} spec={spec} aktiv={null} fasta={[]} />;
 }
 
+/** Delens namn i tabellen, på en rad (bryts inte mitt i ordet). */
+const del = (text: string) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>;
+
 export function Sektion() {
   const oversikt = useMemo(() => oversiktExempel(), []);
   const rader = oversikt.avsnitt.flatMap((a) => a.rader).slice(0, 6);
@@ -54,10 +57,10 @@ export function Sektion() {
         caption="Minidiagrammets mått"
         kolumner={["Del", "Spec"]}
         rader={[
-          ["Storlek", `${h.bredd} × ${h.hojd} px`],
-          ["Linje", `${svTal(m.bredd)} px i farg.diagram.fokus, raka linjer, luckor bryter linjen`],
-          ["Slutpunkt", `r ${svTal(m.punktradie)} vid senaste värdet; ett ensamt värde mellan luckor blir en liten punkt`],
-          ["Skala", "Egen per rad, från radens lägsta till högsta värde. Perioder som ingen mätte (enkäter vartannat år) tas bort."],
+          [del("Storlek"), `${h.bredd} × ${h.hojd} px`],
+          [del("Linje"), `${svTal(m.bredd)} px i farg.diagram.fokus, raka linjer, luckor bryter linjen`],
+          [del("Slutpunkt"), `r ${svTal(m.punktradie)} vid senaste värdet; ett ensamt värde mellan luckor blir en liten punkt`],
+          [del("Skala"), "Egen per rad, från radens lägsta till högsta värde. Perioder som ingen mätte (enkäter vartannat år) tas bort."],
         ]}
       />
       <Not>

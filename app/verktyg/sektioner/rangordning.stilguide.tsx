@@ -34,6 +34,9 @@ function Exempel({ namn, rubrik, text, visning, fasta: start = [], bild }: {
   );
 }
 
+/** Delens namn i tabellen, på en rad (bryts inte mitt i ordet). */
+const del = (text: string) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>;
+
 export function Sektion() {
   const d = tema.diagram;
   const r = d.rangordning;
@@ -57,11 +60,11 @@ export function Sektion() {
         caption="Rangordningens delar"
         kolumner={["Del", "Spec"]}
         rader={[
-          ["Rad", `${d.hojd.rangordning.rad} px per rad, ${d.hojd.rangordning.radMobil} px under ${d.etikett.kortaUnder} px. Namnet högerställt i typ.roll.not, högst ${svTal(r.namnMaxAndel * 100)} % av bredden, längre namn kortas med ellips.`],
-          ["Punkt", `Övriga r ${svTal(r.punktradie)} i farg.diagram.kontextPunkt. Halland r ${svTal(r.fokusPunktradie)} i farg.diagram.fokus med namn och värde i 600. Fästa regioner r ${svTal(r.punktradie)} i sin markeringsfärg med värde.`],
-          ["Riket", `Lodrät linje ${svTal(d.roll.referens.bredd)} px, streck ${d.roll.referens.streck}, etikett och värde ovanför plotytan.`],
-          ["Topp 3", `Heldragen linje ${svTal(d.roll.grans.bredd)} px i farg.diagram.grans under tredje platsen, "topp 3" i ${tema.typ.minsta} px vid högerkanten. Inte för neutrala mått.`],
-          ["Rutnät", `Lodrätt, ${svTal(d.rutnat.bredd)} px streckat ${d.rutnat.streck}, på värdeaxelns jämna värden. Tickvärden under plotytan, ingen axellinje.`],
+          [del("Rad"), `${d.hojd.rangordning.rad} px per rad, ${d.hojd.rangordning.radMobil} px under ${d.etikett.kortaUnder} px. Namnet högerställt i typ.roll.not, högst ${svTal(r.namnMaxAndel * 100)} % av bredden, längre namn kortas med ellips.`],
+          [del("Punkt"), `Övriga r ${svTal(r.punktradie)} i farg.diagram.kontextPunkt. Halland r ${svTal(r.fokusPunktradie)} i farg.diagram.fokus med namn och värde i 600. Fästa regioner r ${svTal(r.punktradie)} i sin markeringsfärg med värde.`],
+          [del("Riket"), `Lodrät linje ${svTal(d.roll.referens.bredd)} px, streck ${d.roll.referens.streck}, etikett och värde ovanför plotytan.`],
+          [del("Topp 3"), `Heldragen linje ${svTal(d.roll.grans.bredd)} px i farg.diagram.grans under tredje platsen, "topp 3" i ${tema.typ.minsta} px vid högerkanten. Inte för neutrala mått.`],
+          [del("Rutnät"), `Lodrätt, ${svTal(d.rutnat.bredd)} px streckat ${d.rutnat.streck}, på värdeaxelns jämna värden. Tickvärden under plotytan, ingen axellinje.`],
         ]}
       />
 
