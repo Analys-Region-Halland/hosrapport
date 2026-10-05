@@ -1,0 +1,33 @@
+/* Dialog: modal yta för förstoringen (stilguiden 6.8). Ingen skugga, ingen radie. */
+@layer komponent {
+  .bakgrund {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: var(--matt-marginal);
+    background: color-mix(in srgb, var(--farg-black) 35%, transparent);
+  }
+  .yta {
+    position: relative;
+    inline-size: min(var(--matt-sida), 100%);
+    max-block-size: 100%;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: var(--rum-5);
+    background: var(--farg-yta);
+    color: var(--farg-black);
+  }
+  .yta:focus { outline: none; }
+  .huvud {
+    display: flex;
+    justify-content: flex-end;
+    margin-block-end: var(--rum-2);
+  }
+
+  /* Under brytpunkt.mobil (tema.ts, 639 px): mediefrågor kan inte läsa CSS-variabler. */
+  @media (max-width: 639px) {
+    .yta { padding: var(--rum-4); }
+  }
+}

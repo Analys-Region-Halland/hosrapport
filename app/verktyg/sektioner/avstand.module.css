@@ -1,0 +1,135 @@
+/* avstand.module.css: avståndsskala, närhetsregeln och mått i stilguiden.
+   Staplarnas längd sätts inline med CSS-variablerna ur tema.ts. Ägare: WP7. */
+@layer komponent {
+  .skala {
+    display: grid;
+    gap: var(--rum-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+
+  .skala li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--rum-1) var(--rum-4);
+  }
+
+  .skalaNamn {
+    min-width: var(--rum-8);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-black);
+  }
+
+  .skalaVarde {
+    min-width: var(--rum-8);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .skalaVariabel {
+    min-width: calc(var(--rum-10) + var(--rum-4));
+  }
+
+  .stapel {
+    display: block;
+    flex: 1 0 var(--rum-10);
+  }
+
+  .stapel i {
+    display: block;
+    height: var(--rum-3);
+    background: var(--farg-fokus);
+  }
+
+  /* Närhetsregeln ritad */
+  .narhet {
+    max-width: var(--matt-text);
+    margin: var(--rum-5) 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+
+  .block {
+    width: 55%;
+    padding: var(--rum-2) var(--rum-3);
+    background: var(--farg-yta);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    color: var(--farg-black);
+  }
+
+  /* Avståndets etikett står till höger om blocken, mitt för glappet */
+  .glapp {
+    position: relative;
+  }
+
+  .glappText, .glappTextStor {
+    position: absolute;
+    top: 50%;
+    left: calc(55% + var(--rum-4));
+    right: 0;
+    transform: translateY(-50%);
+  }
+
+  .glappTextStor {
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-fokus);
+  }
+
+  .kvoter {
+    margin: var(--rum-4) 0 var(--rum-5);
+    padding-left: var(--rum-5);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  /* Mått */
+  .matt {
+    display: grid;
+    gap: var(--rum-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .matt p {
+    margin: 0;
+  }
+
+  .mattNamn {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+
+  .mattRad {
+    margin-bottom: var(--rum-2) !important;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+
+  .matt .stapel {
+    width: 100%;
+  }
+
+  .radlangd {
+    max-width: var(--matt-text);
+    padding: var(--rum-2) 0;
+    font-family: var(--typ-brod-familj);
+    font-size: var(--typ-brod-storlek);
+    line-height: var(--typ-brod-radhojd);
+    color: var(--farg-text2);
+  }
+}

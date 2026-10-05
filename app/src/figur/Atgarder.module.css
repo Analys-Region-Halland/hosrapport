@@ -1,0 +1,9 @@
+/* Figurens åtgärder: textknappar på källraden (stilguiden 6.1 och 5.3). */
+@layer komponent {
+  .atgarder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--rum-1) var(--rum-4);
+  }
+}

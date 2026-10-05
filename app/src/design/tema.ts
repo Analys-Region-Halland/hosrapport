@@ -88,6 +88,7 @@ export const tema = {
     sida: 1320,
     toc: 220,
     verktygsrad: 56,
+    harlinje: 1,
     marginal: { desktop: 24, mobil: 16 },
   },
 
