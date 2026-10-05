@@ -1,0 +1,118 @@
+/* Kapitelrad: rad i startsidans kapitelförteckning (stilguiden 4.1). Numret
+   hänger i marginalen så att namn, dek och metarad delar vänsterkant. Från
+   brytpunkt.mellan står mätaren i en egen spalt till höger, i mobil under
+   texten. Inga ramar, linjer eller bakgrunder. */
+@layer komponent {
+  .rad {
+    --nr-bredd: calc(var(--typ-indikator-storlek) * 1.5);
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--rum-4);
+  }
+
+  .text {
+    min-inline-size: 0;
+    padding-inline-start: var(--nr-bredd);
+  }
+
+  .rubrik {
+    margin: 0;
+    font-family: var(--typ-indikator-familj);
+    font-size: var(--typ-indikator-storlek);
+    line-height: var(--typ-indikator-radhojd);
+    font-weight: var(--typ-indikator-vikt);
+    color: var(--farg-black);
+    overflow-wrap: break-word;
+  }
+
+  .lank {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Klickytan täcker hela raden, med lite luft runt texten. */
+  .lank::after {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--rum-2));
+  }
+
+  .lank:focus-visible {
+    outline: none;
+  }
+
+  .lank:focus-visible::after {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: 0;
+  }
+
+  .nr {
+    display: inline-block;
+    inline-size: var(--nr-bredd);
+    margin-inline-start: calc(-1 * var(--nr-bredd));
+    color: var(--farg-fokus);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .rad:hover .namn,
+  .lank:focus-visible .namn {
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykningHover);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .dek {
+    margin: var(--rum-2) 0 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-text2);
+  }
+
+  .meta,
+  .notis {
+    margin: var(--rum-2) 0 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text3);
+  }
+
+  .notis {
+    margin-top: var(--rum-1);
+    color: var(--farg-text2);
+  }
+
+  .skiljare {
+    color: var(--farg-text3);
+  }
+
+  .matare {
+    min-inline-size: 0;
+    padding-inline-start: var(--nr-bredd);
+  }
+
+  .matare:empty {
+    display: none;
+  }
+
+  /* brytpunkt.mellan och uppåt: mätaren i egen spalt, i höjd med namnet */
+  @media (min-width: 640px) {
+    .rad {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+      column-gap: var(--rum-6);
+    }
+
+    .matare {
+      padding-inline-start: 0;
+      padding-block-start: var(--rum-3);
+    }
+
+    .matare:empty {
+      display: block;
+    }
+  }
+}

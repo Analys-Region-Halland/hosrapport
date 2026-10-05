@@ -1,0 +1,206 @@
+/* StartSida: startsidan (stilguiden 4.1 och 2.5). En spalt, matt.figur bred
+   och centrerad. Brandlisten är produktens enda gröna yta. Inga ramar, linjer
+   eller bakgrunder i flödet; avstånd grupperar. Alla värden ur tema-variablerna. */
+@layer komponent {
+  .startsida {
+    --spalt: calc(var(--matt-figur) + 2 * var(--matt-marginal));
+    min-height: 100vh;
+    background: var(--farg-papper);
+    color: var(--farg-black);
+  }
+
+  /* ── Brandlist: 48 px, vit logotyp 22 px och produktnamnet ── */
+  .brandlist {
+    background: var(--farg-fokus);
+  }
+
+  .brandinnehall {
+    display: flex;
+    align-items: center;
+    gap: var(--rum-3);
+    max-width: var(--spalt);
+    block-size: var(--rum-7);
+    margin: 0 auto;
+    padding-inline: var(--matt-marginal);
+  }
+
+  .logo {
+    display: block;
+    block-size: calc(var(--rum-5) - var(--rum-1) / 2);
+    inline-size: auto;
+  }
+
+  .produkt {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-yta);
+  }
+
+  /* ── Spalten ── */
+  .spalt {
+    max-width: var(--spalt);
+    margin: 0 auto;
+    padding: var(--rum-8) var(--matt-marginal);
+  }
+
+  /* ── Masthead ── */
+  .kicker {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    letter-spacing: var(--typ-kicker-sparr);
+    text-transform: uppercase;
+    color: var(--farg-fokus);
+  }
+
+  .titel {
+    margin: var(--rum-3) 0 0;
+    font-family: var(--typ-titel-familj);
+    font-size: var(--typ-titel-storlek);
+    line-height: var(--typ-titel-radhojd);
+    font-weight: var(--typ-titel-vikt);
+    letter-spacing: var(--typ-titel-sparr);
+    overflow-wrap: break-word;
+  }
+
+  .ingress {
+    margin: var(--rum-5) 0 0;
+    max-width: var(--matt-text);
+    font-family: var(--typ-ingress-familj);
+    font-size: var(--typ-ingress-storlek);
+    line-height: var(--typ-ingress-radhojd);
+    font-weight: var(--typ-ingress-vikt);
+    color: var(--farg-text2);
+  }
+
+  /* ── Läget just nu ── */
+  .lage {
+    margin-top: var(--rum-8);
+  }
+
+  .blockrubrik {
+    margin: 0;
+    font-family: var(--typ-figurtitel-familj);
+    font-size: var(--typ-figurtitel-storlek);
+    line-height: var(--typ-figurtitel-radhojd);
+    font-weight: var(--typ-figurtitel-vikt);
+  }
+
+  .lagematare {
+    margin-top: var(--rum-4);
+  }
+
+  .lagelank {
+    margin: var(--rum-2) 0 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+  }
+
+  /* ── Kapitelförteckningen ── */
+  .tema {
+    margin-top: var(--rum-9);
+  }
+
+  .temanamn {
+    margin: 0;
+    font-family: var(--typ-avsnitt-familj);
+    font-size: var(--typ-avsnitt-storlek);
+    line-height: var(--typ-avsnitt-radhojd);
+    font-weight: var(--typ-avsnitt-vikt);
+    letter-spacing: var(--typ-avsnitt-sparr);
+    overflow-wrap: break-word;
+  }
+
+  .temamening {
+    margin: var(--rum-2) 0 0;
+    max-width: var(--matt-text);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-text2);
+  }
+
+  .kapitellista {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--rum-6);
+    margin: var(--rum-6) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* ── Sidfot ── */
+  .sidfot {
+    margin-top: var(--rum-9);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text3);
+  }
+
+  .sidfotrad {
+    margin: 0;
+  }
+
+  .publicerad {
+    white-space: nowrap;
+  }
+
+  .skiljare {
+    color: var(--farg-text3);
+  }
+
+  .om {
+    max-width: var(--matt-text);
+    margin-top: var(--rum-3);
+    color: var(--farg-text2);
+  }
+
+  .om > p {
+    margin: 0;
+  }
+
+  .om > p + p {
+    margin-top: var(--rum-2);
+  }
+
+  .laddar {
+    margin: var(--rum-8) 0 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-text2);
+  }
+
+  /* ── Länkar (stilguiden 2.4) och sidfotens textknapp i samma form ── */
+  .lank {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--komponent-klickyta);
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--farg-fokus);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+    cursor: pointer;
+  }
+
+  .lank:hover {
+    text-decoration-thickness: var(--typ-lank-understrykningHover);
+  }
+
+  .lank:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+}
