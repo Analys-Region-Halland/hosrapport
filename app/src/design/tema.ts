@@ -115,6 +115,9 @@ export const tema = {
     jamforLista: { radhojd: 34 },
     tocPrick: 6,
     kapitellinje: 2,
+    // Statusmätaren på startsidan och i sammanfattningen (stilguiden 4.1):
+    // stapelns höjd och mellanrummet mellan segmenten
+    statusmatare: { hojd: 6, mellanrum: 2 },
   },
 
   // ── 6.3–6.5 och 6.8 Diagram ──
