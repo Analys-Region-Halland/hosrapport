@@ -110,6 +110,20 @@ function dagar(iso: string, vy: VyId): number {
 
 const avrunda = (v: number, d: number) => Math.round(v * 10 ** d) / 10 ** d;
 
+/**
+ * Barnens fasta lägen kring föräldern, jämnt fördelade från −1 till 1 och
+ * blandade med fast frö, så att avdelningarna alltid skiljer sig åt.
+ */
+function fastaLagen(text: string, antal: number): number[] {
+  const lagen = Array.from({ length: antal }, (_, i) => (antal === 1 ? 0 : -1 + (2 * i) / (antal - 1)));
+  const r = slump(text);
+  for (let i = lagen.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [lagen[i], lagen[j]] = [lagen[j], lagen[i]];
+  }
+  return lagen;
+}
+
 /** Andelarna en viss period: mallens andelar med lite brus, summerar till 1. */
 function periodAndelar(mall: Barnmall, r: () => number): number[] {
   const brutto = mall.barn.map(([, a]) => a * (1 + (r() - 0.5) * 0.3));
@@ -173,10 +187,8 @@ export function delaUpp(
   const fall = (FALL_PER_DAG[kpi.id] ?? FALL_PER_DAG_ANNARS) * mall.storlek * dagar(punkt.period, vy);
   const n = andelar.map((a) => Math.max(1, Math.round(fall * a)));
   const spridning = SPRIDNING[kpi.id] ?? SPRIDNING_ANNARS;
-  const ra = ids.map((id) => {
-    const lage = slump(`${kpi.id}|${id}`)() * 2 - 1;            // avdelningens fasta läge, −1 till 1
-    return V * (1 + spridning * (lage + (r() - 0.5) * 0.6));
-  });
+  const lagen = fastaLagen(`${kpi.id}|${foralderId}`, ids.length);
+  const ra = lagen.map((lage) => V * (1 + spridning * (lage + (r() - 0.5) * 0.6)));
   const N = n.reduce((s, v) => s + v, 0);
   const skillnad = V - ra.reduce((s, v, i) => s + v * n[i], 0) / N;
   return ids.map((id, i) => ({ id, varde: Math.max(0, avrunda(ra[i] + skillnad, d)), n: n[i] }));
