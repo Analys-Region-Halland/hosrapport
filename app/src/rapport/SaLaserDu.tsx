@@ -31,7 +31,7 @@ const HS = " "; // hårt mellanslag före procenttecknet (stilguiden 3.2)
 type Post = [term: string, text: string];
 
 const KAPITLETS_DELAR: Post[] = [
-  ["Det viktigaste", "Högst sex punkter, en mening var. De väljs med fasta regler, till exempel statusbyten, bästa och sämsta placering och största förändring. Varje punkt slutar med en länk till indikatorn, som se 2.3."],
+  ["Det viktigaste", "Högst sex punkter, en mening var. De väljs med fasta regler, till exempel statusbyten, bästa och sämsta placering och största förändring. Varje punkt slutar med en länk till indikatorn i formen ”se 2.3”."],
   ["Läget i korthet", "En tabell med kapitlets alla indikatorer: senaste värde, plats bland regionerna, utvecklingen i ett litet diagram och status. Sortera genom att klicka på ett kolumnhuvud. Namnet leder till indikatorn."],
   ["Avsnitt", "Indikatorerna står i numrerade avsnitt, vart och ett med en kort inledning. Ett kapitel utan avsnitt visar indikatorerna direkt."],
   ["Indikator", `Rubriken har nummer, namn och status. Under den står nyckeltalsraden med senaste värde, plats och period, till exempel 87,7${HS}% · plats 8 av 21 · 2024. Sedan följer en kort analys och figuren.`],
