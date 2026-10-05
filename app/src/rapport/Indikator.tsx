@@ -130,9 +130,19 @@ export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, 
 // och skrivs med replaceState när läsaren byter flik eller nivå. Registret i
 // nav/figurlage.ts ger "Kopiera länk" och läspositionen samma läge.
 
-function IndikatorFigur({ kpi, kapitel, vy }: { kpi: KpiModell; kapitel: KapitelModell; vy: VyId }) {
+export interface IndikatorFigurProps {
+  kpi: KpiModell;
+  kapitel: KapitelModell;
+  vy: VyId;
+  /** Läget utan adress (stilguiden): fokus och visning att börja i. Förval: regionen, första visningen. */
+  start?: NivaLage;
+}
+
+/** Indikatorns figur med visningar, nivåer och dagflik. Exporteras för stilguiden (WP10). */
+export function IndikatorFigur({ kpi, kapitel, vy, start }: IndikatorFigurProps) {
   const adress = useFigurAdress();
-  const [onskat, setOnskat] = useState<NivaLage>(() => lageFranAdress(adress?.route ?? null, kpi, kapitel, vy));
+  const [onskat, setOnskat] = useState<NivaLage>(() =>
+    (adress || !start ? lageFranAdress(adress?.route ?? null, kpi, kapitel, vy) : start));
   // Bakåt, framåt och vanliga länkar till indikatorn: följ adressens läge
   const [adressNr, setAdressNr] = useState(adress?.nr);
   if (adress && adress.nr !== adressNr) {
