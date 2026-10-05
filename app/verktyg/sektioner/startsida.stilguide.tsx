@@ -84,7 +84,7 @@ export function Sektion() {
       </Prosa>
       <Exempel bild="matare">
         <div style={stil.matare}>
-          <Not>Läget just nu (alla indikatorer med status i årsvyn)</Not>
+          <Not>Läget just nu (summan av kapitelraderna)</Not>
           <Statusmatare status={{ gron: 29, gul: 20, rod: 31 }} storlek="lage" />
           <Not>Kapitelrad</Not>
           <div style={stil.smal}>

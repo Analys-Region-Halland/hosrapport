@@ -41,11 +41,20 @@
     color: var(--farg-yta);
   }
 
-  /* ── Spalten ── */
-  .spalt {
+  /* ── Spalten: main och sidfoten är lika breda ── */
+  .bredd {
     max-width: var(--spalt);
     margin: 0 auto;
-    padding: var(--rum-8) var(--matt-marginal);
+    padding-inline: var(--matt-marginal);
+  }
+
+  .huvud {
+    padding-block-start: var(--rum-8);
+  }
+
+  /* main får fokus från adressen; själva ytan ritar ingen ring */
+  .huvud:focus {
+    outline: none;
   }
 
   /* ── Masthead ── */
@@ -141,6 +150,7 @@
   /* ── Sidfot ── */
   .sidfot {
     margin-top: var(--rum-9);
+    padding-block-end: var(--rum-8);
     font-family: var(--typ-not-familj);
     font-size: var(--typ-not-storlek);
     line-height: var(--typ-not-radhojd);

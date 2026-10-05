@@ -1,0 +1,15 @@
+/* Laddar.module.css: laddnings- och felraden i ramen. Värden ur tema-variablerna. */
+@layer komponent {
+  .laddar,
+  .fel {
+    padding: var(--rum-9) 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-text2);
+  }
+
+  .fel {
+    color: var(--farg-black);
+  }
+}

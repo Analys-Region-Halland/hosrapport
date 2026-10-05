@@ -8,9 +8,8 @@ import {
   hittaKapitelForBlock, kapitelForBlockICache, useAllaKapitel, useKapitel, useKapitelIndex, vyForKapitel,
   type KapitelIndex,
 } from "./rapport/ramData";
-import {
-  BegreppPlatshallare, Laddar, LasPlatshallare, StartPlatshallare, Stubbgrans,
-} from "./rapport/RamPlatshallare";
+import { Laddar } from "./rapport/Laddar";
+import { LasPlatshallare } from "./rapport/RamPlatshallare";
 import Sammanfattning from "./rapport/Sammanfattning";
 import StartSida from "./start/StartSida";
 
@@ -43,9 +42,8 @@ export default function App() {
 //    #/kapitel/{id}?vy=&i=   kapitlet (WP9), rullat till blocket i
 //    #/begrepp, #/begrepp/x  begreppslistan (WP5)
 //    #/las                   så läser du rapporten
-//  Startsidan och begreppslistan renderas i en Stubbgrans: så länge de är
-//  stubbar visas ramens platshållare (rapport/RamPlatshallare.tsx). Kapitlet
-//  och sammanfattningen (WP9) renderas direkt.
+//  Startsidan ritar egna landmärken (header, main, footer); ramen lägger
+//  main runt övriga sidor. Kapitelraderna på startsidan är länkar.
 //  Saknar adressen vy öppnas ett kapitel i månadsvyn om den finns, annars i
 //  en vy som har kapitlet (KAPITELVY; routern säger utanVy).
 // ════════════════════════════════════════════════════════════
@@ -78,6 +76,7 @@ function NyApp() {
   let sida: ReactNode;
   let klar = true;
   let kapitel = null;
+  let egnaLandmarken = false;
 
   if (ankare) {
     sida = <Laddar text="Letar upp platsen i rapporten …" />;
@@ -90,11 +89,8 @@ function NyApp() {
   } else {
     switch (route.sida) {
       case "start":
-        sida = (
-          <Stubbgrans key="start" ersattning={<StartPlatshallare index={index} />}>
-            <StartSida onValj={(id) => navigera({ sida: "kapitel", id, vy: (index && vyForKapitel(index, id, KAPITELVY)) ?? STANDARDVY })} />
-          </Stubbgrans>
-        );
+        sida = <StartSida key="start" />;
+        egnaLandmarken = true;
         break;
       case "kapitel": {
         kapitel = kap.kapitel;
@@ -124,11 +120,7 @@ function NyApp() {
         );
         break;
       case "begrepp":
-        sida = (
-          <Stubbgrans key="begrepp" ersattning={<BegreppPlatshallare id={route.id} />}>
-            <BegreppSida id={route.id} />
-          </Stubbgrans>
-        );
+        sida = <BegreppSida key="begrepp" id={route.id} />;
         break;
       case "las":
         sida = <LasPlatshallare />;
@@ -137,7 +129,7 @@ function NyApp() {
   }
 
   return (
-    <Ram kapitel={kapitel} klar={klar} sidnamn={sidtitel}>
+    <Ram kapitel={kapitel} klar={klar} sidnamn={sidtitel} egnaLandmarken={egnaLandmarken}>
       {sida}
     </Ram>
   );

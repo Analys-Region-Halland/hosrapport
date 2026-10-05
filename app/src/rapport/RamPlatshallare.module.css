@@ -1,30 +1,11 @@
-/* RamPlatshallare.module.css: enkla platshållare för sidor i andra paket (startsidan,
-   begreppslistan, läsanvisningen).
-   Avstånd och typroller enligt stilguiden 2.4, 2.5 och 4.3 så att sidlängd och
-   rullning liknar den riktiga rapportsidan. Alla värden ur tema-variablerna. */
+/* RamPlatshallare.module.css: platshållaren för läsanvisningen. Värden ur
+   tema-variablerna. */
 @layer komponent {
-  .startsida {
-    max-width: var(--matt-sida);
-    margin: 0 auto;
-    padding: var(--rum-8) var(--matt-marginal) var(--rum-10);
-  }
-
   .kapitel {
     max-width: var(--matt-figur);
   }
 
-  .kicker {
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    font-weight: var(--typ-not-viktStark);
-    letter-spacing: var(--typ-kicker-sparr);
-    text-transform: uppercase;
-    color: var(--farg-fokus);
-  }
-
   .titel {
-    margin-top: var(--rum-3);
     font-family: var(--typ-titel-familj);
     font-size: var(--typ-titel-storlek);
     line-height: var(--typ-titel-radhojd);
@@ -33,7 +14,6 @@
     overflow-wrap: break-word;
   }
 
-  .ingress,
   .dek {
     margin-top: var(--rum-5);
     max-width: var(--matt-text);
@@ -42,91 +22,5 @@
     line-height: var(--typ-ingress-radhojd);
     font-weight: var(--typ-ingress-vikt);
     color: var(--farg-text2);
-  }
-
-  .skiljare {
-    color: var(--farg-text3);
-  }
-
-  .block {
-    margin-top: var(--rum-9);
-  }
-
-  .blockrubrik {
-    font-family: var(--typ-figurtitel-familj);
-    font-size: var(--typ-figurtitel-storlek);
-    line-height: var(--typ-figurtitel-radhojd);
-    font-weight: var(--typ-figurtitel-vikt);
-  }
-
-  .nr {
-    color: var(--farg-fokus);
-    font-variant-numeric: var(--typ-siffror);
-  }
-
-  .kapitellista {
-    list-style: none;
-    margin-top: var(--rum-4);
-    padding: 0;
-  }
-
-  .kapitellista {
-    margin-top: var(--rum-7);
-  }
-
-  .kapitellista li + li {
-    margin-top: var(--rum-5);
-  }
-
-  .kapitellank {
-    font-family: var(--typ-indikator-familj);
-    font-size: var(--typ-indikator-storlek);
-    line-height: var(--typ-indikator-radhojd);
-    font-weight: var(--typ-indikator-vikt);
-    color: var(--farg-black);
-    text-decoration: none;
-  }
-
-  .kapitellank:hover {
-    text-decoration-line: underline;
-    text-decoration-thickness: var(--typ-lank-understrykningHover);
-    text-underline-offset: var(--typ-lank-avstand);
-  }
-
-  .lankrad {
-    margin-top: var(--rum-8);
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-  }
-
-  .lank {
-    color: var(--farg-fokus);
-    text-decoration-line: underline;
-    text-decoration-thickness: var(--typ-lank-understrykning);
-    text-underline-offset: var(--typ-lank-avstand);
-  }
-
-  .lank:hover {
-    text-decoration-thickness: var(--typ-lank-understrykningHover);
-  }
-
-  .lank:focus-visible,
-  .kapitellank:focus-visible {
-    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
-    outline-offset: var(--komponent-fokusring-avstand);
-  }
-
-  .laddar,
-  .fel {
-    padding: var(--rum-9) 0;
-    font-family: var(--typ-granssnitt-familj);
-    font-size: var(--typ-granssnitt-storlek);
-    line-height: var(--typ-granssnitt-radhojd);
-    color: var(--farg-text2);
-  }
-
-  .fel {
-    color: var(--farg-black);
   }
 }

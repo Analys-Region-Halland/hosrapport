@@ -84,8 +84,10 @@ describe("byggStartModell", () => {
   };
   const m = byggStartModell(manifest, TESTTEMAN);
 
-  it("Läget just nu summerar årsvyn, inte andra vyer", () => {
-    expect(m.lage).toEqual({ gron: 3, gul: 1, rod: 3 });
+  it("Läget just nu är summan av kapitelraderna, var och en i den vy raden leder till", () => {
+    // k1 och okand i årsvyn, k3 och bara-manad i månadsvyn, k2 utan status
+    expect(m.lage).toEqual({ gron: 5, gul: 2, rod: 1 });
+    expect(m.lage).toEqual(summeraStatus(m.teman.flatMap((t) => t.kapitel.map((k) => k.status))));
   });
 
   it("grupperar per tema i kapitelinfos ordning och hoppar över tema utan kapitel i manifestet", () => {
@@ -107,9 +109,10 @@ describe("byggStartModell", () => {
       .toEqual(["1 k1", "2 k2", "3 k3", "4 okand", "5 bara-manad"]);
   });
 
-  it("hämtar kapitlets siffror ur vyn länken leder till (årsvyn när den finns)", () => {
+  it("hämtar kapitlets siffror ur vyn länken leder till, som en adress utan vy (månadsvyn när den finns)", () => {
     const k3 = m.teman[1].kapitel[0];
-    expect(k3).toMatchObject({ vy: "ar", status: { gron: 2, gul: 0, rod: 2 }, antal: 4 });
+    expect(k3).toMatchObject({ vy: "manad", status: { gron: 3, gul: 1, rod: 0 }, antal: 4 });
+    expect(m.teman[0].kapitel[0]).toMatchObject({ id: "k1", vy: "ar" });
   });
 
   it("bygger dek, metarad och notis ur kapitelinfo och namnet ur manifestet", () => {
@@ -125,13 +128,15 @@ describe("byggStartModell", () => {
     expect(antalMedStatus(k2.status)).toBe(0);
   });
 
-  it("rapportens manifest ger 26 i fas, 20 bevaka och 31 avvikelse i sju kapitel (beskrivande mått räknas inte)", () => {
+  it("rapportens manifest ger 27 i fas, 21 bevaka och 29 avvikelse i sju kapitel (beskrivande mått räknas inte)", () => {
     const r = byggStartModell(MANIFEST, TEMAN);
-    expect(r.lage).toEqual({ gron: 26, gul: 20, rod: 31 });
+    // SKR-kapitlen i årsvyn, akutflödet i månadsvyn (KAPITELVY)
+    expect(r.lage).toEqual({ gron: 27, gul: 21, rod: 29 });
     expect(r.teman.map((t) => t.id)).toEqual(["patienten", "kvalitet", "resultat", "internt"]);
     const kapitel = r.teman.flatMap((t) => t.kapitel);
     expect(kapitel.map((k) => k.nummer)).toEqual([1, 2, 3, 4, 5, 6, 7]);
-    expect(kapitel.every((k) => k.vy === "ar")).toBe(true);
+    expect(kapitel.map((k) => k.vy)).toEqual(["ar", "ar", "ar", "ar", "ar", "ar", "manad"]);
+    expect(kapitel[6]).toMatchObject({ id: "akutflode", status: { gron: 3, gul: 1, rod: 0 } });
     expect(kapitel[0].meta).toEqual(["14 indikatorer", "årlig", "Hälso- och sjukvårdsbarometern, Nationell patientenkät"]);
     expect(summeraStatus(kapitel.map((k) => k.status))).toEqual(r.lage);
   });
