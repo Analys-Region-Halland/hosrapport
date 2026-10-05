@@ -1,0 +1,100 @@
+/* BegreppSida.module.css: begreppslistan (stilguiden 5.7). Värden ur design/tema.ts.
+   Avstånd enligt närhetsregeln: mellan begrepp rum.7, inuti högst rum.3. */
+@layer komponent {
+  .sida {
+    color: var(--farg-black);
+  }
+
+  .titel {
+    font-family: var(--typ-titel-familj);
+    font-size: var(--typ-titel-storlek);
+    line-height: var(--typ-titel-radhojd);
+    font-weight: var(--typ-titel-vikt);
+    letter-spacing: var(--typ-titel-sparr);
+  }
+
+  .ingress {
+    margin-top: var(--rum-5);
+    max-width: var(--matt-text);
+    font-family: var(--typ-ingress-familj);
+    font-size: var(--typ-ingress-storlek);
+    line-height: var(--typ-ingress-radhojd);
+    font-weight: var(--typ-ingress-vikt);
+    color: var(--farg-text2);
+  }
+
+  .sida .lista {
+    margin-top: var(--rum-8);
+  }
+
+  .post {
+    max-width: var(--matt-text);
+    scroll-margin-top: calc(var(--matt-verktygsrad) + var(--rum-5));
+  }
+
+  .post + .post {
+    margin-top: var(--rum-7);
+  }
+
+  .post:focus {
+    outline: none;
+  }
+
+  .post:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--rum-2);
+  }
+
+  .term {
+    font-family: var(--typ-figurtitel-familj);
+    font-size: var(--typ-figurtitel-storlek);
+    line-height: var(--typ-figurtitel-radhojd);
+    font-weight: var(--typ-figurtitel-vikt);
+    color: var(--farg-black);
+  }
+
+  .kort,
+  .lang {
+    font-family: var(--typ-brod-familj);
+    font-size: var(--typ-brod-storlek);
+    line-height: var(--typ-brod-radhojd);
+    font-weight: var(--typ-brod-vikt);
+  }
+
+  .kort {
+    margin-top: var(--rum-2);
+  }
+
+  .lang {
+    margin-top: var(--typ-styckeavstand);
+  }
+
+  .meta {
+    margin-top: var(--rum-3);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text3);
+  }
+
+  .meta + .meta {
+    margin-top: var(--rum-1);
+  }
+
+  .lank {
+    color: var(--farg-fokus);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  .lank:hover {
+    text-decoration-thickness: var(--typ-lank-understrykningHover);
+  }
+
+  .lank:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+}

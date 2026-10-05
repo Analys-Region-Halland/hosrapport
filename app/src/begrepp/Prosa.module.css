@@ -1,0 +1,6 @@
+/* Prosa.module.css: styckeavstånd i löptext (stilguiden 2.5). Typografin ärvs. */
+@layer komponent {
+  .prosa > p + p {
+    margin-top: var(--typ-styckeavstand);
+  }
+}
