@@ -51,9 +51,13 @@ export function Tooltip({ lage, bredd, helBredd }: Props) {
       left = x <= mitt ? x + avstand : x - avstand - b;
       top = yta.y;
     } else {
+      // Centrerad på raden, inom plotytan; är tooltipen högre än plotytan
+      // (få rader) får den gå ned över axeln men aldrig under diagrammet.
       const h = el.offsetHeight;
       left = x > mitt ? yta.x : yta.x + yta.b - b;
-      top = Math.max(yta.y, Math.min(yta.y + yta.h - h, y - h / 2));
+      const hogst = Math.max(0, Math.min(yta.y + yta.h, lage.under) - h);
+      const lagst = Math.max(0, Math.min(yta.y, lage.under - h));
+      top = Math.max(lagst, Math.min(Math.max(hogst, lagst), y - h / 2));
     }
     left = Math.max(0, Math.min(bredd - b, left));
     el.style.left = `${Math.round(left)}px`;

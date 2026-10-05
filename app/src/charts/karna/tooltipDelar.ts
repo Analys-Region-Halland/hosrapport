@@ -30,12 +30,15 @@ export function relativText(d: number, bas: number): string | null {
   return medTecken(v, `${tal(v, 1)}${HART}%`);
 }
 
+/** Meningens punkt, utom när texten redan slutar med en (t.ex. "p.e."). */
+const mening = (s: string) => (s.endsWith(".") ? s : `${s}.`);
+
 /** Uppläsningen (aria-live): tooltipens innehåll som meningar, som i linjediagrammet. */
 export function liveText(rubrik: string, rader: TooltipRad[], noter: string[], uppmaning: string | null, tillagg = ""): string {
   const delar = rader.map((r) => `${r.namn} ${r.varde}${r.plats ? `, ${r.plats}` : ""}`);
   return [
-    `${rubrik}${tillagg}: ${delar.join("; ")}.`,
-    ...noter.map((n) => `${n}.`),
-    ...(uppmaning ? [`${uppmaning}.`] : []),
+    mening(`${rubrik}${tillagg}: ${delar.join("; ")}`),
+    ...noter.map(mening),
+    ...(uppmaning ? [mening(uppmaning)] : []),
   ].join(" ");
 }
