@@ -5,7 +5,7 @@ import { kontraktVersion, valideraKontrakt } from "./kontrakt";
 import type { RaManifest } from "./kontrakt";
 import { HALLAND_ID, RIKET_ID } from "./modell";
 import type { KapitelModell, Punkt, VyId } from "./modell";
-import { arKronor, fyllLuckor, nastaPeriod, normalisera, periodRutnat, platser } from "./normalisera";
+import { arKronor, fyllLuckor, nastaPeriod, normalisera, periodRutnat, platser, reservkalla } from "./normalisera";
 import { antalMeningar } from "../charts/text";
 
 const DATA = fileURLToPath(new URL("../../public/data/", import.meta.url));
@@ -167,6 +167,17 @@ describe("normalisera i detalj", () => {
     expect(k.serier["0006"]).toMatchObject({ senaste: 99.1, rank: 8, rank_av: 21 });
     expect(platser(new Map([["a", 3], ["b", 5], ["c", 5], ["d", null]]), "hog")).toEqual(new Map([["a", 3], ["b", 1], ["c", 1]]));
     expect(platser(new Map([["a", 3], ["b", 5]]), "lag")).toEqual(new Map([["a", 1], ["b", 2]]));
+  });
+
+  it("indikatorer utan källa i datan får kapitlets källa ur kapitelinfo (WP9)", () => {
+    for (const fil of kapitelfiler.filter((f) => f.endsWith("-akutflode.json"))) {
+      for (const k of modell(fil).kpier) {
+        expect(k.kalla).toMatchObject({ namn: "Regionens vårddatalager", huvudman: "Region Halland", uppdatering: "Dagligen" });
+      }
+    }
+    // Källor som finns i datan skrivs inte över
+    expect(kpi("ar-skr-tillganglighet.json", "kolada-n79179").kalla?.namn).toBe("Nationella väntetidsdatabasen (Väntetider i vården)");
+    expect(reservkalla("finns-inte")).toBeUndefined();
   });
 });
 

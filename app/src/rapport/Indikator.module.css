@@ -1,0 +1,70 @@
+/* Indikator.module.css: indikatorns block (stilguiden 2.5 och 4.4). Inne i en
+   indikator är avståndet högst rum.6; mellan indikatorer rum.9 (sätts av
+   avsnittet och kapitlet). */
+@layer komponent {
+  .indikator {
+    /* Block utanför skärmen ritas inte förrän de närmar sig; höjden uppskattas
+       tills blocket ritats en gång (auto). Ritinneslutningen klipper vid
+       blockets kant, så fokusringar nära kanten får rum.2 marginal. */
+    content-visibility: auto;
+    overflow-clip-margin: var(--rum-2);
+  }
+
+  .rubrikrad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--rum-4);
+    row-gap: var(--rum-2);
+    max-inline-size: var(--matt-figur);
+  }
+
+  .rubrik {
+    margin: 0;
+    font-family: var(--typ-indikator-familj);
+    font-size: var(--typ-indikator-storlek);
+    line-height: var(--typ-indikator-radhojd);
+    font-weight: var(--typ-indikator-vikt);
+    color: var(--farg-black);
+    text-wrap: balance;
+  }
+
+  .status {
+    flex: 0 0 auto;
+  }
+
+  .nyckeltal {
+    margin-block-start: var(--rum-2);
+  }
+
+  .analys {
+    margin-block-start: var(--rum-5);
+  }
+
+  .proveniens {
+    margin-block-start: var(--rum-2);
+  }
+
+  .figur {
+    margin-block-start: var(--rum-6);
+  }
+
+  .vantar {
+    max-inline-size: var(--matt-figur);
+    background: var(--farg-yta);
+  }
+
+  .fordjupning {
+    margin-block-start: var(--rum-5);
+  }
+
+  .kommentar:not(:empty) {
+    margin-block-start: var(--rum-6);
+  }
+
+  @media print {
+    .indikator {
+      content-visibility: visible;
+    }
+  }
+}

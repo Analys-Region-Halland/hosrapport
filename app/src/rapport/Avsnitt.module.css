@@ -1,0 +1,15 @@
+/* Avsnitt.module.css: avsnittet (stilguiden 2.5 och 4.3). Rubrik, dek rum.4
+   under, sedan rum.8 till första indikatorn och rum.9 mellan indikatorerna. */
+@layer komponent {
+  .dek {
+    margin-block-start: var(--rum-4);
+  }
+
+  .indikatorer {
+    margin-block-start: var(--rum-8);
+  }
+
+  .indikatorer > * + * {
+    margin-block-start: var(--rum-9);
+  }
+}

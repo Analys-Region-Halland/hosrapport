@@ -1,0 +1,129 @@
+/* delat.module.css: textroller och länkar som rapportsidans delar (WP9) har
+   gemensamt: rubriker på kapitelnivå, nummer, löptext, noter och länkar
+   (stilguiden 2.4 och 5.3). Alla värden ur tema-variablerna. */
+@layer komponent {
+  /* Blockrubrik: Det viktigaste, Läget i korthet (typ.roll.figurtitel) */
+  .blockrubrik {
+    margin: 0;
+    font-family: var(--typ-figurtitel-familj);
+    font-size: var(--typ-figurtitel-storlek);
+    line-height: var(--typ-figurtitel-radhojd);
+    font-weight: var(--typ-figurtitel-vikt);
+    color: var(--farg-black);
+  }
+
+  /* Avsnitt, Om statistiken och kapitel i sammanfattningen (typ.roll.avsnitt) */
+  .avsnittsrubrik {
+    margin: 0;
+    font-family: var(--typ-avsnitt-familj);
+    font-size: var(--typ-avsnitt-storlek);
+    line-height: var(--typ-avsnitt-radhojd);
+    font-weight: var(--typ-avsnitt-vikt);
+    letter-spacing: var(--typ-avsnitt-sparr);
+    color: var(--farg-black);
+    text-wrap: balance;
+  }
+
+  /* Delrubrik inne i Om statistiken och fördjupningen (typ.roll.granssnitt 600) */
+  .etikett {
+    margin: 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-black);
+  }
+
+  /* Numrering: farg.fokus, tabulära siffror, lite luft till namnet */
+  .nr {
+    margin-inline-end: 0.35em;
+    color: var(--farg-fokus);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  .brod {
+    max-inline-size: var(--matt-text);
+    font-family: var(--typ-brod-familj);
+    font-size: var(--typ-brod-storlek);
+    line-height: var(--typ-brod-radhojd);
+    font-weight: var(--typ-brod-vikt);
+    color: var(--farg-black);
+  }
+
+  .ingress {
+    max-inline-size: var(--matt-text);
+    margin: 0;
+    font-family: var(--typ-ingress-familj);
+    font-size: var(--typ-ingress-storlek);
+    line-height: var(--typ-ingress-radhojd);
+    font-weight: var(--typ-ingress-vikt);
+    color: var(--farg-text2);
+  }
+
+  .granssnitt {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+  }
+
+  .not {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text3);
+  }
+
+  /* Länk (stilguiden 2.4): fokusgrön, understrykning 1 px med 0,2 em avstånd,
+     2 px vid hover. Besökta länkar ändrar inte färg. */
+  .lank,
+  .lank:visited {
+    color: var(--farg-fokus);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+  .lank:hover {
+    text-decoration-thickness: var(--typ-lank-understrykningHover);
+  }
+  .lank:focus-visible,
+  .knapp:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  /* Textknapp (stilguiden 5.3): not 600, text2, ingen ram, understrykning vid hover */
+  .knapp {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--komponent-klickyta);
+    min-inline-size: var(--komponent-klickyta);
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+    cursor: pointer;
+  }
+  .knapp:hover {
+    color: var(--farg-black);
+    text-decoration-line: underline;
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+
+  /* Bara för skärmläsare */
+  .dold {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

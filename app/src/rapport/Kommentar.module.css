@@ -1,0 +1,55 @@
+/* Kommentar.module.css: verksamhetens kommentar (stilguiden 4.4). Ingen ram
+   eller bakgrund i läsflödet; formuläret i redigeringsläget har fält med
+   hårlinje, eftersom fält måste synas som fält. */
+@layer komponent {
+  .kommentar {
+    display: grid;
+    row-gap: var(--rum-5);
+  }
+
+  .post > * + * {
+    margin-block-start: var(--rum-2);
+  }
+
+  .text {
+    margin: 0;
+  }
+
+  .knappar {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--rum-4);
+    margin: 0;
+  }
+
+  .formular {
+    display: grid;
+    row-gap: var(--rum-2);
+    max-inline-size: var(--matt-text);
+  }
+
+  .faltetikett {
+    margin-block-start: var(--rum-2);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+  }
+
+  .falt {
+    inline-size: 100%;
+    padding: var(--rum-2) var(--rum-3);
+    background: var(--farg-yta);
+    border: var(--matt-harlinje) solid var(--farg-text3);
+    border-radius: 0;
+    font-family: var(--typ-brod-familj);
+    font-size: var(--typ-brod-storlek);
+    line-height: var(--typ-brod-radhojd);
+    color: var(--farg-black);
+  }
+  .falt:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+}

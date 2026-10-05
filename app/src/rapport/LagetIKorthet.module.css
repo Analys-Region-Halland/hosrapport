@@ -1,0 +1,151 @@
+/* LagetIKorthet.module.css: översiktstabellen (stilguiden 5.8 och 5.9).
+   Radhöjd 44 px, hårlinje mellan rader, inga lodräta linjer, ingen zebra. */
+@layer komponent {
+  .tabell {
+    inline-size: 100%;
+    max-inline-size: var(--matt-figur);
+    margin-block-start: var(--rum-4);
+    border-collapse: collapse;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-black);
+  }
+
+  .tabell th,
+  .tabell td {
+    padding-block: var(--rum-1);
+    padding-inline: 0 var(--rum-4);
+    border-block-end: var(--matt-harlinje) solid var(--farg-harlinje);
+    text-align: start;
+    vertical-align: middle;
+    font-weight: var(--typ-granssnitt-vikt);
+  }
+  .tabell th:last-child,
+  .tabell td:last-child {
+    padding-inline-end: 0;
+  }
+
+  .tabell tbody td,
+  .tabell tbody th {
+    block-size: var(--komponent-tabell-radhojd);
+  }
+
+  /* Huvud: not 600 text2, gemener (stilguiden 5.9) */
+  .tabell thead th {
+    vertical-align: bottom;
+    padding-block: 0 var(--rum-1);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+    white-space: nowrap;
+  }
+
+  .sortera,
+  .huvudtext {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rum-1);
+    min-block-size: var(--komponent-klickyta);
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    color: inherit;
+  }
+  .sortera {
+    cursor: pointer;
+  }
+  .sortera:hover {
+    color: var(--farg-black);
+    text-decoration-line: underline;
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+  .sortera:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+  .pil {
+    color: var(--farg-black);
+  }
+
+  .namnkolumn {
+    inline-size: 100%;
+  }
+
+  /* Gruppetikett: avsnittets namn, granssnitt 600 black, inte versalt, inte grönt */
+  .tabell .grupp th {
+    block-size: auto;
+    padding-block: var(--rum-5) var(--rum-1);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-black);
+  }
+  .tabell tbody:first-of-type .grupp th {
+    padding-block-start: var(--rum-3);
+  }
+
+  .namn {
+    text-wrap: pretty;
+  }
+  .namnlank,
+  .namnlank:visited {
+    color: var(--farg-black);
+    text-decoration: none;
+  }
+  .namnlank:hover {
+    color: var(--farg-fokus);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--typ-lank-understrykning);
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+  .namnlank:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+
+  .tabell .tal {
+    text-align: end;
+    font-variant-numeric: var(--typ-siffror);
+    white-space: nowrap;
+  }
+  .tabell thead .tal .sortera {
+    justify-content: flex-end;
+  }
+
+  .period {
+    display: block;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+
+  .utveckling {
+    white-space: nowrap;
+  }
+  .mini {
+    display: inline-flex;
+    vertical-align: middle;
+  }
+
+  .status {
+    white-space: nowrap;
+  }
+  .beskrivande {
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+
+  /* Mobil: Indikator, Senaste, Status (stilguiden 5.8) */
+  @media (max-width: 639px) {
+    .dMob {
+      display: none;
+    }
+  }
+}
