@@ -59,10 +59,10 @@ Fem textfärger totalt (`black`, `text2`, `text3`, `fokus` samt statusfärgernas
 | `farg.diagram.nollinje` | #6B716D | Nollbaslinje i stapeldiagram |
 | `farg.diagram.axeltext` | #6B716D | Tickvärden |
 | `farg.diagram.anslutning` | #A9A9A4 | Kopplingslinje från linjeslut till etikett |
-| `farg.diagram.markering` | #004990, #D46A00, #433C9D, #895B42 | Fästa serier, i denna ordning, högst fyra |
+| `farg.diagram.markering` | #004990, #B35900, #433C9D, #895B42 | Fästa serier, i denna ordning, högst fyra |
 
 - Inga ytor i plotytan utom förväntat intervall och staplar. Topp 3-zoner, områden mellan regioner och skuggningar används inte.
-- Markeringsfärgerna har alla ≥ 3,5:1 mot vit yta. Grönt ingår inte (reserverat för fokus) och inte heller rött (förväxlas med status).
+- Markeringsfärgerna har alla ≥ 4,5:1 mot vit yta, så att etiketter i seriens färg också klarar textkravet. Grönt ingår inte (reserverat för fokus) och inte heller rött (förväxlas med status).
 - Kontextlinjerna (#D6D6D1) är medvetet ljusa och undantas från kravet på 3:1 eftersom de inte är nödvändiga för budskapet och tabellen ger samma information (WCAG 1.4.11, AF). Allt som bär budskapet (fokus, referens, punkter i punktdiagram) klarar 3:1.
 
 ### 2.3 Statusfärger
@@ -168,6 +168,7 @@ Inga animationer utöver `rorelse.kort` = 120 ms för opacitet när popover och 
 | Datum i löptext | `5 oktober 2026` | |
 | Månad | Liten bokstav. I löptext utskriven (`mars 2026`), på axlar förkortad (`mar 26`) | |
 | Vecka | `vecka 12` i löptext, `v. 12` på axlar | |
+| Kvartal | `kvartal 1 2026` i löptext, `kv. 1 26` på axlar | |
 | Period | En dash utan mellanslag | `2016–2025`, `jan 2021–mar 2026` |
 | Saknas | `–` (inget värde), `..` (för osäkert eller dolt på grund av få fall) | Förklaras i tabellens not |
 
@@ -390,7 +391,7 @@ Undertitelns måttbeskrivning hämtas från indikatorns `fakta.matt` (kortad til
 | Roll | Färg | Linje | Punkter | Etikett vid linjeslut |
 |---|---|---|---|---|
 | `fokus` | `diagram.fokus` | 2,5 px heldragen | Bara slutpunkten (r 4,5) och ensamma värden mellan luckor (r 3). Alltid grön. | `typ.roll.not` 600 `farg.fokus` |
-| `referens` | `diagram.referens` | 1,5 px, streck 6 4 | Slutpunkt r 3 | `typ.roll.not` `farg.referens` |
+| `referens` | `diagram.referens` | 1,5 px, streck 6 4 | Slutpunkt r 3 | `typ.roll.not` `farg.diagram.referens` |
 | `kontext` | `diagram.kontext` | 0,8 px | Inga, inte heller för ensamma värden | Bara högsta och lägsta, `typ.roll.not` `farg.text3` |
 | `kontext` under pekaren | `diagram.kontextAktiv` | 1,75 px | Punkt vid aktuell period | Namnet visas tillfälligt, 600 `farg.black` |
 | `markerad` | `diagram.markering[i]` | 2 px | Slutpunkt r 3 | 600 i seriens färg |
@@ -547,4 +548,4 @@ En bild per indikator: kicker (kapitel), titel = indikatornamn, figurens titel o
 | Helhetsvy med alla indikatorer | Sammanfattningssida | 177 803 px lång |
 | Tidsväljare i verktygsraden med avstängda val | Väljare i mastheadet, bara när det finns flera | Avstängda kontroller är brus |
 | Gul statusmarkör #C28A1E | #B07A12 | Klarade inte 3:1 mot papper |
-| Markeringsfärger #FF7E00, #2DB8F6, #A51300 | #D46A00, #433C9D, #895B42 | För låg kontrast eller förväxlingsbar med status |
+| Markeringsfärger #FF7E00, #2DB8F6, #A51300 | #B35900, #433C9D, #895B42 | För låg kontrast för etiketter i seriens färg, eller förväxlingsbar med status |

@@ -58,7 +58,7 @@ app/
     charts/  spec.ts kpiTillSpec.ts text.ts *.test.ts ... WP1
              register.ts Diagram.tsx karna/* typer/linje.tsx ... WP2
              typer/{rangordning,stapel,smaMultiplar,minidiagram}.tsx ... WP3
-    figur/   Figur.tsx Nyckel.tsx Flikrad.tsx Noter.tsx Kallrad.tsx
+    figur/   Figur.tsx JamforRad.tsx Flikrad.tsx Noter.tsx Kallrad.tsx
              Atgarder.tsx Forstoring.tsx TabellVy.tsx nedladdning.ts ... WP4
     ui/      StatusMarkor Knapp Flikar Disclosure Dialog Meny Tabell ... WP4
              Popover Ark ......................... WP5

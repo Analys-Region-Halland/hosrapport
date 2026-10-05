@@ -22,7 +22,7 @@ const diagramFarg = {
   axeltext: "#6B716D",
   anslutning: "#A9A9A4",
   // Fästa serier i denna ordning, högst fyra (stilguiden 2.2)
-  markering: ["#004990", "#D46A00", "#433C9D", "#895B42"],
+  markering: ["#004990", "#B35900", "#433C9D", "#895B42"],
 } as const;
 
 const status = {
