@@ -1,11 +1,10 @@
 // a11y.mjs: axe-core via DevTools-protokollet mot den levande stilguiden och
-// rapportens nya adresser under ?ny (docs/arkitektur.md avsnitt 7, stilguiden 7).
-// Ägare: WP7.
+// rapportens adresser (docs/arkitektur.md avsnitt 7, stilguiden 7). Ägare: WP7.
 //
-//   npm run a11y                          stilguiden och ?ny-adresserna, 1440 och 390 px
+//   npm run a11y                          stilguiden och rapportens adresser, 1440 och 390 px
 //   npm run a11y -- --bara stilguide      bara stilguiden (eller: ny)
 //   npm run a11y -- --bredder 1440        bara angivna bredder
-//   npm run a11y -- --adresser "/?ny#/begrepp,/verktyg/stilguide.html"
+//   npm run a11y -- --adresser "/#/begrepp,/verktyg/stilguide.html"
 //                                         egna adresser i stället för listan nedan
 //
 // Fynden skrivs per adress och allvarlighetsgrad (critical, serious, moderate,
@@ -13,10 +12,12 @@
 // Hela resultatet sparas i verktyg/bank/a11y.json. Avslutskod 1 när något fynd
 // är serious eller critical.
 //
-// Adresserna under ?ny byggs ur manifestet (public/data/index.json) och
-// adresstabellen i arkitektur.md 4.6. En adress granskas bara när den finns, det
-// vill säga när den visar något annat än /?ny; så länge nya appen är en tom ram
-// hoppas de över och det står i rapporten.
+// Rapportens adresser byggs ur manifestet (public/data/index.json) och
+// adresstabellen i arkitektur.md 4.6. Nya rapporten är standard sedan WP12b;
+// gamla vyn bakom ?gammal granskas inte. Varje adress väntar på elementet som
+// bara dess egen sida ritar, så att en adress som inte finns (routern faller
+// tillbaka till startsidan) eller en sida som fortfarande laddar ger fel i
+// stället för en granskning av fel sida.
 //
 // Processer och portar som i bänken: BANK_PORT, CDP_PORT, BANK_URL (webblasare.mjs).
 
@@ -41,23 +42,24 @@ const TAGGAR = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-pr
 
 // ── Adresser ──
 
+/** Rapportens adresser, var och en med elementet som visar att sidan är ritad. */
 function nyaAdresser() {
   const manifest = JSON.parse(fs.readFileSync(path.join(APP, "public/data/index.json"), "utf8"));
   const kapitel = Object.entries(manifest).flatMap(([vy, m]) =>
-    (m.sektioner ?? []).map((s) => `/?ny#/kapitel/${s.id}?vy=${vy}`));
+    (m.sektioner ?? []).map((s) => ({ adress: `/#/kapitel/${s.id}?vy=${vy}`, vanta: `[data-kapitelsida="${s.id}"]` })));
   return [
-    "/?ny#/",
-    ...Object.keys(manifest).map((vy) => `/?ny#/sammanfattning?vy=${vy}`),
+    { adress: "/", vanta: "[data-start-lage]" },
+    ...Object.keys(manifest).map((vy) => ({ adress: `/#/sammanfattning?vy=${vy}`, vanta: "[data-sammanfattning]" })),
     ...kapitel,
-    "/?ny#/begrepp",
-    "/?ny#/las",
+    { adress: "/#/begrepp", vanta: "[data-begrepp-sida]" },
+    { adress: "/#/las", vanta: "[data-las-sida]" },
+    { adress: "/#/om", vanta: "[data-om-sida]" },
   ];
 }
 
 const MALL = [
   { grupp: "stilguide", adress: "/verktyg/stilguide.html", vanta: "html[data-stilguide='klar']" },
-  { grupp: "ny", adress: "/?ny", vanta: "#root > *", rot: true },
-  ...nyaAdresser().map((adress) => ({ grupp: "ny", adress, vanta: "#root > *", omFinns: true })),
+  ...nyaAdresser().map((a) => ({ grupp: "ny", ...a })),
 ];
 
 if (GRUPPER) {
@@ -66,7 +68,7 @@ if (GRUPPER) {
 }
 const adresser = EGNA
   ? EGNA.map((adress) => ({ grupp: "egen", adress, vanta: "#root > *" }))
-  : MALL.filter((m) => !GRUPPER || GRUPPER.includes(m.grupp) || (m.rot && GRUPPER.includes("ny")));
+  : MALL.filter((m) => !GRUPPER || GRUPPER.includes(m.grupp));
 
 // ── Körning i sidan ──
 
@@ -96,19 +98,12 @@ const kod = await medWebblasare(async () => {
   console.log(`axe-core ${AXE_VERSION} · ${adresser.length} adresser · bredder ${BREDDER.join(", ")} · CDP ${CDP_PORT}`);
   const resultat = [];
   for (const bredd of BREDDER) {
-    let rotText = null;
     for (const a of adresser) {
       const konsol = [];
       const { k, stang } = await oppnaSida(a.adress, {
         bredd, hojd: HOJD[bredd] ?? 900, steg: [{ vanta: a.vanta }], konsol: (typ, text) => konsol.push(`${typ}: ${text}`),
       });
       try {
-        const text = await k.utvardera("document.body.innerText.trim()");
-        if (a.rot) rotText = text;
-        if (a.omFinns && rotText !== null && text === rotText) {
-          resultat.push({ adress: a.adress, bredd, grupp: a.grupp, hoppad: "visar samma innehåll som /?ny: samma sida, eller adressen finns inte än" });
-          continue;
-        }
         await k.utvardera(AXE);
         const fynd = await k.utvardera(korAxe);
         resultat.push({ adress: a.adress, bredd, grupp: a.grupp, fynd, konsol });
@@ -121,8 +116,7 @@ const kod = await medWebblasare(async () => {
   // Rapport per adress och allvarlighetsgrad
   let stoppande = 0;
   const summa = Object.fromEntries(GRADER.map((g) => [g, 0]));
-  const hoppade = resultat.filter((r) => r.hoppad);
-  for (const r of resultat.filter((x) => !x.hoppad)) {
+  for (const r of resultat) {
     const perGrad = Object.fromEntries(GRADER.map((g) => [g, r.fynd.filter((f) => f.impact === g)]));
     console.log(`\n${r.adress} ${r.bredd}: ${GRADER.map((g) => `${perGrad[g].length} ${g}`).join(", ")}`);
     for (const g of GRADER) {
@@ -136,12 +130,7 @@ const kod = await medWebblasare(async () => {
     }
     for (const rad of r.konsol) console.log(`  konsol   ${rad.slice(0, 200)}`);
   }
-  if (hoppade.length) {
-    console.log(`\nHoppade över ${hoppade.length} adresser som visar samma innehåll som /?ny (samma sida, eller adressen finns inte än):`);
-    console.log(`  ${[...new Set(hoppade.map((r) => r.adress))].join(", ")}`);
-  }
-  const granskade = resultat.length - hoppade.length;
-  console.log(`\n${granskade} sidor granskade. ${GRADER.map((g) => `${summa[g]} ${g}`).join(", ")}.`);
+  console.log(`\n${resultat.length} sidor granskade. ${GRADER.map((g) => `${summa[g]} ${g}`).join(", ")}.`);
   const ut = path.join(HAR, "bank", "a11y.json");
   fs.mkdirSync(path.dirname(ut), { recursive: true });
   fs.writeFileSync(ut, JSON.stringify({ tid: new Date().toISOString(), axe: AXE_VERSION, taggar: TAGGAR, resultat }, null, 2));

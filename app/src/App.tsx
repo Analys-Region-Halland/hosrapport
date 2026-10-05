@@ -1,7 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
-import type { Scope } from "./types";
-import StartScreen from "./components/StartScreen";
-import ReportShell from "./components/ReportShell";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import BegreppSida from "./begrepp/BegreppSida";
 import { KAPITELVY, skrivOmGammalt, START, STANDARDVY, type Route } from "./nav/route";
 import { navigera, registreraAnkarUppslag, useRouteTillstand } from "./nav/useRoute";
@@ -18,15 +15,25 @@ import Sammanfattning from "./rapport/Sammanfattning";
 import StartSida from "./start/StartSida";
 
 // ════════════════════════════════════════════════════════════
-//  App: väljer mellan gamla och nya rapporten (docs/arkitektur.md avsnitt 2).
-//    ?ny i adressen → nya appen (NyApp nedan). WP0 äger flaggan, WP6 den nya grenen.
-//    annars         → gamla appen, oförändrad, tills WP9 och WP11 är godkända.
+//  App: väljer mellan nya och gamla rapporten (docs/arkitektur.md avsnitt 2).
+//    utan parametrar → nya appen (NyApp nedan), även för gamla bokmärken
+//    ?gammal         → gamla appen, oförändrad, tills användaren granskat den
+//                      nya. Den laddas för sig (GammalApp.tsx), så att den
+//                      inte ligger i nya appens huvudbit.
 // ════════════════════════════════════════════════════════════
 
-const NY = typeof location !== "undefined" && new URLSearchParams(location.search).has("ny");
+const GAMMAL = typeof location !== "undefined" && new URLSearchParams(location.search).has("gammal");
+
+const GammalApp = lazy(() => import("./GammalApp"));
 
 export default function App() {
-  return NY ? <NyApp /> : <GammalApp />;
+  return GAMMAL ? (
+    <Suspense fallback={null}>
+      <GammalApp />
+    </Suspense>
+  ) : (
+    <NyApp />
+  );
 }
 
 // ════════════════════════════════════════════════════════════
@@ -172,24 +179,4 @@ function useGamlaAnkare(ankare: string | null, index: KapitelIndex | null): void
       avbruten = true;
     };
   }, [ankare, index]);
-}
-
-// ════════════════════════════════════════════════════════════
-//  Gamla appen: tunn router i minnet, inget bibliotek.
-//    start  → StartScreen (välj "Alla områden" eller ett sakområde)
-//    report → ReportShell (äger tidsvyn, laddar data, renderar rapporten)
-//  Tidsperioden väljs inne i rapporten, inte här och inte på startsidan.
-//  Typsnitten är självhostade (styles/typsnitt.css), inte Google Fonts.
-// ════════════════════════════════════════════════════════════
-
-type Screen = { name: "start" } | { name: "report"; scope: Scope };
-
-function GammalApp() {
-  const [screen, setScreen] = useState<Screen>({ name: "start" });
-
-  return screen.name === "start" ? (
-    <StartScreen onPick={(scope) => setScreen({ name: "report", scope })} />
-  ) : (
-    <ReportShell scope={screen.scope} onBack={() => setScreen({ name: "start" })} />
-  );
 }

@@ -13,9 +13,10 @@
 //   npm run bank -- --bredder 1440      bara angivna bredder
 //   npm run bank -- --tolerans 0.1      största tillåtna andel avvikande pixlar i procent
 //
-// Grupper: gammal (gamla vyn), grafprov (verktyg/grafprov.html), stilguide (en
-// bild per sektion och per galleriexempel i verktyg/stilguide.html), ny (nya
-// adresser under ?ny; extra tills de har en baslinje värd att skydda).
+// Grupper: ny (nya rapporten utan parametrar: startsidan, kapitel 2, akutflödet
+// och sammanfattningen), gammal (gamla vyn bakom ?gammal), grafprov
+// (verktyg/grafprov.html), stilguide (en bild per sektion och per
+// galleriexempel i verktyg/stilguide.html).
 //
 // Miljövariabler: BANK_PORT (Vite, standard 5174) och CDP_PORT (Edge, standard
 // 9223). Med egna portar kan flera agenter köra bänken samtidigt. BANK_URL pekar
@@ -80,15 +81,35 @@ const grafprov = (param) => (bredd) =>
 /** Grafprovets diagram (WP2:s Figur och Diagram), som stegen väntar på. */
 const DIAGRAM = "[data-diagram] svg[role='img']";
 
+/** Gamla vyn, som bara nås med ?gammal sedan WP12b. */
+const GAMMAL = "/?gammal";
+
 export const VYER = [
-  { id: "start", grupp: "gammal", adress: "/", steg: [{ vanta: "button.start-area" }], skivor: 6 },
+  // Nya rapporten utan parametrar (standard sedan WP12b). Kapitel 2 är
+  // Tillgänglighet och väntetider i årsvyn; akutflödet öppnas utan vy, alltså i
+  // månadsvyn (KAPITELVY), som från startsidan.
+  { id: "ny-start", grupp: "ny", adress: "/", steg: [{ vanta: "[data-start-lage]" }], skivor: 6 },
   {
-    id: "kapitel2", grupp: "gammal", adress: "/",
+    id: "ny-kapitel2", grupp: "ny", adress: "/#/kapitel/skr-tillganglighet?vy=ar",
+    steg: [{ vanta: "[data-kapitelsida]" }], skivor: 6,
+  },
+  {
+    id: "ny-akutflode", grupp: "ny", adress: "/#/kapitel/akutflode",
+    steg: [{ vanta: "[data-kapitelsida]" }], skivor: 6,
+  },
+  {
+    id: "ny-sammanfattning", grupp: "ny", adress: "/#/sammanfattning?vy=ar",
+    steg: [{ vanta: "[data-sammanfattning]" }], skivor: 4,
+  },
+  // Gamla vyn bakom ?gammal. Den saknar adresser; bänken klickar sig fram.
+  { id: "start", grupp: "gammal", adress: GAMMAL, steg: [{ vanta: "button.start-area" }], skivor: 6 },
+  {
+    id: "kapitel2", grupp: "gammal", adress: GAMMAL,
     steg: [{ vanta: "button.start-area" }, { klicka: "button.start-area", index: 1 }, { vanta: "[data-block]" }],
     skivor: 6,
   },
   {
-    id: "akutflode", grupp: "gammal", adress: "/",
+    id: "akutflode", grupp: "gammal", adress: GAMMAL,
     steg: [{ vanta: "button.start-area" }, { klicka: "button.start-area", index: 6 }, { vanta: "[data-block]" }],
     skivor: 6,
   },
@@ -158,11 +179,6 @@ export const VYER = [
     adress: "/verktyg/stilguide.html",
     steg: [{ vanta: "html[data-stilguide='klar']" }],
     bilder: "[data-bank-bild]",
-  },
-  {
-    // Den nya ramen bakom ?ny-flaggan. Ingår inte i jämförelsen förrän den
-    // har en baslinje som är värd att skydda.
-    id: "ny-ram", grupp: "ny", adress: "/?ny", steg: [{ vanta: "[data-ram]" }], skivor: 1, extra: true,
   },
 ];
 

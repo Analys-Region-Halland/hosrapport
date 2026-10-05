@@ -27,7 +27,7 @@ const varde = (n) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i 
 const UT = path.resolve(varde("ut") ?? path.join(HAR, "bank", "undernivaer"));
 fs.mkdirSync(UT, { recursive: true });
 
-const KAPITEL = "/?ny#/kapitel/akutflode?vy=manad";
+const KAPITEL = "/#/kapitel/akutflode?vy=manad";
 const KPIER = ["belaggning", "akutbesok", "vantetid", "ambulans"];
 const BREDDER = [{ bredd: 1440, hojd: 900 }, { bredd: 390, hojd: 844 }];
 

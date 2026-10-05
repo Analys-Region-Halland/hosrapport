@@ -128,7 +128,7 @@ function Oversikt({ e }: { e: Exempel }) {
                   {g.rader.map((r) => (
                     <tr key={r.kpiId}>
                       <td>
-                        <a className={s.lank} href={`/?ny#/kapitel/${RAPPORTKAPITEL.id}?vy=${RAPPORTKAPITEL.vy}&i=${r.kpiId}`}>{r.namn}</a>
+                        <a className={s.lank} href={`/#/kapitel/${RAPPORTKAPITEL.id}?vy=${RAPPORTKAPITEL.vy}&i=${r.kpiId}`}>{r.namn}</a>
                       </td>
                       <td className={s.tal}>
                         {r.senaste}

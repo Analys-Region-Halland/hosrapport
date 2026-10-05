@@ -1,6 +1,6 @@
 // rapport/Ram.tsx: nya rapportens ram (stilguiden 4.5): verktygsrad med
 // positionsrad och Exportera, innehållsförteckning som spalt (≥ 1200 px) eller
-// ark (under), och sidans innehåll. Visas när adressen har ?ny (App.tsx).
+// ark (under), och sidans innehåll. Rapportens standardvy (App.tsx).
 // Ägare: WP6.
 //
 // Ramen äger läspositionen: den rullar till i när innehållet är `klar`, kör
