@@ -249,7 +249,7 @@ describe("SSR", () => {
     }
   }, TUNG);
 
-  it("renderar WP1:s fixturer i alla visningar (linje här, övriga typer som stubbar)", () => {
+  it("renderar WP1:s fixturer i alla visningar (alla graftyper sedan WP3)", () => {
     let linjer = 0;
     const fall = [{ kap: skrUtdrag(), vy: "ar" as const }, { kap: akutflodeUtdrag(), vy: "manad" as const }, { kap: hierarki(), vy: "manad" as const }];
     for (const { kap, vy } of fall) {
