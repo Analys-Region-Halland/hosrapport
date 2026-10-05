@@ -9,7 +9,6 @@
 import { Fragment, type ReactNode } from "react";
 import type { KpiModell, VyId } from "../data/modell";
 import { nyckeltalDelar } from "./rapportText";
-import t from "./delat.module.css";
 import s from "./Nyckeltal.module.css";
 
 export interface NyckeltalProps {
@@ -25,7 +24,7 @@ export default function Nyckeltal({ kpi, vy }: NyckeltalProps): ReactNode {
       {delar.map((d) => (
         <Fragment key={d}>
           <span className={s.skiljare} aria-hidden="true">·</span>
-          <span className={t.dold}>, </span>
+          <span className="visuellt-dold">, </span>
           <span className={s.del}>{d}</span>
         </Fragment>
       ))}

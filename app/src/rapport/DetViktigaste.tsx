@@ -55,7 +55,7 @@ export function PunktLista({ punkter }: { punkter: ViktigPunkt[] }): ReactNode {
               {" "}
               <Lank till={p.lank.till} className={`${t.lank} ${s.se}`} data-se="">
                 {p.lank.text}
-                {p.lank.namn && <span className={t.dold}>{`, ${p.lank.namn}`}</span>}
+                {p.lank.namn && <span className="visuellt-dold">{`, ${p.lank.namn}`}</span>}
               </Lank>
             </>
           )}

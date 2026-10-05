@@ -97,7 +97,7 @@ export default function Sammanfattning({ kapitel, vy, publicerad }: Sammanfattni
               <PunktLista punkter={egna} />
               <p className={t.granssnitt}>
                 <Lank till={{ sida: "kapitel", id: k.id, vy }} className={t.lank} data-las-kapitlet="">
-                  Läs kapitlet<span className={t.dold}>{` ${k.namn}`}</span>
+                  Läs kapitlet<span className="visuellt-dold">{` ${k.namn}`}</span>
                 </Lank>
               </p>
             </section>

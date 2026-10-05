@@ -80,7 +80,7 @@ export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, 
         </h3>
         {kpi.status && (
           <span className={s.status}>
-            <span className={t.dold}>Status: </span>
+            <span className="visuellt-dold">Status: </span>
             <StatusMarkor status={kpi.status} />
           </span>
         )}

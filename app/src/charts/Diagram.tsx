@@ -352,7 +352,7 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
       {scen && tooltip && (
         <Tooltip lage={tooltip} bredd={scen.bredd} helBredd={scen.bredd < GEOMETRI.tooltipHelBreddUnder} />
       )}
-      {interaktiv && <p className={s.sr} aria-live="polite" data-live="">{tooltip?.modell.live ?? ""}</p>}
+      {interaktiv && <p className="visuellt-dold" aria-live="polite" data-live="">{tooltip?.modell.live ?? ""}</p>}
     </div>
   );
 }

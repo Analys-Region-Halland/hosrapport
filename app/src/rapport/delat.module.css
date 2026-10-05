@@ -116,14 +116,4 @@
     text-decoration-line: underline;
     text-underline-offset: var(--typ-lank-avstand);
   }
-
-  /* Bara för skärmläsare */
-  .dold {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
 }

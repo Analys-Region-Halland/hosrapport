@@ -51,7 +51,7 @@ export default function LagetIKorthet({ kapitel, vy, redigera = false }: LagetIK
         <button type="button" className={s.sortera} onClick={() => klick(kolumn)} data-sortera={kolumn}>
           {text}
           {pil && <span aria-hidden="true" className={s.pil}>{pil}</span>}
-          {kolumn === "standard" && sortering.kolumn !== "standard" && <span className={t.dold}> (avsnittens ordning)</span>}
+          {kolumn === "standard" && sortering.kolumn !== "standard" && <span className="visuellt-dold"> (avsnittens ordning)</span>}
         </button>
       </th>
     );
@@ -61,7 +61,7 @@ export default function LagetIKorthet({ kapitel, vy, redigera = false }: LagetIK
     <section data-block={KAPITELBLOCK.laget} aria-labelledby={RUBRIK_ID}>
       <h2 id={RUBRIK_ID} className={t.blockrubrik}>Läget i korthet</h2>
       <table className={s.tabell} data-oversikt="">
-        <caption className={t.dold}>
+        <caption className="visuellt-dold">
           {harPlats
             ? "Kapitlets indikatorer med senaste värde, plats bland regionerna, utveckling och status. Kolumnhuvudena sorterar."
             : "Kapitlets indikatorer med senaste värde, utveckling och status. Kolumnhuvudena sorterar."}
