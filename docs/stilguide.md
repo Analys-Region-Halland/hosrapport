@@ -284,7 +284,7 @@ Se 4.4. Siffror i `tabular-nums`. Plats skrivs alltid `plats r av n` där n = an
 
 ### 5.4 Flikar (vyval och nivåval i figuren, tidsupplösning i masthead)
 
-Textflikar utan ram: `typ.roll.not` 600, `farg.text2`, aktiv `farg.black` med 2 px `farg.fokus` understrykning. Höjd 32 px, mellanrum `rum.5`. ARIA: `tablist`/`tab`, pilar flyttar, Enter/mellanslag väljer. Visas bara när det finns mer än ett val. Högst fyra flikar per rad.
+Textflikar utan ram: `typ.roll.not` 600, `farg.text2`, aktiv `farg.black` med 2 px `farg.fokus` understrykning. Höjd 32 px, mellanrum `rum.5`. ARIA: `tablist`/`tab`, pilar flyttar, Enter/mellanslag väljer. Visas bara när det finns mer än ett val. Högst fyra flikar per rad, utom tidsupplösningen som kan ha fem (dag, vecka, månad, kvartal, år).
 
 ### 5.5 Fördjupning (`<details>`)
 
@@ -479,9 +479,11 @@ Målet är att hovring ska kännas lugn: linjen man pekar på ska fastna och ing
 |---|---|
 | Ritning | Statiska lager (rutnät, linjer, etiketter) ritas om bara när fästa serier, storlek eller visning ändras. Hovring och tangentbord ritar bara ett överlägg (hjälplinje, lyft linje, punkter, tooltip). |
 | Tooltip | Inne i figuren, i plotytans överkant på fast höjd. Ligger till höger om hjälplinjen och byter sida först när hjälplinjen passerat plotytans mitt. `farg.yta`, 1 px ram `farg.harlinje`, ingen skugga, `typ.roll.not`. Rubrik: perioden i 600 (med "ny metod" efter seriebrott). Rader: färgprick, namn, värde (högerställt, `tabular-nums`), `plats r av n` i `farg.text3`; sorterade efter värde; den lyfta serien i 600. Sist en rad i `farg.text3`: "Klicka för att visa {namn} i grafen" eller "Klicka för att ta bort". Läses upp via `aria-live="polite"`. |
+| Tooltip på mobil | Under 560 px står tooltipen under plotytan, i full bredd, i stället för ovanpå grafen. Samma innehåll. |
 | Muspekare | Hand bara när en linje som kan fästas är lyft. |
 | Fokus | Musklick ger inte grafen tangentbordsfokus. Tab ger synlig fokusring (2.1). |
 | Jämför-listan | Popover med kryssrutor i alfabetisk ordning och senaste värde till höger, rad 34 px. Högst fyra; den femte ersätter den äldsta. Listan stängs med Escape eller klick utanför och står kvar öppen medan man kryssar. |
+| Täta serier | För dag- och veckodata markeras bara Avvikelse (romb, utanför 95 %), utan korta etiketter. Bevaka syns i tooltipen. Fler än 8 markerade punkter i en serie: inga korta etiketter. |
 | Rangordning | Hovring över en rad visar dess värde. Fästa regioner syns i sina färger även här. |
 | Klickytor | ≥ 24 × 24 px (WCAG 2.5.8). |
 | Textsammanfattning | `aria-label` 100–200 tecken: `{Typ} som visar {mått} för Halland {period}. Senaste värde {x}, {plats}. {Riktning på utvecklingen}.` |
