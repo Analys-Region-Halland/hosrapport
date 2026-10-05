@@ -27,8 +27,19 @@ export type Route =
 /** Tidsupplösningarna i rapportens ordning, kortast först. */
 export const VYER: readonly VyId[] = ["dag", "vecka", "manad", "kvartal", "ar"];
 
-/** Vy när adressen saknar vy eller har en ogiltig. Alla kapitel finns i årsvyn. */
+/** Vy när adressen saknar vy eller har en ogiltig. Alla kapitel finns i årsvyn.
+ *  Sammanfattningen öppnas här (vyn med flest kapitel). Kapitel öppnas enligt
+ *  KAPITELVY när adressen saknar vy. */
 export const STANDARDVY: VyId = "ar";
+
+/**
+ * Vyn ett kapitel öppnas i när adressen saknar vy (regeln i gamla
+ * utils/vyval.ts): månadsvyn om kapitlet finns där, annars en vy som har
+ * kapitlet. parse kan inte välja, eftersom det kräver manifestet; routern
+ * säger därför om adressen saknade vy (RouteTillstand.utanVy) och appen väljer
+ * med rapport/ramData.ts vyForKapitel(index, id, KAPITELVY).
+ */
+export const KAPITELVY: VyId = "manad";
 
 export const VISNINGAR: readonly VisningId[] = ["tid", "rang", "enheter", "enheterRang"];
 
@@ -110,6 +121,17 @@ export function skrivOmGammalt(blockId: string, ktx: AnkarKontext = {}): Route |
 // ════════════════════════════════════════════════════════════
 //  parse och format
 // ════════════════════════════════════════════════════════════
+
+/**
+ * Sant när adressen bestämmer vyn själv: en giltig vy-parameter. Gamla ankare
+ * har ingen vy (de ärver den aktuella sidans vy om läsaren står i ett kapitel,
+ * vilket routern hanterar). Används för KAPITELVY-regeln.
+ */
+export function harVy(hash: string): boolean {
+  const s = hash.trim();
+  const q = s.indexOf("?");
+  return q >= 0 && arVy(new URLSearchParams(s.slice(q + 1)).get("vy"));
+}
 
 /** Tolkar location.hash. Gamla ankare (#rapport-{x}) skrivs om enligt
  *  skrivOmGammalt; går de inte att lösa utan data blir svaret startsidan. */

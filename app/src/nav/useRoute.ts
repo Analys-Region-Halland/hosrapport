@@ -17,7 +17,7 @@
 // Lyssnarna installeras först när någon prenumererar, så gamla appen påverkas inte.
 
 import { useSyncExternalStore } from "react";
-import { format, gammaltAnkare, parse, skrivOmGammalt, START, type Route } from "./route";
+import { format, gammaltAnkare, harVy, parse, skrivOmGammalt, START, type Route } from "./route";
 
 export interface RouteTillstand {
   route: Route;
@@ -31,6 +31,9 @@ export interface RouteTillstand {
   nr: number;
   /** Gammalt ankare som väntar på att kapitlet slås upp i datan. route är då startsidan. */
   ankare: string | null;
+  /** Adressen saknade vy (route.vy är då STANDARDVY). Ett kapitel ska öppnas
+   *  enligt KAPITELVY-regeln (nav/route.ts); appen väljer vyn. Tillägg i WP9. */
+  utanVy: boolean;
 }
 
 export interface NavAlt {
@@ -40,6 +43,8 @@ export interface NavAlt {
   rulla?: boolean;
   /** Flytta fokus till blocket. Förval: sant vid push med rullning, annars falskt. */
   fokus?: boolean;
+  /** Adressen har ingen egen vy (t.ex. ett gammalt ankare); se RouteTillstand.utanVy. Förval: falskt. */
+  utanVy?: boolean;
 }
 
 /** navigera(till, { ersatt }). En boolesk andra parameter betyder ersatt (stubbens form). */
@@ -75,18 +80,20 @@ export function skapaRouter(plats: Plats, fordrojning = LASPOSITION_FORDROJNING)
   let installerad = false;
   let vantande: { i: string | undefined; timer: ReturnType<typeof setTimeout> } | null = null;
 
-  function tolka(hash: string, aktuell: Route | undefined): { route: Route; ankare: string | null } {
+  function tolka(hash: string, aktuell: Route | undefined): { route: Route; ankare: string | null; utanVy: boolean } {
     const g = gammaltAnkare(hash);
     if (g) {
       const r = skrivOmGammalt(g, { aktuell, kapitelFor: uppslag });
-      return r ? { route: r, ankare: null } : { route: START, ankare: g };
+      // Ett gammalt ankare inne i ett kapitel behåller kapitlets vy
+      const utanVy = aktuell?.sida !== "kapitel";
+      return r ? { route: r, ankare: null, utanVy } : { route: START, ankare: g, utanVy };
     }
-    return { route: parse(hash), ankare: null };
+    return { route: parse(hash), ankare: null, utanVy: !harVy(hash) };
   }
 
   function las(kalla: RouteTillstand["kalla"], aktuell: Route | undefined, nr: number): RouteTillstand {
-    const { route, ankare } = tolka(plats.hash(), aktuell);
-    return { route, kalla, rulla: true, fokus: false, nr, ankare };
+    const { route, ankare, utanVy } = tolka(plats.hash(), aktuell);
+    return { route, kalla, rulla: true, fokus: false, nr, ankare, utanVy };
   }
 
   let t = las("start", undefined, 0);
@@ -131,7 +138,7 @@ export function skapaRouter(plats: Plats, fordrojning = LASPOSITION_FORDROJNING)
       else plats.push(hash);
     }
     kandHash = plats.hash();
-    t = { route, kalla: "navigering", rulla, fokus, nr: t.nr + 1, ankare: null };
+    t = { route, kalla: "navigering", rulla, fokus, nr: t.nr + 1, ankare: null, utanVy: a.utanVy ?? false };
     meddela();
   };
 
@@ -175,7 +182,7 @@ export function skapaRouter(plats: Plats, fordrojning = LASPOSITION_FORDROJNING)
       // Ett väntande ankare kanske går att lösa nu
       if (t.ankare) {
         const r = skrivOmGammalt(t.ankare, { aktuell: undefined, kapitelFor: f });
-        if (r) navigera(r, { ersatt: true, fokus: false });
+        if (r) navigera(r, { ersatt: true, fokus: false, utanVy: true });
       }
       return () => {
         if (uppslag === f) uppslag = undefined;

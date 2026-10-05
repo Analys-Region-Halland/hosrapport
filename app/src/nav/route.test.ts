@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  format, gammaltAnkare, KAPITELBLOCK, lika, parse, sammaSida, skrivOmGammalt, START, STANDARDVY,
+  format, gammaltAnkare, harVy, KAPITELBLOCK, KAPITELVY, lika, parse, sammaSida, skrivOmGammalt, START, STANDARDVY,
   type AnkarKontext, type Route,
 } from "./route";
 
@@ -78,6 +78,15 @@ describe("saknade och ogiltiga parametrar", () => {
 
   it("tomma i och e faller bort", () => {
     expect(parse("#/kapitel/akutflode?vy=manad&i=&e=")).toEqual({ sida: "kapitel", id: "akutflode", vy: "manad" });
+  });
+
+  it("harVy säger om adressen har en giltig vy; kapitel utan vy öppnas i månadsvyn när den finns (WP9)", () => {
+    expect(KAPITELVY).toBe("manad");
+    expect(harVy("#/kapitel/akutflode?vy=dag")).toBe(true);
+    expect(harVy("#/kapitel/akutflode?i=x&vy=ar")).toBe(true);
+    expect(harVy("#/kapitel/akutflode")).toBe(false);
+    expect(harVy("#/kapitel/akutflode?vy=timme&i=x")).toBe(false);
+    expect(harVy("#rapport-akutflode")).toBe(false);
   });
 
   it("parametrar på sidor som inte har några ignoreras", () => {

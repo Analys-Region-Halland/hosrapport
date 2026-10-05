@@ -62,6 +62,27 @@ describe("router", () => {
     expect(b.poster).toEqual([KAP]);
   });
 
+  it("säger om adressen saknade vy, så att appen kan välja kapitlets vy (WP9)", () => {
+    const b = skapaPlats("#/kapitel/akutflode?i=vantetid");
+    const r = skapaRouter(b.plats);
+    r.prenumerera(() => {});
+    expect(r.tillstand()).toMatchObject({ route: { id: "akutflode", vy: "ar", i: "vantetid" }, utanVy: true });
+    // Appen byter vy med navigera; då är vyn bestämd
+    r.navigera({ sida: "kapitel", id: "akutflode", vy: "manad", i: "vantetid" }, { ersatt: true });
+    expect(r.tillstand().utanVy).toBe(false);
+    expect(b.poster).toEqual(["#/kapitel/akutflode?vy=manad&i=vantetid"]);
+    // En adress med vy, och historiken tillbaka till en utan
+    b.lank("#/kapitel/akutflode?vy=dag");
+    expect(r.tillstand().utanVy).toBe(false);
+    b.lank("#/kapitel/akutflode");
+    expect(r.tillstand().utanVy).toBe(true);
+    // Gammalt ankare utanför ett kapitel har ingen vy
+    const c = skapaPlats("#rapport-akutflode");
+    const r2 = skapaRouter(c.plats);
+    r2.registreraAnkarUppslag((x) => (x === "akutflode" ? "akutflode" : undefined));
+    expect(r2.tillstand()).toMatchObject({ route: { sida: "kapitel", id: "akutflode" }, utanVy: true });
+  });
+
   it("tom adress blir #/ och ogiltig adress blir startsidan", () => {
     const b = skapaPlats("");
     skapaRouter(b.plats).prenumerera(() => {});
