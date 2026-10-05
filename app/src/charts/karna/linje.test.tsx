@@ -12,6 +12,7 @@ import { RENDERARE, type AktivPunkt, type Scen } from "../register";
 import type { ChartSpec } from "../spec";
 import { tillampaFasta, vaxlaFast } from "./fasta";
 import { byggTraffmodell, pekarlage, startlage, tangent } from "./interaktion";
+import { RitDelKontext } from "./ritdel";
 import { tidsaxel } from "./skalor";
 import { allaLinjer, fixtur } from "./testdata";
 import { byggPunktIndex, tooltipModell } from "./tooltipModell";
@@ -265,6 +266,21 @@ describe("SSR", () => {
     }
     expect(linjer).toBeGreaterThan(3);
   }, TUNG);
+});
+
+describe("statiskt och överlägg i var sin svg", () => {
+  it("RitDelKontext styr vilken del Rita ritar", () => {
+    const scen = layout(telefon, 832);
+    const Rita = linje.Rita;
+    const aktiv = { index: 9, serieId: "0006" };
+    const statisk = renderToStaticMarkup(<RitDelKontext.Provider value="statisk"><svg><Rita scen={scen} spec={telefon} aktiv={aktiv} fasta={[]} /></svg></RitDelKontext.Provider>);
+    const overlagg = renderToStaticMarkup(<RitDelKontext.Provider value="overlagg"><svg><Rita scen={scen} spec={telefon} aktiv={aktiv} fasta={[]} /></svg></RitDelKontext.Provider>);
+    expect(statisk).toContain('data-lager="statisk"');
+    expect(statisk).not.toContain("data-hjalplinje");
+    expect(overlagg).not.toContain('data-lager="statisk"');
+    expect(overlagg).toContain("data-hjalplinje");
+    expect(overlagg).toContain('data-lyft="0006"');
+  });
 });
 
 describe("hovring ritar bara överlägget", () => {

@@ -1,5 +1,5 @@
-/* Grafprovets och linjesektionens enkla figurplatta (stilguiden 6.1) tills
-   WP4:s Figur är sammanslagen. Ägare: WP2. */
+/* Grafprovets sida: papper, marginaler och figuren upp till matt.figur.
+   Figuren själv är WP4:s Figur. Ägare: WP2. */
 @layer komponent {
   .sida {
     background: var(--farg-papper);
@@ -9,15 +9,9 @@
     color: var(--farg-black);
   }
 
-  .figur {
-    background: var(--farg-yta);
-    padding: var(--rum-5);
-    margin: 0 auto;
+  .prov {
     max-width: var(--matt-figur);
-  }
-
-  @media (max-width: 639px) {
-    .figur { padding: var(--rum-4); }
+    margin: 0 auto;
   }
 
   .etikett {
@@ -25,47 +19,5 @@
     line-height: var(--typ-not-radhojd);
     color: var(--farg-text3);
     margin: 0 0 var(--rum-4);
-  }
-
-  .titel {
-    font-family: var(--typ-figurtitel-familj);
-    font-size: var(--typ-figurtitel-storlek);
-    line-height: var(--typ-figurtitel-radhojd);
-    font-weight: var(--typ-figurtitel-vikt);
-    margin: 0;
-  }
-
-  .undertitel {
-    font-size: var(--typ-granssnitt-storlek);
-    line-height: var(--typ-granssnitt-radhojd);
-    color: var(--farg-text2);
-    margin: var(--rum-1) 0 0;
-    max-width: 40em;
-  }
-
-  .plot {
-    margin-top: var(--rum-5);
-  }
-
-  .fot {
-    margin-top: var(--rum-4);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    color: var(--farg-text3);
-  }
-
-  .fot p {
-    margin: 0 0 var(--rum-1);
-    max-width: 46em;
-  }
-
-  .fasta {
-    margin-top: var(--rum-3);
-    font-size: var(--typ-not-storlek);
-    color: var(--farg-text2);
-  }
-
-  .exempel + .exempel {
-    margin-top: var(--rum-8);
   }
 }

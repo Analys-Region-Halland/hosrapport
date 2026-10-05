@@ -3,7 +3,7 @@
 // punkter för Halland, riket, fästa och lyft serie. Ritas om vid varje
 // hovring; de statiska lagren (former.tsx) gör det aldrig. Ägare: WP2.
 
-import { useMemo, type ReactNode } from "react";
+import { useContext, useMemo, type ReactNode } from "react";
 import { tema } from "../../design/tema";
 import type { AktivPunkt, Scen, Stopp } from "../register";
 import type { ChartSpec } from "../spec";
@@ -11,6 +11,7 @@ import { EtikettText, StatiskaLager } from "./former";
 import { GEOMETRI } from "./geometri";
 import { kortaText } from "./matt";
 import { HALO, kopplingD, skarp, textAttr } from "./ritstil";
+import { RitDelKontext } from "./ritdel";
 import { serieFarg } from "./tooltipModell";
 import { periodOrdning } from "./traff";
 
@@ -94,14 +95,20 @@ export function TidsOverlagg({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpe
   return <>{delar}</>;
 }
 
-/** Rita för tidsdiagram: memoiserade statiska lager och ett överlägg. */
+/**
+ * Rita för tidsdiagram: memoiserade statiska lager och ett överlägg. Vilken
+ * del som ritas styrs av RitDelKontext (Diagram.tsx lägger dem i var sin svg).
+ */
 export function RitaTid({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpec; aktiv: AktivPunkt | null; fasta: string[] }): ReactNode {
+  const del = useContext(RitDelKontext);
   return (
     <>
-      <StatiskaLager scen={scen} />
-      <g data-lager="overlagg" pointerEvents="none">
-        {aktiv && <TidsOverlagg scen={scen} spec={spec} aktiv={aktiv} />}
-      </g>
+      {del !== "overlagg" && <StatiskaLager scen={scen} />}
+      {del !== "statisk" && (
+        <g data-lager="overlagg" pointerEvents="none">
+          {aktiv && <TidsOverlagg scen={scen} spec={spec} aktiv={aktiv} />}
+        </g>
+      )}
     </>
   );
 }

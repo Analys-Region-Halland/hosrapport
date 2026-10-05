@@ -137,7 +137,7 @@ window.__gp = {
     return { text: t.innerText.replace(/\\s+/g, " ").trim(), left: t.offsetLeft, top: t.offsetTop, b: t.offsetWidth };
   },
   live(n = 0) { return this.diagram(n).querySelector("[data-live]")?.textContent ?? ""; },
-  hjalplinje(n = 0) { const l = this.svg(n).querySelector("[data-hjalplinje]"); return l ? +l.getAttribute("x1") : null; },
+  hjalplinje(n = 0) { const l = this.diagram(n).querySelector("[data-hjalplinje]"); return l ? +l.getAttribute("x1") : null; },
   statiskaPaths(n = 0) { return this.svg(n).querySelectorAll('[data-lager="statisk"] path').length; },
   bevaka(n = 0) {
     window.__gpMut = 0;
@@ -149,7 +149,8 @@ window.__gp = {
   },
   mutationer(n = 0) { return { antal: window.__gpMut, sammaNod: window.__gpStatisk === this.svg(n).querySelector('[data-lager="statisk"]') }; },
   fokus() { const a = document.activeElement; return { tagg: a?.tagName ?? null, synlig: a?.matches?.(":focus-visible") ?? false, diagram: !!a?.closest?.("[data-diagram]") }; },
-  fasta() { return [...document.querySelectorAll("[data-figur]")].map((f) => f.querySelector("p[class*=fasta]")?.textContent ?? ""); },
+  fasta(n = 0) { const f = document.querySelectorAll("[data-figur]")[n]; return [...(f?.querySelectorAll("[data-chip]") ?? [])].map((c) => c.getAttribute("data-chip")); },
+  overlagg(n = 0) { return { svgar: this.diagram(n).querySelectorAll(":scope > svg").length, rollImg: this.diagram(n).querySelectorAll('svg[role="img"]').length, iStatisk: !!this.svg(n).querySelector("[data-hjalplinje]") }; },
   figurRekt(n = 0) { const f = document.querySelectorAll("[data-figur]")[n]; f.scrollIntoView({ block: "center" }); const r = f.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY, b: r.width, h: r.height }; },
 };`;
 
@@ -233,6 +234,8 @@ async function granskning() {
     await mus(k, x, y); await sov(200);
     kontroll("hovra grå linje lyfter Västerbotten", (await k.js(`__gp.lyft()`)) === "0024", await k.js(`__gp.lyft()`));
     kontroll("tooltip har uppmaning att visa i grafen", /Klicka för att visa Västerbotten i grafen/.test((await k.js(`__gp.tooltip()`))?.text ?? ""), (await k.js(`__gp.tooltip()`))?.text);
+    const ov = await k.js(`__gp.overlagg()`);
+    kontroll("överlägget i egen svg utan role=img, statiska svg:n orörd", ov.svgar === 2 && ov.rollImg === 1 && !ov.iStatisk, ov);
     await sparaBild(k, "02-n79179-hovra-gra-1440");
 
     // Rör pekaren längs den branta delen (2020 → 2021, 87,4 → 61,5) med 3 px förskjutning
@@ -275,7 +278,7 @@ async function granskning() {
     [x, y] = await iSvg(k, (vb[0].x + vb[1].x) / 2 + 2, (vb[0].y + vb[1].y) / 2 + 2);
     await mus(k, x, y); await sov(120);
     await klick(k, x, y); await sov(250);
-    kontroll("klick fäster Västerbotten", (await k.js(`__gp.fasta()`))[0].includes("Västerbotten"), await k.js(`__gp.fasta()`));
+    kontroll("klick fäster Västerbotten", JSON.stringify(await k.js(`__gp.fasta()`)) === JSON.stringify(["0024"]), await k.js(`__gp.fasta()`));
     const f = await k.js(`__gp.fokus()`);
     kontroll("musklick ger inte diagrammet fokus", !f.diagram, f);
     kontroll("fäst linje: Klicka för att ta bort", /Klicka för att ta bort/.test((await k.js(`__gp.tooltip()`))?.text ?? ""), (await k.js(`__gp.tooltip()`))?.text);
@@ -295,7 +298,7 @@ async function granskning() {
     }
     kontroll("ingen blinkning från linjeslut till etikett", glapp.length === 0, glapp);
     await klick(k, et.x, et.y); await sov(250);
-    kontroll("klick på etiketten fäster Kalmar", (await k.js(`__gp.fasta()`))[0].includes("Kalmar"), await k.js(`__gp.fasta()`));
+    kontroll("klick på etiketten fäster Kalmar", (await k.js(`__gp.fasta()`)).includes("0008"), await k.js(`__gp.fasta()`));
     await mus(k, rekt.x + rekt.b / 2, rekt.y + rekt.h + 80); await sov(200);
     kontroll("pekaren utanför: ingen tooltip", (await k.js(`__gp.tooltip()`)) === null);
     await sparaBild(k, "06-n79179-tva-fasta-vila-1440");
@@ -317,9 +320,21 @@ async function granskning() {
     kontroll("aria-live läser upp perioden", /^2025/.test(await k.js(`__gp.live()`)), await k.js(`__gp.live()`));
     await sparaBild(k, "07-n79179-tangentbord-1440");
     await tryck(k, "Enter"); await sov(150);
-    kontroll("Enter fäster regionen", (await k.js(`__gp.fasta()`))[0].split(",").length === 3, await k.js(`__gp.fasta()`));
+    kontroll("Enter fäster regionen", (await k.js(`__gp.fasta()`)).length === 3, await k.js(`__gp.fasta()`));
     await tryck(k, "Escape"); await sov(100);
     kontroll("Escape stänger tooltipen", (await k.js(`__gp.tooltip()`)) === null);
+
+    // Förstoringen: Escape stänger först tooltipen (översta lagret), sedan dialogen
+    await k.js(`document.querySelector('[data-atgard="forstora"]').click(); true`); await sov(400);
+    const iDialog = await k.js(`document.querySelectorAll("[data-diagram]").length - 1`);
+    await k.js(`__gp.svg(${iDialog}).focus(); true`); await sov(150);
+    const harTooltip = (await k.js(`__gp.tooltip(${iDialog})`)) !== null;
+    await tryck(k, "Escape"); await sov(150);
+    const efterForsta = { tooltip: (await k.js(`__gp.tooltip(${iDialog})`)) !== null, dialog: await k.js(`!!document.querySelector("[data-dialog]")`) };
+    await tryck(k, "Escape"); await sov(250);
+    const efterAndra = { dialog: await k.js(`!!document.querySelector("[data-dialog]")`) };
+    kontroll("i förstoringen stänger Escape först tooltipen, sedan dialogen",
+      harTooltip && !efterForsta.tooltip && efterForsta.dialog && !efterAndra.dialog, { harTooltip, efterForsta, efterAndra });
   } finally { await stangFlik(k); }
 }
 
@@ -376,7 +391,7 @@ async function mobil() {
     kontroll("pekskärm: tryck visar tooltip och lyfter linjen", (await k.js(`__gp.lyft()`)) === "0024", await k.js(`__gp.lyft()`));
     await sparaBild(k, "m-n79179-tryck-390");
     await peka(k, x, y); await sov(250);
-    kontroll("pekskärm: tryck igen fäster", (await k.js(`__gp.fasta()`))[0].includes("Västerbotten"), await k.js(`__gp.fasta()`));
+    kontroll("pekskärm: tryck igen fäster", (await k.js(`__gp.fasta()`)).includes("0024"), await k.js(`__gp.fasta()`));
     await sparaBild(k, "m-n79179-tryck-igen-390");
     await peka(k, 20, 10); await sov(200);
     kontroll("pekskärm: tryck utanför stänger", (await k.js(`__gp.tooltip()`)) === null);
@@ -391,7 +406,7 @@ async function stilguide() {
   for (const [bredd, hojd] of [[1440, 900], [390, 844]]) {
     const k = await oppnaFlik(url("stilguide=linje"), bredd, hojd);
     try {
-      await k.js(`new Promise((r) => { const f = () => document.querySelectorAll("[data-diagram] svg").length >= 4 ? r(true) : setTimeout(f, 100); f(); })`);
+      await k.js(`new Promise((r) => { const f = () => document.querySelectorAll('[data-diagram] svg[role="img"]').length >= 4 ? r(true) : setTimeout(f, 100); f(); })`);
       await sov(300);
       for (let n = 0; n < 4; n++) await sparaBild(k, `s-linje-${n + 1}-${bredd}`, n);
     } finally { await stangFlik(k); }

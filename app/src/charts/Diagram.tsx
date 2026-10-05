@@ -15,11 +15,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { tema } from "../design/tema";
+import { useLager } from "../ui/lager";
 import { arFastbar, fastNyckel, tillampaFasta, vaxlaFast } from "./karna/fasta";
 import {
   byggTraffmodell, iPlotytan, PEKSKARMSREGLER, pekarlage, startlage, tangent,
 } from "./karna/interaktion";
 import { nollstallMatt } from "./karna/matt";
+import { RitDelKontext } from "./karna/ritdel";
 import { tidsaxel } from "./karna/skalor";
 import { Tooltip } from "./karna/Tooltip";
 import { byggPunktIndex, tooltipModell, type Inmatning } from "./karna/tooltipModell";
@@ -229,6 +231,11 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
 
   const onBlur = () => setAktiv(null);
 
+  // Tooltipen är det översta lagret medan den syns: Escape stänger bara den
+  // (lagerstapeln i ui/lager.ts fångar Escape på window). Utan tooltip når
+  // Escape vidare, t.ex. till förstoringsdialogen.
+  useLager(giltigAktiv !== null, () => { setAktiv(null); tryckt.current = null; });
+
   // Pekskärm: tryck utanför diagrammet stänger
   useEffect(() => {
     if (satt !== "peka" || !aktiv) return;
@@ -273,7 +280,24 @@ export default function Diagram({ spec, fasta, onFasta, bredd: fastBredd }: Diag
           onFocus={onFocus}
           onBlur={onBlur}
         >
-          <Rita scen={scen} spec={effSpec} aktiv={giltigAktiv} fasta={aktuellaFasta} />
+          <RitDelKontext.Provider value="statisk">
+            <Rita scen={scen} spec={effSpec} aktiv={null} fasta={aktuellaFasta} />
+          </RitDelKontext.Provider>
+        </svg>
+      )}
+      {scen && giltigAktiv && (
+        <svg
+          className={s.overlagg}
+          width={scen.bredd}
+          height={scen.hojd}
+          viewBox={`0 0 ${scen.bredd} ${scen.hojd}`}
+          aria-hidden="true"
+          focusable="false"
+          data-overlagg=""
+        >
+          <RitDelKontext.Provider value="overlagg">
+            <Rita scen={scen} spec={effSpec} aktiv={giltigAktiv} fasta={aktuellaFasta} />
+          </RitDelKontext.Provider>
         </svg>
       )}
       {scen && tooltip && xAktiv !== undefined && (
