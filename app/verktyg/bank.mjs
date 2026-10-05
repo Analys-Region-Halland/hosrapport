@@ -66,6 +66,8 @@ const LUFT = 16;
 //    { vanta: "selektor" }                  vänta tills elementet finns
 //    { klicka: "selektor", index: n }       element.click() på n:te träffen
 //    { vila: ms }                           vänta en fast tid
+//    { hovra: "selektor", fx, fy }          riktig mushändelse på andelen (fx, fy)
+//                                           av elementets yta (tillägg i WP3)
 //  Antingen `skivor` (högst så många skärmbilder när sidan rullas; rullningen
 //  sker i det element som har overflow-y auto/scroll och störst rullbar höjd,
 //  annars i dokumentet) eller `bilder` (en selektor; varje träff blir en bild
@@ -75,6 +77,8 @@ const LUFT = 16;
 
 const grafprov = (param) => (bredd) =>
   `/verktyg/grafprov.html?${param}&w=${Math.min(820, bredd - 32)}`;
+/** Grafprovets diagram (WP2:s Figur och Diagram), som stegen väntar på. */
+const DIAGRAM = "[data-diagram] svg[role='img']";
 
 export const VYER = [
   { id: "start", grupp: "gammal", adress: "/", steg: [{ vanta: "button.start-area" }], skivor: 6 },
@@ -88,30 +92,58 @@ export const VYER = [
     steg: [{ vanta: "button.start-area" }, { klicka: "button.start-area", index: 6 }, { vanta: "[data-block]" }],
     skivor: 6,
   },
+  // Grafprovet (verktyg/grafprov.html, WP2): fästa enheter med `fasta=` (enhets-id),
+  // visning med `visning=` (tid, rang, enheter, enheterRang). Hovring med en riktig
+  // mushändelse i steget `hovra`.
   {
     id: "graf-spagetti", grupp: "grafprov",
     adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79179"),
-    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
+    steg: [{ vanta: DIAGRAM }], skivor: 2,
   },
   {
     id: "graf-fasta", grupp: "grafprov",
-    adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79221&pin=Stockholm,Skåne"),
-    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
+    adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79221&fasta=0001,0012"),
+    steg: [{ vanta: DIAGRAM }], skivor: 2,
   },
   {
     id: "graf-hovring", grupp: "grafprov",
-    adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79179&hover=0.55,0.4"),
-    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
+    adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79179"),
+    steg: [{ vanta: DIAGRAM }, { hovra: DIAGRAM, fx: 0.55, fy: 0.4 }], skivor: 1,
   },
   {
     id: "graf-forvantat", grupp: "grafprov",
     adress: grafprov("vy=manad&sektion=akutflode&kpi=belaggning"),
-    steg: [{ vanta: ".figur svg" }], skivor: 2,
+    steg: [{ vanta: DIAGRAM }], skivor: 2,
   },
   {
     id: "graf-kostnad", grupp: "grafprov",
     adress: grafprov("vy=ar&sektion=skr-kostnader&kpi=kolada-u70020"),
-    steg: [{ vanta: "svg rect[role='img']" }], skivor: 2,
+    steg: [{ vanta: DIAGRAM }], skivor: 2,
+  },
+  {
+    id: "graf-rangordning", grupp: "grafprov",
+    adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79179&visning=rang&fasta=0012,0024"),
+    steg: [{ vanta: DIAGRAM }], skivor: 2,
+  },
+  {
+    id: "graf-rangordning-hovring", grupp: "grafprov",
+    adress: grafprov("vy=ar&sektion=skr-tillganglighet&kpi=kolada-n79179&visning=rang"),
+    steg: [{ vanta: DIAGRAM }, { hovra: DIAGRAM, fx: 0.3, fy: 0.55 }], skivor: 1,
+  },
+  {
+    id: "graf-stapel", grupp: "grafprov",
+    adress: grafprov("vy=kvartal&sektion=akutflode&kpi=akutbesok"),
+    steg: [{ vanta: DIAGRAM }, { hovra: DIAGRAM, fx: 0.6, fy: 0.6 }], skivor: 1,
+  },
+  {
+    id: "graf-smamultiplar", grupp: "grafprov",
+    adress: grafprov("vy=manad&sektion=akutflode&kpi=belaggning&visning=enheter"),
+    steg: [{ vanta: DIAGRAM }, { hovra: DIAGRAM, fx: 0.5, fy: 0.6 }], skivor: 2,
+  },
+  {
+    id: "graf-sjukhus-rangordnade", grupp: "grafprov",
+    adress: grafprov("vy=manad&sektion=akutflode&kpi=vantetid&visning=enheterRang"),
+    steg: [{ vanta: DIAGRAM }], skivor: 1,
   },
   {
     // Stilguidens första skärm: masthead och innehållsförteckning
