@@ -107,9 +107,16 @@ export function periodLopande(iso: string, vy: VyId): string {
   return `vecka ${v.vecka} ${v.ar}`;
 }
 
-/** Periodintervall i undertitel ("kort") eller sammanfattning ("lopande"). */
+/** Mellanslagen i en periodtext blir hårda (U+00A0), så att "apr 2024" inte bryts. */
+export const utanBrytning = (s: string) => s.replace(/ /g, HART);
+
+/** En period som text i undertitel, not och tabellhuvud: "2025", "mar 2026", "kv. 1 2026", utan radbrytning. */
+export const periodKort = (iso: string, vy: VyId) => utanBrytning(period(iso, vy, "kort"));
+
+/** Periodintervall i undertitel ("kort", utan radbrytning inom perioderna) eller sammanfattning ("lopande"). */
 function periodSpann(fran: string, till: string, vy: VyId, stil: "kort" | "lopande"): string {
-  if (stil === "kort" || vy !== "vecka") return periodIntervall(fran, till, vy, stil);
+  if (stil === "kort") return utanBrytning(periodIntervall(fran, till, vy, stil));
+  if (vy !== "vecka") return periodIntervall(fran, till, vy, stil);
   const a = periodLopande(fran, vy), b = periodLopande(till, vy);
   return a === b ? a : `${a}${DASH}${b}`;
 }
@@ -156,15 +163,30 @@ export function periodLista(perioder: string[], alla: string[], vy: VyId): strin
     const [a, b] = grupper[k];
     if (b === a + 1) grupper.splice(k, 1, [a, a], [b, b]);
   }
-  const text = grupper.map(([a, b]) => (a === b ? period(alla[a], vy, "kort") : periodIntervall(alla[a], alla[b], vy, "kort")));
+  const text = grupper.map(([a, b]) => utanBrytning(a === b ? period(alla[a], vy, "kort") : periodIntervall(alla[a], alla[b], vy, "kort")));
   return text.length > 1 ? `${text.slice(0, -1).join(", ")} och ${text[text.length - 1]}` : text[0] ?? "";
 }
 
-/** Saknade perioder i fokusserien (inte undertryckta). Tom sträng om inga saknas. */
+/**
+ * Om perioden mättes: någon serie i indikatorn har ett värde (eller ett
+ * undertryckt värde) den perioden. Perioder som ingen serie har är inte mätta,
+ * t.ex. åren mellan enkäter som görs vartannat år, och är inga luckor.
+ * Indikatorer utan andra serier än fokus räknas som mätta varje period.
+ */
+export function mattPeriod(u: Pick<Underlag, "kpi" | "dagar" | "fokusId">): (i: number) => boolean {
+  const andra = Object.keys(u.kpi.serier).filter((id) => id !== u.fokusId);
+  if (!andra.length) return () => true;
+  const serier = Object.keys(u.kpi.serier).map((id) => punkter(u, id));
+  return (i) => serier.some((p) => p[i] !== undefined && (p[i].varde !== null || !!p[i].undertryckt));
+}
+
+/** Saknade perioder i fokusserien (inte undertryckta, inte omätta). Tom sträng om inga saknas. */
 export function luckText(u: Underlag): string {
   const p = punkter(u, u.fokusId);
-  const saknas = p.filter((q) => q.varde === null && !q.undertryckt).map((q) => q.period);
-  if (!saknas.length || saknas.length === p.length) return "";
+  if (p.every((q) => q.varde === null && !q.undertryckt)) return "";
+  const matt = mattPeriod(u);
+  const saknas = p.filter((q, i) => q.varde === null && !q.undertryckt && matt(i)).map((q) => q.period);
+  if (!saknas.length) return "";
   const lista = periodLista(saknas, u.perioder, u.vy);
   if (lista.split(/, | och /).length > 4) return `Värden saknas för ${u.fokusNamn} under ${antalILoptext(saknas.length)} perioder.`;
   return `${versal(lista)} saknas för ${u.fokusNamn}.`;
@@ -221,7 +243,7 @@ export function figurUndertitel(kpi: KpiModell, kap: KapitelModell, ctx: SpecKon
     }
     case "rang": {
       const r = rangordning(u, "rang");
-      andra = `${antalForst(r.rader.length)} ${NIVA_ORD.region.flera} med värde, ${period(r.period, u.vy, "kort")}`;
+      andra = `${antalForst(r.rader.length)} ${NIVA_ORD.region.flera} med värde, ${periodKort(r.period, u.vy)}`;
       break;
     }
     case "enheter": {
@@ -233,7 +255,7 @@ export function figurUndertitel(kpi: KpiModell, kap: KapitelModell, ctx: SpecKon
     case "enheterRang": {
       const r = rangordning(u, "enheterRang");
       const n = r.rader.filter((x) => x.varde !== null).length;
-      andra = `${antalForst(n)} ${NIVA_ORD[barnNiva(u)].flera} med värde, ${period(r.period, u.vy, "kort")}`;
+      andra = `${antalForst(n)} ${NIVA_ORD[barnNiva(u)].flera} med värde, ${periodKort(r.period, u.vy)}`;
       break;
     }
   }

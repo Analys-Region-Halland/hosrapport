@@ -197,7 +197,7 @@ describe("intern uppföljning (akutflöde)", () => {
     const spec = kpiTillSpec(kpi, kap, { vy }, "tid");
     expect(spec.typ).toBe("linje");
     expect(spec.titel).toBe("Mot förväntat intervall");
-    expect(spec.undertitel).toBe("Beläggningsgrad, procent. Region Halland, per månad jan 2021–mar 2026.");
+    expect(spec.undertitel).toBe(`Beläggningsgrad, procent. Region Halland, per månad jan${NBSP}2021–mar${NBSP}2026.`);
     const band = spec.serier.find((s) => s.roll === "forvantat");
     expect(band?.intervall).toHaveLength(63);
     expect(band?.intervall?.at(-1)).toEqual({ x: "2026-03-01", lo: 96.4, hi: 98.6, lo2: 92.5, hi2: 102.4 });
@@ -215,7 +215,7 @@ describe("intern uppföljning (akutflöde)", () => {
     expect(spec.typ).toBe("stapel");
     expect(spec.titel).toBe("Över tid");
     expect(spec.y.noll).toBe(true);
-    expect(spec.undertitel).toBe(`Besök akutmottagning, antal per kvartal. Region Halland, kv.${NBSP}1 2021–kv.${NBSP}1 2026.`);
+    expect(spec.undertitel).toBe(`Besök akutmottagning, antal per kvartal. Region Halland, kv.${NBSP}1${NBSP}2021–kv.${NBSP}1${NBSP}2026.`);
     // Över 24 perioder blir det linje.
     const m = hitta("manad-akutflode.json", "akutbesok");
     expect(kpiTillSpec(m.kpi, m.kap, { vy: "manad" }, "tid").typ).toBe("linje");
@@ -226,7 +226,7 @@ describe("intern uppföljning (akutflöde)", () => {
     const spec = kpiTillSpec(kpi, kap, { vy: "manad", dagar: true }, "tid");
     expect(spec.id).toBe("vantetid:tid:dagar");
     expect(spec.serier.find((s) => s.roll === "fokus")?.punkter).toHaveLength(31);
-    expect(spec.undertitel).toMatch(/per dag 1 mar 2026–31 mar 2026\.$/);
+    expect(spec.undertitel.endsWith(`per dag 1${NBSP}mar${NBSP}2026–31${NBSP}mar${NBSP}2026.`), spec.undertitel).toBe(true);
   });
 
   it("små multiplar: delad skala, referens bara för andel och medel", () => {
@@ -234,7 +234,8 @@ describe("intern uppföljning (akutflöde)", () => {
     const spec = kpiTillSpec(kpi, kap, { vy }, "enheter");
     expect(spec.typ).toBe("smaMultiplar");
     expect(spec.titel).toBe("Per sjukhus");
-    expect(spec.paneler?.map((p) => p.titel)).toEqual(["Halmstad", "Varberg", "Kungsbacka"]);
+    // Lägre beläggning är bättre: bäst först (stilguiden 6.6)
+    expect(spec.paneler?.map((p) => p.titel)).toEqual(["Kungsbacka", "Varberg", "Halmstad"]);
     expect(spec.serier.find((s) => s.roll === "referens")?.id).toBe(HALLAND_ID);
     const alla = spec.serier.flatMap((s) => s.punkter ?? []).map((p) => p.varde).filter((v): v is number => v !== null);
     expect(spec.y.doman).toEqual([Math.min(...alla), Math.max(...alla)]);
@@ -304,5 +305,79 @@ describe("text", () => {
     expect(antalMeningar(`Skillnaden är 2,1${NBSP}p.e. Mot riket.`)).toBe(1);
     expect(antalMeningar("En mening. Två meningar. Tre.")).toBe(3);
     expect(antalMeningar("Utan punkt")).toBe(1);
+    expect(antalMeningar(`Andel, procent. Region Halland, per kvartal kv.${NBSP}1${NBSP}2021–kv.${NBSP}1${NBSP}2026.`)).toBe(2);
+  });
+});
+
+describe("rättelser i WP3", () => {
+  const telefon = hitta("ar-skr-tillganglighet.json", "kolada-n79179");
+  const akut = hitta("manad-akutflode.json", "belaggning");
+  const h = hierarki();
+  const ater = h.kpier.find((k) => k.id === "demo-aterinskrivning") as KpiModell;
+
+  it("jämförnivån står i specen: region för regioner, enhetens nivå för syskon", () => {
+    expect(kpiTillSpec(telefon.kpi, telefon.kap, { vy: "ar" }, "tid").jamforNiva).toEqual({ id: "region", etikett: "region" });
+    expect(kpiTillSpec(telefon.kpi, telefon.kap, { vy: "ar" }, "rang").jamforNiva).toEqual({ id: "region", etikett: "region" });
+    const sjukhus = kpiTillSpec(ater, h, { vy: "manad", fokus: "halmstad" }, "tid");
+    expect(sjukhus.jamforbara?.length).toBeGreaterThan(0);
+    expect(sjukhus.jamforNiva).toEqual({ id: "sjukhus", etikett: "sjukhus" });
+    const avdelning = kpiTillSpec(ater, h, { vy: "manad", fokus: "halmstad-kirurgi" }, "tid");
+    expect(avdelning.jamforNiva).toEqual({ id: "avdelning", etikett: "avdelning" });
+    // Utan jämförbara ingen nivå
+    expect(kpiTillSpec(akut.kpi, akut.kap, { vy: "manad" }, "tid").jamforNiva).toBeUndefined();
+  });
+
+  it("rangordningen har sin period", () => {
+    expect(kpiTillSpec(telefon.kpi, telefon.kap, { vy: "ar" }, "rang").period).toEqual({ iso: "2025-01-01", vy: "ar", text: "2025" });
+    expect(kpiTillSpec(akut.kpi, akut.kap, { vy: "manad" }, "enheterRang").period).toEqual({ iso: "2026-03-01", vy: "manad", text: `mar${NBSP}2026` });
+  });
+
+  it("periodtexter bryts inte: hårt mellanslag i undertitel, not och tabellhuvud", () => {
+    // En period med vanligt mellanslag före årtalet: "mar 2026", "kv.[hårt]1 2026", "v.[hårt]12 2026"
+    const brytbar = new RegExp(`\\b(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec|kv\\.${NBSP}\\d|v\\.${NBSP}\\d+) \\d`);
+    for (const { kap, vy } of kapitel) {
+      for (const kpi of kap.kpier) {
+        for (const v of visningar(kpi, kap, { vy })) {
+          const spec = kpiTillSpec(kpi, kap, { vy }, v.id);
+          const texter = [spec.undertitel, ...spec.noter.map((n) => n.text), ...spec.tabell.kolumner];
+          for (const t of texter) expect(t, `${kpi.id} ${v.id}`).not.toMatch(brytbar);
+        }
+      }
+    }
+  });
+
+  it("år som ingen region mätte (enkät vartannat år) är inga luckor", () => {
+    const enkat = hitta("ar-skr-syn-pa-varden.json", "kolada-n79171");
+    const spec = kpiTillSpec(enkat.kpi, enkat.kap, { vy: "ar" }, "tid");
+    expect(spec.noter.filter((n) => n.typ === "lucka")).toEqual([]);
+    expect(spec.sammanfattning).not.toContain("saknas");
+    // Riktiga luckor (andra regioner har värden) står kvar
+    const gles = hitta("ar-skr-syn-pa-varden.json", "kolada-u71451");
+    expect(kpiTillSpec(gles.kpi, gles.kap, { vy: "ar" }, "tid").noter.find((n) => n.typ === "lucka")?.text)
+      .toBe("2018, 2020, 2022 och 2024 saknas för Halland.");
+    // Minidiagrammet tar bara med mätta perioder
+    const mini = minidiagramSpec(enkat.kpi, enkat.kap, { vy: "ar" });
+    expect(mini.serier[0].punkter?.map((p) => p.period.slice(0, 4))).toEqual(["2016", "2022", "2024"]);
+    expect(minidiagramSpec(telefon.kpi, telefon.kap, { vy: "ar" }).serier[0].punkter?.filter((p) => p.varde === null)).toHaveLength(2);
+  });
+
+  it("små multiplar: panelerna bäst först enligt riktningen, efter värde för neutrala mått", () => {
+    let antal = 0;
+    for (const { kap, vy } of [...kapitel, { kap: h, vy: "manad" as VyId }]) {
+      for (const kpi of kap.kpier) {
+        if (!visningar(kpi, kap, { vy }).some((v) => v.id === "enheter")) continue;
+        const spec = kpiTillSpec(kpi, kap, { vy }, "enheter");
+        // Senaste värdet i datan (inte index, som summamått med olika storlek visas som)
+        const senaste = (spec.paneler ?? []).map((p) =>
+          [...(kpi.serier[p.enhetId]?.tidsserie ?? [])].reverse().find((q) => q.varde !== null)?.varde ?? null,
+        ).filter((v): v is number => v !== null);
+        const sorterad = [...senaste].sort((a, b) => (kpi.riktning === "lag" ? a - b : b - a));
+        expect(senaste, kpi.id).toEqual(sorterad);
+        // Serierna och tabellens kolumner i samma ordning som panelerna
+        expect(spec.serier.filter((s) => s.roll === "fokus").map((s) => s.enhetId)).toEqual(spec.paneler?.map((p) => p.enhetId));
+        antal++;
+      }
+    }
+    expect(antal).toBeGreaterThan(3);
   });
 });
