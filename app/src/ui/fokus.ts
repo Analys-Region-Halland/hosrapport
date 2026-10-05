@@ -16,10 +16,12 @@ export function tabbara(rot: ParentNode): HTMLElement[] {
   return [...rot.querySelectorAll<HTMLElement>(TABBAR)].filter((el) => el.tabIndex >= 0 && synlig(el));
 }
 
-/** Flyttar fokus till det första tabbara elementet efter `el` i dokumentet,
- *  utanför `utom`. Finns inget sådant får `el` själv fokus. */
+/** Flyttar fokus till det första tabbara elementet efter `el`, utanför `utom`.
+ *  Ligger `el` i en modal dialog (till exempel ett ark) söks bara inuti den.
+ *  Finns inget sådant får `el` själv fokus. */
 export function fokuseraEfter(el: HTMLElement, utom?: HTMLElement | null): void {
-  const nasta = tabbara(document).find((k) =>
+  const rot: ParentNode = el.closest("[aria-modal='true']") ?? document;
+  const nasta = tabbara(rot).find((k) =>
     k !== el && !el.contains(k) && !(utom && utom.contains(k))
     && (el.compareDocumentPosition(k) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0);
   (nasta ?? el).focus({ preventScroll: false });

@@ -4,7 +4,9 @@
 // Beteende
 // - Renderas i en portal i <body> och placeras under ankaret (över om det inte
 //   får plats), inom fönstret. Portalen gör att popovern inte klipps av
-//   `overflow` eller `content-visibility` i omgivande block.
+//   `overflow` eller `content-visibility` i omgivande block. Ligger ankaret i
+//   en modal dialog (ett ark) hamnar portalen i den, så att popovern inte blir
+//   osynlig för skärmläsare bakom aria-modal.
 // - Fokus flyttas in i popovern när den öppnas. Tab från sista elementet stänger
 //   och går vidare till nästa element efter ankaret; Skift+Tab från början
 //   stänger och lämnar fokus på ankaret. Så hamnar popovern i tabbordningen
@@ -15,7 +17,7 @@
 // - Ingen skugga, 1 px ram, opacitet in på rorelse.kort (stängs av med
 //   prefers-reduced-motion via CSS-variabeln).
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { tema } from "../design/tema";
 import { FOKUSERBAR, fokuseraEfter, tabbara } from "./fokus";
@@ -37,12 +39,14 @@ export interface PopoverProps {
 
 export default function Popover(props: PopoverProps): ReactNode {
   if (!props.oppen || !props.ankare || typeof document === "undefined") return null;
-  return createPortal(<PopoverYta {...props} ankare={props.ankare} />, document.body);
+  const behallare = props.ankare.closest<HTMLElement>("[aria-modal='true']") ?? document.body;
+  return createPortal(<PopoverYta {...props} ankare={props.ankare} behallare={behallare} />, behallare);
 }
 
-function PopoverYta({ onStang, ankare, children, etikett, beskrivningId, id }: PopoverProps & { ankare: HTMLElement }) {
+type YtaProps = PopoverProps & { ankare: HTMLElement; behallare: HTMLElement };
+
+function PopoverYta({ onStang, ankare, behallare, children, etikett, beskrivningId, id }: YtaProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [plats, setPlats] = useState<{ top: number; left: number } | null>(null);
   const onStangRef = useRef(onStang);
   useLayoutEffect(() => { onStangRef.current = onStang; });
 
@@ -52,7 +56,12 @@ function PopoverYta({ onStang, ankare, children, etikett, beskrivningId, id }: P
   }, [ankare]);
   const stangMedEscape = useCallback(() => stang(true), [stang]);
 
-  // Placering i dokumentkoordinater: under ankaret, annars över; alltid inom fönstret.
+  // Placering under ankaret, annars över, alltid inom fönstret. I <body> används
+  // dokumentkoordinater (position: absolute). I ett ark används fönstrets
+  // (position: fixed), så att arkets rullning inte klipper popovern. Stilen sätts
+  // direkt i layouteffekten, före första målningen; popovern göms aldrig med
+  // visibility eftersom den då inte kan ta emot fokus.
+  const fast = behallare !== document.body;
   useLayoutEffect(() => {
     const placera = () => {
       const el = ref.current;
@@ -66,7 +75,8 @@ function PopoverYta({ onStang, ankare, children, etikett, beskrivningId, id }: P
       const left = Math.max(kant, Math.min(a.left, bredd - kant - p.width));
       let top = a.bottom + glapp;
       if (top + p.height > hojd - kant && a.top - glapp - p.height >= kant) top = a.top - glapp - p.height;
-      setPlats({ top: top + window.scrollY, left: left + window.scrollX });
+      el.style.top = `${fast ? top : top + window.scrollY}px`;
+      el.style.left = `${fast ? left : left + window.scrollX}px`;
     };
     placera();
     window.addEventListener("resize", placera);
@@ -75,7 +85,7 @@ function PopoverYta({ onStang, ankare, children, etikett, beskrivningId, id }: P
       window.removeEventListener("resize", placera);
       window.removeEventListener("scroll", placera, true);
     };
-  }, [ankare]);
+  }, [ankare, fast]);
 
   // Fokus in vid öppning. Stängs popovern medan fokus är i den återgår fokus till ankaret.
   useEffect(() => {
@@ -109,6 +119,8 @@ function PopoverYta({ onStang, ankare, children, etikett, beskrivningId, id }: P
 
   const vidTangent = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Tab" || !ref.current) return;
+    // Portalen bubblar i React-trädet; ett ark runt ankaret ska inte också hantera Tab.
+    e.stopPropagation();
     const lista = tabbara(ref.current);
     const aktiv = document.activeElement;
     if (e.shiftKey && (aktiv === ref.current || aktiv === lista[0])) {
@@ -130,8 +142,7 @@ function PopoverYta({ onStang, ankare, children, etikett, beskrivningId, id }: P
       aria-label={etikett}
       aria-describedby={beskrivningId}
       tabIndex={-1}
-      className={s.popover}
-      style={plats ? { top: plats.top, left: plats.left } : { visibility: "hidden" }}
+      className={fast ? `${s.popover} ${s.fast}` : s.popover}
       onKeyDown={vidTangent}
       data-popover=""
     >

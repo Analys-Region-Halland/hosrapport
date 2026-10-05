@@ -65,6 +65,7 @@
   }
 
   .innehall {
+    max-width: var(--matt-text);
     margin-top: var(--rum-1);
   }
 

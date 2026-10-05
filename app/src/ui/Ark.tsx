@@ -84,6 +84,7 @@ function ArkYta({ onStang, etikett, children, ankare, id }: ArkProps) {
   // Fokusfälla: Tab och Skift+Tab cirkulerar inom arket.
   const vidTangent = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Tab" || !ref.current) return;
+    e.stopPropagation();
     const lista = tabbara(ref.current);
     if (lista.length === 0) { e.preventDefault(); return; }
     const aktiv = document.activeElement;

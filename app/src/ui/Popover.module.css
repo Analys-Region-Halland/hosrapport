@@ -21,13 +21,16 @@
     animation: in var(--rorelse-kort) ease-out;
   }
 
+  /* Popovern tar fokus när den öppnas (så att skärmläsare läser den), men
+     ytan själv får ingen fokusring: den är redan synlig, och nästa Tab ger
+     länken inuti en vanlig fokusring. */
   .popover:focus {
     outline: none;
   }
 
-  .popover:focus-visible {
-    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
-    outline-offset: var(--komponent-fokusring-avstand);
+  /* I ett ark: fönsterkoordinater, så att arkets rullning inte klipper. */
+  .fast {
+    position: fixed;
   }
 
   @keyframes in {
