@@ -16,17 +16,18 @@
 // `interaktion` (karna/interaktion.ts: tid, rader eller paneler), så att alla
 // graftyper delar samma händelser, samma tooltip och samma tangentbordsmönster.
 // Renderare utan interaktion (minidiagrammet) ritas som en bild utan fokus.
-// Nedborrning: `onFokus` (eller NedborrningKontext runt figuren) anropas vid
-// klick på en panels namn och vid Enter i en panel.
+// Nedborrning: `onFokus` anropas vid klick på en panels namn och vid Enter i
+// en panel. Tillägg i WP10: även klick på en rad i enheternas rangordning
+// (spec.borrbar), Enter på raden och andra trycket på raden på pekskärm.
+// Figuren skickar onFokus vidare hit (reserven NedborrningKontext är borttagen).
 
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { tema } from "../design/tema";
 import { useLager } from "../ui/lager";
 import { arFastbar, fastNyckel, tillampaFasta, vaxlaFast } from "./karna/fasta";
 import { GEOMETRI } from "./karna/geometri";
 import { nollstallMatt } from "./karna/matt";
-import { NedborrningKontext } from "./karna/nedborrning";
 import { RitDelKontext } from "./karna/ritdel";
 import { Tooltip } from "./karna/Tooltip";
 import type { Inmatning } from "./karna/tooltipModell";
@@ -120,8 +121,7 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
   const svg = useRef<SVGSVGElement>(null);
   const bredd = useBredd(ram, fastBredd);
   const typsnitt = useTypsnitt();
-  const kontextFokus = useContext(NedborrningKontext);
-  const nedborrning = onFokus ?? kontextFokus ?? undefined;
+  const nedborrning = onFokus;
 
   // Fästa serier, kontrollerat eller okontrollerat
   const [egnaFasta, setEgnaFasta] = useState<string[]>(fasta ?? []);
@@ -164,6 +164,17 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
     if (!nedborrning) return;
     nedborrning(effSpec.serier.find((x) => x.id === serieId)?.enhetId ?? serieId);
   };
+
+  // Efter nedborrning med tangentbordet står fokus kvar i diagrammet: nästa
+  // nivås startläge visas (och läses upp) så snart dess scen finns.
+  const startEfterBorr = useRef(false);
+  useEffect(() => {
+    if (!startEfterBorr.current || !modell) return;
+    startEfterBorr.current = false;
+    if (document.activeElement !== svg.current) return;
+    setSatt("tangent");
+    setAktiv(modell.start());
+  }, [modell]);
 
   const lage = (e: { clientX: number; clientY: number }) => {
     const b = svg.current?.getBoundingClientRect();
@@ -219,6 +230,9 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
     setSatt("peka");
     if (ny?.serieId && ny.serieId === tryckt.current) {
       tryckt.current = null;
+      // Andra trycket på en rad i enheternas rangordning borrar ned, annars fäster det
+      const mal = nedborrning ? modell.borra?.(ny) : null;
+      if (mal && nedborrning) { setAktiv(null); nedborrning(mal); return; }
       vaxla(ny.serieId);
       setAktiv(ny);
       return;
@@ -236,6 +250,9 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
     if (namn !== null) { borra(namn); return; }
     const etikett = etikettUnder(e);
     if (etikett !== null) { vaxla(etikett); return; }
+    // En rad i enheternas rangordning borrar ned (tillägg i WP10), annars fäster klicket
+    const mal = giltigAktiv && nedborrning ? modell?.borra?.(giltigAktiv) : null;
+    if (mal && nedborrning) { setAktiv(null); nedborrning(mal); return; }
     if (giltigAktiv?.serieId) vaxla(giltigAktiv.serieId);
   };
 
@@ -248,7 +265,10 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
     setSatt("tangent");
     setAktiv(utfall.aktiv);
     if (utfall.vaxla) vaxla(utfall.vaxla);
-    if (utfall.fokus && nedborrning) nedborrning(utfall.fokus);
+    if (utfall.fokus && nedborrning) {
+      startEfterBorr.current = true;
+      nedborrning(utfall.fokus);
+    }
   };
 
   const onFocus = () => {
@@ -282,7 +302,7 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
     [giltigAktiv, modell, satt],
   );
   const lyftSerie = giltigAktiv?.serieId ? effSpec.serier.find((x) => x.id === giltigAktiv.serieId) : undefined;
-  const hand = !!lyftSerie && arFastbar(lyftSerie);
+  const hand = (!!lyftSerie && arFastbar(lyftSerie)) || (!!giltigAktiv && !!nedborrning && !!modell?.borra?.(giltigAktiv));
 
   const Rita = r.Rita;
   return (

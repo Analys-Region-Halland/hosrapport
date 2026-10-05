@@ -3,7 +3,7 @@
 // import.meta.glob; filen exporterar { id, rubrik, ordning, Sektion }.
 //
 // Exemplen är riktiga specar ur WP1:s fixturer (kpiTillSpec). Diagrammet ritas
-// av RENDERARE: platshållare tills WP2 och WP3 är sammanslagna.
+// av graftypens renderare (RENDERARE).
 
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { kpiTillSpec, visningar } from "../../src/charts/kpiTillSpec";

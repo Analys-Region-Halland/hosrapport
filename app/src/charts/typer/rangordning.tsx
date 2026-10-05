@@ -15,13 +15,14 @@
 // vågrät hjälplinje, namnet och värdet i 600, och tooltipen visar namn, värde,
 // plats av antal och skillnaden mot riket. Klick på raden fäster eller tar
 // bort regionen (samma fästa som i linjevyn), ↑ ↓ flyttar mellan rader och
-// Enter fäster.
+// Enter fäster. Tillägg i WP10: i enheternas rangordning (spec.borrbar) borrar
+// klick och Enter ned i raden när figuren kan, och uppmaningen säger det.
 
 import { plats, varde } from "../../design/format";
 import { tema, type Tema } from "../../design/tema";
 import { arFastbar } from "../karna/fasta";
 import { GEOMETRI } from "../karna/geometri";
-import { radinteraktion } from "../karna/interaktion";
+import { radEnhet, radinteraktion } from "../karna/interaktion";
 import { kortaText, textbredd } from "../karna/matt";
 import { skarp } from "../karna/ritstil";
 import { linjarSkala, tickText, vardeTicks } from "../karna/skalor";
@@ -199,9 +200,10 @@ const motNamn = (namn: string) => (namn === "Riket" ? "riket" : namn);
 /**
  * Tooltipen för en rad (stilguiden 6.8): perioden som rubrik, raden med värde
  * och plats av antal (i 600), riket och skillnaden mot riket. Sist
- * uppmaningen att markera eller ta bort när regionen kan fästas.
+ * uppmaningen att markera eller ta bort när regionen kan fästas, eller att
+ * visa enheten när raden borrar ned (`nedborrning`, enheternas rangordning).
  */
-export function radTooltip(spec: ChartSpec, rad: Stopp, satt: Inmatning): TooltipModell {
+export function radTooltip(spec: ChartSpec, rad: Stopp, satt: Inmatning, nedborrning = false): TooltipModell {
   const s = spec.serier.find((x) => x.id === rad.serieId);
   const f = spec.x.format;
   const rubrik = spec.period?.text ?? "";
@@ -220,7 +222,9 @@ export function radTooltip(spec: ChartSpec, rad: Stopp, satt: Inmatning): Toolti
     rader.push({ serieId: null, namn: `Skillnad mot ${motNamn(namn)}`, varde: skillnadText(rad.varde - ref.varde, f), plats: null, farg: null, fet: false });
   }
   let uppmaning: string | null = null;
-  if (s && arFastbar(s)) {
+  if (s && nedborrning && radEnhet(spec, s.id)) {
+    uppmaning = `${uppmaningVerb(satt)} för att visa ${s.namn}`;
+  } else if (s && arFastbar(s)) {
     uppmaning = s.roll === "markerad"
       ? `${uppmaningVerb(satt)} för att ta bort`
       : `${uppmaningVerb(satt)} för att markera ${s.namn}`;
