@@ -81,6 +81,19 @@ describe("läspositionen tar med blockets figurläge", () => {
     expect(poster[0]).toBe(`${KAP}&i=akutbesok`);
   });
 
+  it("en länk till en borrad figurs block tar med figurens läge; egna v och e står kvar", () => {
+    const { p, poster } = plats(`${KAP}&i=belaggning`);
+    const r = skapaRouter(p);
+    r.prenumerera(() => {});
+    anmalFigurlage("vantetid", { v: "enheter", e: "halmstad" });
+    r.navigera(kapitel({ i: "vantetid" }));
+    expect(poster[0]).toBe(`${KAP}&i=vantetid&v=enheter&e=halmstad`);
+    r.navigera(kapitel({ i: "vantetid", v: "tid" }));
+    expect(poster[0]).toBe(`${KAP}&i=vantetid&v=tid`);
+    r.navigera(kapitel({ i: "akutbesok" }));
+    expect(poster[0]).toBe(`${KAP}&i=akutbesok`);
+  });
+
   it("figuren skriver sitt läge med replaceState när läsaren borrar ned, utan ny historikpost", () => {
     const { p, poster } = plats(`${KAP}&i=vantetid`);
     const r = skapaRouter(p);
