@@ -160,7 +160,7 @@ export function Sektion() {
         Specarna byggs av kpiTillSpec ur WP1:s fixturer, och graferna ritas av renderarna för respektive graftyp. Varje exempel
         fotograferas för sig i bänken, i 1440 och 390 px.
       </Not>
-      {EXEMPEL.map((e) => (e.typ === "minidiagram" ? <Oversikt key={e.namn} e={e} /> : <Exempelvisning key={e.namn} e={e} />))}
+      {EXEMPEL.filter((e) => e.iGalleriet !== false).map((e) => (e.typ === "minidiagram" ? <Oversikt key={e.namn} e={e} /> : <Exempelvisning key={e.namn} e={e} />))}
     </>
   );
 }

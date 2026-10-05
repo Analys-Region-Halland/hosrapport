@@ -74,6 +74,7 @@ export type ExempelNamn =
   | "stapel"
   | "sma-multiplar"
   | "sma-multiplar-avdelning"
+  | "sma-multiplar-avdelning-varberg"
   | "minidiagram";
 
 export interface Exempel {
@@ -93,6 +94,9 @@ export interface Exempel {
   visning: VisningId;
   /** Exemplets utgångsläge: fästa enheter, fokus för nedborrning. */
   kontext?: Partial<SpecKontext>;
+  /** false: bara i en sektion, inte i galleriet (så att två figurer med
+   *  brödsmula inte får samma namn på sidan, axe landmark-unique). */
+  iGalleriet?: boolean;
 }
 
 const LINJE = "charts/typer/linje.tsx";
@@ -163,6 +167,16 @@ export const EXEMPEL: readonly Exempel[] = [
     typ: "smaMultiplar", paket: "WP3", fil: "charts/typer/smaMultiplar.tsx",
     data: { fixtur: "hierarki", kpi: "demo-aterinskrivning" }, visning: "enheter",
     kontext: { fokus: "halmstad" },
+  },
+  {
+    // Små multiplar-sektionen. Galleriet visar återinskrivningarna i Halmstad
+    // och figursektionen beläggningen där, så brödsmulorna får olika namn.
+    namn: "sma-multiplar-avdelning-varberg",
+    rubrik: "Små multiplar per avdelning i Varberg",
+    vad: "Påhittad hierarki: utskrivningarna från avdelningarna på sjukhuset i Varberg, med brödsmula. Ett summamått, så panelerna har ingen referenslinje. Klick på en panel borrar ned.",
+    typ: "smaMultiplar", paket: "WP3", fil: "charts/typer/smaMultiplar.tsx",
+    data: { fixtur: "hierarki", kpi: "demo-utskrivningar" }, visning: "enheter",
+    kontext: { fokus: "varberg" }, iGalleriet: false,
   },
   {
     namn: "minidiagram",

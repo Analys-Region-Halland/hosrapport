@@ -4,8 +4,9 @@
 // Ägare: WP3.
 //
 // Exemplen är riktig data (beläggningen per sjukhus ur akutflödesutdraget) och
-// WP1:s påhittade hierarki (återinskrivningar per avdelning på sjukhuset i
-// Halmstad), byggda av kpiTillSpec (exempelSpec) och ritade i WP4:s Figur med
+// WP1:s påhittade hierarki (utskrivningarna per avdelning på sjukhuset i
+// Varberg; galleriet visar återinskrivningarna i Halmstad, så att de två
+// brödsmulorna får olika namn), byggda av kpiTillSpec (exempelSpec) och ritade i WP4:s Figur med
 // nivåflikar och brödsmula. Nedborrning: Figur skickar onFokus vidare till
 // diagrammet, så klick på ett panelnamn (eller Enter i panelen) byter fokus,
 // som i rapporten.
@@ -69,7 +70,7 @@ export function Sektion() {
 
       <Underrubrik>Exempel</Underrubrik>
       <Exempel namn="sma-multiplar" bild="sma-sjukhus" rubrik="Per sjukhus" />
-      <Exempel namn="sma-multiplar-avdelning" bild="sma-avdelning" rubrik="Per avdelning, med nedborrning" />
+      <Exempel namn="sma-multiplar-avdelning-varberg" bild="sma-avdelning" rubrik="Per avdelning, med nedborrning" />
 
       <Underrubrik>Uppbyggnad</Underrubrik>
       <Tabell
