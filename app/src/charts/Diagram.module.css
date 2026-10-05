@@ -1,0 +1,52 @@
+/* Diagrammets ram: plats för svg, tooltip och uppläsning. Ägare: WP2. */
+@layer komponent {
+  .ram {
+    position: relative;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .svg {
+    display: block;
+    overflow: visible;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  /* Överlägget (hjälplinje, lyft linje, punkter) i en egen svg ovanpå den
+     statiska, så att figurens export bara tar de statiska lagren. */
+  .overlagg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  /* Musklick ger inte fokus; Tab ger synlig fokusring (stilguiden 2.1, 6.8) */
+  .svg:focus {
+    outline: none;
+  }
+
+  /* Ringen ritas på svg:ns innerkant: figurens plotyta klipper i sidled
+     (overflow-x: clip), så en ring utanför skulle bara synas upptill och
+     nedtill. Innehållet ligger minst 7 px innanför kanten, så avståndet
+     mellan ring och innehåll blir ändå större än fokusring.avstand. */
+  .svg:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
+  }
+
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

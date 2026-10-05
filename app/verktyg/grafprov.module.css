@@ -1,0 +1,23 @@
+/* Grafprovets sida: papper, marginaler och figuren upp till matt.figur.
+   Figuren själv är WP4:s Figur. Ägare: WP2. */
+@layer komponent {
+  .sida {
+    background: var(--farg-papper);
+    min-height: 100vh;
+    padding: var(--rum-6) var(--matt-marginal);
+    font-family: var(--typ-familj-sans);
+    color: var(--farg-black);
+  }
+
+  .prov {
+    max-width: var(--matt-figur);
+    margin: 0 auto;
+  }
+
+  .etikett {
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+    margin: 0 0 var(--rum-4);
+  }
+}

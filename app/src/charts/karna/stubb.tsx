@@ -1,7 +1,11 @@
 // charts/karna/stubb.tsx: platshållarrenderare så att Figur och Diagram går att
 // rendera innan graftyperna finns (WP4 kan börja mot den). Ritar en tom platta
-// med texten "{typ}: byggs i {paket}". Ägare: WP2; tas bort när WP2 och WP3
-// har ersatt alla typer i typer/*.tsx.
+// med texten "{typ}: byggs i {paket}". Ägare: WP2; tas bort när WP3 har
+// ersatt alla typer i typer/*.tsx.
+//
+// Rita returnerar en egen <svg>: den fungerar både inne i Diagram.tsx yttre
+// svg (en inbäddad svg är giltig) och fristående, som när galleriet ritar
+// minidiagrammet direkt i en tabellcell.
 
 import { standardHojd, tema as standardTema } from "../../design/tema";
 import type { DiagramTyp } from "../spec";
