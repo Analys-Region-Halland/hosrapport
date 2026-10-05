@@ -125,9 +125,9 @@ describe("byggStartModell", () => {
     expect(antalMedStatus(k2.status)).toBe(0);
   });
 
-  it("rapportens manifest ger 29 i fas, 20 bevaka och 31 avvikelse i sju kapitel", () => {
+  it("rapportens manifest ger 26 i fas, 20 bevaka och 31 avvikelse i sju kapitel (beskrivande mått räknas inte)", () => {
     const r = byggStartModell(MANIFEST, TEMAN);
-    expect(r.lage).toEqual({ gron: 29, gul: 20, rod: 31 });
+    expect(r.lage).toEqual({ gron: 26, gul: 20, rod: 31 });
     expect(r.teman.map((t) => t.id)).toEqual(["patienten", "kvalitet", "resultat", "internt"]);
     const kapitel = r.teman.flatMap((t) => t.kapitel);
     expect(kapitel.map((k) => k.nummer)).toEqual([1, 2, 3, 4, 5, 6, 7]);
