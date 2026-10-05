@@ -130,7 +130,10 @@ function IndikatorFigur({ kpi, kapitel, vy }: { kpi: KpiModell; kapitel: Kapitel
   // ändrar ingenting här, så de statiska lagren i diagrammet står still.
   const ctx: SpecKontext = useMemo(() => ({ vy, fasta, dagar: pa }), [vy, fasta, pa]);
   const spec = useMemo(() => kpiTillSpec(kpi, kapitel, ctx, visning), [kpi, kapitel, ctx, visning]);
-  const dagFlik = useMemo(() => (harDagar ? { pa, onByt: setDagar } : undefined), [harDagar, pa]);
+  // "Per dag" är en egen flik: den visar dagsserien över tid, inte den visning som var vald
+  const dagFlik = useMemo(() => (harDagar
+    ? { pa, onByt: (p: boolean) => { setDagar(p); if (p) setVald("tid"); } }
+    : undefined), [harDagar, pa]);
 
   return (
     <Figur

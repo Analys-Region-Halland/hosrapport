@@ -18,5 +18,7 @@ export function figurReserv(fonsterbredd: number): number {
 
 /** Ungefärlig höjd för hela indikatorn med stängd fördjupning: figuren och texten runt den. */
 export function indikatorUppskattning(fonsterbredd: number): number {
-  return figurReserv(fonsterbredd) + 4 * tema.rum[9];
+  // Rubrik, nyckeltal, analys och fördjupningens summering; texten bryts oftare på mobil
+  const mobil = fonsterbredd <= tema.brytpunkt.mobil.max;
+  return figurReserv(fonsterbredd) + (mobil ? 6 : 4) * tema.rum[9];
 }
