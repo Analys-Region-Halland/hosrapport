@@ -12,6 +12,9 @@
   /* ── Brandlist: 48 px, vit logotyp 22 px och produktnamnet ── */
   .brandlist {
     background: var(--farg-fokus);
+    /* Utskrift: utan bakgrunden blir den vita logotypen osynlig. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .brandinnehall {
