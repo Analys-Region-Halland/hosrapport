@@ -21,7 +21,7 @@ import { utanMarkering } from "../begrepp/lanka";
 import { kpiTillSpec, visningar } from "../charts/kpiTillSpec";
 import type { ChartSpec, VisningId } from "../charts/spec";
 import type { KallaRef, KapitelModell, KpiModell, Status, VyId } from "../data/modell";
-import { varde } from "../design/format";
+import { HART, varde } from "../design/format";
 import { nummerFor, valjOverKapitel } from "../rapport/huvudpunkter";
 import { oversiktRader } from "../rapport/oversikt";
 import { byggDisposition } from "../rapport/ramDisposition";
@@ -163,7 +163,9 @@ const ANALYS_MAX_TECKEN = 300;
  * meningar, eller två när tre blir för långt.
  */
 export function kortAnalys(kpi: KpiModell): string {
-  const m = meningar(utanMarkering(utanUpprepning(kpi.analystext, kpi)));
+  // Tusental med hårt mellanslag (stilguiden 3.2), så att "13 667,6" inte bryts på bilden
+  const text = utanMarkering(utanUpprepning(kpi.analystext, kpi)).replace(/(\d) (\d{3})(?!\d)/g, `$1${HART}$2`);
+  const m = meningar(text);
   const tre = m.slice(0, 3);
   return (tre.join(" ").length > ANALYS_MAX_TECKEN && tre.length > 2 ? tre.slice(0, 2) : tre).join(" ");
 }

@@ -72,7 +72,8 @@ export interface GrafDiagram {
   /** Mellanrum mellan staplar i procent av stapelbredden. */
   stapelMellanrum?: number;
   varde: { min: number; max: number; steg: number; format: string; visa: boolean; rutnat: boolean };
-  kategoriaxel: { visa: boolean; var: number; linje: string | null };
+  /** var = etikett var k:e kategori; streck = korta axelstreck (bara när de inte flyter ihop). */
+  kategoriaxel: { visa: boolean; var: number; linje: string | null; streck: boolean };
   alt: string;
   namn: string;
 }
@@ -242,6 +243,9 @@ const tillTumPunkt = (ruta: Ruta, x: number, y: number) => ({ x: ruta.x + tum(x)
 //  Linje (även förväntat intervall och minidiagram)
 // ════════════════════════════════════════════════════════════
 
+/** Axelstreck per kategori ritas bara när kategorierna är minst så här breda (px); annars flyter de ihop. */
+const STRECK_MIN = tema.rum[1];
+
 const VISADE_LINJER = new Set<SpecSerie["roll"]>(["fokus", "referens", "markerad", "mal"]);
 /** Ritordning: referens och mål under fästa, fokus överst (stilguiden 6.4). */
 const ORDNING: Record<string, number> = { mal: 0, referens: 1, markerad: 2, fokus: 3 };
@@ -317,7 +321,7 @@ function linjePlan(spec: ChartSpec, ruta: Ruta, val: LinjeVal, plan: GrafPlan, s
     kategorier,
     serier,
     varde: { min, max, steg: t.steg, format: formatkod(f, t.decimaler), visa: val.axlar, rutnat: val.axlar },
-    kategoriaxel: { visa: val.axlar, var: steg, linje: val.axlar ? FARG.diagram.rutnat : null },
+    kategoriaxel: { visa: val.axlar, var: steg, linje: val.axlar ? FARG.diagram.rutnat : null, streck: val.axlar && yta.b / Math.max(1, n) >= STRECK_MIN },
     alt: spec.sammanfattning,
     namn: val.namn,
   }));
@@ -438,7 +442,7 @@ function stapelPlan(spec: ChartSpec, ruta: Ruta): GrafPlan {
     // stapelbredd = breddPerMellanrum × mellanrum (stilguiden 6.6)
     stapelMellanrum: Math.round(100 / D.stapel.breddPerMellanrum),
     varde: { min, max, steg: t.steg, format: formatkod(f, t.decimaler), visa: true, rutnat: true },
-    kategoriaxel: { visa: true, var: etikettSteg(kategorier, yta.b / Math.max(1, n)), linje: FARG.diagram.nollinje },
+    kategoriaxel: { visa: true, var: etikettSteg(kategorier, yta.b / Math.max(1, n)), linje: FARG.diagram.nollinje, streck: false },
     alt: spec.sammanfattning,
     namn: spec.titel,
   }));
@@ -499,7 +503,7 @@ function rangPlan(spec: ChartSpec, ruta: Ruta): GrafPlan {
     stapelFarger: omvanda.map(farg),
     stapelMellanrum: Math.round(100 / D.stapel.breddPerMellanrum),
     varde: { min, max, steg: t.steg, format: formatkod(f, t.decimaler), visa: true, rutnat: true },
-    kategoriaxel: { visa: true, var: 1, linje: FARG.diagram.nollinje },
+    kategoriaxel: { visa: true, var: 1, linje: FARG.diagram.nollinje, streck: false },
     alt: spec.sammanfattning,
     namn: spec.titel,
   }));
@@ -657,7 +661,7 @@ function ritaDiagram(slide: PptxGenJS.Slide, d: GrafDiagram): void {
     catAxisLineColor: d.kategoriaxel.linje ?? FARG.diagram.rutnat,
     catAxisLineSize: linjebredd(d.typ === "linje" ? D.xAxel.baslinje : D.nollinje),
     // Korta axelstreck nedåt på tidsaxeln (stilguiden 6.3): pptxgenjs förval "out"
-    ...(d.typ === "linje" ? {} : { catAxisMajorTickMark: "none" as const }),
+    ...(d.kategoriaxel.streck ? {} : { catAxisMajorTickMark: "none" as const }),
     dataLabelColor: FARG.black,
     dataLabelFontFace: TYPSNITT.sans,
     lang: SPRAK,

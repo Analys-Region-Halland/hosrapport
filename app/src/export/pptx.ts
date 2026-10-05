@@ -103,9 +103,16 @@ function rubrik(slide: PptxGenJS.Slide, text: Run[], r: TextRoll, rollnamn: Roll
 
 const enkel = (text: string): Run[] => [{ text, options: {} }];
 
+/** Sidfotens bredd: innerbredden minus bildnumrets plats. */
+const SIDFOT_B = INNERBREDD - 0.6;
+
+/** Sidfotens rader (högst två): en lång källrad bryts, och då börjar sidfoten en rad högre. */
+const sidfotRader = (text: string): number => Math.min(2, rader(text, "not", SIDFOT_B));
+
 /** Sidfot: källa eller kapitel till vänster, bildnummer till höger (typ.roll.not, farg.text3). */
 function sidfot(slide: PptxGenJS.Slide, text: string): void {
-  slide.addText(text, { ...stil(R.not, FARG.text3), x: M, y: SIDFOT_Y, w: INNERBREDD - 0.6, h: R.not.radhojd });
+  const extra = (sidfotRader(text) - 1) * R.not.radhojd;
+  slide.addText(text, { ...stil(R.not, FARG.text3), x: M, y: SIDFOT_Y - extra, w: SIDFOT_B, h: R.not.radhojd + extra });
   slide.slideNumber = {
     x: B - M - 0.5, y: SIDFOT_Y, w: 0.5, h: R.not.radhojd,
     fontFace: R.not.fontFace, fontSize: R.not.fontSize, color: FARG.text3, align: "right", margin: [0, 0, 0, 0],
@@ -358,6 +365,8 @@ function indikatorBild(slide: PptxGenJS.Slide, b: IndikatorBild): void {
   if (b.status) statusMarkor(slide, b.status, B - M, rubrikY + (R.indikator.radhojd - tum(tema.komponent.statusmarkor.hojd)) / 2);
 
   const top = Math.max(INNEHALL_Y, rubrikSlut + rum(4));
+  // En källrad på två rader tar en rad från innehållet
+  const slut = INNEHALL_SLUT - (sidfotRader(b.sidfot) - 1) * R.not.radhojd;
   const spec = b.spec;
 
   // Figurens texter och noten (noten beror inte på grafens höjd)
@@ -370,7 +379,7 @@ function indikatorBild(slide: PptxGenJS.Slide, b: IndikatorBild): void {
     return { tH, uH, nH };
   };
   const std = figurTexter(HOGER_B);
-  const stdGraf = INNEHALL_SLUT - (top + std.tH + std.uH + rum(4)) - (std.nH ? std.nH + rum(2) : 0);
+  const stdGraf = slut - (top + std.tH + std.uH + rum(4)) - (std.nH ? std.nH + rum(2) : 0);
   const hog = stdGraf < minstaHojd(spec);
 
   // Vänster spalt: nyckeltalsraden, analysen och proveniensen (stilguiden 4.4)
@@ -385,15 +394,15 @@ function indikatorBild(slide: PptxGenJS.Slide, b: IndikatorBild): void {
   slide.addText(nyckeltal, { ...stil(R.granssnitt, FARG.black), x: M, y: top, w: VANSTER_B, h: nH });
 
   // Hög layout: figurens texter längst ned i vänsterspalten
-  let vansterSlut = INNEHALL_SLUT;
+  let vansterSlut = slut;
   if (hog) {
     const v = figurTexter(VANSTER_B);
-    let y = INNEHALL_SLUT - v.nH - (v.nH ? rum(2) : 0) - v.uH - v.tH;
+    let y = slut - v.nH - (v.nH ? rum(2) : 0) - v.uH - v.tH;
     vansterSlut = y - rum(5);
     slide.addText(spec.titel, { ...stil(R.figurtitel, FARG.black), x: M, y, w: VANSTER_B, h: v.tH });
     y += v.tH;
     slide.addText(spec.undertitel, { ...stil(R.granssnitt, FARG.text2), x: M, y, w: VANSTER_B, h: v.uH });
-    if (notText) slide.addText(notText, { ...stil(R.not, FARG.text3), x: M, y: INNEHALL_SLUT - v.nH, w: VANSTER_B, h: v.nH });
+    if (notText) slide.addText(notText, { ...stil(R.not, FARG.text3), x: M, y: slut - v.nH, w: VANSTER_B, h: v.nH });
   }
   if (b.sida === 0 && b.analys) {
     const provH = R.not.radhojd;
@@ -407,13 +416,13 @@ function indikatorBild(slide: PptxGenJS.Slide, b: IndikatorBild): void {
   // Höger spalt: figurens titel och undertitel, grafen och noten (stilguiden 6.1)
   let ruta: Ruta;
   if (hog) {
-    ruta = { x: HOGER_X, y: top, b: HOGER_B, h: INNEHALL_SLUT - top };
+    ruta = { x: HOGER_X, y: top, b: HOGER_B, h: slut - top };
   } else {
     slide.addText(spec.titel, { ...stil(R.figurtitel, FARG.black), x: HOGER_X, y: top, w: HOGER_B, h: std.tH });
     slide.addText(spec.undertitel, { ...stil(R.granssnitt, FARG.text2), x: HOGER_X, y: top + std.tH, w: HOGER_B, h: std.uH });
     const grafY = top + std.tH + std.uH + rum(4);
     ruta = { x: HOGER_X, y: grafY, b: HOGER_B, h: stdGraf };
-    if (notText) slide.addText(notText, { ...stil(R.not, FARG.text3), x: HOGER_X, y: INNEHALL_SLUT - std.nH, w: HOGER_B, h: std.nH });
+    if (notText) slide.addText(notText, { ...stil(R.not, FARG.text3), x: HOGER_X, y: slut - std.nH, w: HOGER_B, h: std.nH });
   }
   ritaGraf(slide, grafPlan(spec, ruta, b.sida));
 
