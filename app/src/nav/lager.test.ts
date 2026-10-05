@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { antalLager, oppnaLager, registreraLager, skapaLagerstapel, stangOverstaLager, type Tangenthandelse } from "./lager";
+import { antalLager, arOverst, oppnaLager, registreraLager, skapaLagerstapel, stangOverstaLager, type Tangenthandelse } from "./lager";
 
 function tangent(key: string, extra: Partial<Tangenthandelse> = {}) {
-  const e = { key, defaultPrevented: false, isComposing: false, ...extra, preventDefault() { e.defaultPrevented = true; } };
+  const e = {
+    key, defaultPrevented: false, isComposing: false, stoppad: false, ...extra,
+    preventDefault() { e.defaultPrevented = true; },
+    stopImmediatePropagation() { e.stoppad = true; },
+  };
   return e;
 }
 
@@ -18,6 +22,7 @@ describe("lagerstapeln", () => {
     s.hanteraTangent(e1);
     expect(stangda).toEqual(["meny"]);
     expect(e1.defaultPrevented).toBe(true);
+    expect(e1.stoppad).toBe(true);
     expect(s.antal()).toBe(2);
 
     s.hanteraTangent(tangent("Escape"));
@@ -32,6 +37,7 @@ describe("lagerstapeln", () => {
     const e = tangent("Escape");
     s.hanteraTangent(e);
     expect(e.defaultPrevented).toBe(false);
+    expect(e.stoppad).toBe(false);
     expect(s.stangOversta()).toBe(false);
   });
 
@@ -112,12 +118,32 @@ describe("lagerstapeln", () => {
 
 });
 
+describe("arOverst", () => {
+  it("säger om lagret med en viss stängfunktion ligger överst", () => {
+    const s = skapaLagerstapel();
+    const a = () => {};
+    const b = () => {};
+    expect(s.arOverst(a)).toBe(false);
+    s.registrera(a);
+    expect(s.arOverst(a)).toBe(true);
+    const taBortB = s.registrera(b);
+    expect(s.arOverst(a)).toBe(false);
+    expect(s.arOverst(b)).toBe(true);
+    taBortB();
+    expect(s.arOverst(a)).toBe(true);
+    s.hanteraTangent(tangent("Escape"));
+    expect(s.arOverst(a)).toBe(false);
+  });
+});
+
 describe("den gemensamma stapeln", () => {
   it("registreraLager och oppnaLager delar stapel; fungerar utan document", () => {
     const stangda: string[] = [];
     const taBortA = registreraLager(() => stangda.push("a"));
-    oppnaLager(() => stangda.push("b"));
+    const b = () => stangda.push("b");
+    oppnaLager(b);
     expect(antalLager()).toBe(2);
+    expect(arOverst(b)).toBe(true);
     expect(stangOverstaLager()).toBe(true);
     expect(stangda).toEqual(["b"]);
     taBortA();

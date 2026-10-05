@@ -18,12 +18,17 @@
 // - En komponent som själv använder Escape inne i ett lager (t.ex. grafens
 //   tooltip) anropar event.preventDefault(); då låter stapeln tangenten vara.
 // - Escape under pågående inmatning med IME (isComposing) räknas inte.
+// - När stapeln stänger ett lager hindras standardbeteendet (t.ex. att en
+//   modal <dialog> under lagret också avbryts) och händelsen går inte vidare.
+// - arOverst(stang) säger om lagret med den stängfunktionen ligger överst, så
+//   att även klick utanför bara stänger det översta lagret.
 
 export interface Tangenthandelse {
   key: string;
   defaultPrevented?: boolean;
   isComposing?: boolean;
   preventDefault(): void;
+  stopImmediatePropagation?(): void;
 }
 
 export interface Lagerstapel {
@@ -31,6 +36,8 @@ export interface Lagerstapel {
   registrera(stang: () => void): () => void;
   /** Stänger det översta lagret. Sant om det fanns något att stänga. */
   stangOversta(): boolean;
+  /** Sant när lagret med denna stängfunktion ligger överst. */
+  arOverst(stang: () => void): boolean;
   antal(): number;
   /** Hanterar en tangenttryckning: Escape stänger det översta lagret. */
   hanteraTangent(e: Tangenthandelse): void;
@@ -58,10 +65,13 @@ export function skapaLagerstapel(): Lagerstapel {
       };
     },
     stangOversta,
+    arOverst: (stang) => stapel.length > 0 && stapel[stapel.length - 1].stang === stang,
     antal: () => stapel.length,
     hanteraTangent(e) {
       if (e.key !== "Escape" || e.defaultPrevented || e.isComposing) return;
-      if (stangOversta()) e.preventDefault();
+      if (!stangOversta()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation?.();
     },
   };
 }
@@ -85,6 +95,11 @@ export function registreraLager(stang: () => void): () => void {
 
 /** Samma som registreraLager. Namnet från WP0:s stubb, behålls för paket som skrevs mot den. */
 export const oppnaLager = registreraLager;
+
+/** Sant när lagret med denna stängfunktion ligger överst i den gemensamma stapeln. */
+export function arOverst(stang: () => void): boolean {
+  return gemensam.arOverst(stang);
+}
 
 /** Stänger det översta lagret i den gemensamma stapeln. */
 export function stangOverstaLager(): boolean {
