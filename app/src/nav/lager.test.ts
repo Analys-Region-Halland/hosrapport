@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { antalLager, arOverst, oppnaLager, registreraLager, skapaLagerstapel, stangOverstaLager, type Tangenthandelse } from "./lager";
 
 function tangent(key: string, extra: Partial<Tangenthandelse> = {}) {
@@ -149,5 +149,46 @@ describe("den gemensamma stapeln", () => {
     taBortA();
     expect(antalLager()).toBe(0);
     expect(stangOverstaLager()).toBe(false);
+  });
+});
+
+describe("lyssnaren på window", () => {
+  it("fångstfasen på window: Escape stänger det översta lagret och stoppar händelsen", () => {
+    const fonster = new EventTarget();
+    vi.stubGlobal("window", fonster);
+    try {
+      const stangda: string[] = [];
+      const taBortA = registreraLager(() => stangda.push("a"));
+      registreraLager(() => stangda.push("b"));
+      let efter = 0;
+      fonster.addEventListener("keydown", () => efter++);
+
+      const escape = () => {
+        const e = new Event("keydown", { cancelable: true });
+        Object.defineProperty(e, "key", { value: "Escape" });
+        fonster.dispatchEvent(e);
+        return e;
+      };
+      const e1 = escape();
+      expect(stangda).toEqual(["b"]);
+      expect(e1.defaultPrevented).toBe(true);
+      expect(efter).toBe(0);
+
+      taBortA();
+      const e2 = escape();
+      expect(stangda).toEqual(["b"]);
+      expect(e2.defaultPrevented).toBe(false);
+      expect(efter).toBe(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("WP5:s och WP4:s ingångar är samma stapel", async () => {
+    const lokal = await import("../ui/lagerLokal");
+    const wp4 = await import("../ui/lager");
+    expect(lokal.registreraLager).toBe(registreraLager);
+    expect(lokal.arOverst).toBe(arOverst);
+    expect(wp4.registreraLager).toBe(registreraLager);
   });
 });

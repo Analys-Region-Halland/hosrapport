@@ -1,25 +1,27 @@
-// nav/lager.ts: stapeln av öppna lager (popover, ark, dialog, meny). Escape
-// stänger bara det översta och navigerar aldrig (docs/arkitektur.md 4.6,
-// stilguiden 4.5). Ägare: WP6.
+// nav/lager.ts: rapportens enda lagerstapel (popover, ark, dialog, meny,
+// innehållsförteckningens ark). Escape stänger bara det översta lagret och
+// navigerar aldrig (docs/arkitektur.md 4.6, stilguiden 4.5). Ägare: WP6.
+// ui/lagerLokal.ts (WP5) och ui/lager.ts (WP4, kroken useLager) återexporterar
+// härifrån, så det finns en stapel i hela appen.
 //
 // Användning i en komponent som öppnar något:
 //
 //   useEffect(() => {
 //     if (!oppen) return;
-//     return registreraLager(() => setOppen(false));
-//   }, [oppen]);
+//     return registreraLager(stang);
+//   }, [oppen, stang]);
 //
 // Regler:
-// - Ingen komponent lyssnar på Escape på document för egen räkning. Stapeln
-//   har den enda lyssnaren (keydown på document, bubblingsfasen).
-// - stang() anropas när lagret är överst och Escape trycks. Lagret är då redan
-//   borttaget ur stapeln; avregistreringen som komponenten gör när den stängs
-//   blir en tom operation.
-// - En komponent som själv använder Escape inne i ett lager (t.ex. grafens
-//   tooltip) anropar event.preventDefault(); då låter stapeln tangenten vara.
-// - Escape under pågående inmatning med IME (isComposing) räknas inte.
-// - När stapeln stänger ett lager hindras standardbeteendet (t.ex. att en
-//   modal <dialog> under lagret också avbryts) och händelsen går inte vidare.
+// - Ingen komponent lyssnar på Escape för egen räkning. Stapeln har den enda
+//   lyssnaren: keydown på window i fångstfasen (samma som WP5:s lokala stapel),
+//   så att lagret stängs innan något under det hinner reagera.
+// - När ett lager stängs hindras standardbeteendet (t.ex. att en modal
+//   <dialog> under lagret också avbryts) och händelsen stoppas helt.
+// - Lagret tas ur stapeln innan stang() anropas; komponentens avregistrering
+//   efteråt blir en tom operation. Två snabba Escape stänger två lager.
+// - Utan öppna lager gör stapeln ingenting: Escape får sitt vanliga beteende.
+// - Det som ska kunna stängas med Escape (även en tooltip) registrerar sig som
+//   lager. Escape under pågående inmatning med IME (isComposing) räknas inte.
 // - arOverst(stang) säger om lagret med den stängfunktionen ligger överst, så
 //   att även klick utanför bara stänger det översta lagret.
 
@@ -28,7 +30,7 @@ export interface Tangenthandelse {
   defaultPrevented?: boolean;
   isComposing?: boolean;
   preventDefault(): void;
-  stopImmediatePropagation?(): void;
+  stopImmediatePropagation(): void;
 }
 
 export interface Lagerstapel {
@@ -71,7 +73,7 @@ export function skapaLagerstapel(): Lagerstapel {
       if (e.key !== "Escape" || e.defaultPrevented || e.isComposing) return;
       if (!stangOversta()) return;
       e.preventDefault();
-      e.stopImmediatePropagation?.();
+      e.stopImmediatePropagation();
     },
   };
 }
@@ -82,9 +84,9 @@ const gemensam = skapaLagerstapel();
 let installerad = false;
 
 function installera(): void {
-  if (installerad || typeof document === "undefined") return;
+  if (installerad || typeof window === "undefined") return;
   installerad = true;
-  document.addEventListener("keydown", (e) => gemensam.hanteraTangent(e));
+  window.addEventListener("keydown", (e) => gemensam.hanteraTangent(e), true);
 }
 
 /** Lägger ett lager överst i den gemensamma stapeln. Returnerar en funktion som tar bort det. */
