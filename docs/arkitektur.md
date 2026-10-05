@@ -376,6 +376,8 @@ CSS-variablerna heter som tokens med bindestreck: `farg.diagram.fokus` → `--fa
 
 ## 8. Arbetspaket
 
+> **Prioritering 2026-10-05:** all data är än så länge exempeldata. Fokus ligger på det läsaren ser: grafer, rapportsidan, startsidan och begreppen. **WP8 är parkerat** tills riktig data kopplas in. **WP1 är bantat**: bara typerna, `normalisera` för dagens JSON (v1) och `kpiTillSpec`; inget v2-schema, ingen ajv. **WP10** byggs med en påhittad hierarki i appens fixturer, inte via R. WP2, WP4, WP5, WP6 och WP7 kan börja samtidigt med WP1 eftersom typerna i avsnitt 4 och stubbarna från WP0 räcker.
+
 Varje paket: mål, äger, beror på, levererar, godkänt när. Ägarskap enligt avsnitt 3.
 
 ### WP0 Grund
@@ -418,7 +420,7 @@ Varje paket: mål, äger, beror på, levererar, godkänt när. Ägarskap enligt 
 - **Galleriet ska innehålla** varje graftyp med riktig data och full interaktion, minst: linje med alla 21 regioner och riket (spaghettigraf, t.ex. `kolada-n79179` med luckor och seriebrott, och en indikator utan luckor), linje med två fästa regioner, rangordning, linje mot förväntat (akutflöde, månad), stapel över tid, små multiplar per sjukhus, minidiagram i översiktstabell. Varje exempel i 1440 och 390 px.
 - **Godkänt när:** inga listor är hårdkodade (allt läses ur `tema.ts`); galleriet ovan finns och går att hovra; axe-körning ren; diffrapporten fungerar.
 
-### WP8 R-kontrakt v2
+### WP8 R-kontrakt v2 (parkerat)
 - **Mål:** dubbelskrivning av v1 och v2 enligt avsnitt 5.
 - **Levererar:** fälten i avsnitt 5; `huvudpunkter` och dekar med regler enligt stilguiden 3.4; seriebrottsnoter; kronor och per invånare rätt; undertryckning i demodata med `n`; verifiering och rättning av de tre kända bristerna i `kolada/bearbeta.R` (plats av antal med värde, jämförelseår över tomma år och källbyte, 3 %-klippan) med samtidig uppdatering av exemplet i `docs/tillganglighet-intern-kort.html`; `R/gemensam/begrepp.R`; em dash-kontroll; död R-kod bort (`ranking-tema.R` om oanvänd, `dept_config`, `avdelningar`).
 - **Godkänt när (G3):** R-körningen ger "kontrakt OK"; vitest (WP1:s schema och `normalisera`) passerar mot nya JSON; banken för gamla vyn är oförändrad.
@@ -430,7 +432,7 @@ Varje paket: mål, äger, beror på, levererar, godkänt när. Ägarskap enligt 
 
 ### WP10 Undernivåer
 - **Mål:** nedborrning hela vägen enligt stilguiden 6.7.
-- **Levererar:** demohierarki i R (region › sjukhus › avdelning, med `n` och undertryckning), nivåfliken, brödsmula, `e=` i adressen.
+- **Levererar:** demohierarki i appens fixturer (region › sjukhus › avdelning, med `n` och undertryckning; ingen R), nivåfliken, brödsmula, `e=` i adressen.
 - **Godkänt när:** Region Halland / Per sjukhus / Per avdelning fungerar för alla akutflödesindikatorer; undertryckta värden visas som `..` med not; djuplänk med `e=` fungerar.
 
 ### WP11 Startsida
@@ -453,10 +455,10 @@ Varje paket: mål, äger, beror på, levererar, godkänt när. Ägarskap enligt 
 ```
 Steg 0  stilguide.md + arkitektur.md (orkestreraren) ── du granskar
 Steg 1  WP0 ── G0
-Steg 2  WP1 (typer först) │ WP5 │ WP6 │ WP7 │ WP8 (efter WP1:s typer)
-Steg 3  WP2 → WP3 │ WP4 │ WP11 ── du granskar graferna i levande stilguiden
+Steg 2  WP1 (bantat) │ WP2 │ WP4 │ WP5 │ WP6 │ WP7
+Steg 3  WP3 │ WP11 ── du granskar graferna i levande stilguiden
 Steg 4  WP9 │ WP12a ── du granskar rapportsidan och startsidan
 Steg 5  WP10 → WP12b
 ```
 
-Sammanslagning i ordningen WP0, WP1, WP5, WP6, WP7, WP8, WP2, WP4, WP3, WP11, WP9, WP12a, WP10, WP12b. Orkestreraren granskar varje paket (tester, skärmdumpar, kod) före sammanslagning.
+Sammanslagning i ordningen WP0, WP1, WP7, WP2, WP4, WP5, WP6, WP3, WP11, WP9, WP12a, WP10, WP12b. WP8 parkerat. Orkestreraren granskar varje paket (tester, skärmdumpar, kod) före sammanslagning.
