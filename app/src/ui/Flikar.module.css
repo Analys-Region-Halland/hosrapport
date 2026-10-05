@@ -1,0 +1,33 @@
+/* Flikar: textflikar utan ram (stilguiden 5.4). */
+@layer komponent {
+  .lista {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    column-gap: var(--rum-5);
+  }
+  .flik {
+    block-size: var(--komponent-flik-hojd);
+    margin: 0;
+    padding: 0 1px;
+    background: none;
+    border: 0;
+    border-block-end: var(--komponent-flik-understrykning) solid transparent;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-text2);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .flik:hover { color: var(--farg-black); }
+  .flik[aria-selected="true"] {
+    color: var(--farg-black);
+    border-block-end-color: var(--farg-fokus);
+  }
+  .flik:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+}

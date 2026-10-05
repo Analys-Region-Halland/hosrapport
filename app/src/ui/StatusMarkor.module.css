@@ -1,0 +1,19 @@
+/* StatusMarkor: pill med statusens etikett (stilguiden 5.1). Enda radien i produkten. */
+@layer komponent {
+  .markor {
+    display: inline-flex;
+    align-items: center;
+    block-size: var(--komponent-statusmarkor-hojd);
+    padding-inline: var(--komponent-statusmarkor-sidoluft);
+    border-radius: var(--komponent-statusmarkor-radie);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .gron { color: var(--farg-status-gron-text); background: var(--farg-status-gron-botten); }
+  .gul { color: var(--farg-status-gul-text); background: var(--farg-status-gul-botten); }
+  .rod { color: var(--farg-status-rod-text); background: var(--farg-status-rod-botten); }
+}
