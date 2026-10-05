@@ -8,7 +8,12 @@
 //   report → ReportShell (äger tidsvyn, laddar data, renderar rapporten)
 // Tidsperioden väljs inne i rapporten, inte här och inte på startsidan.
 // Typsnitten är självhostade (styles/typsnitt.css), inte Google Fonts.
+//
+// Gamla vyns stilar (index.css, inslagen i @layer legacy) följer med här i
+// stället för i main.tsx. Lagerordningen deklareras i index.html, så att
+// stilarna hamnar under nya lagren fast de laddas sist.
 
+import "./index.css";
 import { useState } from "react";
 import type { Scope } from "./types";
 import StartScreen from "./components/StartScreen";

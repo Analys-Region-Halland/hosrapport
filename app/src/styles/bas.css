@@ -1,4 +1,20 @@
 /* bas.css: grundtypografi och element för nya vyn. Importeras i lagret `bas`
-   (styles/index.css). Tom tills vidare. Regler här får inte påverka gamla vyn
-   så länge den finns: skriv dem under en rot som bara nya ramen har, t.ex.
-   [data-ram]. Ägare: WP0; fylls av senare paket. */
+   (styles/index.css), ovanför `legacy`. Ägare: WP0; fylls av senare paket.
+
+   Gamla vyns stilar (index.css) laddas bara med gamla appen bakom ?gammal.
+   Det nya får därför inget av dem och sätter sin grund här. Reglerna ger
+   samma resultat i gamla vyn som dess egna (samma typsnittsfiler, samma
+   fokusring), så att den ritas oförändrad. */
+
+/* Element som inte sätter eget typsnitt ärver sans (typ.familj.sans), som
+   förut via gamla vyns --font-sans. Annars får de systemets typsnitt. */
+html {
+  font-family: var(--typ-familj-sans);
+}
+
+/* Tangentbordsfokus (stilguiden 2.1): 2 px heldragen, 2 px avstånd. Komponenter
+   med egen ring (i lagret komponent) går före. */
+:focus-visible {
+  outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+  outline-offset: var(--komponent-fokusring-avstand);
+}
