@@ -21,7 +21,7 @@
 // (spec.borrbar), Enter på raden och andra trycket på raden på pekskärm.
 // Figuren skickar onFokus vidare hit (reserven NedborrningKontext är borttagen).
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { tema } from "../design/tema";
 import { useLager } from "../ui/lager";
@@ -280,9 +280,10 @@ export default function Diagram({ spec, fasta, onFasta, onFokus, bredd: fastBred
   const onBlur = () => setAktiv(null);
 
   // Tooltipen är det översta lagret medan den syns: Escape stänger bara den
-  // (lagerstapeln i ui/lager.ts fångar Escape på window). Utan tooltip når
+  // (lagerstapeln i nav/lager.ts fångar Escape på window). Utan tooltip når
   // Escape vidare, t.ex. till förstoringsdialogen.
-  useLager(giltigAktiv !== null, () => { setAktiv(null); tryckt.current = null; });
+  const stangTooltip = useCallback(() => { setAktiv(null); tryckt.current = null; }, []);
+  useLager(giltigAktiv !== null, stangTooltip);
 
   // Pekskärm: tryck utanför diagrammet stänger
   useEffect(() => {

@@ -183,12 +183,4 @@ describe("lyssnaren på window", () => {
       vi.unstubAllGlobals();
     }
   });
-
-  it("WP5:s och WP4:s ingångar är samma stapel", async () => {
-    const lokal = await import("../ui/lagerLokal");
-    const wp4 = await import("../ui/lager");
-    expect(lokal.registreraLager).toBe(registreraLager);
-    expect(lokal.arOverst).toBe(arOverst);
-    expect(wp4.registreraLager).toBe(registreraLager);
-  });
 });

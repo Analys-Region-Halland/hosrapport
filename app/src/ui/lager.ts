@@ -1,19 +1,20 @@
-// ui/lager.ts: kroken useLager runt lagerstapeln i ui/lagerLokal.ts (WP5), så att
-// Escape stänger bara det översta lagret (stilguiden 4.5, docs/arkitektur.md 4.6)
-// och dialog, meny och popover delar en enda stapel. Ägare: WP4.
-// När nav/lager.ts (WP6) finns byter lagerLokal sin kropp; den här filen behöver
-// inte ändras.
+// ui/lager.ts: kroken useLager runt rapportens enda lagerstapel i nav/lager.ts,
+// så att Escape stänger bara det översta lagret (stilguiden 4.5,
+// docs/arkitektur.md 4.6). Ägare: WP4.
+//
+// Kroken registrerar exakt den funktion den får, utan att linda den, så att
+// arOverst(stang) ur nav/lager.ts svarar för samma lager (klick utanför stänger
+// bara det översta). Ge därför en stabil funktion (useCallback, eller en ref
+// till den senaste): en ny funktion vid varje rendering tas ur stapeln och
+// läggs överst igen.
 
-import { useEffect, useEffectEvent } from "react";
-import { arOverst, registreraLager } from "./lagerLokal";
+import { useEffect } from "react";
+import { registreraLager } from "../nav/lager";
 
-export { arOverst, registreraLager };
-
-/** Registrerar ett lager så länge `oppen` är sant. `stang` får bytas mellan renderingar. */
+/** Registrerar `stang` som lager så länge `oppen` är sant. */
 export function useLager(oppen: boolean, stang: () => void): void {
-  const vidStang = useEffectEvent(stang);
   useEffect(() => {
     if (!oppen) return;
-    return registreraLager(() => vidStang());
-  }, [oppen]);
+    return registreraLager(stang);
+  }, [oppen, stang]);
 }

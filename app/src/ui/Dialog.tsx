@@ -5,13 +5,13 @@
 // - Renderas i document.body; allt annat i body blir `inert` medan dialogen är
 //   öppen, så att klick och Tab inte når sidan bakom.
 // - Fokusfälla: Tab och Skift+Tab cirkulerar bland dialogens fokuserbara element.
-// - Escape via lagerstapeln (ui/lager.ts, ui/lagerLokal.ts): stänger bara det
+// - Escape via lagerstapeln (nav/lager.ts genom ui/lager.ts): stänger bara det
 //   översta lagret, t.ex. en öppen meny eller popover i dialogen före dialogen.
 //   Klick på bakgrunden stänger inte: ett klick som stänger en popover i
 //   dialogen ska inte också stänga dialogen. Stäng-knappen och Escape räcker.
 // - Fokus återgår till elementet som hade fokus när dialogen öppnades.
 
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Knapp from "./Knapp";
 import { useLager } from "./lager";
@@ -45,7 +45,11 @@ export default function Dialog({ oppen, onStang, etikett, children }: DialogProp
 
 function OppenDialog({ onStang, etikett, children }: Omit<DialogProps, "oppen">) {
   const yta = useRef<HTMLDivElement>(null);
-  useLager(true, onStang);
+  // En stabil stängfunktion i stapeln, även när onStang byts mellan renderingar
+  const onStangRef = useRef(onStang);
+  useLayoutEffect(() => { onStangRef.current = onStang; });
+  const stang = useCallback(() => onStangRef.current(), []);
+  useLager(true, stang);
 
   // Fokus in vid öppning och tillbaka vid stängning; sidan bakom blir inert.
   useEffect(() => {

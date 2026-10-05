@@ -20,8 +20,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { tema } from "../design/tema";
+import { arOverst } from "../nav/lager";
 import { FOKUSERBAR, fokuseraEfter, tabbara } from "./fokus";
-import { arOverst, registreraLager } from "./lagerLokal";
+import { useLager } from "./lager";
 import s from "./Popover.module.css";
 
 export interface PopoverProps {
@@ -98,7 +99,7 @@ function PopoverYta({ onStang, ankare, behallare, children, etikett, beskrivning
   }, [ankare]);
 
   // Escape via lagerstapeln.
-  useEffect(() => registreraLager(stangMedEscape), [stangMedEscape]);
+  useLager(true, stangMedEscape);
 
   // Klick utanför stänger det översta lagret.
   useEffect(() => {

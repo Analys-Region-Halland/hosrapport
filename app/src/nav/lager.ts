@@ -1,10 +1,11 @@
 // nav/lager.ts: rapportens enda lagerstapel (popover, ark, dialog, meny,
 // innehållsförteckningens ark). Escape stänger bara det översta lagret och
 // navigerar aldrig (docs/arkitektur.md 4.6, stilguiden 4.5). Ägare: WP6.
-// ui/lagerLokal.ts (WP5) och ui/lager.ts (WP4, kroken useLager) återexporterar
-// härifrån, så det finns en stapel i hela appen.
+// Alla importerar härifrån; kroken useLager i ui/lager.ts gör samma sak som
+// mönstret nedan.
 //
-// Användning i en komponent som öppnar något:
+// Användning i en komponent som öppnar något (stang ska vara stabil, t.ex.
+// useCallback, så att arOverst(stang) svarar för samma lager):
 //
 //   useEffect(() => {
 //     if (!oppen) return;
@@ -13,8 +14,8 @@
 //
 // Regler:
 // - Ingen komponent lyssnar på Escape för egen räkning. Stapeln har den enda
-//   lyssnaren: keydown på window i fångstfasen (samma som WP5:s lokala stapel),
-//   så att lagret stängs innan något under det hinner reagera.
+//   lyssnaren: keydown på window i fångstfasen, så att lagret stängs innan
+//   något under det hinner reagera.
 // - När ett lager stängs hindras standardbeteendet (t.ex. att en modal
 //   <dialog> under lagret också avbryts) och händelsen stoppas helt.
 // - Lagret tas ur stapeln innan stang() anropas; komponentens avregistrering
