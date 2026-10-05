@@ -1,18 +1,27 @@
 /* Sammanfattning.module.css: sammanfattningen (stilguiden 2.5 och 4.2).
    Kapitlen skiljs av avstånd; inga ramar, inga linjer. */
 @layer komponent {
-  .sida {
-    max-inline-size: var(--matt-figur);
-  }
-
   .sida > [data-masthead] + * {
     margin-block-start: var(--rum-8);
   }
 
+  /* Kapitlen i en spalt; på desktop i två, så att sidan ryms på tre
+     skärmhöjder (stilguiden 4.2). Varje spalt är högst en textbredd. */
   .kapitel {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: var(--rum-7);
     row-gap: var(--rum-8);
-    margin-block-start: var(--rum-9);
+    max-inline-size: var(--matt-figur);
+    margin-block-start: var(--rum-8);
+  }
+
+  @media (min-width: 1200px) {
+    .kapitel {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: var(--rum-7);
+      max-inline-size: none;
+    }
   }
 
   .post > * + * {
@@ -22,12 +31,5 @@
   .dek {
     max-inline-size: var(--matt-text);
     color: var(--farg-text2);
-  }
-
-  .om {
-    margin-block-start: var(--rum-9);
-  }
-  .omText {
-    margin-block-start: var(--rum-4);
   }
 }

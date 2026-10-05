@@ -38,6 +38,9 @@ export default function LagetIKorthet({ kapitel, vy, redigera = false }: LagetIK
   const [sortering, setSortering] = useState<Sortering>(STANDARD);
   if (!rader.length) return null;
   const grupper = gruppera(rader, sortering);
+  // Plats bara när någon indikator har en (block utan data utelämnas, princip 7)
+  const harPlats = rader.some((r) => r.plats !== null);
+  const kolumner = harPlats ? 5 : 4;
   const klick = (k: SortKolumn | "standard") => setSortering((nu) => nastaSortering(nu, k));
 
   const huvud = (kolumn: SortKolumn | "standard", text: string, klass = "") => {
@@ -59,13 +62,15 @@ export default function LagetIKorthet({ kapitel, vy, redigera = false }: LagetIK
       <h2 id={RUBRIK_ID} className={t.blockrubrik}>Läget i korthet</h2>
       <table className={s.tabell} data-oversikt="">
         <caption className={t.dold}>
-          Kapitlets indikatorer med senaste värde, plats bland regionerna, utveckling och status. Kolumnhuvudena sorterar.
+          {harPlats
+            ? "Kapitlets indikatorer med senaste värde, plats bland regionerna, utveckling och status. Kolumnhuvudena sorterar."
+            : "Kapitlets indikatorer med senaste värde, utveckling och status. Kolumnhuvudena sorterar."}
         </caption>
         <thead>
           <tr>
             {huvud("standard", "Indikator", s.namnkolumn)}
             {huvud("senaste", "Senaste", s.tal)}
-            {huvud("plats", "Plats", `${s.tal} ${s.dMob}`)}
+            {harPlats && huvud("plats", "Plats", `${s.tal} ${s.dMob}`)}
             <th scope="col" className={s.dMob}><span className={s.huvudtext}>Utveckling</span></th>
             {huvud("status", "Status")}
           </tr>
@@ -74,7 +79,7 @@ export default function LagetIKorthet({ kapitel, vy, redigera = false }: LagetIK
           <tbody key={g.grupp?.id ?? `alla-${gi}`}>
             {g.grupp && (
               <tr className={s.grupp}>
-                <th scope="rowgroup" colSpan={5}>{g.grupp.namn}</th>
+                <th scope="rowgroup" colSpan={kolumner}>{g.grupp.namn}</th>
               </tr>
             )}
             {g.rader.map((r) => {
@@ -93,9 +98,11 @@ export default function LagetIKorthet({ kapitel, vy, redigera = false }: LagetIK
                     {varde(r.senaste, kpi.format)}
                     {r.avvikandePeriod && <span className={s.period}>{periodText(r.avvikandePeriod, vy)}</span>}
                   </td>
-                  <td className={`${s.tal} ${s.dMob}`}>
-                    {r.plats !== null && r.platsAv !== null ? `${r.plats} av ${r.platsAv}` : SAKNAS}
-                  </td>
+                  {harPlats && (
+                    <td className={`${s.tal} ${s.dMob}`}>
+                      {r.plats !== null && r.platsAv !== null ? `${r.plats} av ${r.platsAv}` : SAKNAS}
+                    </td>
+                  )}
                   <td className={`${s.utveckling} ${s.dMob}`}>
                     <Minidiagram kpi={kpi} kapitel={kapitel} vy={vy} />
                   </td>

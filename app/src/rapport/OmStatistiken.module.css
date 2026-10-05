@@ -11,8 +11,7 @@
     margin-block-start: var(--rum-3);
   }
 
-  .statuslista,
-  .begrepp {
+  .statuslista {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     column-gap: var(--rum-4);
@@ -24,20 +23,30 @@
     line-height: var(--typ-granssnitt-radhojd);
     color: var(--farg-black);
   }
-  .statusrad,
-  .begreppsrad {
+  .statusrad {
     display: contents;
   }
-  .statuslista dt,
-  .begrepp dt {
+  .statuslista dt {
     margin: 0;
   }
-  .statuslista dd,
-  .begrepp dd {
+  .statuslista dd {
     margin: 0;
     color: var(--farg-text2);
   }
-  .begrepp dt {
+  /* Begreppen: term som länk, kort definition efter kolon */
+  .begrepp {
+    display: grid;
+    row-gap: var(--rum-2);
+    max-inline-size: var(--matt-text);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-text2);
+  }
+  .term {
     font-weight: var(--typ-granssnitt-viktStark);
   }
 
@@ -68,13 +77,11 @@
   }
 
   @media (max-width: 639px) {
-    .statuslista,
-    .begrepp {
+    .statuslista {
       grid-template-columns: minmax(0, 1fr);
       row-gap: var(--rum-1);
     }
-    .statusrad + .statusrad dt,
-    .begreppsrad + .begreppsrad dt {
+    .statusrad + .statusrad dt {
       margin-block-start: var(--rum-3);
     }
   }

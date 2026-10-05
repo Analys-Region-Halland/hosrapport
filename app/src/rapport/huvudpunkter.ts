@@ -59,10 +59,3 @@ export function nummerFor(kap: KapitelModell): Map<string, string> {
   for (const x of d.indikatorer) ut.set(x.id, x.nummer);
   return ut;
 }
-
-/** Statusräkning för statusmätaren: i fas, bevaka, avvikelse. Beskrivande mått räknas inte. */
-export function statusRakning(kap: KapitelModell): { gron: number; gul: number; rod: number } {
-  const ut = { gron: 0, gul: 0, rod: 0 };
-  for (const k of kap.kpier) if (k.status) ut[k.status]++;
-  return ut;
-}

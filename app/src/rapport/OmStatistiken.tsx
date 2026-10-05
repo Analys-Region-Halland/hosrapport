@@ -14,6 +14,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Prosa from "../begrepp/Prosa";
 import { BEGREPP, hittaBegrepp } from "../begrepp/register";
 import type { KallaRef, KapitelModell, Status } from "../data/modell";
+import { forstaLiten } from "../data/normalisera";
 import Lank from "../nav/Lank";
 import { KAPITELBLOCK } from "../nav/route";
 import StatusMarkor from "../ui/StatusMarkor";
@@ -32,6 +33,7 @@ const SA_SKAPAS =
 
 const STATUSAR: Status[] = ["gron", "gul", "rod"];
 const STATUSBEGREPP: Record<Status, string> = { gron: "i-fas", gul: "bevaka", rod: "avvikelse" };
+const FORKLARADE = new Set(["i-fas", "bevaka", "avvikelse", "beskrivande-matt", "ai-analys"]);
 
 /** Primärkällorna: kapitlets källförteckning, annars indikatorernas egna källor. */
 function primarkallor(kap: KapitelModell): KallaRef[] {
@@ -48,7 +50,8 @@ function primarkallor(kap: KapitelModell): KallaRef[] {
 
 export default function OmStatistiken({ kapitel }: OmStatistikenProps): ReactNode {
   const [redan] = useState(() => new Set<string>());
-  const begrepp = useMemo(() => begreppIKapitlet(kapitel), [kapitel]);
+  // Status och AI-analys förklaras redan i delarna ovanför; de upprepas inte i listan
+  const begrepp = useMemo(() => begreppIKapitlet(kapitel).filter((b) => !FORKLARADE.has(b.id)), [kapitel]);
   const kallor = useMemo(() => primarkallor(kapitel), [kapitel]);
   const rankad = kapitel.kpier.some((k) => k.serier[k.fokus]?.rank !== undefined);
   const intern = kapitel.kpier.some((k) => k.serier[k.fokus]?.tidsserie.some((p) => p.yhat !== undefined));
@@ -102,16 +105,14 @@ export default function OmStatistiken({ kapitel }: OmStatistikenProps): ReactNod
         {begrepp.length > 0 && (
           <div className={s.del}>
             <h3 className={t.blockrubrik}>Begrepp i kapitlet</h3>
-            <dl className={s.begrepp}>
+            <ul className={s.begrepp}>
               {begrepp.map((b) => (
-                <div key={b.id} className={s.begreppsrad}>
-                  <dt>
-                    <Lank till={{ sida: "begrepp", id: b.id }} className={t.lank}>{b.term}</Lank>
-                  </dt>
-                  <dd>{b.kort}</dd>
-                </div>
+                <li key={b.id}>
+                  <Lank till={{ sida: "begrepp", id: b.id }} className={`${t.lank} ${s.term}`}>{b.term}</Lank>
+                  {`: ${forstaLiten(b.kort)}`}
+                </li>
               ))}
-            </dl>
+            </ul>
           </div>
         )}
 
