@@ -1,0 +1,9 @@
+/* Förstoringen: samma figur i full bredd inne i dialogen (stilguiden 6.8).
+   Dialogen ger redan plattan och luften, så figuren inuti får varken egen
+   luft eller maxbredd. */
+@layer komponent {
+  .innehall :global([data-figur]) {
+    max-inline-size: none;
+    padding: 0;
+  }
+}

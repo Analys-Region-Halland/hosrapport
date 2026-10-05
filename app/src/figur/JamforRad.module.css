@@ -1,0 +1,104 @@
+/* Jämför-raden under plotytan: "+ Jämför med …", listan och chipsen
+   (stilguiden 6.1 och 6.8). Listan har popoverns yta: farg.yta, hårlinje,
+   ingen skugga. */
+@layer komponent {
+  .rad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--rum-1) var(--rum-4);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+  }
+  .valjare { position: relative; }
+
+  .lista {
+    position: absolute;
+    inset-block-start: calc(100% + var(--rum-1));
+    inset-inline-start: 0;
+    z-index: 15;
+    inline-size: min(var(--komponent-popover-maxbredd), calc(100vw - 2 * var(--matt-marginal)));
+    max-block-size: min(60vh, 22rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: var(--rum-1);
+    background: var(--farg-yta);
+    border: var(--komponent-menyknapp-ram) solid var(--farg-harlinje);
+  }
+  .tips {
+    margin: var(--rum-1) var(--rum-4) var(--rum-2);
+    color: var(--farg-text3);
+  }
+  .val {
+    display: flex;
+    align-items: center;
+    gap: var(--rum-3);
+    padding-inline: var(--rum-4);
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    color: var(--farg-black);
+    cursor: pointer;
+  }
+  .val:hover,
+  .val:focus-within { background: var(--farg-fokusLjus); }
+  .val input {
+    flex: none;
+    inline-size: var(--rum-4);
+    block-size: var(--rum-4);
+    margin: 0;
+    accent-color: var(--farg-fokus);
+    cursor: pointer;
+  }
+  .val input:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+  /* I markerad rad räcker inte text3 mot fokusLjus (4,5:1); värdet blir text2. */
+  .val:hover .varde,
+  .val:focus-within .varde { color: var(--farg-text2); }
+  .namn { min-inline-size: 0; }
+  .varde {
+    margin-inline-start: auto;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    color: var(--farg-text3);
+    font-variant-numeric: var(--typ-siffror);
+    white-space: nowrap;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rum-2);
+    min-block-size: var(--komponent-klickyta);
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-black);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chip:hover .chipNamn { text-decoration: underline; text-underline-offset: var(--typ-lank-avstand); }
+  .chip:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+  .streck {
+    display: inline-block;
+    inline-size: var(--rum-4);
+    flex: none;
+  }
+  .kryss {
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: 1;
+    color: var(--farg-text3);
+  }
+  .rensa { color: var(--farg-text2); font-weight: var(--typ-not-viktStark); }
+  .rensa:hover { color: var(--farg-black); text-decoration: underline; text-underline-offset: var(--typ-lank-avstand); }
+}

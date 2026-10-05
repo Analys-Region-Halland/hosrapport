@@ -1,0 +1,25 @@
+/* Figurens tabellvy (stilguiden 5.9). Rullar i sidled i smala figurer;
+   första kolumnen står kvar. */
+@layer komponent {
+  .rulla {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .rulla:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+  .rulla :is(th, td):first-child {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    background: var(--farg-yta);
+  }
+  .forklaring {
+    margin: var(--rum-2) 0 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+}
