@@ -122,6 +122,17 @@ describe("luckor och seriebrott (kolada-n79179)", () => {
   });
 });
 
+describe("perioder utan mätning (enkät vartannat år)", () => {
+  it("bryter inte linjerna; luckor bryter bara när andra serier har värde", () => {
+    const scen = layout(fixtur("ar", "skr-syn-pa-varden", "kolada-n79171"), 832);
+    const fokus = scen.lager.find((l) => l.id === "fokus")!.former.find((f) => f.typ === "linje");
+    expect(fokus?.typ === "linje" && fokus.d.match(/M/g)?.length).toBe(1);
+    const kontext = scen.lager.find((l) => l.id === "kontext")!.former;
+    expect(kontext.every((f) => f.typ === "linje" && f.d.includes("L"))).toBe(true);
+    expect(scen.xTicks.map((t) => t.text)).toEqual(["2016", "2020", "2024"]);
+  });
+});
+
 describe("mållinje", () => {
   it("ritas som en streckad linje med etiketten Mål {värde}", () => {
     const spec: ChartSpec = { ...telefon, serier: [...telefon.serier, { id: "mal", namn: "Mål", roll: "mal", varde: 90 }], etiketter: [...telefon.etiketter, { serieId: "mal", text: "" }] };

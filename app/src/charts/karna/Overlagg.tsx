@@ -12,6 +12,7 @@ import { GEOMETRI } from "./geometri";
 import { kortaText } from "./matt";
 import { HALO, kopplingD, skarp, textAttr } from "./ritstil";
 import { serieFarg } from "./tooltipModell";
+import { periodOrdning } from "./traff";
 
 /** Ledig plats i etikettkolumnen närmast y0 för ett tillfälligt namn. */
 function ledigPlats(scen: Scen, y0: number, avstand: number): number {
@@ -32,6 +33,7 @@ export function TidsOverlagg({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpe
     for (const l of m.values()) l.sort((a, b) => a.index - b.index);
     return m;
   }, [scen]);
+  const ordning = useMemo(() => periodOrdning(scen.stopp), [scen]);
   const xAktiv = scen.stopp.find((s) => s.index === aktiv.index)?.x;
   if (xAktiv === undefined) return null;
 
@@ -49,7 +51,7 @@ export function TidsOverlagg({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpe
     const st = perSerie.get(lyft.id) ?? [];
     let d = "";
     st.forEach((p, i) => {
-      d += `${i > 0 && st[i - 1].index === p.index - 1 ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+      d += `${i > 0 && ordning.get(st[i - 1].index)! === ordning.get(p.index)! - 1 ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`;
     });
     const ka = t.diagram.roll.kontextAktiv;
     delar.push(<path key="lyft" d={d} fill="none" stroke={ka.farg} strokeWidth={ka.bredd} strokeLinejoin="round" data-lyft={lyft.id} />);

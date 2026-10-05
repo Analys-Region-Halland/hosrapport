@@ -8,6 +8,8 @@
 //   node verktyg/grafprov.mjs                  hela sviten
 //   node verktyg/grafprov.mjs --bara granskning,galleri,mobil,stilguide
 //   node verktyg/grafprov.mjs --ut <mapp>      var bilder och rapport hamnar
+//   node verktyg/grafprov.mjs --bara prov --q "vy=dag&sektion=akutflode&kpi=belaggning;…" [--bredd 390]
+//                                              vila och hovring för valfria adresser
 //
 // Miljövariabler: BANK_PORT (Vite, standard 5182) och CDP_PORT (Edge, standard
 // 9232). Startar Vite om ingen server svarar på BANK_PORT. Avslutar bara
@@ -121,7 +123,7 @@ window.__gp = {
     while ((m = re.exec(p.getAttribute("d")))) ut.push({ c: m[1], x: +m[2], y: +m[3] });
     return ut;
   },
-  etikett(id, n = 0) { const t = this.svg(n).querySelector('[data-etikett="' + id + '"] text'); if (!t) return null; const r = t.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, text: t.textContent }; },
+  etikett(id, n = 0) { const t = this.svg(n).querySelector('[data-etikett="' + id + '"] text'); if (!t) return null; const r = t.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, vanster: r.left, text: t.textContent }; },
   lyft(n = 0) {
     const d = this.diagram(n);
     const l = d.querySelector("[data-lyft]");
@@ -284,6 +286,14 @@ async function granskning() {
     await mus(k, et.x, et.y); await sov(200);
     kontroll("hovrad etikett lyfter Kalmar", (await k.js(`__gp.lyft()`)) === "0008", await k.js(`__gp.lyft()`));
     await sparaBild(k, "05-n79179-etikett-1440");
+    // Från plotytan in på en etikett i 2 px-steg: tooltipen får inte blinka till
+    const hl = await k.js(`__gp.etikett("0013")`);
+    const glapp = [];
+    for (let px = hl.vanster - 40; px <= hl.x; px += 2) {
+      await mus(k, px, hl.y); await sov(12);
+      if ((await k.js(`__gp.tooltip()`)) === null) glapp.push(Math.round(px - hl.vanster));
+    }
+    kontroll("ingen blinkning från linjeslut till etikett", glapp.length === 0, glapp);
     await klick(k, et.x, et.y); await sov(250);
     kontroll("klick på etiketten fäster Kalmar", (await k.js(`__gp.fasta()`))[0].includes("Kalmar"), await k.js(`__gp.fasta()`));
     await mus(k, rekt.x + rekt.b / 2, rekt.y + rekt.h + 80); await sov(200);
@@ -388,13 +398,29 @@ async function stilguide() {
   }
 }
 
-const SVITER = { granskning, galleri, mobil, stilguide };
+// ── Valfria adresser (--q "a;b", --bredd) ──
+
+async function prov() {
+  const bredd = Number(varde("bredd") ?? 1440);
+  for (const q of (varde("q") ?? "").split(";").filter(Boolean)) {
+    const namn = q.replace(/[^a-z0-9]+/gi, "-").slice(0, 60);
+    const k = await oppnaFlik(url(q), bredd, bredd < 640 ? 844 : 900);
+    try {
+      await sparaBild(k, `q-${namn}-vila-${bredd}`);
+      const r = await k.js(`__gp.rekt()`);
+      await mus(k, r.x + r.b * 0.4, r.y + r.h * 0.5); await sov(250);
+      await sparaBild(k, `q-${namn}-hovra-${bredd}`);
+    } finally { await stangFlik(k); }
+  }
+}
+
+const SVITER = { granskning, galleri, mobil, stilguide, prov };
 
 try {
   await startaVite();
   await startaEdge();
   for (const [namn, f] of Object.entries(SVITER)) {
-    if (BARA && !BARA.includes(namn)) continue;
+    if (BARA ? !BARA.includes(namn) : namn === "prov") continue;
     console.log(`\n== ${namn}`);
     await f();
   }

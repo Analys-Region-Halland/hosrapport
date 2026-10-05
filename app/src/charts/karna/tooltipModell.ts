@@ -8,7 +8,7 @@
 // intervallet (80 %) och status i ord.
 
 import type { Punkt, Status } from "../../data/modell";
-import { DASH, HART, kronor, period, plats, procent, tal, varde } from "../../design/format";
+import { DASH, HART, period, plats, tal, varde } from "../../design/format";
 import { tema } from "../../design/tema";
 import type { AktivPunkt } from "../register";
 import type { ChartSpec, SpecSerie } from "../spec";
@@ -96,13 +96,10 @@ export function forvantatStatus(p: Punkt | undefined): Status | null {
   return p && p.varde !== null && p.signal ? p.signal : null;
 }
 
-/** Intervall i ett format: "89,1–91,3 %". */
+/** Intervall i ett format, enheten en gång: "89,1–91,3 %", "133–148 min". */
 function intervallText(lo: number, hi: number, s: ChartSpec): string {
   const f = s.y.format;
-  const d = f.decimaler;
-  if (f.enhet === "procent") return `${tal(lo, d)}${DASH}${procent(hi, d)}`;
-  if (f.enhet === "kronor") return `${tal(lo, d)}${DASH}${kronor(hi, d)}`;
-  return `${varde(lo, f)}${DASH}${varde(hi, f)}`;
+  return `${tal(lo, f.decimaler)}${DASH}${varde(hi, f)}`;
 }
 
 function uppmaningVerb(satt: Inmatning): string {

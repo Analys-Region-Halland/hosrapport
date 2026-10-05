@@ -9,7 +9,7 @@
 import { precisionFixed, scaleLinear } from "d3";
 import type { ScaleLinear } from "d3";
 import type { TalFormat, VyId } from "../../data/modell";
-import { kronor, period, procent, tal } from "../../design/format";
+import { isoVecka, kronor, period, procent, tal } from "../../design/format";
 import { tema } from "../../design/tema";
 import type { ChartSpec } from "../spec";
 import { GEOMETRI } from "./geometri";
@@ -181,6 +181,9 @@ export interface TidsTick {
   text: string;
 }
 
+/** Veckodata som spänner över mer än ett år. */
+const flerArsVeckor = (axel: Tidsaxel) => axel.vy === "vecka" && axel.perioder.length > 53;
+
 /** Vilka perioder som är förstahandsval för etiketter, per periodsteg. */
 function forstaVal(axel: Tidsaxel): number[] {
   const ut: number[] = [];
@@ -191,12 +194,10 @@ function forstaVal(axel: Tidsaxel): number[] {
       case "kvartal": if (m === 1) ut.push(i); break;
       case "manad": if (m === 1) ut.push(i); break;
       case "dag": if (d === 1) ut.push(i); break;
-      case "vecka": {
-        // Första veckan i varje kvartal (vecka 1, 14, 27, 40 ungefär)
-        const fore = i > 0 ? Number(axel.perioder[i - 1].split("-")[1]) : null;
-        if (fore !== null && fore !== m && (m - 1) % 3 === 0) ut.push(i);
+      case "vecka":
+        // Över flera år: vecka 1 varje år. Inom ett år: alla veckor (glesas ut).
+        if (!flerArsVeckor(axel) || isoVecka(p).vecka === 1) ut.push(i);
         break;
-      }
     }
   });
   return ut;
@@ -211,7 +212,9 @@ function forstaVal(axel: Tidsaxel): number[] {
 export function tidsTicks(axel: Tidsaxel, x: (i: number) => number): TidsTick[] {
   const n = axel.perioder.length;
   if (n === 0) return [];
-  const text = (i: number) => period(axel.perioder[i], axel.vy, "axel");
+  // Veckor över flera år får året med ("v. 1 2022"), annars är etiketten tvetydig
+  const stil = flerArsVeckor(axel) ? "kort" : "axel";
+  const text = (i: number) => period(axel.perioder[i], axel.vy, stil);
   const ruta = (i: number) => {
     const b = textbredd(text(i));
     return [x(i) - b / 2, x(i) + b / 2] as const;

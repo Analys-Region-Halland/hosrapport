@@ -29,12 +29,16 @@ export const STANDARDREGLER: Traffregler = {
   foretrade: 2,
 };
 
-/** Bygger polylinjer ur seriernas pekarmål. Luckor bryter linjen. */
+/**
+ * Bygger polylinjer ur seriernas pekarmål. Luckor bryter linjen; perioder
+ * där ingen serie har värde (inte mätta) hoppas över, som i ritningen.
+ */
 export function byggPolylinjer(
   stopp: Stopp[],
   foretrade: (serieId: string) => boolean,
   ensammaRaknas: (serieId: string) => boolean,
 ): Polylinje[] {
+  const ordning = periodOrdning(stopp);
   const perSerie = new Map<string, Stopp[]>();
   for (const s of stopp) {
     const l = perSerie.get(s.serieId);
@@ -49,13 +53,20 @@ export function byggPolylinjer(
       const p = lista[i];
       const nasta = lista[i + 1];
       const fore = lista[i - 1];
-      if (nasta && nasta.index === p.index + 1) segment.push([p.x, p.y, nasta.x, nasta.y]);
-      const harGranne = (nasta && nasta.index === p.index + 1) || (fore && fore.index === p.index - 1);
+      const iFoljd = (a: Stopp | undefined, b: Stopp | undefined) => !!a && !!b && ordning.get(b.index)! === ordning.get(a.index)! + 1;
+      if (iFoljd(p, nasta)) segment.push([p.x, p.y, nasta.x, nasta.y]);
+      const harGranne = iFoljd(p, nasta) || iFoljd(fore, p);
       if (!harGranne && ensammaRaknas(serieId)) ensamma.push([p.x, p.y]);
     }
     ut.push({ serieId, segment, ensamma, foretrade: foretrade(serieId) });
   }
   return ut;
+}
+
+/** Varje mätt periods plats i ordningen (perioder där någon serie har värde). */
+export function periodOrdning(stopp: Stopp[]): Map<number, number> {
+  const index = [...new Set(stopp.map((s) => s.index))].sort((a, b) => a - b);
+  return new Map(index.map((v, i) => [v, i]));
 }
 
 /** Kortaste avståndet från en punkt till ett linjesegment. */

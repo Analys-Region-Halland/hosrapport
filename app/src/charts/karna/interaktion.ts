@@ -46,7 +46,7 @@ export function byggTraffmodell(scen: Scen, spec: ChartSpec): Traffmodell {
 export function iPlotytan(m: Traffmodell, px: number, py: number): boolean {
   const g = GEOMETRI.traffMarginal;
   const { plot } = m;
-  return px >= plot.x - g && px <= plot.x + plot.b + g && py >= 0 && py <= plot.y + plot.h + g;
+  return px >= plot.x - g && px <= plot.x + plot.b + GEOMETRI.traffHoger && py >= 0 && py <= plot.y + plot.h + g;
 }
 
 /** Närmaste period (med värden) till pekarens x. */

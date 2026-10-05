@@ -7,6 +7,9 @@ import { tema } from "../../design/tema";
 
 const { rum, diagram, typ } = tema;
 
+/** Kopplingslinjens brytpunkter räknat från sista periodens x. */
+const KOPPLING = { start: 6, knack: 12, slut: 18 } as const;
+
 export const GEOMETRI = {
   /** Luft ovanför översta gridlinjen (prototypens m.t). */
   marginalTopp: rum[3],
@@ -26,13 +29,19 @@ export const GEOMETRI = {
    * Kopplingslinjen från linjeslutet till etiketten (vågrät–lodrät–vågrät),
    * räknat från sista periodens x. Texten står på diagram.etikett.kolumnAvstand.
    */
-  koppling: { start: 6, knack: 12, slut: 18 },
+  koppling: KOPPLING,
   /** Luft efter längsta etiketten innan svg:ns högerkant. */
   etikettLuftHoger: 13,
   /** Pekarytan sticker ut så här mycket utanför plotytan. */
   traffMarginal: 6,
-  /** Klippytan sticker ut så här mycket så att slutpunkter inte skärs av. */
-  klippMarginal: 6,
+  /**
+   * Till höger når pekarytan fram till etiketternas pekarytor (kolumnavståndet
+   * minus kopplingslinjens sista vågräta del), så att tooltipen inte blinkar
+   * till när pekaren går från linjeslutet till en etikett.
+   */
+  traffHoger: diagram.etikett.kolumnAvstand - (KOPPLING.slut - KOPPLING.knack),
+  /** Klippytan sticker ut så här mycket så att slutpunkter och avvikelsemarkörer (7 px) inte skärs av. */
+  klippMarginal: diagram.roll.forvantat.markor + 1,
   /** Punkter i överlägget (hjälplinjens punkter för visade serier). */
   overlaggPunkt: { radie: 4, kant: 1.5 },
   /** Tooltipen står så här långt från hjälplinjen. */

@@ -84,6 +84,12 @@ describe("tidsaxelns etiketter", () => {
     expect(t[0]).toBe("apr 24");
     expect(t).toContain("jan 25");
   });
+  it("vecka över flera år: vecka 1 varje år med året", () => {
+    const veckor = Array.from({ length: 160 }, (_, i) => new Date(Date.UTC(2020, 11, 28) + i * 7 * 86_400_000).toISOString().slice(0, 10));
+    const t = tidsTicks(axel(veckor), x(800, 160)).map((tk) => tk.text);
+    expect(t).toContain("v. 1 2022");
+    expect(t.every((s) => /\d{4}$/.test(s))).toBe(true);
+  });
   it("etiketterna överlappar aldrig", () => {
     for (const bredd of [260, 400, 832]) {
       const a = axel(manader("2021-01", 63));

@@ -103,6 +103,14 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
     if (s.roll === "mal" && s.varde !== undefined) ta(s.varde);
   }
   if (spec.y.doman) { min = spec.y.doman[0]; max = spec.y.doman[1]; }
+
+  // Perioder där ingen serie har värde är inte mätta (t.ex. enkäter vartannat
+  // år) och bryter inte linjerna; de står kvar på tidsaxeln. En lucka i en
+  // serie bryter bara när andra serier har värde den perioden.
+  const matt = new Set<number>();
+  for (const v of varden.values()) for (const [i, val] of v) if (val !== null) matt.add(i);
+  for (const [id, v] of varden) varden.set(id, v.filter(([i]) => matt.has(i)));
+
   const vt = vardeTicks(min, max, smal, spec.y.noll);
   const tickTexter = vt.ticks.map((v) => tickText(v, format, vt.decimaler));
   const vanster = Math.ceil(Math.max(0, ...tickTexter.map((x) => textbredd(x))) + GEOMETRI.yKolumnLuft);
