@@ -1,0 +1,164 @@
+/* tokens.module.css: färgprov, diagramroller och statusfärger i stilguiden.
+   Alla värden ur CSS-variablerna från design/tema.ts. Ägare: WP7. */
+@layer komponent {
+  .prover {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--rum-10) + var(--rum-8))), 1fr));
+    gap: var(--rum-5) var(--rum-4);
+    margin: var(--rum-5) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .prov {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+
+  .yta {
+    display: block;
+    height: var(--rum-8);
+    margin-bottom: var(--rum-2);
+    outline: 1px solid var(--farg-harlinje);
+    outline-offset: -1px;
+  }
+
+  .provNamn, .rollNamn {
+    margin: 0;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-black);
+    overflow-wrap: anywhere;
+  }
+
+  .provRad {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+    font-variant-numeric: var(--typ-siffror);
+    overflow-wrap: anywhere;
+  }
+
+  .provText {
+    margin: var(--rum-1) 0 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+
+  /* Diagramroller: prov till vänster, text till höger (staplas när det är trångt) */
+  .roller {
+    display: grid;
+    gap: var(--rum-5);
+    margin: var(--rum-5) 0 0;
+    padding: var(--rum-5);
+    list-style: none;
+    background: var(--farg-yta);
+  }
+
+  .roll {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--rum-2) var(--rum-5);
+  }
+
+  .rollSvg {
+    flex: none;
+    display: block;
+    margin-top: var(--rum-1);
+  }
+
+  .rollText {
+    flex: 1 1 calc(var(--rum-10) * 2);
+    min-width: 0;
+  }
+
+  .rollText p + p {
+    margin-top: var(--rum-1);
+  }
+
+  /* Statusfärger */
+  .statusar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--rum-10) * 2)), 1fr));
+    gap: var(--rum-5) var(--rum-4);
+    margin: var(--rum-5) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .status p {
+    margin: 0;
+  }
+
+  .status p + p {
+    margin-top: var(--rum-1);
+  }
+
+  .statusProv {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--rum-4);
+    margin-bottom: var(--rum-3) !important;
+  }
+
+  .statusPrick {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rum-2);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    color: var(--farg-text2);
+  }
+
+  /* Alla värden: en details med samma utseende som fördjupningen (stilguiden 5.5) */
+  .alla {
+    margin-top: var(--rum-4);
+  }
+
+  .alla summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rum-2);
+    min-height: var(--komponent-klickyta);
+    margin-bottom: var(--rum-4);
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--typ-granssnitt-familj);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+    color: var(--farg-fokus);
+  }
+
+  .alla summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .alla summary::before {
+    content: "›";
+    display: inline-block;
+    transition: transform var(--rorelse-kort);
+  }
+
+  .alla[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  .alla summary:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: var(--komponent-fokusring-avstand);
+  }
+}
