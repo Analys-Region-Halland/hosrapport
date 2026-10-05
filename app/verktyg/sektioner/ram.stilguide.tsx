@@ -1,6 +1,6 @@
 // sektioner/ram.stilguide.tsx: stilguidens sektion för rapportens ram
 // (stilguiden 4.5 och 5.4): verktygsraden på desktop och i 360 px,
-// positionsradens tre lägen, innehållsförteckningen som spalt och ark, och
+// positionsradens lägen, innehållsförteckningen som spalt och ark, och
 // tidsupplösningens flikar. Byggs ur WP1:s fixtur skrUtdrag(). Ägare: WP6.
 // Globbas av stilguide.tsx (WP7), som läser { id, rubrik, ordning, Sektion }.
 //
@@ -15,44 +15,30 @@ import Positionsrad from "../../src/rapport/Positionsrad";
 import { byggDisposition, positionsdelar } from "../../src/rapport/ramDisposition";
 import TidsupplosningVal from "../../src/rapport/TidsupplosningVal";
 import Verktygsrad, { type MenyVal } from "../../src/rapport/Verktygsrad";
+import { Dek, Not, Prosa, Underrubrik } from "./delar";
 
 export const id = "ram";
 export const rubrik = "Ram och navigering";
-export const ordning = 60;
+export const ordning = 45;
 
 // Minsta bredd där verktygsraden ska rymmas (stilguiden 4.5).
 const SMAL = 360;
 
 const stil = {
-  grupp: { marginTop: "var(--rum-7)" },
-  rubrik: {
-    fontFamily: "var(--typ-figurtitel-familj)", fontSize: "var(--typ-figurtitel-storlek)",
-    lineHeight: "var(--typ-figurtitel-radhojd)", fontWeight: "var(--typ-figurtitel-vikt)",
-  },
-  text: {
-    marginTop: "var(--rum-2)", maxWidth: "var(--matt-text)", fontFamily: "var(--typ-granssnitt-familj)",
-    fontSize: "var(--typ-granssnitt-storlek)", lineHeight: "var(--typ-granssnitt-radhojd)", color: "var(--farg-text2)",
-  },
   exempel: { marginTop: "var(--rum-4)", background: "var(--farg-papper)" },
-  etikett: {
-    marginTop: "var(--rum-4)", fontFamily: "var(--typ-not-familj)", fontSize: "var(--typ-not-storlek)",
-    lineHeight: "var(--typ-not-radhojd)", color: "var(--farg-text3)",
-  },
   smal: { width: SMAL, maxWidth: "100%" },
   spalt: { width: "var(--matt-toc)" },
 } satisfies Record<string, CSSProperties>;
 
-function Grupp({ rubrik, text, children }: { rubrik: string; text: string; children: ReactNode }) {
+function Del({ rubrik, text, bild, children }: { rubrik: string; text: string; bild: string; children: ReactNode }) {
   return (
-    <section style={stil.grupp}>
-      <h3 style={stil.rubrik}>{rubrik}</h3>
-      <p style={stil.text}>{text}</p>
-      <div style={stil.exempel}>{children}</div>
-    </section>
+    <>
+      <Underrubrik>{rubrik}</Underrubrik>
+      <Prosa>{text}</Prosa>
+      <div style={stil.exempel} data-bank-bild={`ram-${bild}`}>{children}</div>
+    </>
   );
 }
-
-const Etikett = ({ children }: { children: ReactNode }) => <p style={stil.etikett}>{children}</p>;
 
 export function Sektion() {
   const [kapitel] = useState(skrUtdrag);
@@ -86,17 +72,24 @@ export function Sektion() {
 
   return (
     <div onClickCapture={fanga} data-stilguide-ram="">
-      <Grupp
+      <Dek>
+        Ramen runt kapitlen: verktygsraden med positionsraden, Exportera, innehållsförteckningen och
+        tidsupplösningen. Exemplen visar ett utdrag ur SKR-kapitlen.
+      </Dek>
+
+      <Del
         rubrik="Verktygsrad"
+        bild="verktygsrad"
         text="Sticky, 56 px, papper. Vänster ← Alla kapitel, i mitten positionsraden, till höger Exportera. Hårlinjen under raden visas först när sidan rullats (här alltid)."
       >
         <Verktygsrad statisk meny={meny}>
           <Positionsrad delar={delar} />
         </Verktygsrad>
-      </Grupp>
+      </Del>
 
-      <Grupp
+      <Del
         rubrik="Verktygsrad i 360 px"
+        bild="verktygsrad-360"
         text="Positionsraden kortas till den aktuella delen och öppnar innehållet som ark. Exportera blir en ikon med etikett för skärmläsare."
       >
         <div style={stil.smal}>
@@ -104,45 +97,49 @@ export function Sektion() {
             <Positionsrad delar={delar} kort onOppnaInnehall={() => setArkOppet(true)} innehallOppet={arkOppet} />
           </Verktygsrad>
         </div>
-      </Grupp>
+      </Del>
 
-      <Grupp
+      <Del
         rubrik="Positionsrad"
+        bild="positionsrad"
         text="Not-storlek i text2, aktuell del i svart 600. Ingen statusmarkör och ingen förloppslinje."
       >
-        <Etikett>Desktop (text)</Etikett>
+        <Not>Desktop (text)</Not>
         <Positionsrad delar={delar} />
-        <Etikett>Mellan (knapp som öppnar arket)</Etikett>
+        <Not>Mellan (knapp som öppnar arket)</Not>
         <Positionsrad delar={delar} onOppnaInnehall={() => setArkOppet(true)} innehallOppet={arkOppet} />
-        <Etikett>Mobil (kortad knapp)</Etikett>
+        <Not>Mobil (kortad knapp)</Not>
         <Positionsrad delar={delar} kort onOppnaInnehall={() => setArkOppet(true)} innehallOppet={arkOppet} />
-        <Etikett>Ovanför första blocket</Etikett>
+        <Not>Ovanför första blocket</Not>
         <Positionsrad delar={positionsdelar(d, "")} />
-      </Grupp>
+      </Del>
 
-      <Grupp
+      <Del
         rubrik="Innehållsförteckning som spalt"
+        bild="innehall-spalt"
         text="Från 1200 px, 220 px bred. Avsnittet fälls ut när läsaren är i det. Statusprick 6 px före indikatorn, aktiv indikator på fokusLjus. Klicka för att byta aktiv post."
       >
         <div style={stil.spalt}>
           <Innehall kapitel={kapitel} aktivt={aktivt} variant="spalt" />
         </div>
-      </Grupp>
+      </Del>
 
-      <Grupp
+      <Del
         rubrik="Innehållsförteckning som ark"
+        bild="innehall-ark"
         text="Under 1200 px öppnar positionsraden innehållet som ark nedifrån, med alla avsnitt utfällda. Escape, stängknappen och klick utanför stänger."
       >
         <Positionsrad delar={delar} onOppnaInnehall={() => setArkOppet(true)} innehallOppet={arkOppet} />
         <Innehall kapitel={kapitel} aktivt={aktivt} variant="ark" oppen={arkOppet} onStang={() => setArkOppet(false)} />
-      </Grupp>
+      </Del>
 
-      <Grupp
+      <Del
         rubrik="Tidsupplösning"
+        bild="tidsupplosning"
         text="Textflikar sist i kapitlets metarad, bara när kapitlet finns i mer än en tidsupplösning. Pilarna flyttar, Enter eller mellanslag väljer."
       >
         <TidsupplosningVal vyer={["dag", "vecka", "manad", "kvartal", "ar"]} aktiv={vy} onByt={setVy} />
-      </Grupp>
+      </Del>
     </div>
   );
 }
