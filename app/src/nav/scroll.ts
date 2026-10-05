@@ -145,6 +145,18 @@ function vantaPaElement(selektor: string, ms: number): Promise<HTMLElement | nul
 
 const INMATNING = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
 
+// Varje rullning får ett nummer. En ny rullning (eller avbrytRullning) gör att
+// en äldre som fortfarande väntar på typsnitt eller block inte rullar, och att
+// en äldre som håller kvar sin position släpper.
+let rullningNr = 0;
+let slutaHalla: (() => void) | null = null;
+
+/** Avbryter pågående rullning och kvarhållning. */
+export function avbrytRullning(): void {
+  rullningNr++;
+  slutaHalla?.();
+}
+
 /** Håller blocket kvar under verktygsraden en kort stund medan sidan sätter sig. */
 function hallKvar(el: HTMLElement, id: string, ms = 1500): void {
   const slut = performance.now() + ms;
@@ -152,7 +164,9 @@ function hallKvar(el: HTMLElement, id: string, ms = 1500): void {
   const sluta = () => {
     clearTimeout(timer);
     INMATNING.forEach((h) => removeEventListener(h, sluta, true));
+    if (slutaHalla === sluta) slutaHalla = null;
   };
+  slutaHalla = sluta;
   INMATNING.forEach((h) => addEventListener(h, sluta, { capture: true, passive: true }));
   const steg = () => {
     if (performance.now() > slut || !el.isConnected) return sluta();
@@ -169,15 +183,18 @@ function hallKvar(el: HTMLElement, id: string, ms = 1500): void {
 /**
  * Rullar till [data-block="{blockId}"] efter document.fonts.ready. Väntar upp
  * till `vanta` ms på att blocket finns. Med fokus flyttas tangentbordsfokus
- * till blocket (tabindex -1). Sant om blocket hittades.
+ * till blocket (tabindex -1). Sant om blocket hittades och ingen senare
+ * rullning hann före.
  */
 export async function rullaTillBlock(blockId: string, alt: { fokus?: boolean; vanta?: number } = {}): Promise<boolean> {
   if (typeof document === "undefined") return false;
+  avbrytRullning();
+  const nr = rullningNr;
   await document.fonts.ready;
   const el = await vantaPaElement(`[data-block="${CSS.escape(blockId)}"]`, alt.vanta ?? 5000);
-  if (!el) return false;
+  if (!el || nr !== rullningNr) return false;
   await tvaBilder();
-  if (!el.isConnected) return false;
+  if (!el.isConnected || nr !== rullningNr) return false;
   el.scrollIntoView({ block: "start", behavior: "instant" });
   mal = { id: blockId, y: scrollY };
   sattAktivtBlock(blockId);
@@ -226,6 +243,7 @@ export function useLasposition(t: RouteTillstand, klar: boolean, spana: boolean)
     const id = malFor(t.route);
     // Ny sida eller ingen läsposition: börja överst
     if (!id || !forra || !sammaSida(forra, t.route)) {
+      avbrytRullning();
       scrollTo(0, 0);
       mal = null;
       sattAktivtBlock("");
