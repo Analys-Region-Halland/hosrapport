@@ -121,10 +121,11 @@ export function Sektion() {
   const { jamforda, avvikelser } = jamfor();
   const roller = Object.entries(tema.typ.roll) as [Rollnamn, Roll][];
   const t = tema.typ;
+  // Senaste värdet för kapitlets indikatorer, i varje indikators format
   const tal = (() => {
     try {
-      const kap = exempelKapitel("ar", "skr-tillganglighet");
-      return kap.kpier.slice(0, 6).map((k) => vardeText(k.senaste, { enhet: k.enhet === "procent" ? "procent" : "antal" }));
+      const { kap } = exempelKapitel();
+      return kap.kpier.slice(0, 6).map((k) => vardeText(k.serier[k.fokus]?.senaste ?? null, k.format));
     } catch { return []; }
   })();
   const not = t.roll.not;

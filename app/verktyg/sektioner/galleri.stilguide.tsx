@@ -1,29 +1,27 @@
 // galleri.stilguide.tsx: diagramgalleriet (docs/arkitektur.md WP7). Plats och
-// data för varje graftyp med riktig data: spaghettigraf med alla regioner och
-// riket (med och utan luckor), två fästa regioner, rangordning, linje mot
-// förväntat intervall, stapel över tid, små multiplar per sjukhus och
-// minidiagram i översiktstabellen. Exemplen och deras spec finns i exempel.ts
-// (exempelSpec). Graferna ritas av WP2 och WP3; så länge renderaren är en
-// stubb visar exemplet en platshållare. Ägare: WP7 (ramen).
+// data för varje graftyp: spaghettigraf med alla regioner och riket (med och
+// utan luckor), två fästa regioner, rangordning (även med lika värden), linje
+// mot förväntat intervall, stapel över tid, små multiplar per sjukhus och per
+// avdelning, och minidiagram i översiktstabellen. Exemplen och deras spec finns
+// i exempel.ts (exempelSpec, byggd av WP1:s kpiTillSpec). Graferna ritas av WP2
+// och WP3; så länge renderaren är en stubb visar exemplet en platshållare.
+// Ägare: WP7 (ramen).
 
 import { Fragment, useMemo, useState } from "react";
 import Figur from "../../src/figur/Figur";
 import { RENDERARE } from "../../src/charts/register";
-import type { ChartSpec } from "../../src/charts/spec";
+import type { ChartSpec, VisningId } from "../../src/charts/spec";
 import { tema } from "../../src/design/tema";
 import { Dek, Not, Notis, Prosa, StatusChip, Underrubrik } from "./delar";
-import { EXEMPEL, exempelKapitel, exempelSpecMedKalla, oversiktExempel, type Exempel, type SpecKalla } from "./exempel";
+import {
+  EXEMPEL, FIXTURER, RAPPORTKAPITEL, exempelBrodsmula, exempelSpec, exempelVisningar, oversiktExempel, type Exempel,
+} from "./exempel";
 import { statusEtikett } from "./stilguide-md";
 import s from "./galleri.module.css";
 
 export const id = "galleri";
 export const rubrik = "Diagramgalleri";
 export const ordning = 69;
-
-const KALLTEXT: Record<SpecKalla, string> = {
-  WP1: "spec från kpiTillSpec (WP1)",
-  reserv: "spec från galleriets reservspec tills kpiTillSpec finns",
-};
 
 /** Kort beskrivning av specen: roller, perioder och luckor, så att WP2 och WP3 ser vad de ritar. */
 function specFakta(spec: ChartSpec): string {
@@ -43,15 +41,6 @@ function specFakta(spec: ChartSpec): string {
   ].filter(Boolean).join(" · ");
 }
 
-function Metarad({ e, kalla, spec }: { e: Exempel; kalla: SpecKalla; spec?: ChartSpec }) {
-  return (
-    <p className={s.meta}>
-      {e.typ} · src/{e.fil} ({e.paket}) · data/{e.kalla.vy}-{e.kalla.sektion}.json, {e.kalla.kpi} · {KALLTEXT[kalla]}
-      {spec && <><br />{specFakta(spec)}</>}
-    </p>
-  );
-}
-
 function Platshallare({ e }: { e: Exempel }) {
   return (
     <p className={s.platshallare} role="note">
@@ -60,27 +49,43 @@ function Platshallare({ e }: { e: Exempel }) {
   );
 }
 
+type Resultat<T> = { ok: T } | { fel: string };
+function forsok<T>(f: () => T): Resultat<T> {
+  try {
+    return { ok: f() };
+  } catch (fel) {
+    return { fel: fel instanceof Error ? fel.message : String(fel) };
+  }
+}
+
 function Exempelvisning({ e }: { e: Exempel }) {
-  const [fasta, setFasta] = useState<string[]>(e.fasta ?? []);
-  const resultat = useMemo(() => {
-    try {
-      return exempelSpecMedKalla(e.namn, { fasta });
-    } catch (fel) {
-      return { fel: fel instanceof Error ? fel.message : String(fel) };
-    }
-  }, [e.namn, fasta]);
+  const [fasta, setFasta] = useState<string[]>(e.kontext?.fasta ?? []);
+  const [fokus, setFokus] = useState<string | undefined>(e.kontext?.fokus);
+  const [visning, setVisning] = useState<VisningId>(e.visning);
+  const resultat = useMemo(() => forsok(() => ({
+    spec: exempelSpec(e.namn, { fasta, fokus }, visning),
+    visningar: exempelVisningar(e.namn, { fokus }),
+    brodsmula: exempelBrodsmula(e.namn, { fokus }),
+  })), [e.namn, fasta, fokus, visning]);
 
   return (
     <div className={s.exempel} data-exempel={e.namn} data-bank-bild={`galleri-${e.namn}`}>
       <Underrubrik id={`galleri-${e.namn}`}>{e.rubrik}</Underrubrik>
       <Prosa>{e.vad}</Prosa>
-      {"spec" in resultat ? (
+      {"ok" in resultat ? (
         <>
-          <Metarad e={e} kalla={resultat.kalla} spec={resultat.spec} />
-          {resultat.fel && <Notis rubrik="kpiTillSpec kastade ett fel, reservspecen visas"><p>{resultat.fel}</p></Notis>}
+          <p className={s.meta}>
+            {e.typ} · src/{e.fil} ({e.paket}) · fixturer {FIXTURER[e.data.fixtur].namn}, {e.data.kpi} · kpiTillSpec (WP1)
+            <br />
+            {specFakta(resultat.ok.spec)}
+          </p>
           <Platshallare e={e} />
           <div className={s.figurplats}>
-            <Figur spec={resultat.spec} rubrikniva={4} fasta={fasta} onFasta={setFasta} />
+            <Figur spec={resultat.ok.spec} rubrikniva={4}
+              visningar={resultat.ok.visningar.length > 1 ? resultat.ok.visningar : undefined} visning={visning}
+              onVisning={setVisning}
+              brodsmula={resultat.ok.brodsmula.length ? resultat.ok.brodsmula : undefined} onFokus={setFokus}
+              fasta={fasta} onFasta={setFasta} />
           </div>
         </>
       ) : (
@@ -103,29 +108,19 @@ function Minidiagram({ spec }: { spec: ChartSpec }) {
   );
 }
 
-type OversiktResultat =
-  | { grupper: ReturnType<typeof oversiktExempel>; kapitel: ReturnType<typeof exempelKapitel> }
-  | { fel: string };
-
 function Oversikt({ e }: { e: Exempel }) {
-  const resultat = useMemo((): OversiktResultat => {
-    try {
-      return { grupper: oversiktExempel(), kapitel: exempelKapitel(e.kalla.vy, e.kalla.sektion) };
-    } catch (fel) {
-      return { fel: fel instanceof Error ? fel.message : String(fel) };
-    }
-  }, [e]);
+  const resultat = useMemo(() => forsok(oversiktExempel), []);
 
   return (
     <div className={s.exempel} data-exempel={e.namn} data-bank-bild={`galleri-${e.namn}`}>
       <Underrubrik id={`galleri-${e.namn}`}>{e.rubrik}</Underrubrik>
       <Prosa>{e.vad}</Prosa>
-      {"grupper" in resultat ? (
+      {"ok" in resultat ? (
         <>
-          <Metarad e={e} kalla={resultat.grupper[0]?.rader[0]?.kalla ?? "reserv"} />
+          <p className={s.meta}>{e.typ} · src/{e.fil} ({e.paket}) · {resultat.ok.kalla} · minidiagramSpec (WP1)</p>
           <Platshallare e={e} />
           <table className={s.oversikt}>
-            <caption className={s.caption}>Läget i korthet, {resultat.kapitel.namn}</caption>
+            <caption className={s.caption}>Läget i korthet, {resultat.ok.kapitel}</caption>
             <thead>
               <tr>
                 <th scope="col">Indikator</th>
@@ -136,15 +131,15 @@ function Oversikt({ e }: { e: Exempel }) {
               </tr>
             </thead>
             <tbody>
-              {resultat.grupper.map((g) => (
-                <Fragment key={g.avsnitt}>
+              {resultat.ok.avsnitt.map((g) => (
+                <Fragment key={g.namn}>
                   <tr className={s.grupp}>
-                    <th scope="rowgroup" colSpan={5}>{g.avsnitt}</th>
+                    <th scope="rowgroup" colSpan={5}>{g.namn}</th>
                   </tr>
                   {g.rader.map((r) => (
                     <tr key={r.kpiId}>
                       <td>
-                        <a className={s.lank} href={`/?ny#/kapitel/${e.kalla.sektion}?vy=${e.kalla.vy}&i=${r.kpiId}`}>{r.namn}</a>
+                        <a className={s.lank} href={`/?ny#/kapitel/${RAPPORTKAPITEL.id}?vy=${RAPPORTKAPITEL.vy}&i=${r.kpiId}`}>{r.namn}</a>
                       </td>
                       <td className={s.tal}>
                         {r.senaste}
@@ -171,10 +166,10 @@ function Oversikt({ e }: { e: Exempel }) {
 export function Sektion() {
   return (
     <>
-      <Dek>Varje graftyp med riktig data ur rapporten. Hovra, fäst och använd tangentbordet som i rapporten.</Dek>
+      <Dek>Varje graftyp med data ur rapporten. Hovra, fäst och använd tangentbordet som i rapporten.</Dek>
       <Not>
-        Graferna ritas av WP2 och WP3. Tills deras renderare finns visar varje exempel figuren med en platshållare. Varje exempel
-        fotograferas för sig i bänken, i 1440 och 390 px.
+        Specarna byggs av kpiTillSpec ur WP1:s fixturer. Graferna ritas av WP2 och WP3; tills deras renderare finns visar varje
+        exempel figuren med en platshållare. Varje exempel fotograferas för sig i bänken, i 1440 och 390 px.
       </Not>
       {EXEMPEL.map((e) => (e.typ === "minidiagram" ? <Oversikt key={e.namn} e={e} /> : <Exempelvisning key={e.namn} e={e} />))}
     </>

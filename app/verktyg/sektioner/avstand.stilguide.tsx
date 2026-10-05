@@ -87,11 +87,11 @@ function Narhetsprov() {
       <div className={s.block}>Rubrikrad</div>
       {under.map((u) => (
         <div key={u.token + u.namn}>
-          {glapp(u.token, `${rum(u.token)} (${u.token})`)}
+          {glapp(u.token, `${rum(u.token)} px (${u.token})`)}
           <div className={s.block}>{u.namn}</div>
         </div>
       ))}
-      {glapp(inne, `${rum(inne)}, största inne i indikatorn (${inne})`)}
+      {glapp(inne, `${rum(inne)} px, största inne i indikatorn (${inne})`)}
       <div className={s.block}>Figur</div>
     </div>
   );

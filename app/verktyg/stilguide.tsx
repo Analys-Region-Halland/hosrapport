@@ -137,7 +137,7 @@ export function Stilguide({ datafel }: { datafel: string | null }) {
             <div className={s.fel} role="alert">
               <p className={s.felRubrik}>Stilguiden är inte komplett</p>
               <ul>
-                {datafel && <li>Exempeldatan kunde inte laddas: {datafel}</li>}
+                {datafel && <li>Rapportkapitlet kunde inte laddas, så översikten och typografin visar SKR-utdraget: {datafel}</li>}
                 {FEL.map((f) => <li key={f}>{f}</li>)}
               </ul>
             </div>
