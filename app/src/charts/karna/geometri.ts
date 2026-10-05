@@ -51,6 +51,10 @@ export const GEOMETRI = {
   overlaggPunkt: diagram.overlaggPunkt,
   /** Tooltipen står så här långt från hjälplinjen. */
   tooltipAvstand: rum[4],
+  /** I smala diagram står tooltipen så här långt under ytan (plotytan med axel, eller panelen). */
+  tooltipUnder: rum[2],
+  /** Under denna diagrambredd står tooltipen under plotytan i full bredd (stilguiden 6.8). */
+  tooltipHelBreddUnder: diagram.tooltip.helBreddUnder,
   /** Vit kant runt tillfälliga texter ovanpå linjer. */
   halo: 4,
   /** Baslinjeförskjutning som centrerar 13 px-text på ett y. */

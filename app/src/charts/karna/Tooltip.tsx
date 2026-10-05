@@ -1,39 +1,66 @@
-// charts/karna/Tooltip.tsx: tooltipen i plotytans överkant (stilguiden 6.8).
-// Står på fast höjd, till höger om hjälplinjen, och byter sida först när
-// hjälplinjen passerat plotytans mitt. Placeringen sätts direkt på elementet
-// före målning (useLayoutEffect), så att den aldrig ritas på fel ställe.
-// Uppläsningen sker i Diagram.tsx via aria-live; själva rutan är aria-hidden.
-// Ägare: WP2.
+// charts/karna/Tooltip.tsx: tooltipen inne i figuren (stilguiden 6.8).
+// Står i plotytans överkant på fast höjd, till höger om hjälplinjen, och byter
+// sida först när hjälplinjen passerat plotytans mitt. Placeringen sätts direkt
+// på elementet före målning (useLayoutEffect), så att den aldrig ritas på fel
+// ställe. Uppläsningen sker i Diagram.tsx via aria-live; själva rutan är
+// aria-hidden. Ägare: WP2.
+//
+// Tillägg i WP3:
+//   - Ytan kan vara en panels plotyta (små multiplar) i stället för plotytan.
+//   - Rangordningen anger radens y: tooltipen står då vid raden, centrerad i
+//     höjdled och på andra sidan av plotytans mitt än punkten, så att den
+//     aldrig täcker raden man läser eller grannarna med liknande värde.
+//   - Under tema.diagram.tooltip.helBreddUnder (560 px) står tooltipen under
+//     plotytan i full bredd i stället för ovanpå grafen (stilguiden 6.8,
+//     tooltip på mobil). Den läggs ovanpå det som står under diagrammet och
+//     flyttar därför inget.
 
 import { useLayoutEffect, useRef } from "react";
 import { GEOMETRI } from "./geometri";
-import type { TooltipModell } from "./tooltipModell";
+import type { TooltipLage } from "./interaktion";
 import s from "./Tooltip.module.css";
 
 interface Props {
-  modell: TooltipModell;
-  x: number;                                              // hjälplinjens x
-  plot: { x: number; y: number; b: number; h: number };
-  bredd: number;                                          // diagrammets bredd
+  lage: TooltipLage;
+  bredd: number;            // diagrammets bredd
+  helBredd: boolean;        // smalt diagram: under plotytan i full bredd
 }
 
 const PRICK = GEOMETRI.overlaggPunkt.radie * 2;
 
-export function Tooltip({ modell, x, plot, bredd }: Props) {
+export function Tooltip({ lage, bredd, helBredd }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const { modell } = lage;
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (helBredd) {
+      el.style.left = "0px";
+      el.style.width = `${Math.round(bredd)}px`;
+      el.style.top = `${Math.round(lage.under + GEOMETRI.tooltipUnder)}px`;
+      return;
+    }
+    el.style.width = "";
+    const { x, y, yta } = lage;
     const b = el.offsetWidth;
-    const mitt = plot.x + plot.b / 2;
+    const mitt = yta.x + yta.b / 2;
     const avstand = GEOMETRI.tooltipAvstand;
-    let left = x <= mitt ? x + avstand : x - avstand - b;
+    let left: number;
+    let top: number;
+    if (y === undefined) {
+      left = x <= mitt ? x + avstand : x - avstand - b;
+      top = yta.y;
+    } else {
+      const h = el.offsetHeight;
+      left = x > mitt ? yta.x : yta.x + yta.b - b;
+      top = Math.max(yta.y, Math.min(yta.y + yta.h - h, y - h / 2));
+    }
     left = Math.max(0, Math.min(bredd - b, left));
     el.style.left = `${Math.round(left)}px`;
-    el.style.top = `${Math.round(plot.y)}px`;
+    el.style.top = `${Math.round(top)}px`;
   });
   return (
-    <div ref={ref} className={s.tooltip} data-tooltip="" aria-hidden="true">
+    <div ref={ref} className={helBredd ? `${s.tooltip} ${s.helBredd}` : s.tooltip} data-tooltip="" data-hel-bredd={helBredd ? "" : undefined} aria-hidden="true">
       <div className={s.rubrik}>
         {modell.rubrik}
         {modell.nyMetod && <span className={s.tillagg}> · ny metod</span>}
