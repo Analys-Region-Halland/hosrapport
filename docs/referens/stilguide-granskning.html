@@ -1,0 +1,1236 @@
+<title>HoS-rapportens stilguide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+<style>
+/* Layout: rapportens egen ram. Innehållsförteckning 220 px till vänster (desktop), textspalt 34 em, figurer upp till 880 px.
+   Medvetet ett ljust tema: produkten har bara ljust läge och sidan visar dess verkliga färger. */
+:root {
+  color-scheme: light;
+  --papper: #FBFBF9; --yta: #FFFFFF; --black: #1A1A1A; --text2: #4A4F4C; --text3: #6B716D;
+  --harlinje: #E6E6E1; --fokus: #00664D; --fokusLjus: #E9F2EE;
+  --kontext: #D6D6D1; --rutnat: #D2D2CD; --kontextPunkt: #6B716D; --kontextAktiv: #4A4F4C; --referens: #4A4F4C;
+  --f95: #DDE3EA; --f80: #C9D2DC; --zon: #EEEEE9; --anslutning: #A9A9A4;
+  --m1: #004990; --m2: #D46A00; --m3: #433C9D; --m4: #895B42;
+  --s-gron: #2E7D52; --s-gul: #B07A12; --s-rod: #B23A2E;
+  --c-gron-t: #1F6A43; --c-gron-b: #E8F1EC; --c-gul-t: #8A5E12; --c-gul-b: #F6ECD9; --c-rod-t: #9A2E22; --c-rod-b: #F4E3DF;
+  --vit: #FFFFFF;
+  --serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --text-matt: 34em;
+}
+* { box-sizing: border-box; }
+html { background: var(--papper); }
+body { margin: 0; background: var(--papper); color: var(--black); font-family: var(--serif); -webkit-font-smoothing: antialiased; }
+a { color: var(--fokus); text-decoration-thickness: 1px; text-underline-offset: .2em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--fokus); outline-offset: 2px; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Brandlist */
+.brand { background: var(--fokus); color: var(--vit); height: 48px; display: flex; align-items: center; gap: 14px; padding-inline: 24px; font-family: var(--sans); font-weight: 600; font-size: 15px; }
+.brand svg { height: 22px; width: auto; }
+.brand span { opacity: .9; border-left: 1px solid rgba(255,255,255,.4); padding-left: 14px; }
+
+/* Ram */
+.sida { max-width: 1320px; margin: 0 auto; padding-inline: 24px; padding-block: 0 128px; display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1200px) { .sida { grid-template-columns: 220px minmax(0, 1fr); column-gap: 64px; } }
+.toc { display: none; }
+@media (min-width: 1200px) {
+  .toc { display: block; position: sticky; top: 24px; align-self: start; padding-top: 64px; font-family: var(--sans); max-height: 100vh; overflow-y: auto; }
+}
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.toc a { display: flex; gap: 8px; padding: 5px 8px; color: var(--text2); text-decoration: none; font-size: 15px; line-height: 1.35; }
+.toc a:hover { color: var(--black); }
+.toc a[aria-current="true"] { background: var(--fokusLjus); color: var(--black); font-weight: 600; }
+.toc .nr { color: var(--fokus); min-width: 1.4em; font-variant-numeric: tabular-nums; }
+.toc .rubrik { font-size: 13px; font-weight: 600; color: var(--text3); padding: 0 8px 10px; }
+main { min-width: 0; max-width: 880px; }
+
+/* Typografi enligt rollerna */
+.kicker { font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--fokus); margin: 0 0 12px; }
+h1 { font-family: var(--serif); font-size: 44px; line-height: 1.1; font-weight: 700; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.masthead { padding-top: 64px; }
+.masthead .linje { height: 2px; background: var(--fokus); margin: 20px 0 20px; }
+.ingress { font-family: var(--serif); font-size: 21px; line-height: 1.5; max-width: var(--text-matt); margin: 0 0 16px; }
+.meta { font-family: var(--sans); font-size: 13px; line-height: 1.4; color: var(--text3); margin: 0; }
+h2 { font-family: var(--serif); font-size: 32px; line-height: 1.2; font-weight: 600; letter-spacing: -.01em; margin: 128px 0 16px; text-wrap: balance; scroll-margin-top: 24px; }
+h2 .nr, h3 .nr { color: var(--fokus); margin-right: .35em; font-variant-numeric: tabular-nums; }
+.dek { font-family: var(--serif); font-size: 21px; line-height: 1.5; color: var(--text2); max-width: var(--text-matt); margin: 0 0 48px; }
+h3 { font-family: var(--serif); font-size: 24px; line-height: 1.25; font-weight: 600; margin: 96px 0 8px; text-wrap: balance; scroll-margin-top: 24px; }
+.blockrubrik { font-family: var(--sans); font-size: 18px; line-height: 1.3; font-weight: 600; margin: 64px 0 16px; }
+.prosa p, p.prosa { font-family: var(--serif); font-size: 18px; line-height: 1.6; max-width: var(--text-matt); margin: 0 0 .9em; }
+.granssnitt { font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+.not { font-family: var(--sans); font-size: 13px; line-height: 1.4; color: var(--text3); }
+code { font-family: var(--sans); font-size: .86em; color: var(--text2); background: none; white-space: nowrap; }
+@media (max-width: 639px) {
+  .sida { padding-inline: 16px; }
+  h1 { font-size: 32px; } h2 { font-size: 26px; margin-top: 96px; } h3 { font-size: 21px; }
+  .ingress, .dek { font-size: 19px; } .prosa p, p.prosa { font-size: 17px; } .blockrubrik { font-size: 17px; }
+}
+
+/* Tabeller enligt 5.9 */
+.tabellram { overflow-x: auto; margin: 0 0 24px; }
+table { border-collapse: collapse; font-family: var(--sans); font-size: 15px; line-height: 1.45; width: 100%; }
+th { text-align: left; font-size: 13px; font-weight: 600; color: var(--text2); padding: 8px 16px 8px 0; border-bottom: 1px solid var(--harlinje); vertical-align: bottom; }
+td { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--harlinje); vertical-align: top; }
+td.tal, th.tal { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+caption { text-align: left; font-family: var(--sans); font-weight: 600; font-size: 15px; padding-bottom: 8px; }
+.spec td:first-child { font-weight: 600; white-space: nowrap; }
+
+/* Färgprover */
+.prover { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 24px 16px; margin: 0 0 32px; }
+.prov { font-family: var(--sans); font-size: 13px; line-height: 1.4; min-width: 0; }
+.prov .yta { height: 56px; margin-bottom: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+.prov b { display: block; font-weight: 600; color: var(--black); font-size: 15px; }
+.prov span { color: var(--text3); display: block; }
+.linjeprov { display: grid; grid-template-columns: 64px 1fr; gap: 10px 16px; align-items: center; font-family: var(--sans); font-size: 15px; margin-bottom: 32px; }
+.linjeprov svg { width: 64px; height: 16px; }
+
+/* Typprover */
+.typprov { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 12px 24px; align-items: baseline; padding: 20px 0; border-bottom: 1px solid var(--harlinje); }
+.typprov .namn { font-family: var(--sans); font-size: 13px; color: var(--text3); line-height: 1.4; }
+.typprov .namn b { display: block; color: var(--black); font-size: 15px; }
+@media (max-width: 639px) { .typprov { grid-template-columns: minmax(0,1fr); } }
+
+/* Avstånd */
+.rumskala { display: grid; gap: 8px; font-family: var(--sans); font-size: 13px; color: var(--text3); margin-bottom: 32px; }
+.rumskala div { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 16px; }
+.rumskala i { display: block; height: 12px; background: var(--fokus); opacity: .85; }
+
+/* Statusmarkör */
+.status { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-family: var(--sans); font-size: 13px; font-weight: 600; white-space: nowrap; vertical-align: middle; }
+.status.gron { color: var(--c-gron-t); background: var(--c-gron-b); }
+.status.gul { color: var(--c-gul-t); background: var(--c-gul-b); }
+.status.rod { color: var(--c-rod-t); background: var(--c-rod-b); }
+.prick { display: inline-block; width: 6px; height: 6px; border-radius: 50%; vertical-align: middle; }
+
+/* Exempelram: markerar att något är ett exempel ur produkten */
+.exempel { margin: 32px 0 48px; }
+.exempel > .etikett { font-family: var(--sans); font-size: 13px; color: var(--text3); margin: 0 0 16px; }
+
+/* Indikatorn */
+.ind-titelrad { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 14px; row-gap: 6px; }
+.ind-titelrad h4 { font-family: var(--serif); font-size: 24px; line-height: 1.25; font-weight: 600; margin: 0; text-wrap: balance; }
+.ind-titelrad h4 .nr { color: var(--fokus); margin-right: .35em; }
+.nyckeltal { font-family: var(--sans); font-size: 15px; color: var(--text2); margin: 8px 0 24px; font-variant-numeric: tabular-nums; }
+.nyckeltal b { color: var(--black); font-weight: 600; }
+.nyckeltal .sep { color: var(--text3); padding: 0 .5em; }
+.proveniens { font-family: var(--sans); font-size: 13px; color: var(--text3); margin: -4px 0 32px; }
+@media (max-width: 639px) { .ind-titelrad h4 { font-size: 21px; } }
+
+/* Begrepp (toggletip) */
+.begrepp { font: inherit; color: inherit; text-decoration: underline dotted var(--text3) 1px; text-underline-offset: .2em; cursor: help; }
+.begrepp[aria-expanded="true"] { background: var(--fokusLjus); }
+.popover { position: absolute; z-index: 20; width: min(320px, calc(100vw - 32px)); background: var(--yta); border: 1px solid var(--harlinje); padding: 16px; font-family: var(--sans); font-size: 15px; line-height: 1.45; color: var(--black); }
+.popover b { display: block; font-weight: 600; margin-bottom: 4px; }
+.popover .not { display: block; margin-top: 8px; }
+@media (max-width: 639px) { .popover { position: fixed; left: 0 !important; right: 0; bottom: 0; top: auto !important; width: 100%; border-width: 1px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)); } }
+
+/* Figur */
+figure.figur { background: var(--yta); margin: 0 0 32px; padding: 24px; }
+@media (max-width: 639px) { figure.figur { padding: 16px; margin-inline: -16px; } }
+.figur-huvud { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 24px; row-gap: 8px; }
+.figur-huvud > div:first-child { min-width: 0; flex: 1 1 320px; }
+.figur .kick { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--text2); margin: 0 0 6px; }
+.figur h5 { font-family: var(--sans); font-size: 18px; line-height: 1.3; font-weight: 600; margin: 0; }
+.figur .undertitel { font-family: var(--sans); font-size: 15px; line-height: 1.45; color: var(--text2); margin: 4px 0 0; max-width: 40em; }
+.flikar { display: flex; gap: 24px; align-items: flex-end; font-family: var(--sans); font-size: 13px; font-weight: 600; }
+.flikar [role="tab"] { height: 32px; color: var(--text2); border-bottom: 2px solid transparent; padding: 0 1px; }
+.flikar [role="tab"][aria-selected="true"] { color: var(--black); border-bottom-color: var(--fokus); }
+.flikar [role="tab"]:hover { color: var(--black); }
+.nyckel { display: flex; flex-wrap: wrap; gap: 6px 20px; font-family: var(--sans); font-size: 13px; color: var(--text2); margin: 14px 0 8px; }
+.nyckel span { display: inline-flex; align-items: center; gap: 6px; }
+.nyckel svg { width: 16px; height: 12px; flex: none; }
+.plotyta { position: relative; }
+.plotyta svg { display: block; overflow: visible; }
+.plotyta svg:focus { outline: none; }
+.plotyta svg:focus-visible { outline: 2px solid var(--fokus); outline-offset: 4px; }
+.tooltip { position: absolute; top: 4px; z-index: 5; background: var(--yta); border: 1px solid var(--harlinje); padding: 8px 10px; font-family: var(--sans); font-size: 13px; line-height: 1.4; pointer-events: none; min-width: 180px; }
+.tooltip b { font-weight: 600; display: block; margin-bottom: 4px; }
+.tooltip table { font-size: 13px; width: auto; }
+.tooltip td { border: 0; padding: 1px 10px 1px 0; vertical-align: middle; }
+.tooltip td:last-child { padding-right: 0; color: var(--text3); }
+.markerade { display: flex; flex-wrap: wrap; gap: 8px 16px; font-family: var(--sans); font-size: 13px; margin-top: 12px; color: var(--text2); }
+.markerade button { display: inline-flex; align-items: center; gap: 6px; color: var(--black); min-height: 24px; }
+.markerade button:hover { text-decoration: underline; }
+.fot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-top: 16px; font-family: var(--sans); font-size: 13px; color: var(--text3); }
+.fot .noter p { margin: 0 0 4px; max-width: 46em; }
+.atgarder { display: flex; gap: 16px; align-items: flex-start; position: relative; }
+.atgarder button { font-size: 13px; font-weight: 600; color: var(--text2); min-height: 24px; }
+.atgarder button:hover { color: var(--black); text-decoration: underline; }
+.meny { position: absolute; right: 0; top: 28px; z-index: 10; background: var(--yta); border: 1px solid var(--harlinje); padding: 6px 0; min-width: 220px; }
+.meny button { display: block; width: 100%; text-align: left; padding: 6px 14px; font-weight: 400; color: var(--black); }
+.meny p { margin: 6px 14px; font-size: 13px; color: var(--text3); }
+.jamfor { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 14px; font-family: var(--sans); font-size: 13px; }
+.valjare { position: relative; }
+.jamfor-knapp { font-weight: 600; color: var(--fokus); min-height: 28px; }
+.jamfor-knapp:hover { text-decoration: underline; text-underline-offset: .2em; }
+.valjare .lista { position: absolute; z-index: 15; top: 32px; left: 0; width: min(300px, calc(100vw - 48px)); max-height: 340px; overflow: auto; background: var(--yta); border: 1px solid var(--harlinje); padding: 6px 0; }
+.valjare .lista p { margin: 6px 14px 8px; }
+.valjare label { display: flex; align-items: center; gap: 10px; padding: 4px 14px; font-size: 15px; cursor: pointer; min-height: 34px; }
+.valjare label:hover { background: var(--fokusLjus); }
+.valjare label span { margin-left: auto; color: var(--text3); font-size: 13px; }
+.valjare input { accent-color: var(--fokus); width: 16px; height: 16px; margin: 0; }
+.chip { display: inline-flex; align-items: center; gap: 7px; min-height: 28px; color: var(--black); }
+.chip i { display: inline-block; width: 14px; height: 3px; }
+.chip span[aria-hidden] { color: var(--text3); font-size: 15px; }
+.chip:hover { text-decoration: underline; text-underline-offset: .2em; }
+.chip.rensa { color: var(--text2); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.rad .v { opacity: 0; transition: opacity 120ms; }
+.rad:hover .v { opacity: 1; }
+.tooltip .not { display: block; margin-top: 6px; }
+.tooltip td { padding: 2px 12px 2px 0; }
+details.fordjupning { margin: 8px 0 32px; }
+details.fordjupning summary { font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--fokus); cursor: pointer; list-style: none; display: inline-flex; gap: 8px; align-items: center; min-height: 24px; }
+details.fordjupning summary::-webkit-details-marker { display: none; }
+details.fordjupning summary::before { content: "›"; display: inline-block; transition: transform 120ms; font-size: 18px; line-height: 1; }
+details.fordjupning[open] summary::before { transform: rotate(90deg); }
+details.fordjupning .innehall { padding-top: 16px; }
+.etikett-rub { font-family: var(--sans); font-size: 15px; font-weight: 600; margin: 24px 0 6px; }
+.datarader { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 6px 16px; font-family: var(--sans); font-size: 15px; margin: 0; max-width: 40em; }
+.datarader dt { color: var(--text2); } .datarader dd { margin: 0; }
+@media (max-width: 639px) { .datarader { grid-template-columns: minmax(0,1fr); } .datarader dd { margin-bottom: 8px; } }
+ol.faktorer { padding-left: 1.4em; margin: 8px 0 0; max-width: var(--text-matt); font-family: var(--serif); font-size: 18px; line-height: 1.6; }
+ol.faktorer li { margin-bottom: .6em; }
+ol.faktorer li::marker { color: var(--fokus); font-family: var(--sans); font-weight: 600; font-size: 15px; }
+ol.faktorer b { font-family: var(--sans); font-size: 15px; font-weight: 600; display: block; }
+dialog { border: 0; padding: 24px; background: var(--yta); width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); color: var(--black); }
+dialog::backdrop { background: rgba(26, 26, 26, .35); }
+dialog .stang { float: right; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--text2); min-height: 24px; }
+
+/* Kapitelblock */
+ul.viktigast { list-style: none; padding: 0; margin: 0; max-width: var(--text-matt); display: grid; gap: 14px; }
+ul.viktigast li { position: relative; padding-left: 22px; font-family: var(--serif); font-size: 18px; line-height: 1.55; }
+ul.viktigast li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 7px; height: 7px; background: var(--fokus); }
+ul.viktigast a { font-family: var(--sans); font-size: 13px; font-weight: 600; white-space: nowrap; margin-left: 6px; }
+.oversikt th button { font: inherit; color: inherit; display: inline-flex; gap: 4px; align-items: center; min-height: 24px; }
+.oversikt th button:hover { color: var(--black); }
+.oversikt tr.grupp td { font-weight: 600; padding-top: 22px; color: var(--black); }
+.oversikt td { vertical-align: middle; height: 44px; padding-block: 6px; }
+.oversikt td a { color: var(--black); text-decoration: none; }
+.oversikt td a:hover { text-decoration: underline; color: var(--fokus); }
+.oversikt .ar { display: block; font-size: 13px; color: var(--text3); }
+@media (max-width: 639px) { .oversikt .d-mob { display: none; } }
+
+/* Startsidans rad och ramprov */
+.startrad { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) 180px; gap: 4px 16px; align-items: start; padding: 4px 0; text-decoration: none; color: inherit; }
+.startrad .nr { font-family: var(--serif); font-size: 24px; color: var(--fokus); line-height: 1.25; font-variant-numeric: tabular-nums; }
+.startrad .namn { font-family: var(--serif); font-size: 24px; line-height: 1.25; font-weight: 600; color: var(--black); }
+.startrad:hover .namn { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+.startrad .dek2 { font-family: var(--sans); font-size: 15px; color: var(--text2); margin: 4px 0; max-width: 36em; }
+.matare { display: flex; height: 6px; width: 100%; margin: 10px 0 6px; gap: 2px; }
+.matare i { display: block; height: 100%; }
+@media (max-width: 639px) { .startrad { grid-template-columns: 2em minmax(0,1fr); } .startrad > .matarcell { grid-column: 2; } }
+.ramprov { background: var(--papper); box-shadow: inset 0 -1px 0 var(--harlinje); display: flex; align-items: center; gap: 16px; height: 56px; padding: 0 16px; font-family: var(--sans); font-size: 13px; color: var(--text2); overflow: hidden; }
+.ramprov .tillbaka { font-size: 15px; font-weight: 600; color: var(--black); white-space: nowrap; }
+.ramprov .pos { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ramprov .pos b { color: var(--black); font-weight: 600; }
+.ramprov .exp { font-size: 15px; font-weight: 600; color: var(--black); border: 1px solid var(--harlinje); height: 36px; padding: 0 14px; display: inline-flex; align-items: center; white-space: nowrap; }
+.narhet { display: grid; gap: 0; max-width: 520px; font-family: var(--sans); font-size: 13px; color: var(--text3); margin: 8px 0 32px; }
+.narhet .blk { background: var(--yta); padding: 10px 12px; color: var(--black); }
+.narhet .gap-s { height: 12px; display: flex; align-items: center; padding-left: 12px; }
+.narhet .gap-l { height: 64px; display: flex; align-items: center; padding-left: 12px; color: var(--fokus); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="brand" aria-label="Region Halland, HoS-rapport"><svg aria-hidden="true" focusable="false" id="Lager_1" data-name="Lager 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1609.55 346.56"><defs><style>.cls-1{fill:#fff;}</style></defs><path class="cls-1" d="M380.41,491.43c-.29-1.43-3.28-2.14-8.67-4h0c-10.63-3.65-21.74-10.37-27.61-24.37-6-13.59.68-26.38,3.11-45.57.49-3.85,1.44-19.09-5.37-31.51-7.73-14.09-24.38-28.2-56.35-23.36-4.93.74-16.3,3.81-25.24-5.95-7.74-8.47-6.73-33.95-8.36-51.59-2.93-31.77-14.21-46.21-17.75-51.18-10.27-14.42-25.15-21.32-45.18-33-23.31-13.57-22.22-36.62-18.46-48.12a80.93,80.93,0,0,1,5.55-12.08c1.83-3.45,5-7.21,3.22-7.67-3.94-1-13.14,6.4-17.53,11.52-.8.93-1.59,1.89-2.36,2.92-7.25,9.77-24,46.55,11.49,75.31,6.55,5.3,26.89,12.64,36.45,30.06a62.77,62.77,0,0,1,9,22.16c2.51,13.1,2.42,38.23,3,43.92a108.61,108.61,0,0,0,3.31,18.15c7.12,25.72,27.31,39.23,47.86,40.62,9.09.62,27.77-1.54,31-1.42,6.29-.06,12.6,3.34,14.76,13.8,1.72,8.4-.66,22.12-.75,22.87-2,16.2.8,36,19.32,51.56A52,52,0,0,0,372,495.36c6.53-.7,8.64-3,8.45-3.93" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M432.1,348.58C439.83,341.42,466,329,466,288.1c0-11.28-7.61-48.47-46.47-60.19a75,75,0,0,0-20-3.14,79.35,79.35,0,0,0-21.42,2.53c-13.29,3.47-25.78,8-35.89,7.82-12.66-.22-20.52-6.54-35.8-28.46-6.21-10.38-25.5-41.73-55.61-53.28a63.59,63.59,0,0,0-29.27-4c-12.07,1.19-17.8,6.14-21.28,11-2.45,3.38-3.18,7.29-1.91,8.13.62.43,1.66.28,2.91.1,5.06-1.11,15-1,19.6-.31,28.12,4.39,45.85,29.63,51.79,40.93,8.4,15.93,25.82,41.16,37.75,49,24.43,16.12,49.79,8.88,59.94,6.8,9.85-2,18.79-6.21,30.57-5.27,15.18,1.21,24.4,12.35,27.28,18.88,10.17,23-7.16,35.32-9.66,37.77-3.74,3.66-5.91,4.79-9.81,8.45-14.43,13.59-20.31,27.95-15.1,47.92,4.55,12.59,13.27,33.86,14.67,38.86,5.93,21.17,4.3,34.46.58,43.07a28.53,28.53,0,0,1-16,15.89c-2.65,1.37,1,4.28,7.43,4.28,10,0,20.07-5.48,27.08-16.1,8-12.14,11.76-31,5.43-56.11-5.8-21.83-11.17-31-10.09-41.14C423.44,354.85,429.32,351.15,432.1,348.58Z" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M605.2,314.24c0-10.35-8-16.63-18.49-16.63H559.17v33.27h27.54c10.54,0,18.49-6.28,18.49-16.64m-2.59,83.56L578.39,354H559.17V397.8H532.92V274.5h57.67c25.7,0,41.41,16.82,41.41,39.74,0,21.82-13.68,33.46-27,36.6l27.73,47Z" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M685.36,325c-14.6,0-20.89,10.9-22,19.77h44c-.56-8.5-6.47-19.77-22-19.77m-46.21,28.09c0-25.88,19-46.77,46.21-46.77,26.62,0,44.74,20,44.74,49.17v5.18H663.74c1.47,11.28,10.53,20.7,25.69,20.7,7.58,0,18.11-3.32,23.84-8.87l10.36,15.16C714.75,395.76,700.7,400,686.84,400c-27.17,0-47.69-18.3-47.69-46.95" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M807.59,366V337.15c-3.88-5.91-12.38-10.16-20.15-10.16-13.31,0-22.55,9.24-22.55,24.58s9.24,24.58,22.55,24.58c7.77,0,16.27-4.43,20.15-10.16m-63,54.53,10.53-17c7.21,7.95,16.64,11.1,27.92,11.1s24.58-5,24.58-22.56V383c-7,8.87-16.63,14-27.54,14-22.37,0-39.37-15.71-39.37-45.47,0-29.21,16.82-45.47,39.37-45.47,10.72,0,20.33,4.62,27.54,13.68V308.32h23.66V391.5c0,34-26.25,42.33-48.24,42.33-15.35,0-27.18-3.51-38.45-13.31" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M850,308.32h23.48V397.6H850Zm-2.4-23.67a14.05,14.05,0,1,1,14,14.05,14.16,14.16,0,0,1-14-14.05" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M958.47,352.86c0-13.86-8.32-25.88-22.92-25.88s-22.74,12-22.74,25.88c0,14.05,8.14,26.07,22.74,26.07s22.92-12,22.92-26.07m-70.06,0c0-25.32,17.75-46.76,47.14-46.76,29.58,0,47.32,21.44,47.32,46.76,0,25.51-17.74,47-47.32,47-29.39,0-47.14-21.45-47.14-47" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M1058,397.6v-54c0-12.38-6.47-16.64-16.45-16.64a25.43,25.43,0,0,0-20.33,10.54V397.6H997.74V308.32h23.48V320c5.72-6.84,16.63-13.86,31.23-13.86,19.6,0,29,11.09,29,28.46v63Z" transform="translate(-149.03 -149.03)"/><polygon class="cls-1" points="1078.87 248.56 1078.87 196.81 1020.64 196.81 1020.64 248.56 994.4 248.56 994.4 125.27 1020.64 125.27 1020.64 173.7 1078.87 173.7 1078.87 125.27 1105.31 125.27 1105.31 248.56 1078.87 248.56"/><path class="cls-1" d="M1336.34,368.76V337.34c-3.88-5.92-12.38-10.17-20.33-10.17-13.31,0-22.56,10.35-22.56,25.88,0,15.34,9.25,25.88,22.56,25.88,8,0,16.45-4.25,20.33-10.17m0,28.84V386.14c-7,8.87-16.82,13.68-27.54,13.68-22.56,0-39.56-17-39.56-46.77,0-29.21,16.82-46.95,39.56-46.95a34,34,0,0,1,27.35,13.68V308.32H1360V397.6Z" transform="translate(-149.03 -149.03)"/><polygon class="cls-1" points="1229.73 125.27 1230.12 125.27 1252.82 125.27 1253.21 125.27 1253.21 125.66 1253.21 248.16 1253.21 248.56 1252.81 248.56 1230.12 248.56 1229.73 248.56 1229.73 248.17 1229.73 125.66 1229.73 125.27"/><polygon class="cls-1" points="1272.36 125.27 1272.75 125.27 1295.44 125.27 1295.83 125.27 1295.83 125.67 1295.83 248.17 1295.83 248.56 1295.42 248.56 1272.76 248.56 1272.36 248.56 1272.36 248.16 1272.36 125.67 1272.36 125.27"/><path class="cls-1" d="M1526.84,368.76V337.34c-3.88-5.92-12.38-10.17-20.33-10.17-13.31,0-22.55,10.35-22.55,25.88,0,15.34,9.24,25.88,22.55,25.88,8,0,16.45-4.25,20.33-10.17m0,28.84V386.14c-7,8.87-16.82,13.68-27.54,13.68-22.55,0-39.56-17-39.56-46.77,0-29.21,16.82-46.95,39.56-46.95a34,34,0,0,1,27.36,13.68V308.32h23.84V397.6Z" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M1629.51,397.6v-54c0-12.38-6.47-16.64-16.45-16.64a25.43,25.43,0,0,0-20.33,10.54V397.6h-23.48V308.32h23.48V320c5.73-6.84,16.63-13.86,31.24-13.86,19.59,0,29,11.09,29,28.46v63Z" transform="translate(-149.03 -149.03)"/><path class="cls-1" d="M1734.92,368.76V337.15c-3.88-5.91-12.38-10.17-20.33-10.17-13.31,0-22.55,10.54-22.55,26.07,0,15.34,9.24,25.88,22.55,25.88,8,0,16.45-4.25,20.33-10.17m0,28.84V386.14c-7,8.87-16.82,13.68-27.54,13.68-22.55,0-39.56-17-39.56-46.77,0-29.21,16.82-46.95,39.56-46.95a34.36,34.36,0,0,1,27.54,13.68V274.3h23.66V397.6Z" transform="translate(-149.03 -149.03)"/></svg><span>HoS-rapport</span></div>
+
+<div class="sida">
+<nav class="toc" aria-label="Innehåll">
+  <div class="rubrik">Stilguide</div>
+  <ol id="toc">
+    <li><a href="#principer"><span class="nr">1</span>Principer</a></li>
+    <li><a href="#grund"><span class="nr">2</span>Grundelement</a></li>
+    <li><a href="#text"><span class="nr">3</span>Text</a></li>
+    <li><a href="#sidor"><span class="nr">4</span>Sidmallar</a></li>
+    <li><a href="#komponenter"><span class="nr">5</span>Komponenter</a></li>
+    <li><a href="#diagram"><span class="nr">6</span>Diagram</a></li>
+    <li><a href="#tillganglighet"><span class="nr">7</span>Tillgänglighet</a></li>
+    <li><a href="#granskning"><span class="nr">8</span>Granskningslista</a></li>
+    <li><a href="#andringar"><span class="nr">B</span>Ändringar</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="masthead">
+  <p class="kicker">Region Halland · HoS-rapporten</p>
+  <h1>Stilguide</h1>
+  <div class="linje" role="presentation"></div>
+  <p class="ingress">Så ser rapporten ut, och varför. Varje regel här har ett namn i koden, så att samma beslut gäller på webben, i diagrammen och i PowerPoint.</p>
+  <p class="meta">Version 1.0 · 5 oktober 2026 · Normerande text i repot: docs/stilguide.md · Exemplen är ritade med rapportens egna data</p>
+</header>
+
+<!-- 1 -->
+<h2 id="principer"><span class="nr">1</span>Principer</h2>
+<p class="dek">Nio regler som avgör alla andra. När två regler krockar vinner den som står högst.</p>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Princip</th><th>Det betyder i praktiken</th></tr></thead>
+<tbody>
+<tr><td>Svaret först</td><td>Sammanfattning, kapitel, avsnitt och indikator inleds med sin slutsats. Metod och definitioner ligger sist eller bakom fördjupning.</td></tr>
+<tr><td>En uppgift, en plats</td><td>Status, värde, plats, period och källa har en fast position per nivå (5.6). Att visa samma sak två gånger är ett fel.</td></tr>
+<tr><td>Tre strukturnivåer</td><td>Kapitel › avsnitt › indikator. Inuti en indikator finns inga innehållsrubriker, bara figurens titel och etiketter.</td></tr>
+<tr><td>Fördjupning på begäran</td><td>Det de flesta behöver syns. Det några behöver ligger högst ett klick bort. Aldrig mer än två nivåer av hopfällning.</td></tr>
+<tr><td>Ett grafspråk</td><td>Alla graftyper delar anatomi, färgroller, typografi och interaktion.</td></tr>
+<tr><td>Färg betyder något</td><td>Grönt är Halland eller vald enhet. Grått är sammanhang. Statusfärg bara i statusmarkörer.</td></tr>
+<tr><td>Samma mall oavsett källa</td><td>Alla kapitel byggs av samma block i samma ordning. Block utan data utelämnas.</td></tr>
+<tr><td>Tillgängligt som standard</td><td>WCAG 2.2 AA är lagkrav. Varje graf har tabell, textsammanfattning och tangentbordsstöd.</td></tr>
+<tr><td>Lugn yta</td><td>Inga skuggor, inga rundade hörn utom statusmarkören, inga ramar eller linjer i läsflödet. Avstånd grupperar.</td></tr>
+</tbody></table></div>
+
+<!-- 2 -->
+<h2 id="grund"><span class="nr">2</span>Grundelement</h2>
+<p class="dek">Färg, typografi och avstånd hämtas alltid ur <code>design/tema.ts</code>. Inga värden skrivs direkt i komponenterna.</p>
+
+<h3 id="farg">Färg</h3>
+<p class="prosa">Fem textfärger totalt. Kontrasten står mot sidans papper och figurens vita yta; den lägsta tillåtna textfärgen klarar 4,8:1.</p>
+<div class="prover" id="textfarger"></div>
+
+<p class="blockrubrik">Diagramroller</p>
+<div class="linjeprov" id="linjeprov"></div>
+
+<p class="blockrubrik">Status</p>
+<div class="tabellram"><table>
+<thead><tr><th>Status</th><th>Markör</th><th>Chip</th><th class="tal">Chiptext mot botten</th><th>Får förekomma</th></tr></thead>
+<tbody>
+<tr><td>I fas</td><td><span class="prick" style="background:var(--s-gron)"></span> #2E7D52</td><td><span class="status gron">I fas</span></td><td class="tal">5,7:1</td><td rowspan="3">Statusmarkören, innehållsförteckningens prick, översiktstabellen, punkter utanför förväntat intervall. Ingen annanstans.</td></tr>
+<tr><td>Bevaka</td><td><span class="prick" style="background:var(--s-gul)"></span> #B07A12</td><td><span class="status gul">Bevaka</span></td><td class="tal">4,9:1</td></tr>
+<tr><td>Avvikelse</td><td><span class="prick" style="background:var(--s-rod)"></span> #B23A2E</td><td><span class="status rod">Avvikelse</span></td><td class="tal">6,1:1</td></tr>
+</tbody></table></div>
+<p class="not">Beskrivande mått utan målriktning får ingen statusmarkör. Nyckeltalsraden säger då "beskrivande mått".</p>
+
+<h3 id="typografi">Typografi</h3>
+<p class="prosa">Två familjer: Source Serif 4 för struktur och läsning, IBM Plex Sans för det man använder och avläser. Åtta roller ersätter dagens nitton storlekar. Siffror sätts med tabulära siffror, inte i mono.</p>
+<div id="typprover">
+  <div class="typprov"><div class="namn"><b>Titel</b>serif 44/1.1, 700 · mobil 32</div><div style="font: 700 44px/1.1 var(--serif); letter-spacing:-.02em">Tillgänglighet och väntetider</div></div>
+  <div class="typprov"><div class="namn"><b>Avsnitt</b>serif 32/1.2, 600 · mobil 26</div><div style="font: 600 32px/1.2 var(--serif)"><span style="color:var(--fokus)">2</span> Vårdgarantin i specialiserad vård</div></div>
+  <div class="typprov"><div class="namn"><b>Indikator</b>serif 24/1.25, 600 · mobil 21</div><div style="font: 600 24px/1.25 var(--serif)"><span style="color:var(--fokus)">2.3</span> Väntande högst 90 dagar på operation</div></div>
+  <div class="typprov"><div class="namn"><b>Ingress</b>serif 21/1.5 · mobil 19</div><div style="font: 400 21px/1.5 var(--serif)">Kapitlet följer vårdgarantins två led, från första kontakten i primärvården till operationen.</div></div>
+  <div class="typprov"><div class="namn"><b>Bröd</b>serif 18/1.6 · mobil 17 · högst 34 em</div><div style="font: 400 18px/1.6 var(--serif); max-width: 34em">Andelen som väntat högst 90 dagar på operation har minskat från 79,8 till 73,4 procent sedan 2021. Halland ligger på plats 7 av 19.</div></div>
+  <div class="typprov"><div class="namn"><b>Figurtitel</b>sans 18/1.3, 600 · mobil 17</div><div style="font: 600 18px/1.3 var(--sans)">Halland jämfört med övriga regioner</div></div>
+  <div class="typprov"><div class="namn"><b>Gränssnitt</b>sans 15/1.45, 400 och 600</div><div class="nyckeltal" style="margin:0"><b>73,4&nbsp;%</b><span class="sep">·</span>plats 7 av 19<span class="sep">·</span>2024</div></div>
+  <div class="typprov"><div class="namn"><b>Not</b>sans 13/1.4 · även axeltext i diagram</div><div class="not">Källa: Nationella väntetidsdatabasen (Väntetider i vården), SKR</div></div>
+  </div>
+<div class="tabellram" style="margin-top:24px"><table class="spec">
+<thead><tr><th>Regel</th><th>Spec</th></tr></thead>
+<tbody>
+<tr><td>Versaler</td><td>Bara kickern ovanför titeln. Inga versala etiketter i tabeller, menyer eller flöde.</td></tr>
+<tr><td>Fetstil och kursiv</td><td>Fetstil bara i rubrikroller, nyckeltal och tabellhuvud. Kursiv bara för verktitlar och citat. Aldrig båda.</td></tr>
+<tr><td>Radlängd</td><td>Löptext högst 34 em, ungefär 65 tecken. Figurer får vara bredare (880 px).</td></tr>
+<tr><td>Länkar</td><td>Grön, understruken 1 px. Vid hover 2 px.</td></tr>
+</tbody></table></div>
+
+<h3 id="avstand">Avstånd</h3>
+<p class="prosa">Avstånd ersätter linjer och ramar. Närhetsregeln: mellanrummet mellan två syskon ska vara minst två och en halv gånger det största mellanrummet inuti dem. Då ser läsaren grupperna utan hjälp av streck.</p>
+<div class="rumskala" id="rumskala"></div>
+<div class="narhet" aria-hidden="true">
+  <div class="blk">Indikator 2.2, sista blocket</div>
+  <div class="gap-l">96 px mellan indikatorer</div>
+  <div class="blk">2.3 Rubrikrad</div>
+  <div class="gap-s">8</div>
+  <div class="blk">Nyckeltalsrad</div>
+  <div class="gap-s">24</div>
+  <div class="blk">Analys</div>
+  <div class="gap-s">32 (största inne i indikatorn)</div>
+  <div class="blk">Figur</div>
+</div>
+
+<!-- 3 -->
+<h2 id="text"><span class="nr">3</span>Text</h2>
+<p class="dek">Klarspråk enligt språklagen och Myndigheternas skrivregler. Gäller både handskriven och genererad text.</p>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Regel</th><th>Spec</th></tr></thead>
+<tbody>
+<tr><td>Det viktigaste först</td><td>Aktiv form, meningar högst 25 ord, stycken högst fem meningar.</td></tr>
+<tr><td>Tankstreck</td><td>Inga långa tankstreck i någon text. Kort streck bara i intervall: 2019–2024, plats 4–7.</td></tr>
+<tr><td>Undertitlar</td><td>Högst två meningar. Det längre hör hemma i fördjupningen.</td></tr>
+<tr><td>Rubriker</td><td>Beskrivande, högst 75 tecken, inga frågor, ingen punkt.</td></tr>
+<tr><td>Namn</td><td>"Region Halland" första gången i löptext, sedan "Halland". I diagram alltid "Halland" och "Riket".</td></tr>
+<tr><td>Status</td><td>Exakt "I fas", "Bevaka", "Avvikelse". Aldrig "Att bevaka".</td></tr>
+<tr><td>Hänvisning</td><td>Med nummer: "se 2.3". Aldrig "nedan" eller "ovan".</td></tr>
+</tbody></table></div>
+<p class="blockrubrik">Tal, enheter och datum</p>
+<div class="tabellram"><table>
+<thead><tr><th>Vad</th><th>Skrivs</th><th>Exempel</th></tr></thead>
+<tbody>
+<tr><td>Tusental</td><td>Hårt mellanslag</td><td class="tnum">12&nbsp;345</td></tr>
+<tr><td>Decimaler</td><td>Komma</td><td class="tnum">3,4</td></tr>
+<tr><td>Procent</td><td>Hårt mellanslag före %</td><td class="tnum">87,7&nbsp;%</td></tr>
+<tr><td>Procentenheter</td><td>Utskrivet i löptext, p.e. i tabell och diagram</td><td>ökade med 2,1 procentenheter</td></tr>
+<tr><td>Minus</td><td>Riktigt minustecken i tabell och diagram</td><td class="tnum">−3,2</td></tr>
+<tr><td>Decimaler per enhet</td><td>procent 1, minuter 0, antal 0, kronor 0, per invånare 1</td><td class="tnum">96,9&nbsp;% · 182&nbsp;min · 28&nbsp;700</td></tr>
+<tr><td>Månad</td><td>Liten bokstav; utskriven i löptext, förkortad på axlar</td><td>mars 2026 · mar 26</td></tr>
+<tr><td>Saknas</td><td>– inget värde, .. för osäkert eller dolt</td><td>– · ..</td></tr>
+</tbody></table></div>
+<p class="blockrubrik">Genererad text</p>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Text</th><th>Längd</th><th>Regel</th></tr></thead>
+<tbody>
+<tr><td>Det viktigaste</td><td>≤ 6 punkter</td><td>En mening och en sak per punkt. Valda med regler: statusbyte, bästa och sämsta placering, största rörelse, nått eller lämnat topp 3. Varje punkt länkar till sin indikator.</td></tr>
+<tr><td>Avsnittets dek</td><td>1–2 meningar</td><td>Vad som skiljer avsnittet ut. Ingen statusräkning.</td></tr>
+<tr><td>Indikatorns analys</td><td>2–4 meningar</td><td>Läge och mål, utveckling, relativt riket. Börjar inte med siffror som redan står i nyckeltalsraden. Kompletterar grafen.</td></tr>
+<tr><td>Proveniens</td><td>En rad</td><td>"AI-analys, genererad ur rapportens data." En märkning per text.</td></tr>
+</tbody></table></div>
+
+<!-- 4 -->
+<h2 id="sidor"><span class="nr">4</span>Sidmallar</h2>
+<p class="dek">Samma block i samma ordning, oavsett om kapitlet bygger på öppna jämförelser eller regionens egna system.</p>
+
+<h3 id="indikator">Indikatorn</h3>
+<p class="prosa">Målet är högst 1,3 skärmhöjder med fördjupningen stängd. Status visas en gång, värde och plats en gång, indikatornamnet en gång. Exemplet nedan är telefontillgängligheten i kapitel 2 med riktiga tal. Analystexten är skriven efter de nya reglerna.</p>
+
+<div class="exempel" id="ex-indikator">
+  <p class="etikett">Exempel · kapitel 2, indikator 1.1</p>
+  <div class="ind-titelrad"><h4><span class="nr">1.1</span>Telefonsamtal till primärvården som besvarats samma dag</h4><span class="status gul">Bevaka</span></div>
+  <p class="nyckeltal"><b>89,8&nbsp;%</b><span class="sep">·</span>plats 7 av 19<span class="sep">·</span>2025</p>
+  <div class="prosa">
+    <p>Halland ligger strax utanför <button class="begrepp" data-begrepp="topp3" aria-expanded="false">topp 3</button> och har tappat från plats 5 till plats 7. Andelen låg mellan 90 och 95 procent 2017–2022, men jämförelsen bakåt är osäker eftersom mätmetoden byttes 2024. Regionen ligger fortfarande över <button class="begrepp" data-begrepp="rikssnitt" aria-expanded="false">rikssnittet</button> på 88,5 procent.</p>
+  </div>
+  <p class="proveniens">AI-analys, genererad ur rapportens data. <a href="#text">Så skapas texten</a></p>
+
+  <figure class="figur" id="fig-tel" aria-labelledby="fig-tel-titel">
+    <div class="figur-huvud">
+      <div>
+        <h5 id="fig-tel-titel">Halland jämfört med övriga regioner</h5>
+        <p class="undertitel" id="fig-tel-under">Andel samtal till primärvården som besvarats samma dag, procent. 21 regioner och riket, 2016–2025.</p>
+      </div>
+      <div class="flikar" role="tablist" aria-label="Visning">
+        <button role="tab" aria-selected="true" data-vy="tid" id="tab-tid">Över tid</button>
+        <button role="tab" aria-selected="false" data-vy="rang" id="tab-rang" tabindex="-1">Rangordning</button>
+      </div>
+    </div>
+    <div class="plotyta" id="fig-tel-plot" style="margin-top:20px"></div>
+    <div class="jamfor" id="fig-tel-jamfor"></div>
+    <div class="fot">
+      <div class="noter">
+        <p>Not: 2023 och 2024 saknas för Halland. Från 2024 mäts telefontillgängligheten på ett nytt sätt; jämför över brottet med försiktighet.</p>
+        <p>Källa: <a href="https://skr.se/vantetiderivarden.html">Nationella väntetidsdatabasen (Väntetider i vården)</a>, SKR</p>
+      </div>
+      <div class="atgarder">
+        <button type="button" data-atgard="tabell" aria-pressed="false">Tabell</button>
+        <button type="button" data-atgard="ladda" aria-haspopup="menu" aria-expanded="false">Ladda ner</button>
+        <button type="button" data-atgard="forstora">Förstora</button>
+        <div class="meny" role="menu" hidden>
+          <button role="menuitem">CSV (svensk Excel)</button>
+          <button role="menuitem">SVG</button>
+          <button role="menuitem">PNG</button>
+          <p class="meddelande" hidden>Nedladdning finns i rapporten, inte i den här förhandsvisningen.</p>
+        </div>
+      </div>
+    </div>
+    <p class="not" id="fig-tel-live" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></p>
+  </figure>
+
+  <details class="fordjupning">
+    <summary>Om måttet, källan och påverkansfaktorer</summary>
+    <div class="innehall">
+      <p class="etikett-rub">Vad måttet räknar</p>
+      <div class="prosa"><p id="fakta-matt"></p><p id="fakta-avgr"></p><p id="fakta-riktning"></p></div>
+      <p class="etikett-rub">Datakälla</p>
+      <dl class="datarader">
+        <dt>Primärkälla</dt><dd>Nationella väntetidsdatabasen (Väntetider i vården)</dd>
+        <dt>Huvudman</dt><dd>Sveriges Kommuner och Regioner</dd>
+        <dt>Uppdateras</dt><dd>Månadsvis inrapportering; publiceras omkring den 25:e varje månad</dd>
+        <dt>Vägen till rapporten</dt><dd>Väntetidsdatabasen › Vården i siffror › Kolada › rapporten</dd>
+      </dl>
+      <p class="etikett-rub">Påverkansfaktorer</p>
+      <div class="prosa"><p id="fakta-teori"></p></div>
+      <ol class="faktorer" id="fakta-faktorer"></ol>
+    </div>
+  </details>
+</div>
+
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Ordning</th><th>Block</th><th>Regel</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Rubrikrad</td><td>Nummer, namn, statusmarkör. Enda statusvisningen.</td></tr>
+<tr><td>2</td><td>Nyckeltalsrad</td><td>Värde, plats av antal med värde, period. Enda platsen för dem.</td></tr>
+<tr><td>3</td><td>Analys</td><td>2–4 meningar som bär budskapet, eftersom figurens titel är beskrivande. En proveniensrad under.</td></tr>
+<tr><td>4</td><td>Figur</td><td>Beviset. Se avsnitt 6.</td></tr>
+<tr><td>5</td><td>Fördjupning</td><td>En hopfälld del med Vad måttet räknar, Datakälla och Påverkansfaktorer. Öppnas av sök i sidan och skrivs ut öppen.</td></tr>
+<tr><td>6</td><td>Verksamhetens kommentar</td><td>Bara när den finns. "Lägg till" syns bara i redigeringsläge.</td></tr>
+</tbody></table></div>
+
+<h3 id="kapitel">Kapitlet</h3>
+<p class="prosa">Masthead, Det viktigaste, Läget i korthet, avsnitten och sist Om statistiken. Dagens långa metodinledning flyttar till Om statistiken, så att läsaren möter fynden först.</p>
+<div class="exempel">
+  <p class="etikett">Exempel · kapitel 2 med riktiga tal; punkterna är skrivna efter reglerna i 3</p>
+  <p class="blockrubrik" style="margin-top:0">Det viktigaste</p>
+  <ul class="viktigast">
+    <li>Första kontakten i specialiserad vård är Hallands starkaste område: plats 2 av 19 både för väntande och genomförda.<a href="#ex-indikator">se 2.1</a></li>
+    <li>Startade utredningar inom 30 dagar i barn- och ungdomspsykiatrin föll från 69,3 till 31,5 procent, plats 15 av 21.<a href="#ex-indikator">se 3.2</a></li>
+    <li>Medicinsk bedömning inom tre dagar har ökat varje år sedan 2020, men Halland ligger på plats 8 av 21.<a href="#ex-indikator">se 1.2</a></li>
+    <li>Andelen som väntat högst 90 dagar på operation har minskat från 79,8 till 73,4 procent sedan 2021.<a href="#ex-indikator">se 2.3</a></li>
+    <li>Ledtiderna i standardiserade vårdförlopp förbättrades till 56 procent, vilket räcker till plats 3 av 21.<a href="#ex-indikator">se 4.2</a></li>
+  </ul>
+  <p class="blockrubrik">Läget i korthet</p>
+  <div class="tabellram"><table class="oversikt" id="oversikt">
+    <thead><tr>
+      <th aria-sort="none"><button data-sort="namn">Indikator</button></th>
+      <th class="tal" aria-sort="none"><button data-sort="senaste">Senaste</button></th>
+      <th class="tal d-mob" aria-sort="none"><button data-sort="plats">Plats</button></th>
+      <th class="d-mob"><span style="display:inline-flex;align-items:center;min-height:24px">Utveckling</span></th>
+      <th aria-sort="none"><button data-sort="status">Status</button></th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p class="not">Klicka på en kolumnrubrik för att sortera. "Indikator" återställer ordningen per avsnitt. Minidiagrammen har var sin skala.</p>
+</div>
+
+<h3 id="startsidan">Startsidan och sammanfattningen</h3>
+<p class="prosa">Startsidan är en innehållsförteckning, inte en instrumentpanel. En rad per kapitel: nummer, namn, dek, en metarad och en statusmätare. Sammanfattningen ersätter dagens helhetsvy och har Det viktigaste över alla kapitel plus två till tre punkter per kapitel, utan indikatorblock.</p>
+<div class="exempel">
+  <p class="etikett">Exempel · en rad i kapitelförteckningen</p>
+  <a class="startrad" href="#kapitel">
+    <span class="nr">2</span>
+    <span>
+      <span class="namn">Tillgänglighet och väntetider</span>
+      <span class="dek2" style="display:block">Vårdgarantins tre dagar i primärvården och nittio dagar i den specialiserade vården, plus psykiatrin och cancervårdens vårdförlopp.</span>
+      <span class="not">10 indikatorer · årlig · SKR via Kolada</span>
+    </span>
+    <span class="matarcell">
+      <span class="matare" aria-hidden="true"><i style="flex:3;background:var(--s-gron)"></i><i style="flex:4;background:var(--s-gul)"></i><i style="flex:3;background:var(--s-rod)"></i></span>
+      <span class="not tnum">3 i fas · 4 bevaka · 3 avvikelse</span>
+    </span>
+  </a>
+</div>
+
+<h3 id="ram">Ramen</h3>
+<p class="prosa">Verktygsraden har tre saker: tillbaka, var du är, och export. Tidsupplösningen flyttar till kapitlets metarad och visas bara när det finns mer än en. Fokuslägets nedtoning tas bort; innehållsförteckningen och positionsraden visar var du är.</p>
+<div class="exempel">
+  <p class="etikett">Exempel · verktygsraden när läsaren är i 1.1</p>
+  <div class="ramprov"><span class="tillbaka">← Alla kapitel</span><span class="pos">1 Primärvårdens tillgänglighet › <b>1.1 Telefonsamtal besvarade samma dag</b></span><span class="exp">Exportera</span></div>
+</div>
+
+<!-- 5 -->
+<h2 id="komponenter"><span class="nr">5</span>Komponenter</h2>
+<p class="dek">Få delar, alltid samma utseende. En kontroll som inte kan användas visas inte alls.</p>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Komponent</th><th>Spec</th><th>Prov</th></tr></thead>
+<tbody>
+<tr><td>Statusmarkör</td><td>Pill 24 px, sans 13 halvfet. Enda radien i produkten. Inte klickbar.</td><td><span class="status gul">Bevaka</span></td></tr>
+<tr><td>Flikar</td><td>Textflikar utan ram, aktiv med 2 px grön understrykning, 32 px höga. Bara när det finns mer än ett val.</td><td><span class="flikar" style="display:inline-flex"><span style="color:var(--black);border-bottom:2px solid var(--fokus);height:24px">Över tid</span><span style="color:var(--text2)">Rangordning</span></span></td></tr>
+<tr><td>Textknapp</td><td>Sans 13 halvfet, grå, understruken vid hover, klickyta minst 24 × 24 px.</td><td><span class="not" style="font-weight:600;color:var(--text2)">Tabell</span></td></tr>
+<tr><td>Menyknapp</td><td>Enda inramade knappen (Exportera), 36 px.</td><td><span class="ramprov" style="display:inline-flex;height:auto;padding:0;box-shadow:none;background:none"><span class="exp">Exportera</span></span></td></tr>
+<tr><td>Jämför med region</td><td>Grön textknapp med plustecken som öppnar en lista med kryssrutor. Valda regioner visas som chips med färgstreck och ×.</td><td><span class="not" style="font-weight:600;color:var(--fokus)">+ Jämför med region</span></td></tr>
+<tr><td>Fördjupning</td><td>Ett details-element med grön summering och vinkel som vrids. Ingen ram eller bakgrund.</td><td>Se 1.1 ovan</td></tr>
+<tr><td>Begrepp</td><td>Prickad understrykning på första förekomsten. Klick eller Enter öppnar en ruta; på mobil ett ark nedifrån. Inte hover.</td><td><span class="prosa"><button class="begrepp" data-begrepp="forvantat" aria-expanded="false">förväntat intervall</button></span></td></tr>
+<tr><td>Tabell</td><td>Huvud sans 13 halvfet i gemener, hårlinje mellan rader, tal högerställda, ingen zebra, inga lodräta linjer.</td><td>Alla tabeller på sidan</td></tr>
+</tbody></table></div>
+<p class="blockrubrik">Var varje uppgift visas</p>
+<div class="tabellram"><table>
+<thead><tr><th>Uppgift</th><th>Kapitel</th><th>Indikator</th><th>Figur</th><th>Fördjupning</th></tr></thead>
+<tbody>
+<tr><td>Status</td><td>Översikten, innehållsförteckningen</td><td>Rubrikraden</td><td>Nej</td><td>Nej</td></tr>
+<tr><td>Värde, plats</td><td>Översikten</td><td>Nyckeltalsraden</td><td>Tooltip, tabell</td><td>Nej</td></tr>
+<tr><td>Period</td><td>Metaraden</td><td>Nyckeltalsraden</td><td>Undertiteln</td><td>Nej</td></tr>
+<tr><td>Källa</td><td>Om statistiken</td><td>Nej</td><td>Källraden</td><td>Datakälla</td></tr>
+<tr><td>Definition</td><td>Begreppslistan</td><td>Nej</td><td>Undertiteln</td><td>Vad måttet räknar</td></tr>
+</tbody></table></div>
+
+<!-- 6 -->
+<h2 id="diagram"><span class="nr">6</span>Diagram</h2>
+<p class="dek">Utgångspunkten är kommundatas stora grafer, Tufte och OWID: lite bläck, inga legender, etiketten där linjen slutar. Figuren ska gå att förstå utan att man rör den.</p>
+
+<h3 id="anatomi">Anatomi</h3>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Del</th><th>Spec</th></tr></thead>
+<tbody>
+<tr><td>Titel</td><td>Sans 18 halvfet, högst två rader. Beskrivande. Upprepar aldrig indikatornamnet eller perioden.</td></tr>
+<tr><td>Undertitel</td><td>Sans 15, grå, högst två meningar i fast ordning: mått och enhet. Population, period.</td></tr>
+<tr><td>Flikar</td><td>Visning och nivå, högerställt på desktop, under undertiteln på mobil.</td></tr>
+<tr><td>Etiketter</td><td>Varje serie får sitt namn vid linjeslutet, i seriens färg. Inga legender och inga nyckelrader. Ett band etiketteras där det slutar.</td></tr>
+<tr><td>Plotyta</td><td>Vit platta, inga ramar. Allt inom plotytan.</td></tr>
+<tr><td>Not och källa</td><td>Sans 13 grå. Noter för seriebrott, luckor, dolda värden. Källan som publikation och huvudman.</td></tr>
+<tr><td>Jämför</td><td>"+ Jämför med region" under grafen öppnar en lista. Valda regioner ritas i egen färg med etikett och visas som chips som kan tas bort.</td></tr>
+<tr><td>Åtgärder</td><td>Tabell, Ladda ner (CSV, SVG, PNG), Förstora.</td></tr>
+<tr><td>Fristående</td><td>I förstoring, PowerPoint och galleri står indikatornamnet som kicker över titeln.</td></tr>
+</tbody></table></div>
+<p class="blockrubrik">Titelformler</p>
+<div class="tabellram"><table>
+<thead><tr><th>Visning</th><th>Titel</th><th>Undertitel</th></tr></thead>
+<tbody>
+<tr><td>Över tid, regioner</td><td>Halland jämfört med övriga regioner</td><td>Andel samtal besvarade samma dag, procent. 21 regioner och riket, 2016–2025.</td></tr>
+<tr><td>Över tid, intern</td><td>Mot förväntat intervall</td><td>Andel belagda vårdplatser, procent. Region Halland, per månad apr 2024–mar 2026.</td></tr>
+<tr><td>Över tid, volym</td><td>Över tid</td><td>Antal besök på akutmottagning per månad. Region Halland, apr 2024–mar 2026.</td></tr>
+<tr><td>Rangordning</td><td>Regionerna rangordnade</td><td>Andel samtal besvarade samma dag, procent. 19 regioner med värde, 2025.</td></tr>
+<tr><td>Per enhet</td><td>Per sjukhus</td><td>Andel belagda vårdplatser, procent. Tre sjukhus, apr 2024–mar 2026.</td></tr>
+</tbody></table></div>
+
+<h3 id="serier">Serier, axlar och markörer</h3>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Regel</th><th>Spec</th></tr></thead>
+<tbody>
+<tr><td>Linjer</td><td>Raka mellan punkterna, ingen utjämning, luckor bryter linjen. Halland 2,5 px grön, riket 1,5 px mörk streckad, övriga 0,8 px ljusgrå.</td></tr>
+<tr><td>Inga legender</td><td>Halland, riket, fästa regioner samt högsta och lägsta region etiketteras vid linjeslutet. Etiketterna hålls isär; kopplingslinje bara när en etikett har flyttats.</td></tr>
+<tr><td>Inga zoner</td><td>Topp 3 ritas inte i linjediagrammet. Den visas i rangordningen, som en enda linje under tredje raden.</td></tr>
+<tr><td>Seriebrott</td><td>Ett kort streck på tidsaxeln med texten "ny metod". Förklaringen står i noten. Ingen linje genom plotytan.</td></tr>
+<tr><td>Punkter</td><td>Bara slutpunkten och ensamma värden mellan luckor. Utanför förväntat intervall: triangel eller romb med kort etikett.</td></tr>
+<tr><td>Rutnät och axlar</td><td>Streckat rutnät (4 4). Årtal vid första, vart femte och sista året. Ticks omsluter datan; staplar börjar på noll.</td></tr>
+<tr><td>Hovra</td><td>Pekaren nära en linje lyfter den och visar den i tooltipen tillsammans med Halland och riket. Tooltipen ligger fast i grafens överkant och byter sida bara vid mitten. Grafen ritas aldrig om medan du hovrar.</td></tr>
+<tr><td>Fästa</td><td>Klick på linjen eller dess etikett, eller "+ Jämför med region". Högst fyra, i egna färger. Tangentbord: piltangenter, Enter fäster, Escape stänger.</td></tr>
+</tbody></table></div>
+
+<h3 id="graftyper">Graftyper</h3>
+<p class="prosa">Sju typer byggs nu. Linje och rangordning visas i exemplet under 1.1 ovan: byt flik, hovra över linjerna och klicka på en för att fästa den. Här är de övriga, ritade med akutflödets exempeldata.</p>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Typ</th><th>När</th><th>Regler</th></tr></thead>
+<tbody>
+<tr><td>Linje</td><td>Utveckling över tid, minst fem tidpunkter</td><td>Förval för rankade indikatorer. Halland, riket och övriga regioner. Inga zoner, inga legender.</td></tr>
+<tr><td>Linje mot förväntat</td><td>Intern uppföljning</td><td>Ett band (80 procent) med etikett. Punkter utanför markeras med form och en kort etikett.</td></tr>
+<tr><td>Rangordning</td><td>Läget senaste perioden</td><td>Sorterad bäst till sämst, Halland markerad, riket som streckad linje, topp 3 avgränsad med en linje. Hovra en rad för värdet.</td></tr>
+<tr><td>Stapel över tid</td><td>Volymer</td><td>Nollbaslinje, högst 24 staplar, stapeln dubbelt så bred som mellanrummet.</td></tr>
+<tr><td>Små multiplar</td><td>Samma mått per enhet</td><td>Delad skala, högst 12 paneler. Andelsmått får överordnad nivå som referens i varje panel, etiketterad bara i den första.</td></tr>
+<tr><td>Minidiagram</td><td>Bara i tabeller</td><td>Egen skala per rad, ingen axel. Se Läget i korthet.</td></tr>
+<tr><td>Tabell</td><td>Alternativ till varje graf</td><td>Knappen Tabell i figurens fot.</td></tr>
+<tr><td>Senare</td><td>Hantel, liggande stapel, del av helhet, trattdiagram</td><td>Specificerade, byggs när data kräver det.</td></tr>
+</tbody></table></div>
+
+<figure class="figur" id="fig-bel">
+  <div class="figur-huvud"><div>
+    <h5>Mot förväntat intervall</h5>
+    <p class="undertitel">Andel belagda vårdplatser, procent. Region Halland, per månad apr 2024–mar 2026.</p>
+  </div></div>
+  <div class="plotyta" id="fig-bel-plot" style="margin-top:20px"></div>
+  <div class="fot"><div class="noter"><p>Not: Exempeldata tills den interna kopplingen är på plats.</p><p>Källa: Regionens vårddatalager, Region Halland</p></div></div>
+</figure>
+
+<figure class="figur" id="fig-bes">
+  <div class="figur-huvud"><div>
+    <h5>Över tid</h5>
+    <p class="undertitel">Antal besök på akutmottagning per månad. Region Halland, apr 2024–mar 2026.</p>
+  </div></div>
+  <div class="plotyta" id="fig-bes-plot" style="margin-top:20px"></div>
+  <div class="fot"><div class="noter"><p>Not: Exempeldata tills den interna kopplingen är på plats.</p><p>Källa: Regionens vårddatalager, Region Halland</p></div></div>
+</figure>
+
+<figure class="figur" id="fig-pan">
+  <div class="figur-huvud">
+    <div>
+      <h5>Per sjukhus</h5>
+      <p class="undertitel">Andel belagda vårdplatser, procent. Tre sjukhus, apr 2024–mar 2026.</p>
+    </div>
+    <div class="flikar" role="tablist" aria-label="Nivå">
+      <button role="tab" aria-selected="false" tabindex="-1" data-niva="region">Region Halland</button>
+      <button role="tab" aria-selected="true" data-niva="sjukhus">Per sjukhus</button>
+    </div>
+  </div>
+  <div class="plotyta" id="fig-pan-plot" style="margin-top:20px"></div>
+  <div class="fot"><div class="noter"><p>Not: Exempeldata. Region Halland är referens i varje panel eftersom måttet är en andel.</p><p>Källa: Regionens vårddatalager, Region Halland</p></div></div>
+</figure>
+
+<h3 id="undernivaer">Undernivåer och aggregat</h3>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Regel</th><th>Spec</th></tr></thead>
+<tbody>
+<tr><td>Val</td><td>Nivåfliken i figuren: Region Halland (förval) och Per sjukhus, Per avdelning. Namnet kommer från datan.</td></tr>
+<tr><td>Nedborrning</td><td>Klick på panelens namn gör enheten till fokus. Brödsmula: Region Halland › Hallands sjukhus › Halmstad.</td></tr>
+<tr><td>Aggregatet</td><td>Aldrig en panel bland enheterna. Referenslinje för andels- och medelmått, nämns i undertiteln för summamått.</td></tr>
+<tr><td>Ordning</td><td>Aggregat först, enheter efter värde, övrigt sist.</td></tr>
+<tr><td>Få fall</td><td>Värden under tröskeln skickas inte från R. De visas som .. i tabell och som lucka i grafen, med not.</td></tr>
+</tbody></table></div>
+
+<!-- 7 -->
+<h2 id="tillganglighet"><span class="nr">7</span>Tillgänglighet</h2>
+<p class="dek">Krav före publicering. De flesta prövas automatiskt.</p>
+<div class="tabellram"><table class="spec">
+<thead><tr><th>Krav</th><th>Kontroll</th></tr></thead>
+<tbody>
+<tr><td>Kontrast</td><td>Text minst 4,5:1, budskapsbärande grafik minst 3:1. Test av alla par i tema.ts.</td></tr>
+<tr><td>Färg</td><td>Aldrig enda bäraren: status har ord, serier har etiketter eller streckning.</td></tr>
+<tr><td>Textalternativ</td><td>Varje graf har en textsammanfattning och en tabell.</td></tr>
+<tr><td>Tangentbord</td><td>Allt går att nå och använda; synlig fokusring överallt.</td></tr>
+<tr><td>Hover och fokus</td><td>Tooltip och ruta kan stängas med Escape och försvinner inte av sig själva.</td></tr>
+<tr><td>Klickytor</td><td>Minst 24 × 24 px.</td></tr>
+<tr><td>Zoom och bredd</td><td>Fungerar vid 200 % zoom och 320 px utan vågrät rullning.</td></tr>
+<tr><td>Rubriker</td><td>h1 titel, h2 avsnitt, h3 indikator, h4 figur. Inga hopp.</td></tr>
+<tr><td>Automatisk granskning</td><td>axe utan allvarliga fel på alla sidor.</td></tr>
+</tbody></table></div>
+
+<!-- 8 -->
+<h2 id="granskning"><span class="nr">8</span>Granskningslista</h2>
+<p class="dek">Tio frågor innan något publiceras.</p>
+<div class="tabellram"><table>
+<tbody>
+<tr><td class="tal">1</td><td>Börjar varje nivå med sin slutsats?</td></tr>
+<tr><td class="tal">2</td><td>Visas status, värde, plats, period och källa bara på sin plats?</td></tr>
+<tr><td class="tal">3</td><td>Har varje figur titel, undertitel, källa och vid behov not, utan att upprepa indikatornamn eller period?</td></tr>
+<tr><td class="tal">4</td><td>Stämmer analysens påståenden med datan: plats av antal med värde, rätt jämförelseår, seriebrott nämnda?</td></tr>
+<tr><td class="tal">5</td><td>Inga långa tankstreck, inga undertitlar över två meningar, inga rubriker som frågor?</td></tr>
+<tr><td class="tal">6</td><td>Talformat, decimaler och enheter enligt 3?</td></tr>
+<tr><td class="tal">7</td><td>Finns alla nya facktermer i begreppslistan?</td></tr>
+<tr><td class="tal">8</td><td>Passerar kontrast-, axe- och kontraktstester och skärmdumpsjämförelsen?</td></tr>
+<tr><td class="tal">9</td><td>Fungerar sidan i 360 px, med tangentbord och vid 200 % zoom?</td></tr>
+<tr><td class="tal">10</td><td>Fungerar djuplänken till varje kapitel och indikator?</td></tr>
+</tbody></table></div>
+
+<h2 id="andringar"><span class="nr">B</span>Ändringar mot tidigare regler</h2>
+<p class="dek">Det som ändras jämfört med designen från juni och september, och varför.</p>
+<div class="tabellram"><table>
+<thead><tr><th>Tidigare</th><th>Nu</th><th>Skäl</th></tr></thead>
+<tbody>
+<tr><td>Siffror i mono</td><td>Plex Sans med tabulära siffror</td><td>Mono gav verktygskänsla</td></tr>
+<tr><td>Fokusläge med nedtoning</td><td>Borttaget</td><td>Bröt kontrastkravet och såg avstängt ut</td></tr>
+<tr><td>Om indikatorn och Datakälla före grafen</td><td>Hopfällt efter figuren</td><td>Referensmaterial låg före fynden</td></tr>
+<tr><td>Statusfärgad slutpunkt för Halland</td><td>Grön slutpunkt</td><td>Status syns en gång per indikator</td></tr>
+<tr><td>Utjämnade kurvor</td><td>Raka linjer, luckor syns</td><td>Utjämning hittade på förlopp mellan mätpunkter</td></tr>
+<tr><td>Titel "{Indikator}, Halland jämfört med …"</td><td>Beskrivande titel utan indikatornamn</td><td>Upprepade rubriken</td></tr>
+<tr><td>Legend som prosa i undertiteln</td><td>Inga legender, direkta etiketter</td><td>Tufte och OWID: namnet sitter där linjen slutar</td></tr>
+<tr><td>Grönt topp 3-fält i linjediagrammet</td><td>Inget fält; topp 3 visas i rangordningen</td><td>Ytor i plotytan stjäl uppmärksamhet från linjerna</td></tr>
+<tr><td>Hovring och klick som ritade om hela grafen</td><td>Stabil hovring, fast tooltip, fästa via klick eller lista</td><td>Upplevdes fladdrigt</td></tr>
+<tr><td>Förväntat intervall i två band med streckat förväntat värde</td><td>Ett band</td><td>Mindre bläck; markeringarna bär avvikelserna</td></tr>
+<tr><td>"AI-analys"-märke plus byline</td><td>En proveniensrad</td><td>Dubbelmärkning, märket såg ut som en knapp</td></tr>
+<tr><td>Helhetsvy med alla 80 indikatorer</td><td>Sammanfattningssida</td><td>177 803 px lång</td></tr>
+<tr><td>Tidsväljare med avstängda val</td><td>Väljare i metaraden, bara vid flera val</td><td>Avstängda kontroller är brus</td></tr>
+<tr><td>Gul markör #C28A1E</td><td>#B07A12</td><td>Klarade inte 3:1 mot papper</td></tr>
+<tr><td>Markeringsfärger med orange, ljusblått och rött</td><td>Mörkare orange, lila, brun</td><td>För låg kontrast eller förväxlingsbar med status</td></tr>
+</tbody></table></div>
+</main>
+</div>
+
+<dialog id="dialog" aria-labelledby="dialog-titel">
+  <button class="stang" type="button" id="dialog-stang">Stäng</button>
+  <p class="kick" style="font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text2);margin:0 0 6px">Telefonsamtal till primärvården som besvarats samma dag</p>
+  <h5 id="dialog-titel" style="font:600 18px/1.3 var(--sans);margin:0">Halland jämfört med övriga regioner</h5>
+  <p class="undertitel" style="font:400 15px/1.45 var(--sans);color:var(--text2);margin:4px 0 14px">Andel samtal till primärvården som besvarats samma dag, procent. 21 regioner och riket, 2016–2025.</p>
+  <div class="plotyta" id="dialog-plot"></div>
+  <p class="not" style="margin-top:16px">Källa: Nationella väntetidsdatabasen (Väntetider i vården), SKR</p>
+</dialog>
+
+<div class="popover" id="popover" role="dialog" aria-modal="false" hidden></div>
+
+<script id="data" type="application/json">{"tel":{"namn":"Telefonsamtal till primärvården som besvarats samma dag","senaste":89.8,"rank":7,"rank_av":19,"status":"gul","halland":[[2016,87.6],[2017,95],[2018,90.6],[2019,93.3],[2020,92.8],[2021,93.2],[2022,93.6],[2025,89.8]],"riket":[[2016,87.4],[2017,88.3],[2018,86.7],[2019,88],[2020,90.2],[2021,83.2],[2022,86.3],[2023,87],[2024,87],[2025,88.5]],"topp3":[[2016,93.6,99.8],[2017,95,100],[2018,94,99.9],[2019,93.9,98.4],[2020,94.9,97.2],[2021,92.6,94.9],[2022,94.7,95.5],[2023,88.9,93.7],[2024,91.1,94.2],[2025,93.4,96.1]],"regioner":[{"id":"0001","namn":"Stockholm","v":[[2016,92],[2017,92.5],[2018,90.5],[2019,93.9],[2020,86.8],[2022,84.2]]},{"id":"0003","namn":"Uppsala","v":[[2016,89.6],[2017,88.9],[2018,89.1],[2019,88.2],[2020,86.7],[2021,83.2],[2022,83.5],[2023,80.7],[2024,88.8],[2025,92.3]]},{"id":"0004","namn":"Sörmland","v":[[2016,89.1],[2017,87.8],[2018,88.7],[2019,82.7],[2020,92.4],[2021,80.6],[2022,72.4],[2024,69.7]]},{"id":"0005","namn":"Östergötland","v":[[2016,85.3],[2017,87.9],[2018,81.7],[2019,83.1],[2020,90.7],[2021,76.3],[2022,80.7],[2024,81.2],[2025,84.4]]},{"id":"0006","namn":"Jönköpings län","v":[[2016,99.8],[2017,100],[2018,99.9],[2019,98.4],[2020,97.2],[2021,94.9],[2022,95.5],[2023,93.7],[2024,89.4],[2025,91]]},{"id":"0007","namn":"Kronoberg","v":[[2016,93.2],[2017,94.2],[2018,94],[2019,92.7],[2020,94.5],[2022,87.4],[2024,91.1],[2025,89.3]]},{"id":"0008","namn":"Kalmar","v":[[2016,96.5],[2017,96.7],[2018,95],[2019,92.8],[2020,96.5],[2021,92.6],[2022,92.3],[2024,94.2],[2025,96.1]]},{"id":"0009","namn":"Gotland","v":[[2016,78.3],[2017,87.5],[2018,78.8],[2019,95.1],[2020,92.4],[2021,91.8],[2022,95.2],[2023,86.4],[2024,86.7],[2025,89.4]]},{"id":"0010","namn":"Blekinge","v":[[2016,74.8],[2017,82.8],[2018,82.5],[2019,83.2],[2020,85.7],[2021,72.8],[2022,71.3],[2023,82.3],[2024,80.8],[2025,82.4]]},{"id":"0012","namn":"Skåne","v":[[2016,85.1],[2017,81.4],[2018,78.3],[2019,83.1],[2020,86.2],[2021,84.4],[2022,88.5],[2025,95.2]]},{"id":"0014","namn":"Västra Götalandsregionen","v":[[2016,85.9],[2017,90.9],[2018,88.2],[2019,89.5],[2020,92.9],[2021,88.2],[2022,94.7],[2023,92.1],[2024,92.4],[2025,93.3]]},{"id":"0017","namn":"Värmland","v":[[2016,80.8],[2017,79.6],[2018,81.5],[2019,82.9],[2020,77.2],[2021,73.1],[2022,83.9],[2025,84.1]]},{"id":"0018","namn":"Örebro län","v":[[2016,81.7],[2017,82.3],[2018,83.2],[2019,84.7],[2020,87.9],[2021,80.1],[2022,80.8],[2023,74.6],[2024,74.8],[2025,78.8]]},{"id":"0019","namn":"Västmanland","v":[[2016,89.8],[2017,93.5],[2018,91.8],[2020,91.1],[2021,84.5],[2022,89.8],[2023,88.2],[2024,86.6],[2025,93.4]]},{"id":"0020","namn":"Dalarna","v":[[2016,91.1],[2017,93.2],[2018,90.2],[2019,87.7],[2020,94.9],[2021,88.6],[2022,87.5],[2023,88.9],[2024,87.2],[2025,88.2]]},{"id":"0021","namn":"Gävleborg","v":[[2016,93.6],[2017,91],[2018,89.4],[2019,88.3],[2020,90.3],[2021,83.8],[2022,85.8],[2023,82.7],[2024,86.8],[2025,81.2]]},{"id":"0022","namn":"Västernorrland","v":[[2016,92.3],[2017,86.5],[2018,87.6],[2019,87.7],[2021,83.5],[2022,86.4],[2023,83.6],[2024,81.8],[2025,78.3]]},{"id":"0023","namn":"Jämtland Härjedalen","v":[[2016,81],[2017,86.6],[2018,90.1],[2019,87.5],[2020,89.1],[2021,85.4],[2022,86.1],[2023,85.8],[2024,85.8],[2025,83.7]]},{"id":"0024","namn":"Västerbotten","v":[[2016,80.6],[2017,74.7],[2018,81.7],[2019,78.2],[2020,87.4],[2021,61.5],[2022,76.7],[2023,72.6],[2024,73.1],[2025,66.4]]},{"id":"0025","namn":"Norrbotten","v":[[2016,85.9],[2017,86.9],[2018,89.8],[2019,88.2],[2020,88.7],[2021,79.8],[2022,82.9],[2023,81.5],[2024,78.1],[2025,77.7]]}],"kalla":"Nationella väntetidsdatabasen (Väntetider i vården)","huvudman":"Sveriges Kommuner och Regioner","fakta":{"matt":"Andelen inkommande telefonsamtal till primärvården som besvarats samma dag, redovisat som ett genomsnitt av årets tolv månader.","riktning":"Högre andel är bättre. Tillgänglighetsgarantin innebär att den som söker kontakt med primärvården ska få kontakt samma dag."}},"oversikt":[{"namn":"Primärvårdens tillgänglighet","kpier":[{"id":"kolada-n79179","namn":"Telefonsamtal till primärvården som besvarats samma dag","senaste":89.8,"ar":"2025","rank":7,"rank_av":19,"status":"gul","serie":[[2016,87.6],[2017,95],[2018,90.6],[2019,93.3],[2020,92.8],[2021,93.2],[2022,93.6],[2025,89.8]]},{"id":"kolada-n79173","namn":"Medicinsk bedömning inom tre dagar i primärvård","senaste":87.7,"ar":"2024","rank":8,"rank_av":21,"status":"rod","serie":[[2019,85.5],[2020,80],[2021,83.4],[2022,85.2],[2023,86.6],[2024,87.7]]}]},{"namn":"Vårdgarantin i specialiserad vård","kpier":[{"id":"kolada-n79221","namn":"Väntande högst 90 dagar till första kontakt i specialiserad vård","senaste":87.1,"ar":"2024","rank":2,"rank_av":19,"status":"gron","serie":[[2021,87.6],[2022,87.4],[2023,86.8],[2024,87.1]]},{"id":"kolada-n79222","namn":"Genomförd första kontakt inom högst 90 dagar i specialiserad vård","senaste":92.2,"ar":"2024","rank":2,"rank_av":19,"status":"gron","serie":[[2021,92.7],[2022,92],[2023,91.6],[2024,92.2]]},{"id":"kolada-n79223","namn":"Väntande högst 90 dagar på operation/åtgärd i specialiserad vård","senaste":73.4,"ar":"2024","rank":7,"rank_av":19,"status":"gul","serie":[[2021,79.8],[2022,76.2],[2023,72.8],[2024,73.4]]},{"id":"kolada-n79224","namn":"Genomförd operation/åtgärd inom högst 90 dagar i specialiserad vård","senaste":80.8,"ar":"2024","rank":6,"rank_av":19,"status":"gul","serie":[[2021,81.2],[2022,82.1],[2023,83],[2024,80.8]]}]},{"namn":"Psykiatrisk vård","kpier":[{"id":"kolada-u79049","namn":"Genomförda första besök inom 90 dagar i allmänpsykiatrisk vård","senaste":84.3,"ar":"2025","rank":9,"rank_av":21,"status":"rod","serie":[[2016,85],[2017,88],[2018,98.1],[2019,93],[2020,96.9],[2021,92],[2022,92.5],[2023,89.3],[2024,84.5],[2025,84.3]]},{"id":"kolada-u79119","namn":"Startade utredningar och behandlingar inom 30 dagar i barn- och ungdomspsykiatri","senaste":31.5,"ar":"2025","rank":15,"rank_av":21,"status":"rod","serie":[[2016,74.7],[2017,64.6],[2018,70.1],[2019,60],[2020,61],[2021,91.1],[2022,82.7],[2023,82.9],[2024,69.3],[2025,31.5]]}]},{"namn":"Standardiserade vårdförlopp vid cancer","kpier":[{"id":"kolada-n70643","namn":"Standardiserat vårdförlopp för patienter med cancer","senaste":90,"ar":"2024","rank":6,"rank_av":20,"status":"gul","serie":[[2018,60.7],[2019,80.8],[2020,70.6],[2021,70.5],[2022,78.4],[2023,78.3],[2024,90]]},{"id":"kolada-n79198","namn":"Patienter som genomgått standardiserade vårdförlopp inom den angivna ledtiden (cancervård)","senaste":56,"ar":"2025","rank":3,"rank_av":21,"status":"gron","serie":[[2020,60],[2021,56],[2022,45],[2023,43],[2024,49],[2025,56]]}]}],"besok":{"namn":"Besök akutmottagning","senaste":28700,"total":[["2024-04-01","apr 24",25894],["2024-05-01","maj 24",26014],["2024-06-01","jun 24",24524],["2024-07-01","jul 24",25849],["2024-08-01","aug 24",25869],["2024-09-01","sep 24",25758],["2024-10-01","okt 24",27294],["2024-11-01","nov 24",26798],["2024-12-01","dec 24",28082],["2025-01-01","jan 25",28385],["2025-02-01","feb 25",25814],["2025-03-01","mar 25",28563],["2025-04-01","apr 25",26033],["2025-05-01","maj 25",26621],["2025-06-01","jun 25",25187],["2025-07-01","jul 25",26128],["2025-08-01","aug 25",26663],["2025-09-01","sep 25",26464],["2025-10-01","okt 25",27588],["2025-11-01","nov 25",27513],["2025-12-01","dec 25",32208],["2026-01-01","jan 26",28830],["2026-02-01","feb 26",26350],["2026-03-01","mar 26",28700]],"enheter":[{"namn":"Halmstad","status":"gron","v":[["2024-04-01","apr 24",12209],["2024-05-01","maj 24",12235],["2024-06-01","jun 24",11616],["2024-07-01","jul 24",12232],["2024-08-01","aug 24",12255],["2024-09-01","sep 24",11936],["2024-10-01","okt 24",12780],["2024-11-01","nov 24",12679],["2024-12-01","dec 24",13216],["2025-01-01","jan 25",13404],["2025-02-01","feb 25",12148],["2025-03-01","mar 25",13427],["2025-04-01","apr 25",12157],["2025-05-01","maj 25",12628],["2025-06-01","jun 25",11829],["2025-07-01","jul 25",12301],["2025-08-01","aug 25",12440],["2025-09-01","sep 25",12448],["2025-10-01","okt 25",12850],["2025-11-01","nov 25",12899],["2025-12-01","dec 25",15118],["2026-01-01","jan 26",13591],["2026-02-01","feb 26",12351],["2026-03-01","mar 26",13462]]},{"namn":"Varberg","status":"gron","v":[["2024-04-01","apr 24",7784],["2024-05-01","maj 24",7749],["2024-06-01","jun 24",7311],["2024-07-01","jul 24",7769],["2024-08-01","aug 24",7866],["2024-09-01","sep 24",7734],["2024-10-01","okt 24",8203],["2024-11-01","nov 24",8108],["2024-12-01","dec 24",8357],["2025-01-01","jan 25",8450],["2025-02-01","feb 25",7763],["2025-03-01","mar 25",8561],["2025-04-01","apr 25",7742],["2025-05-01","maj 25",7944],["2025-06-01","jun 25",7639],["2025-07-01","jul 25",7891],["2025-08-01","aug 25",8025],["2025-09-01","sep 25",7993],["2025-10-01","okt 25",8249],["2025-11-01","nov 25",8300],["2025-12-01","dec 25",9692],["2026-01-01","jan 26",8650],["2026-02-01","feb 26",7903],["2026-03-01","mar 26",8600]]},{"namn":"Kungsbacka","status":"gron","v":[["2024-04-01","apr 24",5945],["2024-05-01","maj 24",6053],["2024-06-01","jun 24",5600],["2024-07-01","jul 24",5902],["2024-08-01","aug 24",5913],["2024-09-01","sep 24",5925],["2024-10-01","okt 24",6291],["2024-11-01","nov 24",6162],["2024-12-01","dec 24",6466],["2025-01-01","jan 25",6533],["2025-02-01","feb 25",5967],["2025-03-01","mar 25",6514],["2025-04-01","apr 25",6006],["2025-05-01","maj 25",6093],["2025-06-01","jun 25",5785],["2025-07-01","jul 25",6014],["2025-08-01","aug 25",6101],["2025-09-01","sep 25",6112],["2025-10-01","okt 25",6375],["2025-11-01","nov 25",6309],["2025-12-01","dec 25",7451],["2026-01-01","jan 26",6594],["2026-02-01","feb 26",6081],["2026-03-01","mar 26",6587]]}]},"belagg":{"namn":"Beläggningsgrad","senaste":96.9,"status":"gron","serie":[["2024-04-01","apr 24",92.1,91.7,90.6,92.8,86.8,96.6,"gron"],["2024-05-01","maj 24",89.4,89.2,88.1,90.3,84.3,94.2,"gron"],["2024-06-01","jun 24",87.2,87.7,86.6,88.8,82.7,92.6,"gron"],["2024-07-01","jul 24",87.3,87.7,86.6,88.8,82.8,92.6,"gron"],["2024-08-01","aug 24",87.8,88.4,87.3,89.5,83.5,93.3,"gron"],["2024-09-01","sep 24",89.5,90.2,89.1,91.3,85.2,95.1,"gron"],["2024-10-01","okt 24",93.1,92.5,91.4,93.6,87.6,97.5,"gron"],["2024-11-01","nov 24",94.7,94.8,93.7,95.9,89.8,99.7,"gron"],["2024-12-01","dec 24",95.8,95.9,94.8,97,91,100.9,"gron"],["2025-01-01","jan 25",97.5,97.2,96.1,98.3,92.2,102.1,"gron"],["2025-02-01","feb 25",97.2,97.1,96,98.2,92.1,102,"gron"],["2025-03-01","mar 25",95.9,95.7,94.6,96.8,90.8,100.6,"gron"],["2025-04-01","apr 25",93.2,93.2,92.1,94.3,88.2,98.1,"gron"],["2025-05-01","maj 25",91.5,91.1,90,92.2,86.2,96.1,"gron"],["2025-06-01","jun 25",89.2,89.4,88.3,90.5,84.5,94.3,"gron"],["2025-07-01","jul 25",90.1,89.4,88.3,90.5,84.5,94.4,"gron"],["2025-08-01","aug 25",90,90.1,89,91.2,85.2,95,"gron"],["2025-09-01","sep 25",92.7,91.9,90.8,93,86.9,96.8,"gron"],["2025-10-01","okt 25",95,94.2,93.1,95.3,89.3,99.1,"gron"],["2025-11-01","nov 25",96.1,96.5,95.4,97.6,91.5,101.4,"gron"],["2025-12-01","dec 25",102.3,97.8,96.7,99,92.9,102.8,"gul"],["2026-01-01","jan 26",98.6,98.8,97.7,99.9,93.8,103.7,"gron"],["2026-02-01","feb 26",99.3,98.8,97.7,99.9,93.9,103.8,"gron"],["2026-03-01","mar 26",96.9,97.5,96.4,98.6,92.5,102.4,"gron"]],"enheter":[{"namn":"Halmstad","status":"gron","v":[["2024-04-01","apr 24",94.2],["2024-05-01","maj 24",91.4],["2024-06-01","jun 24",88.9],["2024-07-01","jul 24",88.9],["2024-08-01","aug 24",90],["2024-09-01","sep 24",91.7],["2024-10-01","okt 24",95],["2024-11-01","nov 24",96.2],["2024-12-01","dec 24",97.8],["2025-01-01","jan 25",99.1],["2025-02-01","feb 25",98.8],["2025-03-01","mar 25",98.1],["2025-04-01","apr 25",95.1],["2025-05-01","maj 25",93.4],["2025-06-01","jun 25",91.5],["2025-07-01","jul 25",92.5],["2025-08-01","aug 25",91.7],["2025-09-01","sep 25",94.8],["2025-10-01","okt 25",97.3],["2025-11-01","nov 25",97.9],["2025-12-01","dec 25",104.4],["2026-01-01","jan 26",100.4],["2026-02-01","feb 26",101.5],["2026-03-01","mar 26",98.8]]},{"namn":"Varberg","status":"gron","v":[["2024-04-01","apr 24",90.7],["2024-05-01","maj 24",87.9],["2024-06-01","jun 24",85.6],["2024-07-01","jul 24",85.7],["2024-08-01","aug 24",86.3],["2024-09-01","sep 24",88.2],["2024-10-01","okt 24",91.9],["2024-11-01","nov 24",93.3],["2024-12-01","dec 24",94.7],["2025-01-01","jan 25",95.9],["2025-02-01","feb 25",95.8],["2025-03-01","mar 25",94.5],["2025-04-01","apr 25",91.6],["2025-05-01","maj 25",90.2],["2025-06-01","jun 25",87.6],["2025-07-01","jul 25",89],["2025-08-01","aug 25",88.8],["2025-09-01","sep 25",91],["2025-10-01","okt 25",93.8],["2025-11-01","nov 25",94.4],["2025-12-01","dec 25",100.9],["2026-01-01","jan 26",97],["2026-02-01","feb 26",97.6],["2026-03-01","mar 26",95.1]]},{"namn":"Kungsbacka","status":"gron","v":[["2024-04-01","apr 24",89.1],["2024-05-01","maj 24",86.9],["2024-06-01","jun 24",84.3],["2024-07-01","jul 24",84.7],["2024-08-01","aug 24",84.9],["2024-09-01","sep 24",87],["2024-10-01","okt 24",89.9],["2024-11-01","nov 24",91.5],["2024-12-01","dec 24",92.7],["2025-01-01","jan 25",94.4],["2025-02-01","feb 25",94.2],["2025-03-01","mar 25",92.8],["2025-04-01","apr 25",90.2],["2025-05-01","maj 25",88.7],["2025-06-01","jun 25",86.1],["2025-07-01","jul 25",86.9],["2025-08-01","aug 25",86.6],["2025-09-01","sep 25",89.7],["2025-10-01","okt 25",91.9],["2025-11-01","nov 25",93.5],["2025-12-01","dec 25",98.9],["2026-01-01","jan 26",95.8],["2026-02-01","feb 26",96.1],["2026-03-01","mar 26",93.9]]}]}}</script>
+<script>
+(function () {
+"use strict";
+const D = JSON.parse(document.getElementById("data").textContent);
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const F = {
+  fokus: css("--fokus"), kontext: css("--kontext"), kontextPunkt: css("--kontextPunkt"), kontextAktiv: css("--kontextAktiv"),
+  referens: css("--referens"), f95: css("--f95"), f80: css("--f80"), zon: css("--zon"), anslutning: css("--anslutning"),
+  harlinje: css("--harlinje"), rutnat: css("--rutnat"), nollinje: css("--text3"), text2: css("--text2"), text3: css("--text3"), black: css("--black"), yta: css("--yta"),
+  sGul: css("--s-gul"), sRod: css("--s-rod"), sGron: css("--s-gron"),
+  mark: [css("--m1"), css("--m2"), css("--m3"), css("--m4")]
+};
+const SANS = '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif';
+const NBSP = " ";
+const fmt = (v, dec) => v == null || isNaN(v) ? "–" : Number(v).toLocaleString("sv-SE", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const pct = (v, dec = 1) => v == null ? "–" : fmt(v, dec) + NBSP + "%";
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const mattCtx = document.createElement("canvas").getContext("2d");
+function textbredd(t, px = 13, vikt = 400) { mattCtx.font = vikt + " " + px + "px " + SANS; return mattCtx.measureText(t).width; }
+function skala(d0, d1, r0, r1) { const k = (r1 - r0) / ((d1 - d0) || 1); const f = (v) => r0 + (v - d0) * k; f.inv = (p) => d0 + (p - r0) / k; return f; }
+function ticks(min, max, antal) {
+  const span = (max - min) || 1; let steg = Math.pow(10, Math.floor(Math.log10(span / antal)));
+  const fel = span / antal / steg; if (fel >= 7.5) steg *= 10; else if (fel >= 3.5) steg *= 5; else if (fel >= 1.5) steg *= 2;
+  const lo = Math.floor(min / steg) * steg, hi = Math.ceil(max / steg) * steg; const t = [];
+  for (let v = lo; v <= hi + steg / 2; v += steg) t.push(Math.round(v * 1e6) / 1e6); return t;
+}
+function stig(pts, x, y) {
+  let d = ""; const ensamma = [];
+  for (let i = 0; i < pts.length; i++) {
+    const v = pts[i][1]; if (v == null) continue;
+    const fore = i > 0 && pts[i - 1][1] != null, efter = i < pts.length - 1 && pts[i + 1][1] != null;
+    if (!fore && !efter) ensamma.push(pts[i]);
+    d += (fore ? "L" : "M") + x(pts[i][0]).toFixed(1) + "," + y(v).toFixed(1);
+  }
+  return { d, ensamma };
+}
+function losEtiketter(lista, min, max, avstand = 16) {
+  lista.sort((a, b) => a.y0 - b.y0); lista.forEach((e) => (e.y = e.y0));
+  for (let varv = 0; varv < 20; varv++) {
+    let flyttat = false;
+    for (let i = 1; i < lista.length; i++) { const diff = lista[i].y - lista[i - 1].y; if (diff < avstand) { const m = (avstand - diff) / 2; lista[i - 1].y -= m; lista[i].y += m; flyttat = true; } }
+    lista.forEach((e) => { e.y = Math.max(min, Math.min(max, e.y)); });
+    if (!flyttat) break;
+  }
+  return lista;
+}
+function symbol(roll, farg) {
+  const w = 16, h = 12, m = h / 2;
+  if (roll === "fokus") return '<svg viewBox="0 0 16 12" aria-hidden="true"><line x1="0" y1="' + m + '" x2="16" y2="' + m + '" stroke="' + F.fokus + '" stroke-width="2.5"/></svg>';
+  if (roll === "referens") return '<svg viewBox="0 0 16 12" aria-hidden="true"><line x1="0" y1="' + m + '" x2="16" y2="' + m + '" stroke="' + F.referens + '" stroke-width="1.5" stroke-dasharray="6 4"/></svg>';
+  if (roll === "kontext") return '<svg viewBox="0 0 16 12" aria-hidden="true"><line x1="0" y1="' + m + '" x2="16" y2="' + m + '" stroke="' + F.kontext + '" stroke-width="1.5"/></svg>';
+  if (roll === "zon") return '<svg viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="1" width="16" height="10" fill="' + F.zon + '" stroke="' + F.harlinje + '"/></svg>';
+  if (roll === "forvantat") return '<svg viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="2" width="16" height="8" fill="' + F.f95 + '"/></svg>';
+  if (roll === "rutnat") return '<svg viewBox="0 0 16 12" aria-hidden="true"><line x1="0" y1="' + m + '" x2="16" y2="' + m + '" stroke="' + F.rutnat + '" stroke-width="1" stroke-dasharray="4 4"/></svg>';
+  if (roll === "yhat") return '<svg viewBox="0 0 16 12" aria-hidden="true"><line x1="0" y1="' + m + '" x2="16" y2="' + m + '" stroke="' + F.text3 + '" stroke-width="1" stroke-dasharray="2 3"/></svg>';
+  if (roll === "bevaka") return '<svg viewBox="0 0 16 12" aria-hidden="true"><path d="M8 2 L13 10 L3 10 Z" fill="' + F.sGul + '"/></svg>';
+  if (roll === "avvikelse") return '<svg viewBox="0 0 16 12" aria-hidden="true"><path d="M8 1 L13 6 L8 11 L3 6 Z" fill="' + F.sRod + '"/></svg>';
+  if (roll === "markerad") return '<svg viewBox="0 0 16 12" aria-hidden="true"><line x1="0" y1="' + m + '" x2="16" y2="' + m + '" stroke="' + farg + '" stroke-width="2"/></svg>';
+  return "";
+}
+function nyckel(el, poster) { el.innerHTML = poster.map((p) => "<span>" + symbol(p[0], p[2]) + esc(p[1]) + (p[3] ? ' <button class="begrepp" data-begrepp="' + p[3] + '" aria-expanded="false" aria-label="Förklara ' + esc(p[1]) + '">ⓘ</button>' : "") + "</span>").join(""); }
+
+/* ── Färgprover ── */
+const textf = [["papper", "#FBFBF9", "Sidans bakgrund", null], ["yta", "#FFFFFF", "Figurplatta, rutor", null], ["black", "#1A1A1A", "Rubriker, brödtext", "16,8 / 17,4"], ["text2", "#4A4F4C", "Undertitel, sekundärt", "8,1 / 8,4"], ["text3", "#6B716D", "Not, källa, axeltext", "4,8 / 5,0"], ["harlinje", "#E6E6E1", "Rutnät, tabellrader", null], ["fokus", "#00664D", "Halland, länkar, nummer", "6,7 / 7,0"], ["fokusLjus", "#E9F2EE", "Vald rad", null]];
+document.getElementById("textfarger").innerHTML = textf.map((t) => '<div class="prov"><div class="yta" style="background:' + t[1] + '"></div><b>' + t[0] + "</b><span>" + t[1] + " · " + t[2] + "</span>" + (t[3] ? "<span>Kontrast " + t[3] + "</span>" : "") + "</div>").join("");
+const linjer = [["fokus", "Halland eller vald enhet · 2,5 px, grön slutpunkt"], ["referens", "Riket eller överordnad nivå · 1,5 px streckad 6 4"], ["kontext", "Övriga regioner eller enheter · 0,8 px, ljusgrå"], ["markerad", "Fästa serier · 2 px, högst fyra: blå, orange, lila, brun", F.mark[0]], ["forvantat", "Förväntat intervall · ett band, 80 procent"], ["rutnat", "Rutnät · 0,8 px streckat 4 4, som i kommundata och OWID"], ["bevaka", "Punkt utanför intervallet · Bevaka"], ["avvikelse", "Punkt långt utanför (95 procent) · Avvikelse"]];
+document.getElementById("linjeprov").innerHTML = linjer.map((l) => symbol(l[0], l[2]).replace("<svg ", '<svg width="64" height="16" ') + "<span>" + esc(l[1]) + "</span>").join("") +
+  '<span style="display:flex;gap:4px">' + F.mark.map((c) => '<i style="display:block;width:14px;height:14px;background:' + c + '"></i>').join("") + "</span><span>Markeringsfärger i ordning, alla minst 3,5:1 mot vitt</span>";
+document.getElementById("rumskala").innerHTML = [4, 8, 12, 16, 24, 32, 48, 64, 96, 128].map((v, i) => "<div><span>rum." + (i + 1) + " · " + v + '</span><i style="width:' + v * 2 + 'px;max-width:100%"></i></div>').join("");
+
+/* ── Fakta ── */
+const T = D.tel;
+document.getElementById("fakta-matt").textContent = T.fakta.matt;
+document.getElementById("fakta-avgr").textContent = "Mäter om samtalet besvarats, inte vad som hände sedan. Ett besvarat samtal kan sluta med en tid långt fram eller med en hänvisning vidare.";
+document.getElementById("fakta-riktning").textContent = T.fakta.riktning;
+document.getElementById("fakta-teori").textContent = "Telefonen är primärvårdens tröskel och måttet är det första ledet i vårdgarantins kedja. Det som mäts är teknisk åtkomst, inte medicinsk bedömning. Måttet ska därför läsas tillsammans med den medicinska bedömningen inom tre dagar.";
+const faktorer = [["Källbyte 2024", "Från och med 2024 mäts telefontillgängligheten på ett nytt sätt, med månadsvis rapportering till den nationella väntetidsdatabasen."], ["Teknisk lösning", "Återuppringningsfunktion och kösystem påverkar talet direkt."], ["Digitala ingångar", "Chatt och e-tjänster avlastar telefonen, men de samtal som blir kvar är ofta mer komplexa."], ["Bemanning i slussen", "Mätningen avser samma arbetsdag. Bemanningen i telefonslussen är avgörande för utfallet."], ["Årsvärdet är ett medelvärde", "Talet är ett genomsnitt av tolv månader. Enstaka bortfallsmånader kan påverka årets värde."]];
+document.getElementById("fakta-faktorer").innerHTML = faktorer.map((f) => "<li><b>" + esc(f[0]) + "</b>" + esc(f[1]) + "</li>").join("");
+
+/* ── Begrepp ── */
+const BEGREPP = {
+  topp3: ["Topp 3", "De tre regioner som har bäst värde ett visst år. Att ligga där är rapportens mål för rankade indikatorer och ger statusen I fas."],
+  rikssnitt: ["Rikssnitt", "Värdet för hela riket, beräknat på alla regioners underlag tillsammans. Det är inte ett medelvärde av regionernas värden."],
+  forvantat: ["Förväntat intervall", "Det spann där värdet borde hamna om inget ovanligt har hänt, beräknat ur tidigare perioder. Värden utanför spannet markeras."]
+};
+const pop = document.getElementById("popover"); let oppen = null;
+function stangPop(aterFokus) { if (!oppen) return; oppen.setAttribute("aria-expanded", "false"); pop.hidden = true; if (aterFokus) oppen.focus(); oppen = null; }
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".begrepp");
+  if (b) {
+    e.preventDefault();
+    if (oppen === b) { stangPop(false); return; }
+    stangPop(false);
+    const def = BEGREPP[b.dataset.begrepp]; if (!def) return;
+    pop.innerHTML = "<b>" + esc(def[0]) + "</b>" + esc(def[1]) + '<span class="not">Mer i begreppslistan</span>';
+    pop.hidden = false; const r = b.getBoundingClientRect();
+    const left = Math.max(16, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - pop.offsetWidth - 16));
+    pop.style.left = left + "px"; pop.style.top = (r.bottom + window.scrollY + 8) + "px";
+    b.setAttribute("aria-expanded", "true"); oppen = b; return;
+  }
+  if (oppen && !pop.contains(e.target)) stangPop(false);
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && oppen) { stangPop(true); e.stopPropagation(); } });
+
+/* ── Tidsdiagram: telefontillgänglighet ──
+   Grundbygget efter kommundatas storgrafer (OWID-stil): streckat rutnät, hårfina
+   bakgrundslinjer, riket streckat, Halland grönt, allt etiketterat vid linjeslut.
+   Statiska lager ritas en gång per tillståndsändring (fästa serier, storlek).
+   Hovring ritar bara om ett överlägg, aldrig hela grafen. */
+const AR = []; for (let a = 2016; a <= 2025; a++) AR.push(a);
+const tillAr = (par) => { const m = new Map(par); return AR.map((a) => [a, m.has(a) ? m.get(a) : null]); };
+const halland = { id: "0013", namn: "Halland", pts: tillAr(T.halland) };
+const riket = { id: "0000", namn: "Riket", pts: tillAr(T.riket) };
+const regioner = T.regioner.map((r) => ({ id: r.id, namn: r.namn.replace("Västra Götalandsregionen", "Västra Götaland"), pts: tillAr(r.v) }));
+const allaRegioner = [halland, ...regioner];
+const SERIEBROTT = 2024;
+function platsAr(ar) {
+  const v = allaRegioner.map((r) => [r.id, r.pts[AR.indexOf(ar)][1]]).filter((p) => p[1] != null).sort((a, b) => b[1] - a[1]);
+  const plats = new Map(); v.forEach((p) => plats.set(p[0], v.findIndex((q) => q[1] === p[1]) + 1));
+  return { plats, n: v.length };
+}
+const vardeVid = (s, ar) => s.pts[AR.indexOf(ar)][1];
+const serieAv = (id) => id === "0013" ? halland : id === "0000" ? riket : regioner.find((r) => r.id === id);
+const arRegion = (id) => id && id !== "0013" && id !== "0000";
+function vardeVidX(s, arF) {
+  const a0 = Math.floor(arF), a1 = Math.ceil(arF), i0 = AR.indexOf(a0), i1 = AR.indexOf(a1);
+  if (i0 < 0 || i1 < 0) return null;
+  const v0 = s.pts[i0][1], v1 = s.pts[i1][1];
+  if (a0 === a1) return v0;
+  if (v0 != null && v1 != null) return v0 + (v1 - v0) * (arF - a0);
+  const nar = Math.round(arF); return Math.abs(arF - nar) < 0.3 ? s.pts[AR.indexOf(nar)][1] : null;
+}
+function vaxlaFast(st, id) { const i = st.fasta.indexOf(id); if (i >= 0) st.fasta.splice(i, 1); else { if (st.fasta.length >= 4) st.fasta.shift(); st.fasta.push(id); } }
+const tillstand = { vy: "tid", fasta: [] };
+const txt = (x, y, t, o = {}) => '<text x="' + x + '" y="' + y + '"' + (o.anchor ? ' text-anchor="' + o.anchor + '"' : "") + ' font-size="' + (o.size || 13) + '" font-weight="' + (o.vikt || 400) + '" fill="' + (o.farg || F.text3) + '" font-family=\'' + SANS + '\' style="font-variant-numeric:tabular-nums' + (o.halo ? ";paint-order:stroke;stroke:" + F.yta + ";stroke-width:4px;stroke-linejoin:round" : "") + (o.cursor ? ";cursor:" + o.cursor : "") + '"' + (o.attr || "") + ">" + esc(t) + "</text>";
+
+function skapaTidsdiagram(el, st, omrita, liveId) {
+  let aktiv = { ar: null, id: null };
+  let geo = null, tryckt = null;
+  const farg = (id) => id === "0013" ? F.fokus : id === "0000" ? F.referens : st.fasta.includes(id) ? F.mark[st.fasta.indexOf(id)] : F.kontextAktiv;
+
+  function bygg() {
+    const W = el.clientWidth; if (!W) return;
+    const H = Math.max(260, Math.min(420, W * 0.52)), smal = W < 560;
+    let ymin = Infinity, ymax = -Infinity;
+    [halland, riket, ...regioner].forEach((s) => s.pts.forEach((p) => { if (p[1] != null) { ymin = Math.min(ymin, p[1]); ymax = Math.max(ymax, p[1]); } }));
+    const yt = ticks(ymin, ymax, smal ? 4 : 5);
+    const vl = Math.max(...yt.map((t) => textbredd(fmt(t, 0) + NBSP + "%", 13))) + 12;
+    const sist = 2025;
+    const medVarde = regioner.filter((r) => vardeVid(r, sist) != null).sort((a, b) => vardeVid(b, sist) - vardeVid(a, sist));
+    const etik = [{ id: "0013", text: "Halland", farg: F.fokus, vikt: 600 }, { id: "0000", text: "Riket", farg: F.referens, vikt: 400 }];
+    st.fasta.forEach((id, i) => etik.push({ id, text: serieAv(id).namn, farg: F.mark[i], vikt: 600 }));
+    [medVarde[0], medVarde[medVarde.length - 1]].forEach((r) => { if (r && !st.fasta.includes(r.id)) etik.push({ id: r.id, text: r.namn, farg: F.text3, vikt: 400 }); });
+    etik.forEach((e) => { e.full = e.text; if (smal && e.text.length > 11) e.text = e.text.slice(0, 10) + "…"; });
+    const hm = Math.min(W * 0.34, Math.max(...etik.map((e) => textbredd(e.text, 13, e.vikt))) + 34);
+    const m = { t: 12, r: hm, b: 34, l: vl };
+    const x = skala(2016, 2025, m.l, W - m.r), y = skala(yt[0], yt[yt.length - 1], H - m.b, m.t);
+    geo = { W, H, m, x, y, smal, etik };
+    let s = '<svg width="' + W + '" height="' + H + '" role="img" tabindex="0" aria-label="' + esc(sammanfattningTel()) + '">';
+    // rutnät och y-axel
+    yt.forEach((t) => {
+      s += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="' + F.rutnat + '" stroke-width=".8" stroke-dasharray="4 4"/>';
+      s += txt(m.l - 10, y(t) + 4.5, fmt(t, 0) + NBSP + "%", { anchor: "end" });
+    });
+    // x-axel: baslinje, korta streck, första, var femte och sista året
+    s += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + (H - m.b) + '" y2="' + (H - m.b) + '" stroke="' + F.rutnat + '"/>';
+    const xar = AR.filter((a) => a === 2016 || a === 2025 || a % 5 === 0);
+    xar.forEach((a) => { s += '<line x1="' + x(a) + '" x2="' + x(a) + '" y1="' + (H - m.b) + '" y2="' + (H - m.b + 5) + '" stroke="' + F.rutnat + '"/>' + txt(x(a), H - m.b + 20, String(a), { anchor: "middle" }); });
+    // seriebrott: bara ett märke på tidsaxeln, förklaringen står i noten
+    s += '<path d="M' + x(SERIEBROTT) + "," + (H - m.b - 4) + "V" + (H - m.b + 5) + '" stroke="' + F.text3 + '" stroke-width="1.5"/>';
+    if (x(2025) - x(2024) > 64) s += txt(x(SERIEBROTT), H - m.b + 20, "ny metod", { anchor: "middle", size: 12 });
+    // bakgrundslinjer
+    regioner.forEach((r) => {
+      if (st.fasta.includes(r.id)) return;
+      const p = stig(r.pts, x, y);
+      s += '<path d="' + p.d + '" fill="none" stroke="' + F.kontext + '" stroke-width=".8"/>';
+    });
+    // riket
+    s += '<path d="' + stig(riket.pts, x, y).d + '" fill="none" stroke="' + F.referens + '" stroke-width="1.5" stroke-dasharray="6 4"/>';
+    s += '<circle cx="' + x(sist) + '" cy="' + y(vardeVid(riket, sist)) + '" r="3" fill="' + F.referens + '"/>';
+    // fästa regioner
+    st.fasta.forEach((id, i) => {
+      const r = serieAv(id), p = stig(r.pts, x, y);
+      s += '<path d="' + p.d + '" fill="none" stroke="' + F.mark[i] + '" stroke-width="2"/>';
+      p.ensamma.forEach((q) => { s += '<circle cx="' + x(q[0]) + '" cy="' + y(q[1]) + '" r="2.5" fill="' + F.mark[i] + '"/>'; });
+      const v = vardeVid(r, sist); if (v != null) s += '<circle cx="' + x(sist) + '" cy="' + y(v) + '" r="3" fill="' + F.mark[i] + '"/>';
+    });
+    // halland
+    const ph = stig(halland.pts, x, y);
+    s += '<path d="' + ph.d + '" fill="none" stroke="' + F.fokus + '" stroke-width="2.5" stroke-linejoin="round"/>';
+    ph.ensamma.forEach((q) => { if (q[0] !== sist) s += '<circle cx="' + x(q[0]) + '" cy="' + y(q[1]) + '" r="3" fill="' + F.fokus + '"/>'; });
+    s += '<circle cx="' + x(sist) + '" cy="' + y(vardeVid(halland, sist)) + '" r="4.5" fill="' + F.fokus + '"/>';
+    // etiketter vid linjeslut; kopplingslinje bara när etiketten flyttats
+    const lista = etik.filter((e) => vardeVid(serieAv(e.id), sist) != null).map((e) => Object.assign(e, { y0: y(vardeVid(serieAv(e.id), sist)) }));
+    losEtiketter(lista, m.t + 4, H - m.b, 17);
+    const ex = x(sist) + 8;
+    lista.forEach((e) => {
+      s += '<path d="M' + (x(sist) + 6) + "," + e.y0 + "H" + (ex + 4) + "V" + e.y + "H" + (ex + 10) + '" fill="none" stroke="' + F.anslutning + '" stroke-width=".6"/>';
+      s += txt(ex + 13, e.y + 4.5, e.text, { farg: e.farg, vikt: e.vikt, attr: ' data-etikett="' + e.id + '"', cursor: arRegion(e.id) ? "pointer" : "default" });
+    });
+    s += '<g class="ov" pointer-events="none"></g>';
+    s += '<rect class="traff" x="' + m.l + '" y="0" width="' + (W - m.l - m.r + 6) + '" height="' + (H - m.b + 6) + '" fill="transparent"/>';
+    el.innerHTML = s + '</svg><div class="tooltip" hidden></div>';
+    koppla();
+    overlagg();
+  }
+
+  function overlagg() {
+    if (!geo) return;
+    const ov = el.querySelector(".ov"), tt = el.querySelector(".tooltip"), svg = el.querySelector("svg");
+    if (aktiv.ar == null) { ov.innerHTML = ""; tt.hidden = true; svg.style.cursor = "default"; return; }
+    const { x, y, m, H, W } = geo, ar = aktiv.ar;
+    let s = '<line x1="' + x(ar) + '" x2="' + x(ar) + '" y1="' + m.t + '" y2="' + (H - m.b) + '" stroke="' + F.text3 + '" stroke-opacity=".35"/>';
+    const lyft = aktiv.id && arRegion(aktiv.id) && !st.fasta.includes(aktiv.id) ? serieAv(aktiv.id) : null;
+    if (lyft) {
+      s += '<path d="' + stig(lyft.pts, x, y).d + '" fill="none" stroke="' + F.kontextAktiv + '" stroke-width="1.75"/>';
+      const sistDef = lyft.pts.filter((p) => p[1] != null).pop();
+      if (sistDef && !geo.etik.some((e) => e.id === lyft.id)) s += txt(x(sistDef[0]) + (sistDef[0] === 2025 ? 21 : 8), y(sistDef[1]) + 4.5, lyft.namn, { farg: F.black, vikt: 600, halo: true });
+    }
+    const visas = ["0013", "0000", ...st.fasta]; if (lyft) visas.push(lyft.id);
+    visas.forEach((id) => { const v = vardeVid(serieAv(id), ar); if (v != null) s += '<circle cx="' + x(ar) + '" cy="' + y(v) + '" r="4" fill="' + farg(id) + '" stroke="' + F.yta + '" stroke-width="1.5"/>'; });
+    ov.innerHTML = s;
+    svg.style.cursor = lyft || (aktiv.id && st.fasta.includes(aktiv.id)) ? "pointer" : "default";
+    // tooltip: fast höjd i plotytans överkant, byter sida bara vid mitten
+    const pl = platsAr(ar);
+    const rader = visas.map(serieAv).filter((r) => vardeVid(r, ar) != null).sort((a, b) => vardeVid(b, ar) - vardeVid(a, ar));
+    let h = "<b>" + ar + (ar >= SERIEBROTT ? ' <span style="font-weight:400;color:var(--text3)">· ny metod</span>' : "") + "</b><table>";
+    h += rader.map((r) => {
+      const fet = r.id === aktiv.id || (r.id === "0013" && !aktiv.id);
+      return "<tr" + (fet ? ' style="font-weight:600"' : "") + '><td><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + farg(r.id) + ';margin-right:6px"></i>' + esc(r.namn) + '</td><td class="tal" style="color:var(--black)">' + pct(vardeVid(r, ar)) + "</td><td>" + (r.id === "0000" ? "" : pl.plats.get(r.id) + " av " + pl.n) + "</td></tr>";
+    }).join("") + "</table>";
+    if (vardeVid(halland, ar) == null) h += '<span class="not">Inget värde för Halland ' + ar + "</span>";
+    if (lyft) h += '<span class="not">Klicka för att visa ' + esc(lyft.namn) + " i grafen</span>";
+    else if (aktiv.id && st.fasta.includes(aktiv.id)) h += '<span class="not">Klicka för att ta bort</span>';
+    tt.innerHTML = h; tt.hidden = false;
+    const vx = x(ar), tw = tt.offsetWidth;
+    tt.style.left = (vx > (m.l + W - m.r) / 2 ? Math.max(0, vx - 16 - tw) : vx + 16) + "px";
+    tt.style.top = m.t + "px";
+    const live = liveId && document.getElementById(liveId);
+    if (live) live.textContent = ar + ": " + rader.map((r) => r.namn + " " + pct(vardeVid(r, ar))).join(", ");
+  }
+
+  function avstand(s, px, py) {
+    const { x, y } = geo; let bast = Infinity;
+    for (let i = 0; i < AR.length; i++) {
+      const v = s.pts[i][1]; if (v == null) continue;
+      const x0 = x(AR[i]), y0 = y(v), nv = i + 1 < AR.length ? s.pts[i + 1][1] : null;
+      const fore = i > 0 && s.pts[i - 1][1] != null;
+      if (nv != null) {
+        const x1 = x(AR[i + 1]), y1 = y(nv), dx = x1 - x0, dy = y1 - y0;
+        const t = Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / (dx * dx + dy * dy || 1)));
+        bast = Math.min(bast, Math.hypot(px - (x0 + t * dx), py - (y0 + t * dy)));
+      } else if (!fore) bast = Math.min(bast, Math.hypot(px - x0, py - y0));
+    }
+    return bast;
+  }
+  function narmast(px, py) {
+    const d = new Map(); let bast = null, bastD = Infinity;
+    [halland, riket, ...regioner].forEach((s) => {
+      const dd = avstand(s, px, py) - (arRegion(s.id) && !st.fasta.includes(s.id) ? 0 : 2);
+      d.set(s.id, dd); if (dd < bastD) { bastD = dd; bast = s.id; }
+    });
+    const nu = aktiv.id, nuD = nu != null ? d.get(nu) : undefined;
+    if (nuD != null && nuD <= 14 && bastD > nuD - 4) return nu;
+    return bastD <= 8 ? bast : null;
+  }
+  function satt(ar, id) { if (ar === aktiv.ar && id === aktiv.id) return; aktiv = { ar, id }; overlagg(); }
+  function vaxla(id) { if (!arRegion(id)) return; vaxlaFast(st, id); omrita(); }
+
+  function koppla() {
+    const svg = el.querySelector("svg"), traff = el.querySelector(".traff");
+    const lage = (e) => { const b = svg.getBoundingClientRect(); const px = e.clientX - b.left, py = e.clientY - b.top; const arF = Math.max(2016, Math.min(2025, geo.x.inv(px))); return { ar: Math.round(arF), id: narmast(px, py) }; };
+    traff.addEventListener("pointermove", (e) => { if (e.pointerType === "touch") return; const l = lage(e); satt(l.ar, l.id); });
+    traff.addEventListener("pointerleave", (e) => { if (e.pointerType === "touch" || svg.matches(":focus-visible")) return; satt(null, null); });
+    traff.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse") { e.preventDefault(); return; }
+      if (e.pointerType !== "touch") return;
+      const l = lage(e);
+      if (l.id && l.id === tryckt && arRegion(l.id)) { tryckt = null; vaxla(l.id); return; }
+      tryckt = l.id; satt(l.ar, l.id);
+    });
+    traff.addEventListener("click", (e) => { if (e.pointerType === "touch") return; if (aktiv.id) vaxla(aktiv.id); });
+    el.querySelectorAll("[data-etikett]").forEach((t) => {
+      const id = t.getAttribute("data-etikett");
+      t.addEventListener("pointerenter", () => satt(2025, id));
+      t.addEventListener("pointerleave", () => satt(null, null));
+      t.addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse") e.preventDefault(); });
+      t.addEventListener("click", () => vaxla(id));
+    });
+    svg.addEventListener("focus", () => { if (aktiv.ar == null) satt(2025, "0013"); });
+    svg.addEventListener("blur", () => satt(null, null));
+    svg.addEventListener("keydown", (e) => {
+      const ar = aktiv.ar ?? 2025;
+      const ordning = () => ["0013", "0000", ...st.fasta, ...regioner.filter((r) => !st.fasta.includes(r.id) && vardeVid(r, ar) != null).sort((a, b) => vardeVid(b, ar) - vardeVid(a, ar)).map((r) => r.id)];
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") satt(Math.max(2016, Math.min(2025, ar + (e.key === "ArrowRight" ? 1 : -1))), aktiv.id ?? "0013");
+      else if (e.key === "Home" || e.key === "End") satt(e.key === "Home" ? 2016 : 2025, aktiv.id ?? "0013");
+      else if (e.key === "ArrowDown" || e.key === "ArrowUp") { const o = ordning(); const i = Math.max(0, o.indexOf(aktiv.id ?? "0013")); satt(ar, o[(i + (e.key === "ArrowDown" ? 1 : o.length - 1)) % o.length]); }
+      else if (e.key === "Enter" && arRegion(aktiv.id)) { vaxla(aktiv.id); el.querySelector("svg").focus(); }
+      else if (e.key === "Escape" && aktiv.ar != null) satt(null, null);
+      else return;
+      e.preventDefault();
+    });
+  }
+  return { bygg, nollstall: () => { aktiv = { ar: null, id: null }; } };
+}
+function sammanfattningTel() { return "Linjediagram som visar andelen telefonsamtal till primärvården som besvarats samma dag för Halland 2016–2025. Senaste värde 89,8 procent, plats 7 av 19. Värden saknas 2023 och 2024."; }
+
+/* ── Rangordning 2025: punktdiagram, topp 3 avgränsas med en enda linje ── */
+function ritaRang(el, st) {
+  const W = el.clientWidth; if (!W) return;
+  const ar = 2025;
+  const rader = allaRegioner.filter((r) => vardeVid(r, ar) != null).map((r) => ({ id: r.id, namn: r.namn, v: vardeVid(r, ar) })).sort((a, b) => b.v - a.v);
+  const radH = W < 640 ? 22 : 24;
+  const vl = Math.max(...rader.map((r) => textbredd(r.namn, 13, r.id === "0013" ? 600 : 400))) + 16;
+  const m = { t: 26, r: 70, b: 30, l: vl }, H = m.t + rader.length * radH + m.b;
+  const xt = ticks(Math.min(...rader.map((r) => r.v)), Math.max(...rader.map((r) => r.v)), W < 640 ? 3 : 5);
+  const x = skala(xt[0], xt[xt.length - 1], m.l, W - m.r), yr = (i) => m.t + i * radH + radH / 2;
+  let s = '<svg width="' + W + '" height="' + H + '" role="img" aria-label="Punktdiagram med regionerna rangordnade efter andel besvarade samtal 2025. Halland ligger på plats 7 av 19 med 89,8 procent.">';
+  xt.forEach((t) => { s += '<line x1="' + x(t) + '" x2="' + x(t) + '" y1="' + m.t + '" y2="' + (H - m.b) + '" stroke="' + F.rutnat + '" stroke-width=".8" stroke-dasharray="4 4"/>' + txt(x(t), H - 10, fmt(t, 0) + NBSP + "%", { anchor: "middle" }); });
+  const rv = vardeVid(riket, ar);
+  s += '<line x1="' + x(rv) + '" x2="' + x(rv) + '" y1="' + (m.t - 8) + '" y2="' + (H - m.b) + '" stroke="' + F.referens + '" stroke-width="1.5" stroke-dasharray="6 4"/>' + txt(x(rv), m.t - 12, "Riket " + pct(rv), { anchor: "middle", farg: F.referens });
+  const gy = m.t + 3 * radH;
+  s += '<line x1="' + (m.l - vl + 4) + '" x2="' + (W - m.r + 60) + '" y1="' + gy + '" y2="' + gy + '" stroke="' + F.text3 + '" stroke-width=".8"/>' + txt(W - 4, gy - 6, "topp 3", { anchor: "end", size: 12 });
+  rader.forEach((r, i) => {
+    const h = r.id === "0013", fi = st.fasta.indexOf(r.id), f = h ? F.fokus : fi >= 0 ? F.mark[fi] : F.kontextPunkt, yy = yr(i);
+    s += '<g class="rad"><rect x="0" y="' + (yy - radH / 2) + '" width="' + W + '" height="' + radH + '" fill="transparent"/>';
+    s += txt(m.l - 12, yy + 4.5, r.namn, { anchor: "end", vikt: h || fi >= 0 ? 600 : 400, farg: h || fi >= 0 ? f : F.text2 });
+    s += '<circle cx="' + x(r.v) + '" cy="' + yy + '" r="' + (h ? 5.5 : 4.5) + '" fill="' + f + '"/>';
+    s += '<text class="' + (h || fi >= 0 ? "" : "v") + '" x="' + (x(r.v) + 10) + '" y="' + (yy + 4.5) + '" font-size="13" font-weight="' + (h ? 600 : 400) + '" fill="' + f + '" font-family=\'' + SANS + '\' style="font-variant-numeric:tabular-nums">' + pct(r.v) + "</text></g>";
+  });
+  el.innerHTML = s + "</svg>";
+}
+
+/* ── Tabellvy ── */
+function ritaTabell(el) {
+  const sorterade = [...regioner].sort((a, b) => (vardeVid(b, 2025) ?? -1) - (vardeVid(a, 2025) ?? -1));
+  const rader = [halland, riket, ...sorterade];
+  let h = '<div class="tabellram"><table><caption>Halland jämfört med övriga regioner, andel i procent</caption><thead><tr><th>Region</th>' + AR.map((a) => '<th class="tal">' + a + "</th>").join("") + "</tr></thead><tbody>";
+  h += rader.map((r) => "<tr" + (r.id === "0013" ? ' style="font-weight:600"' : "") + "><td>" + esc(r.namn) + "</td>" + r.pts.map((p) => '<td class="tal">' + fmt(p[1], 1) + "</td>").join("") + "</tr>").join("");
+  el.innerHTML = h + "</tbody></table></div>";
+}
+
+/* ── Jämför med region: lista att välja ur + valda som chips ── */
+function jamforRad(el, st, omrita) {
+  const alfa = [...regioner].sort((a, b) => a.namn.localeCompare(b.namn, "sv"));
+  let h = '<div class="valjare"><button type="button" class="jamfor-knapp" aria-expanded="false" aria-controls="' + el.id + '-lista">+ Jämför med region</button>';
+  h += '<div class="lista" id="' + el.id + '-lista" hidden><p class="not">Högst fyra åt gången. Du kan också klicka på en linje i grafen.</p>';
+  h += alfa.map((r) => '<label><input type="checkbox" value="' + r.id + '"' + (st.fasta.includes(r.id) ? " checked" : "") + "> " + esc(r.namn) + '<span class="tnum">' + pct(vardeVid(r, 2025)) + "</span></label>").join("") + "</div></div>";
+  h += st.fasta.map((id, i) => '<button type="button" class="chip" data-bort="' + id + '"><i style="background:' + F.mark[i] + '"></i>' + esc(serieAv(id).namn) + '<span aria-hidden="true">×</span><span class="sr">ta bort</span></button>').join("");
+  if (st.fasta.length > 1) h += '<button type="button" class="chip rensa" data-bort="alla">Rensa</button>';
+  el.innerHTML = h;
+  const knapp = el.querySelector(".jamfor-knapp"), lista = el.querySelector(".lista");
+  knapp.addEventListener("click", () => { const o = lista.hidden; lista.hidden = !o; knapp.setAttribute("aria-expanded", o); if (o) lista.querySelector("input").focus(); });
+  lista.addEventListener("change", (e) => { vaxlaFast(st, e.target.value); omrita(true, e.target.value); });
+  lista.addEventListener("keydown", (e) => { if (e.key === "Escape") { lista.hidden = true; knapp.setAttribute("aria-expanded", "false"); knapp.focus(); e.stopPropagation(); } });
+  el.querySelectorAll("[data-bort]").forEach((b) => b.addEventListener("click", () => { if (b.dataset.bort === "alla") st.fasta = []; else vaxlaFast(st, b.dataset.bort); omrita(); }));
+}
+document.addEventListener("click", (e) => { document.querySelectorAll(".valjare .lista:not([hidden])").forEach((l) => { if (!l.parentElement.contains(e.target)) { l.hidden = true; l.parentElement.querySelector(".jamfor-knapp").setAttribute("aria-expanded", "false"); } }); });
+
+/* ── Figurens kontroller ── */
+const fig = document.getElementById("fig-tel"), plot = document.getElementById("fig-tel-plot");
+let tabellLage = false;
+const diagTel = skapaTidsdiagram(plot, tillstand, () => rendera(), "fig-tel-live");
+function rendera(listaOppen, fokusVarde) {
+  const titel = document.getElementById("fig-tel-titel"), under = document.getElementById("fig-tel-under");
+  if (tillstand.vy === "tid") { titel.textContent = "Halland jämfört med övriga regioner"; under.textContent = "Andel samtal till primärvården som besvarats samma dag, procent. 21 regioner och riket, 2016–2025."; }
+  else { titel.textContent = "Regionerna rangordnade"; under.textContent = "Andel samtal till primärvården som besvarats samma dag, procent. 19 regioner med värde, 2025."; }
+  const jr = document.getElementById("fig-tel-jamfor");
+  jr.hidden = tabellLage; jamforRad(jr, tillstand, rendera);
+  if (listaOppen) { const l = jr.querySelector(".lista"); l.hidden = false; jr.querySelector(".jamfor-knapp").setAttribute("aria-expanded", "true"); const f = fokusVarde && l.querySelector('input[value="' + fokusVarde + '"]'); if (f) f.focus(); }
+  if (tabellLage) ritaTabell(plot); else if (tillstand.vy === "tid") diagTel.bygg(); else ritaRang(plot, tillstand);
+}
+function flikar(lista, vid) {
+  lista.addEventListener("click", (e) => { const t = e.target.closest('[role="tab"]'); if (t) vid(t); });
+  lista.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return; const tabs = [...lista.querySelectorAll('[role="tab"]')];
+    const i = tabs.indexOf(document.activeElement); const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); vid(n); e.preventDefault();
+  });
+}
+function valjFlik(t) { t.parentElement.querySelectorAll('[role="tab"]').forEach((b) => { const v = b === t; b.setAttribute("aria-selected", v); b.tabIndex = v ? 0 : -1; }); }
+flikar(fig.querySelector(".flikar"), (t) => { valjFlik(t); tillstand.vy = t.dataset.vy; diagTel.nollstall(); rendera(); });
+const atg = fig.querySelector(".atgarder"), meny = atg.querySelector(".meny");
+let diagDialog = null; const dialogTillstand = { vy: "tid", fasta: [] };
+atg.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.atgard === "tabell") { tabellLage = !tabellLage; b.setAttribute("aria-pressed", tabellLage); b.textContent = tabellLage ? "Diagram" : "Tabell"; rendera(); }
+  else if (b.dataset.atgard === "ladda") { const oppna = meny.hidden; meny.hidden = !oppna; b.setAttribute("aria-expanded", oppna); meny.querySelector(".meddelande").hidden = true; if (oppna) meny.querySelector("button").focus(); }
+  else if (b.dataset.atgard === "forstora") {
+    const d = document.getElementById("dialog"); d.showModal();
+    dialogTillstand.fasta = [...tillstand.fasta];
+    const dp = document.getElementById("dialog-plot");
+    diagDialog = skapaTidsdiagram(dp, dialogTillstand, () => diagDialog.bygg(), null); diagDialog.bygg();
+  }
+  else if (b.getAttribute("role") === "menuitem") { meny.querySelector(".meddelande").hidden = false; }
+});
+document.addEventListener("click", (e) => { if (!meny.hidden && !atg.contains(e.target)) { meny.hidden = true; atg.querySelector('[data-atgard="ladda"]').setAttribute("aria-expanded", "false"); } });
+meny.addEventListener("keydown", (e) => { if (e.key === "Escape") { meny.hidden = true; const k = atg.querySelector('[data-atgard="ladda"]'); k.setAttribute("aria-expanded", "false"); k.focus(); e.stopPropagation(); } });
+document.getElementById("dialog-stang").addEventListener("click", () => document.getElementById("dialog").close());
+
+/* ── Gemensamt för månadsdiagrammen ── */
+function manadTicks(serie, W) {
+  const jan = []; serie.forEach((p, i) => { if (p[1].startsWith("jan")) jan.push(i); });
+  const idx = jan.slice(), n = serie.length;
+  if (W >= 520 && (!jan.length || jan[0] >= 4)) idx.unshift(0);
+  if (!jan.length || n - 1 - jan[jan.length - 1] >= 4) idx.push(n - 1);
+  return idx;
+}
+function rutnatY(s, yt, y, m, W, format) {
+  yt.forEach((t) => { s.push('<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="' + F.rutnat + '" stroke-width=".8" stroke-dasharray="4 4"/>' + txt(m.l - 10, y(t) + 4.5, format(t), { anchor: "end" })); });
+}
+function tidsaxel(s, idx, xpos, etikett, H, m, W) {
+  s.push('<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + (H - m.b) + '" y2="' + (H - m.b) + '" stroke="' + F.rutnat + '"/>');
+  idx.forEach((i) => { s.push('<line x1="' + xpos(i) + '" x2="' + xpos(i) + '" y1="' + (H - m.b) + '" y2="' + (H - m.b + 5) + '" stroke="' + F.rutnat + '"/>' + txt(xpos(i), H - m.b + 20, etikett(i), { anchor: "middle" })); });
+}
+
+/* ── Linje mot förväntat: ett band, avvikande punkter med form och kort etikett ── */
+function ritaForvantat(el) {
+  const W = el.clientWidth; if (!W) return; const S = D.belagg.serie, n = S.length;
+  const H = Math.max(240, Math.min(400, W * 0.5));
+  const vals = S.flatMap((p) => [p[2], p[4], p[5]]).filter((v) => v != null);
+  const yt = ticks(Math.min(...vals), Math.max(...vals), W < 560 ? 4 : 5);
+  const vl = Math.max(...yt.map((t) => textbredd(fmt(t, 0) + NBSP + "%", 13))) + 12;
+  const m = { t: 12, r: Math.min(W * 0.32, textbredd("Förväntat intervall", 13) + 22), b: 34, l: vl };
+  const x = skala(0, n - 1, m.l, W - m.r), y = skala(yt[0], yt[yt.length - 1], H - m.b, m.t);
+  const s = ['<svg width="' + W + '" height="' + H + '" role="img" aria-label="Linjediagram över andel belagda vårdplatser per månad, april 2024 till mars 2026, mot förväntat intervall. Senaste värde 96,9 procent, inom intervallet. December 2025 låg över intervallet.">'];
+  rutnatY(s, yt, y, m, W, (t) => fmt(t, 0) + NBSP + "%");
+  tidsaxel(s, manadTicks(S, W), x, (i) => S[i][1], H, m, W);
+  let a = "", b = ""; S.forEach((p, i) => { a += (i ? "L" : "M") + x(i) + "," + y(p[5]); b = "L" + x(i) + "," + y(p[4]) + b; });
+  s.push('<path d="' + a + b + 'Z" fill="' + F.f95 + '"/>');
+  s.push('<path d="' + S.map((p, i) => (i ? "L" : "M") + x(i) + "," + y(p[2])).join("") + '" fill="none" stroke="' + F.fokus + '" stroke-width="2.5" stroke-linejoin="round"/>');
+  S.forEach((p, i) => {
+    if (p[8] !== "gul" && p[8] !== "rod") return; const cx = x(i), cy = y(p[2]);
+    s.push(p[8] === "gul" ? '<path d="M' + cx + "," + (cy - 7) + "L" + (cx + 6) + "," + (cy + 4) + "L" + (cx - 6) + "," + (cy + 4) + 'Z" fill="' + F.sGul + '"/>' : '<path d="M' + cx + "," + (cy - 7) + "L" + (cx + 7) + "," + cy + "L" + cx + "," + (cy + 7) + "L" + (cx - 7) + "," + cy + 'Z" fill="' + F.sRod + '"/>');
+    s.push(txt(cx - 10, cy - 4, p[1] + (p[2] > p[5] ? ", över intervallet" : ", under intervallet"), { anchor: "end", farg: F.text2, halo: true }));
+  });
+  s.push('<circle cx="' + x(n - 1) + '" cy="' + y(S[n - 1][2]) + '" r="4.5" fill="' + F.fokus + '"/>');
+  const et = losEtiketter([{ text: "Halland", farg: F.fokus, vikt: 600, y0: y(S[n - 1][2]) }, { text: "Förväntat intervall", farg: F.text2, vikt: 400, y0: y((S[n - 1][4] + S[n - 1][5]) / 2) }], m.t + 4, H - m.b, 17);
+  et.forEach((e) => s.push(txt(x(n - 1) + 9, e.y + 4.5, e.text, { farg: e.farg, vikt: e.vikt })));
+  el.innerHTML = s.join("") + "</svg>";
+}
+
+/* ── Stapel över tid ── */
+function ritaStapel(el) {
+  const W = el.clientWidth; if (!W) return; const S = D.besok.total, n = S.length;
+  const H = Math.max(240, Math.min(400, W * 0.5));
+  const yt = ticks(0, Math.max(...S.map((p) => p[2])), W < 560 ? 4 : 5);
+  const vl = Math.max(...yt.map((t) => textbredd(fmt(t, 0), 13))) + 12;
+  const m = { t: 12, r: 8, b: 34, l: vl }, y = skala(0, yt[yt.length - 1], H - m.b, m.t);
+  const steg = (W - m.l - m.r) / n, bw = steg * 2 / 3, mitt = (i) => m.l + i * steg + steg / 2;
+  const s = ['<svg width="' + W + '" height="' + H + '" role="img" aria-label="Stapeldiagram över antal besök på akutmottagning per månad, april 2024 till mars 2026. Senaste månaden ' + fmt(S[n - 1][2], 0) + ' besök.">'];
+  rutnatY(s, yt.filter((t) => t > 0), y, m, W, (t) => fmt(t, 0));
+  s.push(txt(m.l - 10, y(0) + 4.5, "0", { anchor: "end" }));
+  S.forEach((p, i) => s.push('<rect x="' + (mitt(i) - bw / 2) + '" y="' + y(p[2]) + '" width="' + bw + '" height="' + (y(0) - y(p[2])) + '" fill="' + F.fokus + '"><title>' + p[1] + ": " + fmt(p[2], 0) + " besök</title></rect>"));
+  s.push('<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="' + F.nollinje + '"/>');
+  manadTicks(S, W).forEach((i) => s.push(txt(mitt(i), H - m.b + 20, S[i][1], { anchor: "middle" })));
+  el.innerHTML = s.join("") + "</svg>";
+}
+
+/* ── Små multiplar: referensen etiketteras bara i första panelen ── */
+let nivaVal = "sjukhus";
+function ritaPaneler(el) {
+  const W = el.clientWidth; if (!W) return;
+  if (nivaVal === "region") { el.innerHTML = '<div id="pan-region"></div>'; ritaForvantat(el.querySelector("#pan-region")); return; }
+  const E = D.belagg.enheter.slice().sort((a, b) => b.v[b.v.length - 1][2] - a.v[a.v.length - 1][2]), R = D.belagg.serie;
+  const kol = W >= 760 ? 3 : W >= 480 ? 2 : 1, gap = 32, pw = (W - gap * (kol - 1)) / kol, ph = Math.max(170, Math.min(230, pw * 0.66));
+  const vals = E.flatMap((e) => e.v.map((p) => p[2])).concat(R.map((p) => p[2]));
+  const yt = ticks(Math.min(...vals), Math.max(...vals), 3);
+  const statusNamn = { gron: "I fas", gul: "Bevaka", rod: "Avvikelse" };
+  let h = '<div style="display:grid;grid-template-columns:repeat(' + kol + ',minmax(0,1fr));gap:28px ' + gap + 'px">';
+  E.forEach((e, ei) => {
+    const n = e.v.length, vl = Math.max(...yt.map((t) => textbredd(fmt(t, 0) + NBSP + "%", 13))) + 10;
+    const m = { t: 10, r: 10, b: 28, l: vl }, x = skala(0, n - 1, m.l, pw - m.r), y = skala(yt[0], yt[yt.length - 1], ph - m.b, m.t);
+    const s = ['<svg width="' + pw + '" height="' + ph + '" role="img" aria-label="' + esc(e.namn) + ": andel belagda vårdplatser, senast " + pct(e.v[n - 1][2]) + ', jämfört med Region Halland">'];
+    rutnatY(s, yt, y, m, pw, (t) => fmt(t, 0) + NBSP + "%");
+    s.push('<line x1="' + m.l + '" x2="' + (pw - m.r) + '" y1="' + (ph - m.b) + '" y2="' + (ph - m.b) + '" stroke="' + F.rutnat + '"/>');
+    [0, n - 1].forEach((i) => s.push(txt(x(i), ph - 8, e.v[i][1], { anchor: i ? "end" : "start" })));
+    s.push('<path d="' + R.map((p, i) => (i ? "L" : "M") + x(i) + "," + y(p[2])).join("") + '" fill="none" stroke="' + F.referens + '" stroke-width="1.5" stroke-dasharray="6 4"/>');
+    s.push('<path d="' + e.v.map((p, i) => (i ? "L" : "M") + x(i) + "," + y(p[2])).join("") + '" fill="none" stroke="' + F.fokus + '" stroke-width="2.25" stroke-linejoin="round"/><circle cx="' + x(n - 1) + '" cy="' + y(e.v[n - 1][2]) + '" r="4" fill="' + F.fokus + '"/>');
+    if (ei === 0) { const i0 = 2; s.push(txt(x(i0), y(R[i0][2]) + 18, "Region Halland", { farg: F.referens, halo: true })); }
+    h += '<div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-family:var(--sans);font-size:15px;margin-bottom:6px"><b style="font-weight:600">' + esc(e.namn) + '</b><span class="tnum" style="color:var(--text2)">' + pct(e.v[n - 1][2]) + '</span><span class="status ' + e.status + '" style="height:20px;font-size:12px;padding:0 8px">' + statusNamn[e.status] + "</span></div>" + s.join("") + "</svg></div>";
+  });
+  el.innerHTML = h + "</div>";
+}
+const panFig = document.getElementById("fig-pan");
+flikar(panFig.querySelector(".flikar"), (t) => {
+  valjFlik(t); nivaVal = t.dataset.niva;
+  panFig.querySelector("h5").textContent = nivaVal === "region" ? "Mot förväntat intervall" : "Per sjukhus";
+  panFig.querySelector(".undertitel").textContent = nivaVal === "region" ? "Andel belagda vårdplatser, procent. Region Halland, per månad apr 2024–mar 2026." : "Andel belagda vårdplatser, procent. Tre sjukhus, apr 2024–mar 2026.";
+  ritaPaneler(document.getElementById("fig-pan-plot"));
+});
+
+/* ── Översiktstabell ── */
+const STATUS_ORD = { gron: "I fas", gul: "Bevaka", rod: "Avvikelse" }, STATUS_RANG = { rod: 0, gul: 1, gron: 2 };
+const radLista = []; let nr = 0;
+D.oversikt.forEach((g, gi) => g.kpier.forEach((k) => { nr++; radLista.push(Object.assign({ grupp: g.namn, gi, nr }, k)); }));
+function mini(serie) {
+  const v = serie.filter((p) => p[1] != null).map((p) => p[1]); const mn = Math.min(...v), mx = Math.max(...v);
+  const a0 = serie[0][0], a1 = serie[serie.length - 1][0];
+  const full = []; for (let a = a0; a <= a1; a++) { const p = serie.find((q) => q[0] === a); full.push([a, p ? p[1] : null]); }
+  const x = skala(a0, a1, 3, 93), y = skala(mn, mx === mn ? mn + 1 : mx, 21, 3); const st = stig(full, x, y);
+  const sista = full.filter((p) => p[1] != null).pop();
+  return '<svg width="96" height="24" aria-hidden="true"><path d="' + st.d + '" fill="none" stroke="' + F.fokus + '" stroke-width="1.5"/>' + st.ensamma.map((q) => '<circle cx="' + x(q[0]) + '" cy="' + y(q[1]) + '" r="1.5" fill="' + F.fokus + '"/>').join("") + '<circle cx="' + x(sista[0]) + '" cy="' + y(sista[1]) + '" r="2.5" fill="' + F.fokus + '"/></svg>';
+}
+let sortering = null;
+function ritaOversikt() {
+  const tb = document.querySelector("#oversikt tbody"); let rader = radLista.slice();
+  if (sortering) { const k = sortering; rader.sort((a, b) => k === "senaste" ? b.senaste - a.senaste : k === "plats" ? a.rank - b.rank : STATUS_RANG[a.status] - STATUS_RANG[b.status]); }
+  let h = "", senGrupp = null;
+  rader.forEach((r) => {
+    if (!sortering && r.grupp !== senGrupp) { h += '<tr class="grupp"><td colspan="5">' + esc(r.grupp) + "</td></tr>"; senGrupp = r.grupp; }
+    h += '<tr><td><a href="#ex-indikator">' + esc(r.namn) + '</a></td><td class="tal">' + pct(r.senaste) + (r.ar !== "2025" ? '<span class="ar">' + r.ar + "</span>" : "") + '</td><td class="tal d-mob">' + r.rank + " av " + r.rank_av + '</td><td class="d-mob">' + mini(r.serie) + '</td><td><span class="status ' + r.status + '">' + STATUS_ORD[r.status] + "</span></td></tr>";
+  });
+  tb.innerHTML = h;
+  document.querySelectorAll("#oversikt th[aria-sort]").forEach((th) => { const k = th.querySelector("button").dataset.sort; th.setAttribute("aria-sort", sortering && k === sortering ? (k === "plats" ? "ascending" : "descending") : "none"); });
+}
+document.querySelector("#oversikt thead").addEventListener("click", (e) => { const b = e.target.closest("button[data-sort]"); if (!b) return; sortering = b.dataset.sort === "namn" ? null : b.dataset.sort; ritaOversikt(); });
+
+/* ── Innehållsförteckning följer läsningen ── */
+const tocLankar = [...document.querySelectorAll("#toc a")];
+const mal = tocLankar.map((a) => document.querySelector(a.getAttribute("href")));
+function markeraToc() { let aktiv = 0; mal.forEach((m, i) => { if (m && m.getBoundingClientRect().top < window.innerHeight * 0.3) aktiv = i; }); tocLankar.forEach((a, i) => a.setAttribute("aria-current", i === aktiv ? "true" : "false")); }
+window.addEventListener("scroll", markeraToc, { passive: true });
+
+/* ── Start ── */
+function allt() { rendera(); ritaForvantat(document.getElementById("fig-bel-plot")); ritaStapel(document.getElementById("fig-bes-plot")); ritaPaneler(document.getElementById("fig-pan-plot")); }
+ritaOversikt(); markeraToc();
+const klar = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+klar.then(allt);
+let rt = null; const ro = new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(allt, 120); });
+ro.observe(document.querySelector("main"));
+})();
+</script>
