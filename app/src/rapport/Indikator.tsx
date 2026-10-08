@@ -3,7 +3,7 @@
 // Ordning, och inget annat:
 //   1 rubrikrad     nummer (farg.fokus) + namn (h3, typ.roll.indikator) +
 //                   statusmarkör efter namnet; ingen markör för beskrivande mått
-//   2 analys        Prosa med begrepp, proveniensrad med länk till Om statistiken
+//   2 analys        märket AI-analys (Textmarke, länk till Om statistiken), Prosa med begrepp
 //   3 figur         figur/Figur med h4, visningar, nivåer (brödsmula, nedborrning)
 //                   och dagflik, monteras när den närmar sig skärmen
 //   4 fördjupning   stängd <details> (rapport/IndikatorFordjupning)
@@ -28,13 +28,13 @@ import type { KapitelModell, KpiModell, VyId } from "../data/modell";
 import { tema } from "../design/tema";
 import Figur from "../figur/Figur";
 import { anmalFigurlage, useFigurAdress } from "../nav/figurlage";
-import Lank from "../nav/Lank";
 import { KAPITELBLOCK } from "../nav/route";
 import { sattAktivtBlock } from "../nav/scroll";
 import { aktuellRoute, navigera } from "../nav/useRoute";
 import StatusMarkor from "../ui/StatusMarkor";
 import IndikatorFordjupning from "./IndikatorFordjupning";
 import Kommentar from "./Kommentar";
+import Textmarke from "./Textmarke";
 import { figurReserv, indikatorUppskattning } from "./hojder";
 import { brodsmula, bytFokus, giltigtLage, lageFranAdress, lageTillAdress, type NivaLage } from "./nedborrning";
 import t from "./delat.module.css";
@@ -85,14 +85,10 @@ export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, 
 
       {analys && (
         <div className={s.analys}>
-          {/* Proveniensen som en liten ruta före texten; hela rutan leder till Om statistiken */}
-          <Lank till={om} className={s.proveniens} data-proveniens="">
-            <svg className={s.proveniensikon} viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M8 1.5 9.4 6.6 14.5 8 9.4 9.4 8 14.5 6.6 9.4 1.5 8 6.6 6.6Z" />
-            </svg>
-            <span><b>AI-analys</b>, genererad ur rapportens data.</span>
-            <span className={s.proveniensvidare}>Så skapas texten <span aria-hidden="true">→</span></span>
-          </Lank>
+          {/* Proveniensen som märke före texten (samma som verksamhetens kommentar) */}
+          <Textmarke ikon="ai" rubrik="AI-analys" till={om} vidare="Så skapas texten" data={{ "data-proveniens": "" }}>
+            genererad ur rapportens data
+          </Textmarke>
           <Prosa text={analys} redan={redan} className={t.brod} />
         </div>
       )}

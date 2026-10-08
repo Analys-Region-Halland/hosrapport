@@ -38,54 +38,6 @@
     margin-block-start: var(--rum-5);
   }
 
-  /* Proveniensen (2026-10-08): en liten ruta före analysen, hela rutan en länk
-     till Om statistiken. Neutral, inte statusfärgad; pilen och länktexten i
-     farg.fokus visar att den går att klicka. */
-  .proveniens {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 10px;
-    margin-block-end: var(--rum-3);
-    padding: 5px 12px 5px 9px;
-    background: var(--farg-yta);
-    border: 1px solid #D9D9D2;
-    border-radius: 8px;
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    color: var(--farg-black);
-    text-decoration: none;
-    transition: border-color 100ms, box-shadow 100ms;
-  }
-  .proveniens b { font-weight: 650; }
-  .proveniensikon {
-    inline-size: 14px;
-    block-size: 14px;
-    flex: none;
-    fill: var(--farg-fokus);
-  }
-  .proveniensvidare {
-    font-weight: 600;
-    color: var(--farg-fokus);
-    white-space: nowrap;
-  }
-  .proveniens:hover {
-    border-color: var(--farg-fokus);
-    box-shadow: 0 2px 8px -3px rgb(16 48 36 / 0.25);
-  }
-  .proveniens:hover .proveniensvidare {
-    text-decoration: underline;
-    text-underline-offset: var(--typ-lank-avstand);
-  }
-  .proveniens:focus-visible {
-    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
-    outline-offset: 2px;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .proveniens { transition: none; }
-  }
-
   .figur {
     margin-block-start: var(--rum-6);
   }

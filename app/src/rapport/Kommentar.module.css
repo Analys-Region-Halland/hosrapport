@@ -1,5 +1,5 @@
-/* Kommentar.module.css: verksamhetens kommentar (stilguiden 4.4). Ingen ram
-   eller bakgrund i läsflödet; formuläret i redigeringsläget har fält med
+/* Kommentar.module.css: verksamhetens kommentar (stilguiden 4.4). Märket före
+   texten är Textmarke; texten har ingen ram eller bakgrund i läsflödet; formuläret i redigeringsläget har fält med
    hårlinje, eftersom fält måste synas som fält. */
 @layer komponent {
   .kommentar {
@@ -7,79 +7,14 @@
     row-gap: var(--rum-5);
   }
 
-  /* Kortet: vit yta, hårlinjeram, grön vänsterkant, mjuk skugga */
+  /* Märket (Textmarke) och texten som vanlig löptext, inget kort (2026-10-08) */
   .post {
     max-inline-size: var(--matt-text);
-    padding: var(--rum-4) var(--rum-5) var(--rum-4) calc(var(--rum-5) - 2px);
-    background: var(--farg-yta);
-    border: 1px solid #D9D9D2;
-    border-inline-start: 4px solid var(--farg-fokus);
-    border-radius: 10px;
-    box-shadow: 0 1px 2px rgb(16 32 26 / 0.05), 0 8px 22px -14px rgb(16 48 36 / 0.22);
   }
   .post > * + * {
     margin-block-start: var(--rum-2);
   }
-  .rubrik {
-    display: flex;
-    align-items: center;
-    gap: var(--rum-2);
-    margin: 0 0 var(--rum-3);
-    font-family: var(--typ-granssnitt-familj);
-    font-size: 14px;
-    line-height: 1.3;
-    font-weight: 650;
-    color: var(--farg-fokus);
-  }
-  .ikon {
-    inline-size: 18px;
-    block-size: 18px;
-    flex: none;
-    fill: none;
-    stroke: var(--farg-fokus);
-    stroke-width: 1.6;
-    stroke-linejoin: round;
-  }
   .titel { font-weight: 600; }
-
-  /* Foten: vem (initialer i rund bricka och namnet) och när */
-  .post > .fot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--rum-2) var(--rum-4);
-    margin-block-start: var(--rum-4);
-    padding-block-start: var(--rum-3);
-    border-block-start: 1px solid #ECECE6;
-    font-family: var(--typ-granssnitt-familj);
-    font-size: 14px;
-    line-height: 1.3;
-    color: var(--farg-black);
-  }
-  .vem {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--rum-2);
-    font-weight: 650;
-  }
-  .initialer {
-    display: inline-grid;
-    place-items: center;
-    inline-size: 28px;
-    block-size: 28px;
-    border-radius: 50%;
-    background: var(--farg-fokus);
-    color: var(--farg-yta);
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
-  .nar {
-    font-weight: 500;
-    font-variant-numeric: var(--typ-siffror);
-  }
-  .nar time { font-weight: 650; }
 
   .text {
     margin: 0;

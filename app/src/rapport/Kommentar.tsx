@@ -1,9 +1,9 @@
 // rapport/Kommentar.tsx: verksamhetens kommentar (stilguiden 4.4). Ägare: WP9.
 //
-// Visas bara när en kommentar finns, som ett kort (2026-10-08): vit yta med
-// grön vänsterkant, överst en pratbubbla och "Verksamhetens kommentar", texten
-// i typ.roll.brod och sist en fot med vem som skrev (initialerna i en rund
-// bricka och namnet) och när ("Uppdaterad 16 juni 2026"). I redigeringsläget (route.red) finns "Lägg till kommentar",
+// Visas bara när en kommentar finns: märket (Textmarke, samma som AI-analysen)
+// med "Verksamhetens kommentar", vem och när ("Robin R, uppdaterad 16 juni
+// 2026"), och därunder texten som vanlig löptext i typ.roll.brod
+// (2026-10-08). I redigeringsläget (route.red) finns "Lägg till kommentar",
 // "Redigera" och "Ta bort". Kommentarerna lagras som i dag via stores/blocks.ts
 // under nyckeln `${vy}:${targetId}`, så att gamla vyns kommentarer syns här och
 // tvärtom. Lagret läses med useSyncExternalStore: ändringar i en annan flik
@@ -15,6 +15,7 @@ import { BLOCKS_KEY, getBlocks, getForfattare, setBlocks, setForfattare } from "
 import { markClean, markDirty } from "../stores/dirty";
 import t from "./delat.module.css";
 import s from "./Kommentar.module.css";
+import Textmarke from "./Textmarke";
 
 export interface KommentarProps {
   vy: string;
@@ -58,11 +59,6 @@ function skriv(nyckel: string, block: Block[]): void {
   }
 }
 
-/** "Robin R" → "RR": första bokstaven i de två första orden. */
-function initialer(namn: string): string {
-  return namn.trim().split(/\s+/).slice(0, 2).map((d) => d[0]?.toUpperCase() ?? "").join("");
-}
-
 const nyttId = () => `kommentar-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
 // ── Komponenten ──
@@ -98,31 +94,13 @@ export default function Kommentar({ vy, targetId, redigera }: KommentarProps): R
           <Redigering key={b.id} block={b} onSpara={spara} onAvbryt={() => setRedigerar(null)} />
         ) : (
           <div key={b.id} className={s.post}>
-            <p className={s.rubrik}>
-              <svg className={s.ikon} viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M3.5 4.5h13a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9l-4 3v-3H3.5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z" />
-              </svg>
-              Verksamhetens kommentar
-            </p>
+            <Textmarke ikon="kommentar" rubrik="Verksamhetens kommentar">
+              {[b.author, b.timestamp ? `${b.author ? "uppdaterad" : "Uppdaterad"} ${datum(b.timestamp.slice(0, 10))}` : ""].filter(Boolean).join(", ")}
+            </Textmarke>
             {b.title && <p className={`${t.brod} ${s.text} ${s.titel}`}>{b.title}</p>}
             {b.text.split(/\n\s*\n/).filter(Boolean).map((stycke, i) => (
               <p key={i} className={`${t.brod} ${s.text}`}>{stycke}</p>
             ))}
-            {(b.author || b.timestamp) && (
-              <div className={s.fot}>
-                {b.author && (
-                  <span className={s.vem}>
-                    <span className={s.initialer} aria-hidden="true">{initialer(b.author)}</span>
-                    <span><span className="visuellt-dold">Skriven av </span>{b.author}</span>
-                  </span>
-                )}
-                {b.timestamp && (
-                  <span className={s.nar}>
-                    Uppdaterad <time dateTime={b.timestamp.slice(0, 10)}>{datum(b.timestamp.slice(0, 10))}</time>
-                  </span>
-                )}
-              </div>
-            )}
             {redigera && (
               <p className={s.knappar}>
                 <button type="button" className={t.knapp} onClick={() => setRedigerar(b.id)}>Redigera</button>
