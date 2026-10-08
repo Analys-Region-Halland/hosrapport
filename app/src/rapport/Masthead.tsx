@@ -22,9 +22,11 @@ export interface MastheadProps {
   children?: ReactNode;
   /** Regionens logotyp överst (kapitelsidan). */
   logotyp?: boolean;
+  /** Uppdateringsrutan (ui/Uppdatering) under deken. */
+  uppdatering?: ReactNode;
 }
 
-export default function Masthead({ kicker, titel, dek, metarad = [], children, logotyp = false }: MastheadProps): ReactNode {
+export default function Masthead({ kicker, titel, dek, metarad = [], children, logotyp = false, uppdatering }: MastheadProps): ReactNode {
   return (
     <header className={s.masthead} data-masthead="">
       {logotyp && (
@@ -34,16 +36,17 @@ export default function Masthead({ kicker, titel, dek, metarad = [], children, l
       <h1 className={s.titel}>{titel}</h1>
       <div className={s.linje} aria-hidden="true" />
       {dek && <p className={s.dek}>{dek}</p>}
+      {uppdatering && <div className={s.uppdatering}>{uppdatering}</div>}
       {(metarad.length > 0 || children) && (
         <div className={s.metarad} data-metarad="">
-          <p className={s.meta}>
+          {metarad.length > 0 && <p className={s.meta}>
             {metarad.map((del, i) => (
               <Fragment key={i}>
                 {i > 0 && <span className={s.skiljare} aria-hidden="true">{" · "}</span>}
                 <span className={s.del}>{del}</span>
               </Fragment>
             ))}
-          </p>
+          </p>}
           {children}
         </div>
       )}

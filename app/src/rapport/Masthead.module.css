@@ -53,6 +53,11 @@
     color: var(--farg-text2);
   }
 
+  .uppdatering {
+    margin: 0 0 var(--rum-4);
+  }
+  .uppdatering:empty { display: none; }
+
   .metarad {
     display: flex;
     flex-wrap: wrap;

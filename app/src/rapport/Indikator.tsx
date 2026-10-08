@@ -85,11 +85,15 @@ export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, 
 
       {analys && (
         <div className={s.analys}>
+          {/* Proveniensen som en liten ruta före texten; hela rutan leder till Om statistiken */}
+          <Lank till={om} className={s.proveniens} data-proveniens="">
+            <svg className={s.proveniensikon} viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M8 1.5 9.4 6.6 14.5 8 9.4 9.4 8 14.5 6.6 9.4 1.5 8 6.6 6.6Z" />
+            </svg>
+            <span><b>AI-analys</b>, genererad ur rapportens data.</span>
+            <span className={s.proveniensvidare}>Så skapas texten <span aria-hidden="true">→</span></span>
+          </Lank>
           <Prosa text={analys} redan={redan} className={t.brod} />
-          <p className={`${t.not} ${s.proveniens}`} data-proveniens="">
-            {PROVENIENS}{" "}
-            <Lank till={om} className={t.lank}>Så skapas texten</Lank>
-          </p>
         </div>
       )}
 

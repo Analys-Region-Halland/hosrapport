@@ -22,6 +22,9 @@ import { useStatusIndikatorer } from "./statusIndikatorer";
 import { useStartModell } from "./useStartModell";
 import s from "./StartSida.module.css";
 
+import Uppdatering from "../ui/Uppdatering";
+import { uppdateringsFalt, useManifestVy } from "../rapport/publicering";
+
 const LOGO = `${import.meta.env.BASE_URL}logo_vit.svg`;
 
 const INGRESS =
@@ -31,6 +34,7 @@ const INGRESS =
 
 export default function StartSida(): ReactNode {
   const { modell, fel } = useStartModell();
+  const arPost = useManifestVy("ar");
 
   return (
     <div className={s.startsida} data-startsida="">
@@ -46,6 +50,9 @@ export default function StartSida(): ReactNode {
           <p className={s.kicker}>Region Halland · Analys</p>
           <h1 className={s.titel}>Hälso- och sjukvården i Halland</h1>
           <p className={s.ingress}>{INGRESS}</p>
+          <div className={s.uppdatering}>
+            <Uppdatering storlek="stor" falt={uppdateringsFalt(arPost, true)} />
+          </div>
         </div>
 
         {fel ? (

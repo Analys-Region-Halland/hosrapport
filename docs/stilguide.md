@@ -199,7 +199,7 @@ Samma sak heter alltid samma sak.
 | Det viktigaste | ≤ 6 punkter, en mening var | En sak per punkt. Valda med regler: statusbyte, bästa och sämsta placering, största rörelse, nått eller lämnat topp 3. Varje punkt slutar med länk till indikatorn. |
 | Avsnittets dek | 1–2 meningar | Vad som skiljer avsnittet ut. Ingen statusräkning (den står i översikten). |
 | Indikatorns analys | 2–4 meningar | Ordning för rankade mått: läge och mål, utveckling, relativt riket och övriga. Börjar inte med siffror som redan står i nyckeltalsraden. Kompletterar grafen, beskriver den inte. |
-| Proveniens | En rad | `AI-analys, genererad ur rapportens data. Så skapas texten` (länk till Om statistiken). En märkning per text, aldrig både märke i rubrik och byline. |
+| Proveniens | En liten ruta före texten | Vit ruta, 1 px ram #D9D9D2, radie 8 px, `typ.roll.not` i `farg.black`: stjärnikon i `farg.fokus`, **AI-analys**, genererad ur rapportens data. och `Så skapas texten →` i 600 `farg.fokus`. Hela rutan är en länk till Om statistiken; hover ger grön ram och understruken länktext (2026-10-08). En märkning per text, aldrig både märke i rubrik och byline. |
 
 ---
 
@@ -245,10 +245,10 @@ Mål: ≤ 1,3 skärmhöjder i 1440 × 900 med fördjupningen stängd.
 | # | Block | Spec |
 |---|---|---|
 | 1 | Rubrikrad | Nummer (`farg.fokus`) + namn (`typ.roll.indikator`) + statusmarkör efter namnet på samma rad (bryts under på mobil). |
-| 2 | Analys | `typ.roll.brod`, 2–5 meningar. Första meningen anger värde, plats och period (det som förr stod i nyckeltalsraden). Proveniensraden under i `typ.roll.not`, `farg.text3`. |
+| 2 | Analys | `typ.roll.brod`, 2–5 meningar. Första meningen anger värde, plats och period (det som förr stod i nyckeltalsraden). Proveniensen som en liten ruta före texten (se Proveniens ovan). |
 | 3 | Figur | Avsnitt 6 |
 | 4 | Fördjupning | En `<details>` med summeringen "Om måttet, källan och påverkansfaktorer". Stängd som standard. Innehåll i tre delar med etiketter i `typ.roll.granssnitt` 600: **Vad måttet räknar** (definition, avgränsning, riktning och mål), **Datakälla** (radlista: primärkälla, huvudman, uppdateras, vägen till rapporten), **Påverkansfaktorer** (teoristycke + numrerad lista). |
-| 5 | Verksamhetens kommentar | Visas bara när en kommentar finns: etikett "Verksamhetens kommentar" (`typ.roll.granssnitt` 600), text i `typ.roll.brod`, signatur i `typ.roll.not`. "Lägg till kommentar" syns bara i redigeringsläge. |
+| 5 | Verksamhetens kommentar | Visas bara när en kommentar finns, som ett kort (2026-10-08): vit yta, 1 px ram #D9D9D2, 4 px vänsterkant i `farg.fokus`, radie 10 px, mjuk skugga, högst textbredd. Överst pratbubbla och "Verksamhetens kommentar" (14 px 650 `farg.fokus`), texten i `typ.roll.brod`, sist en fot över hårlinje: initialerna i en rund grön bricka (28 px) och namnet i 650 till vänster, `Uppdaterad 16 juni 2026` (datumet i 650) till höger, allt i `farg.black`. "Lägg till kommentar" syns bara i redigeringsläge. |
 
 Status visas en gång (rubrikraden). Nyckeltalsraden (`71,4 % · plats 4 av 21 · 2025`) används inte (2026-10-08): värde, plats och period står i analysen, figuren och Läget i korthet. Indikatornamnet står i rubriken och som figurens titel, så att figuren står på egna ben när den förstoras, laddas ned eller klistras in i en presentation.
 
@@ -343,6 +343,10 @@ Tabellen ligger i ett vitt kort med samma ram som figurerna (6.1): hårlinjeram,
 **Hovringskort.** När pekaren står på en rad (eller namnlänken har fokus) visas efter 90 ms ett kort: avsnittet som kicker, indikatorns namn, statusmarkör, senaste värdet och platsen stort med förändringen i ord (`−3,8 procentenheter sedan 2022`, `3 ned sedan 2022`), och två minigrafer, 156 px höga, med en skala som går att läsa: tunna hjälplinjer (`farg.harlinje`) med värdet till vänster i axelfärgen, baslinje i `farg.diagram.axel` och åren under ändarna. *Värde över tid*: bara Halland, lätt utjämnad linje, punkt per år, större slutpunkt. Skalan har jämna steg (`vardeTicks`) och spänner Hallands värden men minst 40 % av regionernas spridning under perioden, så att brus inte ser dramatiskt ut och en stor förändring syns stor. Första och senaste värdet står som etikett vid punkten; läget väljs bland flera kring punkten så att etiketten inte korsar linjen eller går utanför (`rapport/miniEtikett.ts`), med en tunn connector när den står en bit bort. *Plats bland regionerna*: hela fältet med plats 1 överst, platserna 1, 5, 10, 15 och sista utskrivna. Topp 3 är ett ljusgrönt fält med en grön kant exakt mellan plats 3 och 4 (förklaringen `topp 3, målet` i grafens rubrik), så att plats 4 och sämre aldrig ser ut att ligga i målet. Varje år är en ring i placeringens ton med platsen skriven i (vit siffra, mörk på gul och bärnsten), den senaste större, som Hallands linje i bumpdiagrammet; raka linjer mellan åren. Sist `Klicka på raden för att gå till indikatorn`. Escape stänger. Platsen per år räknas bland regionerna med värde det året; senaste året tas från R.
 
 Sortering genom klick på kolumnhuvud (`aria-sort`); grupperingen gäller bara standardordningen. Inga filterchips och inga sorteringsknappar utanför tabellen. På mobil: Indikator, Halland, Status (Plats och förklaringsraderna döljs).
+
+### 5.11 Uppdateringsruta (startsidan och kapitlen)
+
+Ersätter metaraderna (2026-10-08). En vit ruta, 1 px ram #D9D9D2, radie 10 px (12 px på startsidan): kalenderikon i `farg.fokus` och fält åtskilda av lodräta hårlinjer, varje fält med etiketten (12,5 px 600 `farg.fokus`) över värdet (15 px 650 `farg.black`; 17 px på startsidan). Startsidan, under ingressen: `Senast uppdaterad` · `Senaste årsdata` · `Nästa uppdatering`. Kapitlet, under deken: `Uppdaterad` · `Senaste data` · `Nästa uppdatering`. Uppdaterad är byggdatumet (`__BUILD_DATE__`, följer publiceringen); perioden och nästa uppdatering kommer ur manifestet. (Komponenten: `ui/Uppdatering.tsx`.)
 
 ### 5.10 Statusruta (startsidan och sammanfattningen)
 

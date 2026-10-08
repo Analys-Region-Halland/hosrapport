@@ -79,6 +79,11 @@
     overflow-wrap: break-word;
   }
 
+  .uppdatering {
+    margin-block-start: var(--rum-5);
+  }
+  .uppdatering:empty { display: none; }
+
   .ingress {
     margin: var(--rum-5) 0 0;
     max-width: var(--matt-text);
