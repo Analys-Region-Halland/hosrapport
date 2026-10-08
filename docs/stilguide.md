@@ -211,8 +211,8 @@ Samma sak heter alltid samma sak.
 |---|---|---|
 | 1 | Brandlist | `farg.fokus` som yta, 48 px, vit logotyp 22 px och "HoS-rapport" i `typ.roll.granssnitt` 600 vitt. Enda gröna ytan i produkten. |
 | 2 | Masthead | Kicker "Region Halland · Analys", titel "Hälso- och sjukvården i Halland" (`typ.roll.titel`), ingress ≤ 3 meningar (`typ.roll.ingress`). |
-| 3 | Läget just nu | Blockrubrik, en rad (`77 indikatorer i 7 kapitel har en status. Peka på en kategori för att se vilka.`), statusrutan i storlek `lage` (5.10) som är summan av kapitelradernas rutor (varje kapitel räknas i den tidsupplösning det öppnas i, 4.5), länk "Läs sammanfattningen". Listan per kategori grupperas per kapitel i två spalter. |
-| 4 | Kapitelförteckning | Per tema: temanamn (`typ.roll.avsnitt`) och en mening (`typ.roll.granssnitt`, `farg.text2`). Per kapitel: nummer (`farg.fokus`), namn (`typ.roll.indikator`), dek högst två rader (`typ.roll.granssnitt`), metarad (`typ.roll.not`: `14 indikatorer · årlig · SKR via Kolada`) och till höger statusrutan (5.10, 320 px). Hela raden är en länk; hover stryker under namnet, utom när pekaren står på statusrutan. |
+| 3 | Läget just nu | Blockrubrik, statusrutan i storlek `lage` (5.10) som är summan av kapitelradernas rutor (varje kapitel räknas i den tidsupplösning det öppnas i, 4.5), länk "Läs sammanfattningen". Listan per kategori grupperas per kapitel i två spalter. |
+| 4 | Kapitelförteckning | Per tema: temanamn (`typ.roll.avsnitt`) och en mening (`typ.roll.granssnitt`, `farg.text2`). Per kapitel: nummer (`farg.fokus`), namn (`typ.roll.indikator`), dek högst två rader (`typ.roll.granssnitt`) och till höger statusrutan (5.10, 320 px). Ingen metarad (borttagen 2026-10-08): vad siffrorna gäller står i statusrutans rubrikrad. Hela raden är en länk; hover stryker under namnet, utom när pekaren står på statusrutan. |
 | 5 | Sidfot | Om rapporten · Begrepp · Så läser du rapporten · Publicerad {datum}. `typ.roll.not`. Brandlisten är `header` och sidfoten `footer`, båda utanför `main`. |
 
 Inga vänsterkanter, topplinjer, källtaggar ("Öppen data") eller fyrfältsfakta. Statusrutan är det enda kortet. Avstånd mellan teman `rum.9`, mellan kapitel `rum.6`.
@@ -232,7 +232,7 @@ Mål: ≤ 3 skärmhöjder i 1440 × 900.
 
 | # | Block | Spec |
 |---|---|---|
-| 1 | Masthead | Logotyp 28 px · kicker (temat) · titel · 2 px `farg.fokus` linje under titeln (enda linjen i flödet) · dek ≤ 2 meningar · metarad: `Årsanalys 2025 · 10 indikatorer i 4 avsnitt · Källa: SKR via Kolada · Publicerad 5 okt 2026`. Finns fler tidsupplösningar visas väljaren sist i metaraden (5.4). |
+| 1 | Masthead | Logotyp 28 px · kicker (temat) · titel · 2 px `farg.fokus` linje under titeln (enda linjen i flödet) · dek ≤ 2 meningar. Ingen metarad (borttagen 2026-10-08; källan står under Om statistiken och vid varje figur). Finns fler tidsupplösningar visas väljaren under deken (5.4). |
 | 2 | Det viktigaste | ≤ 6 punkter (3.4) |
 | 3 | Läget i korthet | Översiktstabellen (5.8) |
 | 4 | Avsnitt | Nummer + rubrik (`typ.roll.avsnitt`), dek (`typ.roll.ingress`, `farg.text2`), sedan indikatorerna. Ett kapitel utan avsnitt visar indikatorerna direkt. |
@@ -350,7 +350,7 @@ Ersätter statusmätaren och räkneraden `27 i fas · 21 bevaka · 29 avvikelse`
 
 | Del | Spec |
 |---|---|
-| Kort | `farg.yta`, 1 px ram #D9D9D2, radie 12 px, mjuk skugga. Tre lika breda fält (I fas, Bevaka, Avvikelse) åtskilda av hårlinjer. |
+| Kort | `farg.yta`, 1 px ram #D9D9D2, radie 12 px, mjuk skugga. Överst en rubrikrad i full bredd, 650 `farg.black` (13 px, 15 px i Läget just nu), med hårlinje under: `Status för 14 indikatorer`, i Läget just nu `Status för 77 indikatorer i 7 kapitel` och till höger `Peka på en kategori för att se vilka` i `farg.fokus`. Under den tre lika breda fält (I fas, Bevaka, Avvikelse) åtskilda av hårlinjer. |
 | Fält | Antalet stort i `status.*.text` (26 px i kapitelraden, 44 px i Läget just nu), ordet under i 600 (i Läget just nu också andelen `35 %`), och en ruta per indikator (9 px, 13 px i Läget just nu) i `status.*.markor`. Ett fält med noll indikatorer är inte klickbart. |
 | Hovring och fokus | Fältet tonas i `status.*.botten` och en lista öppnas under rutan: rubrik (prick, ordet, antal) och indikatorerna med nummer och namn som länkar. I Läget just nu grupperas listan per kapitel i två spalter. Listan går att peka in i, stängs med Escape och när pekaren lämnar. |
 | Indikatorkort | Pekar man på en indikator i listan (eller ger länken fokus) tonas raden i `plats.topp.yta`, namnet blir grönt och understruket och en pil `→` glider in till höger. Samtidigt visas samma hovringskort som i Läget i korthet (5.8) bredvid listan: till höger om den smala listan när det finns plats, annars till vänster; i Läget just nu bredvid raden. Första kortet efter 60 ms, sedan byter det indikator direkt. Kortet slutar med ett grönt fält i full bredd, `Klicka för att läsa mer i rapporten →` (i tabellen `Klicka på raden för att läsa mer →`). |

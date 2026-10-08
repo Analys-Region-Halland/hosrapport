@@ -11,6 +11,10 @@
 // kommer nästan direkt och byter indikator utan fördröjning när man pekar sig
 // nedåt i listan.
 //
+// Överst i kortet står vad siffrorna gäller ("Status för 14 indikatorer"), i
+// Läget just nu också uppmaningen att peka på en kategori. Det ersätter de grå
+// rader som tidigare stod ovanför och under (2026-10-08).
+//
 // Storlekar: "kapitel" (kapitelraden, kompakt) och "lage" (Läget just nu,
 // större; listan grupperas per kapitel). Färg är aldrig enda bäraren: varje
 // fält har ordet och talet i text.
@@ -29,6 +33,8 @@ export interface StatusrutaProps {
   /** Indikatorerna bakom siffrorna; undefined medan de hämtas. */
   indikatorer?: StatusIndikator[];
   storlek?: "kapitel" | "lage";
+  /** Vad siffrorna gäller, utan antalet: "i 7 kapitel". Antalet räknas här. */
+  omfang?: string;
 }
 
 const ORD: Record<Status, string> = { gron: "I fas", gul: "Bevaka", rod: "Avvikelse" };
@@ -38,7 +44,7 @@ interface Pekad { ind: StatusIndikator; ankare: { vanster: number; hoger: number
 /** Listor smalare än så har kortet bredvid hela listan; bredare bredvid raden. */
 const SMAL_LISTA = 520;
 
-export default function Statusruta({ status, indikatorer, storlek = "kapitel" }: StatusrutaProps): ReactNode {
+export default function Statusruta({ status, indikatorer, storlek = "kapitel", omfang }: StatusrutaProps): ReactNode {
   const total = antalMedStatus(status);
   const [oppen, setOppen] = useState<Status | null>(null);
   const timer = useRef(0);
@@ -86,6 +92,10 @@ export default function Statusruta({ status, indikatorer, storlek = "kapitel" }:
 
   return (
     <div className={`${s.ruta} ${s[storlek]}`} data-statusruta="" data-oppen={oppen ?? undefined}>
+      <p className={s.rubrik}>
+        <span>Status för {total} {total === 1 ? "indikator" : "indikatorer"}{omfang ? ` ${omfang}` : ""}</span>
+        {storlek === "lage" && <span className={s.tips} aria-hidden="true">Peka på en kategori för att se vilka</span>}
+      </p>
       {STATUSORDNING.map((st) => {
         const n = status[st];
         const andel = Math.round((n / total) * 100);

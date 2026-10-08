@@ -71,7 +71,6 @@
     color: var(--farg-text2);
   }
 
-  .meta,
   .notis {
     margin: var(--rum-2) 0 0;
     font-family: var(--typ-not-familj);
@@ -82,12 +81,7 @@
   }
 
   .notis {
-    margin-top: var(--rum-1);
     color: var(--farg-text2);
-  }
-
-  .skiljare {
-    color: var(--farg-text3);
   }
 
   .matare {

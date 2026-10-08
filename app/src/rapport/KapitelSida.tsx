@@ -22,9 +22,8 @@ import Indikator from "./Indikator";
 import LagetIKorthet from "./LagetIKorthet";
 import Masthead from "./Masthead";
 import OmStatistiken from "./OmStatistiken";
-import { usePubliceringsdatum } from "./publicering";
 import { byggDisposition, type DispIndikator } from "./ramDisposition";
-import { kapitelDek, kapitelKicker, kapitelMetarad } from "./rapportText";
+import { kapitelDek, kapitelKicker } from "./rapportText";
 import TidsupplosningVal from "./TidsupplosningVal";
 import s from "./KapitelSida.module.css";
 
@@ -36,18 +35,15 @@ export interface KapitelSidaProps {
   onVy?(vy: VyId): void;
   /** Redigeringsläget (route.red). */
   redigera?: boolean;
-  /** Publiceringsdatum (ISO). Förval: manifestets datum för vyn. */
-  publicerad?: string;
   /** Montera figurerna först nära skärmen. Förval: sant. */
   latFigur?: boolean;
 }
 
 export default function KapitelSida({
-  kapitel, vy, vyer = [], onVy, redigera = false, publicerad, latFigur = true,
+  kapitel, vy, vyer = [], onVy, redigera = false, latFigur = true,
 }: KapitelSidaProps): ReactNode {
   const d = useMemo(() => byggDisposition(kapitel), [kapitel]);
   const kpier = useMemo(() => new Map(kapitel.kpier.map((k) => [k.id, k])), [kapitel]);
-  const datum = usePubliceringsdatum(vy, publicerad);
 
   const till = (i: string): Route => ({ sida: "kapitel", id: kapitel.id, vy, i, ...(redigera ? { red: true } : {}) });
   const nummer = new Map([...d.avsnitt.flatMap((a) => a.indikatorer), ...d.indikatorer].map((x) => [x.id, x]));
@@ -65,7 +61,7 @@ export default function KapitelSida({
 
   return (
     <article className={s.kapitel} data-kapitelsida={kapitel.id}>
-      <Masthead logotyp kicker={kapitelKicker(kapitel)} titel={kapitel.namn} dek={kapitelDek(kapitel)} metarad={kapitelMetarad(kapitel, vy, datum)}>
+      <Masthead logotyp kicker={kapitelKicker(kapitel)} titel={kapitel.namn} dek={kapitelDek(kapitel)}>
         {onVy && <TidsupplosningVal vyer={vyer} aktiv={vy} onByt={onVy} />}
       </Masthead>
 

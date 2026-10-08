@@ -73,11 +73,9 @@ function Innehall({ modell }: { modell: StartModell }) {
     <>
       <section className={s.lage} aria-labelledby={`${id}-lage`} data-start-lage="">
         <h2 id={`${id}-lage`} className={s.blockrubrik}>Läget just nu</h2>
-        <p className={s.lagetext}>
-          {antalMedStatus(modell.lage)} indikatorer i {medStatus} kapitel har en status. Peka på en kategori för att se vilka.
-        </p>
         <div className={s.lagematare}>
-          <Statusruta status={modell.lage} indikatorer={allaListor} storlek="lage" />
+          <Statusruta status={modell.lage} indikatorer={allaListor} storlek="lage"
+            omfang={`i ${medStatus} kapitel`} />
         </div>
         <p className={s.lagelank}>
           <Lank till={{ sida: "sammanfattning", vy: STANDARDVY }} className={s.lank} data-start-sammanfattning="">

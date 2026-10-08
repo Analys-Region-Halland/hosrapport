@@ -266,7 +266,7 @@ describe("indikatorn visar varje uppgift en gång", () => {
 describe("kapitelsidan och sammanfattningen", () => {
   it("kapitlet har blocken i ordning med data-block för ramen", () => {
     const kap = skrUtdrag();
-    const html = renderToStaticMarkup(<KapitelSida kapitel={kap} vy="ar" publicerad="2026-03-31" latFigur={false} />);
+    const html = renderToStaticMarkup(<KapitelSida kapitel={kap} vy="ar" latFigur={false} />);
     const block = [...html.matchAll(/data-block="([^"]+)"/g)].map((m) => m[1]);
     const forvantat = [
       ...(kap.huvudpunkter.length ? [KAPITELBLOCK.viktigast] : []),

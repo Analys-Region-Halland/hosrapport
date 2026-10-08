@@ -102,14 +102,6 @@
     font-weight: var(--typ-figurtitel-vikt);
   }
 
-  .lagetext {
-    margin: var(--rum-1) 0 0;
-    font-family: var(--typ-granssnitt-familj);
-    font-size: var(--typ-granssnitt-storlek);
-    line-height: var(--typ-granssnitt-radhojd);
-    color: var(--farg-text2);
-  }
-
   .lagematare {
     margin-top: var(--rum-4);
   }

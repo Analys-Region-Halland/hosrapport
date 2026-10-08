@@ -1,6 +1,6 @@
 // start/Kapitelrad.tsx: en rad i startsidans kapitelförteckning (stilguiden 4.1):
-// nummer, namn, dek, metarad, eventuell notis och statusrutan (2026-10-08,
-// ersätter statusmätaren). Ägare: WP11.
+// nummer, namn, dek, eventuell notis och statusrutan (2026-10-08, ersätter
+// statusmätaren; metaraden "14 indikatorer · årlig · källa" borttagen). Ägare: WP11.
 //
 // Hela raden är en länk: länken sitter i rubriken (så att länkens namn är
 // kapitlets namn och rubriknavigeringen fungerar) och dess klickyta sträcks ut
@@ -33,14 +33,6 @@ export default function Kapitelrad({ kapitel: k, rubrikniva = 3, indikatorer }: 
           </Lank>
         </Rubrik>
         {k.dek && <p className={s.dek}>{k.dek}</p>}
-        <p className={s.meta}>
-          {k.meta.map((d, i) => (
-            <span key={i}>
-              {i > 0 && <span className={s.skiljare} aria-hidden="true"> · </span>}
-              {d}
-            </span>
-          ))}
-        </p>
         {k.notis && <p className={s.notis}>{k.notis}</p>}
       </div>
       <div className={s.matare}>
