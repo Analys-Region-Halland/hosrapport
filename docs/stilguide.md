@@ -221,7 +221,7 @@ Inga vänsterkanter, topplinjer, källtaggar ("Öppen data") eller fyrfältsfakt
 
 | # | Block | Spec |
 |---|---|---|
-| 1 | Masthead | Kicker, titel "Sammanfattning", dek, metarad (`7 kapitel · 80 indikatorer · publicerad 5 oktober 2026`) |
+| 1 | Masthead | Kicker, titel "Sammanfattning", dek, uppdateringsrutan (5.11). Ingen metarad. |
 | 2 | Det viktigaste | ≤ 6 punkter över alla kapitel |
 | 3 | Kapitel för kapitel | Per kapitel: nummer + namn (`typ.roll.avsnitt`), dek, statusruta (5.10), 2–3 huvudpunkter, länk "Läs kapitlet". Inga indikatorblock, inga grafer. |
 | 4 | Om statistiken | Länk till begreppslista och läsanvisning |
@@ -271,7 +271,7 @@ En adress utan tidsupplösning öppnar kapitlet i månadsvyn om den finns, annar
 
 | Del | Spec |
 |---|---|
-| Masthead | Som kapitlets, med kicker "Hälso- och sjukvården i Halland", titel, 2 px linje och dek. Metaraden är valfri. |
+| Masthead | Som kapitlets, med kicker "Hälso- och sjukvården i Halland", titel, 2 px linje och dek, därunder uppdateringsrutan (5.11) med startsidans fält. Ingen metarad. |
 | Del | Rubrik i `typ.roll.avsnitt` utan nummer, `rum.9` mellan delarna. Underrubrik i `typ.roll.figurtitel`. |
 | Löptext | `typ.roll.brod`, `matt.text`. Inga ramar, inga kort. |
 | Listor | Term i `typ.roll.granssnitt` 600 över förklaringen i `typ.roll.brod`. En statuslista visar statusmarkören (5.1) över förklaringen. |

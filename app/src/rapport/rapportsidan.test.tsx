@@ -281,7 +281,7 @@ describe("kapitelsidan och sammanfattningen", () => {
   });
 
   it("sammanfattningen har inga indikatorblock och inga grafer", () => {
-    const html = renderToStaticMarkup(<Sammanfattning kapitel={arsKapitel()} vy="ar" publicerad="2026-03-31" />);
+    const html = renderToStaticMarkup(<Sammanfattning kapitel={arsKapitel()} vy="ar" />);
     expect(antal(html, "<figure")).toBe(0);
     expect(antal(html, "data-indikator")).toBe(0);
     expect(antal(html, "data-las-kapitlet")).toBe(7);

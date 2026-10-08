@@ -1,7 +1,7 @@
 // rapport/Sammanfattning.tsx: sammanfattningssidan (stilguiden 4.2). Ägare: WP9.
 //
 // Ersätter gamla helhetsvyn. Inga indikatorblock och inga grafer:
-//   1 Masthead          kicker, titel "Sammanfattning", dek, metarad
+//   1 Masthead          kicker, titel "Sammanfattning", dek, uppdateringsrutan
 //   2 Det viktigaste    högst sex punkter över alla kapitel (rapport/huvudpunkter.ts)
 //   3 Kapitel för kapitel  nummer + namn (h2), dekens första mening,
 //                       statusmätare, kapitlets två nästa huvudpunkter och
@@ -23,16 +23,15 @@ import { statusIndikatorer } from "../start/statusIndikatorer";
 import { forstaMeningen, summeraStatus } from "../start/startModell";
 import { kapitelPunkter, nummerFor, valjOverKapitel } from "./huvudpunkter";
 import Masthead from "./Masthead";
-import { useManifestVy } from "./publicering";
-import { ANALYSNAMN, kapitelDek, kapitletsPeriod, periodText, publiceradText } from "./rapportText";
+import Uppdatering from "../ui/Uppdatering";
+import { uppdateringsFalt, useManifestVy } from "./publicering";
+import { kapitelDek } from "./rapportText";
 import t from "./delat.module.css";
 import s from "./Sammanfattning.module.css";
 
 export interface SammanfattningProps {
   kapitel: KapitelModell[];
   vy: VyId;
-  /** Publiceringsdatum (ISO). Förval: manifestets datum för vyn. */
-  publicerad?: string;
 }
 
 const KICKER = "Hälso- och sjukvården i Halland";
@@ -40,9 +39,8 @@ const DEK = "Läget i rapportens kapitel, med det viktigaste först. Indikatorer
 /** Punkter per kapitel under Det viktigaste (stilguiden 4.2: två till tre). Två, så att sidan ryms på tre skärmhöjder. */
 const PER_KAPITEL = 2;
 
-export default function Sammanfattning({ kapitel, vy, publicerad }: SammanfattningProps): ReactNode {
+export default function Sammanfattning({ kapitel, vy }: SammanfattningProps): ReactNode {
   const manifest = useManifestVy(vy);
-  const datum = publicerad ?? manifest?.datum;
   // Statusräkningen per kapitel ur manifestet, summerad som på startsidan
   const status = (id: string) => summeraStatus([manifest?.sektioner.find((x) => x?.id === id)?.status]);
   const valda = useMemo(() => valjOverKapitel(kapitel), [kapitel]);
@@ -64,19 +62,11 @@ export default function Sammanfattning({ kapitel, vy, publicerad }: Sammanfattni
   };
 
   const viktigast = valda.map((v) => punkt(v.kapitelIndex, v.punkt.text, v.punkt.kpi_id, false));
-  const antal = kapitel.reduce((n, k) => n + k.kpier.length, 0);
-  const perioder = kapitel.map(kapitletsPeriod).filter((p): p is string => !!p).sort();
-  const period = perioder[perioder.length - 1];
-  const metarad = [
-    period ? `${ANALYSNAMN[vy]} ${periodText(period, vy)}` : ANALYSNAMN[vy],
-    `${kapitel.length} kapitel`,
-    `${antal} indikatorer`,
-    ...(datum ? [publiceradText(datum)] : []),
-  ];
 
   return (
     <article className={s.sida} data-sammanfattning="">
-      <Masthead kicker={KICKER} titel="Sammanfattning" dek={DEK} metarad={metarad} />
+      <Masthead kicker={KICKER} titel="Sammanfattning" dek={DEK}
+        uppdatering={<Uppdatering falt={uppdateringsFalt(manifest)} />} />
 
       <DetViktigaste punkter={viktigast} blockId={KAPITELBLOCK.viktigast} />
 

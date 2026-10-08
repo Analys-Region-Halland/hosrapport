@@ -18,8 +18,10 @@ import { kapitelInfo } from "../data/kapitelinfo";
 import Lank from "../nav/Lank";
 import type { StartKapitel, StartModell } from "../start/startModell";
 import { useStartModell } from "../start/useStartModell";
+import Uppdatering from "../ui/Uppdatering";
 import { Laddar } from "./Laddar";
 import Masthead from "./Masthead";
+import { uppdateringsFalt, useManifestVy } from "./publicering";
 import t from "./delat.module.css";
 import s from "./Textsida.module.css";
 
@@ -42,22 +44,21 @@ const EXEMPELDATA = [
 ].join("\n\n");
 
 const PUBLICERING = [
-  "Rapporten publiceras som webbsida. Startsidans sidfot visar när den senast publicerades. Varje kapitel visar i sin metarad vilken period analysen gäller och när kapitlet publicerades.",
+  "Rapporten publiceras som webbsida. Överst på startsidan och i varje kapitel står när rapporten senast uppdaterades, vilken period den senaste datan gäller och när nästa uppdatering väntas.",
   "Under Exportera i verktygsraden kan ett kapitel eller hela rapporten sparas som PowerPoint. Där finns också Skriv ut och Kopiera länk till här.",
   "Varje kapitel, indikator och begrepp har en egen adress. En kopierad länk öppnar samma ställe i rapporten, med figuren i samma läge.",
 ].join("\n\n");
 
 export default function OmRapporten(): ReactNode {
   const { modell, fel } = useStartModell();
-  const kapitel = modell?.teman.flatMap((x) => x.kapitel) ?? [];
-  const antal = kapitel.reduce((n, k) => n + k.antal, 0);
-  const metarad = modell ? [`${kapitel.length} kapitel`, `${antal} indikatorer`] : [];
+  const arPost = useManifestVy("ar");
   // Begreppen länkas första gången per del
   const [redan] = useState(() => ({ vad: new Set<string>(), exempel: new Set<string>(), publicering: new Set<string>() }));
 
   return (
     <article className={s.sida} data-om-sida="">
-      <Masthead kicker={KICKER} titel="Om rapporten" dek={DEK} metarad={metarad} />
+      <Masthead kicker={KICKER} titel="Om rapporten" dek={DEK}
+        uppdatering={<Uppdatering falt={uppdateringsFalt(arPost, true)} />} />
 
       <section className={s.del} aria-labelledby="om-vad">
         <h2 id="om-vad" className={t.avsnittsrubrik}>Vad rapporten är</h2>
