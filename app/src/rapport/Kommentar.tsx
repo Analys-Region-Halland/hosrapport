@@ -1,8 +1,8 @@
 // rapport/Kommentar.tsx: verksamhetens kommentar (stilguiden 4.4). Ägare: WP9.
 //
 // Visas bara när en kommentar finns, i samma ram som AI-analysen (Textram,
-// 2026-10-08): etiketten "Verksamhetens kommentar", vem och när ("Robin R,
-// uppdaterad 16 juni 2026") och texten som löptext. Titeln blir kommentarens
+// 2026-10-08): etiketten "Verksamhetens kommentar", vem och när ("Exempel
+// Exempelsson, uppdaterad 8 oktober 2026") och texten som löptext. Titeln blir kommentarens
 // rubrik, rader som börjar med "## " mellanrubriker och rader med "- " punkter.
 // Det fiktiva exemplet, när ett finns, står alltid först, märkt "Fiktivt
 // exempel" och utan redigering (data/exempelkommentarer.ts); egna kommentarer

@@ -6,7 +6,7 @@
 //     så bred att texten inuti får brödtextens radlängd
 //   - överst en rad med etiketten som kicker (versaler, farg.fokus, med ikon)
 //     och till höger uppgifter eller en länk ("Så skapas texten →",
-//     "Robin R, uppdaterad 16 juni 2026")
+//     "Exempel Exempelsson, uppdaterad 8 oktober 2026")
 //   - därunder innehållet: brödtext, och i kommentaren gärna rubriker
 //
 // Ersätter Textmarke (märket före texten), som kändes som ett främmande element.
