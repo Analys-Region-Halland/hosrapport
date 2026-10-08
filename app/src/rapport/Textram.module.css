@@ -1,20 +1,23 @@
-/* Textram (2026-10-08): ramen kring AI-analysen och verksamhetens kommentar.
-   Ljus yta, hårlinje, rundade hörn, ingen skugga. Ramen står i textspalten
-   (indikatorblocket klipper allt utanför, content-visibility) och är så bred
-   att texten inuti får brödtextens radlängd. */
+/* Textram (2026-10-08, andra versionen): ramen kring AI-analysen och
+   verksamhetens kommentar, som en faktaruta i en tryckt rapport. Ingen kant,
+   ingen skugga, ingen vit kortyta: en svag ton strax mörkare än sidan, nästan
+   raka hörn och generösa inre marginaler. Texten inuti får något längre rader
+   än brödtexten (--extra), så att rutan läses som en del av spalten. Ramen står
+   i textspalten (indikatorblocket klipper allt utanför, content-visibility). */
 @layer komponent {
   .ram {
-    --ut: 20px;
+    --ut: 26px;
+    --extra: 48px;
     box-sizing: border-box;
-    max-inline-size: calc(var(--matt-text) + 2 * var(--ut) + 2px);
-    padding: 14px var(--ut) 18px;
-    background: var(--farg-yta);
-    border: 1px solid #DEDED7;
-    border-radius: 10px;
+    max-inline-size: calc(var(--matt-text) + var(--extra) + 2 * var(--ut));
+    padding: 18px var(--ut) 22px;
+    background: #F2F3EF;
+    border-radius: 3px;
   }
   @media (max-width: 719px) {
-    .ram { --ut: 14px; }
+    .ram { --ut: 16px; --extra: 0px; }
   }
+  .innehall :is(p, div) { max-inline-size: none; }
 
   .huvud {
     display: flex;
