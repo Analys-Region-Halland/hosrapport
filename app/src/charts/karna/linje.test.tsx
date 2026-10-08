@@ -102,22 +102,53 @@ describe("luckor och seriebrott (kolada-n79179)", () => {
     expect(stopp).toEqual([0, 1, 2, 3, 4, 5, 6, 9]);
   });
 
-  it("slutpunkt r 4,5 för Halland och inga punkter för kontextlinjer", () => {
+  it("en punkt per period med vit kant för Halland, pulserande slutpunkt r 5, inga punkter för kontextlinjer", () => {
     const fokus = scen.lager.find((l) => l.id === "fokus")!.former.filter((f) => f.typ === "punkt");
-    expect(fokus.map((f) => f.typ === "punkt" && f.r)).toEqual([tema.diagram.roll.fokus.punktradie]);
+    const r = tema.diagram.roll.fokus;
+    // Halland har värden 2016–2022 och 2025: åtta punkter, den sista är slutpunkten
+    expect(fokus.map((f) => f.typ === "punkt" && f.r)).toEqual([...Array(7).fill(r.punktradiePeriod), r.punktradie]);
+    expect(r.punktradie).toBe(5);
+    expect(fokus.every((f) => f.typ === "punkt" && f.kant === tema.diagram.punkter.kant)).toBe(true);
+    expect(fokus.map((f) => f.typ === "punkt" && !!f.puls)).toEqual([...Array(7).fill(false), true]);
     expect(scen.lager.find((l) => l.id === "kontext")!.former.every((f) => f.typ === "linje")).toBe(true);
+    // Riket får också en punkt per period, utan puls
+    const riket = scen.lager.find((l) => l.id === "referens")!.former.filter((f) => f.typ === "punkt");
+    expect(riket.length).toBeGreaterThan(1);
+    expect(riket.some((f) => f.typ === "punkt" && f.puls)).toBe(false);
   });
 
-  it("seriebrottet märks på tidsaxeln med ny metod", () => {
-    const axel = scen.lager.find((l) => l.id === "axel")!.former;
-    expect(axel.some((f) => f.typ === "streck")).toBe(true);
-    expect(axel.some((f) => f.typ === "text" && f.text === "ny metod")).toBe(true);
-    const smal = layout(telefon, 326).lager.find((l) => l.id === "axel")!.former;
-    expect(smal.some((f) => f.typ === "text")).toBe(false);
+  it("perioderna står för tätt: bara slutpunkten", () => {
+    // 63 månader i 326 px ger mindre än minstaAvstand mellan perioderna
+    const spec = fixtur("manad", "akutflode", "belaggning");
+    const s = layout(spec, 326);
+    const n = tidsaxel(spec).perioder.length;
+    expect(s.plot.b / (n - 1)).toBeLessThan(tema.diagram.punkter.minstaAvstand);
+    const fokus = s.lager.find((l) => l.id === "fokus")!.former.filter((f) => f.typ === "punkt");
+    expect(fokus.filter((f) => f.typ === "punkt" && f.r === tema.diagram.roll.fokus.punktradiePeriod)).toHaveLength(0);
+    expect(fokus.filter((f) => f.typ === "punkt" && f.puls)).toHaveLength(1);
   });
 
-  it("x-axeln har 2016, 2020 och 2025", () => {
-    expect(scen.xTicks.map((t) => t.text)).toEqual(["2016", "2020", "2025"]);
+  it("linjerna är lätt utjämnade kurvor (monoton)", () => {
+    expect(fokusLinje?.typ === "linje" && fokusLinje.d.includes("C")).toBe(true);
+  });
+
+  it("seriebrottet märks på tidsaxeln; ny metod bara när texten inte krockar med årtalen", () => {
+    for (const bredd of [326, 832]) {
+      const s = layout(telefon, bredd);
+      const axel = s.lager.find((l) => l.id === "axel")!.former;
+      expect(axel.some((f) => f.typ === "streck"), `${bredd}`).toBe(true);
+      const text = axel.find((f) => f.typ === "text" && f.text === "ny metod");
+      if (text?.typ === "text") {
+        for (const tk of s.xTicks) expect(Math.abs(tk.x - text.x), `${bredd} ${tk.text}`).toBeGreaterThan(20);
+      }
+    }
+    // Med varje år utskrivet får texten inte plats vid 832 px
+    expect(scen.lager.find((l) => l.id === "axel")!.former.some((f) => f.typ === "text")).toBe(false);
+  });
+
+  it("x-axeln har varje år 2016–2025", () => {
+    expect(scen.xTicks.map((t) => t.text)).toEqual(["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"]);
+    expect(layout(telefon, 326).xTicks.map((t) => t.text)).toEqual(["2016", "2020", "2025"]);
   });
 
   it("etiketter för Halland, riket, högsta och lägsta region", () => {
@@ -131,8 +162,9 @@ describe("perioder utan mätning (enkät vartannat år)", () => {
     const fokus = scen.lager.find((l) => l.id === "fokus")!.former.find((f) => f.typ === "linje");
     expect(fokus?.typ === "linje" && fokus.d.match(/M/g)?.length).toBe(1);
     const kontext = scen.lager.find((l) => l.id === "kontext")!.former;
-    expect(kontext.every((f) => f.typ === "linje" && f.d.includes("L"))).toBe(true);
-    expect(scen.xTicks.map((t) => t.text)).toEqual(["2016", "2020", "2024"]);
+    // Varje kontextlinje har minst ett segment (C i kurvan, L när den bara har två punkter)
+    expect(kontext.every((f) => f.typ === "linje" && /[CL]/.test(f.d))).toBe(true);
+    expect(scen.xTicks.map((t) => t.text)).toEqual(["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"]);
   });
 });
 

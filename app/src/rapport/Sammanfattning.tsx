@@ -18,7 +18,8 @@ import type { KapitelModell, VyId } from "../data/modell";
 import Lank from "../nav/Lank";
 import { KAPITELBLOCK } from "../nav/route";
 import DetViktigaste, { PunktLista, type ViktigPunkt } from "./DetViktigaste";
-import Statusmatare from "../start/Statusmatare";
+import Statusruta from "../start/Statusruta";
+import { statusIndikatorer } from "../start/statusIndikatorer";
 import { forstaMeningen, summeraStatus } from "../start/startModell";
 import { kapitelPunkter, nummerFor, valjOverKapitel } from "./huvudpunkter";
 import Masthead from "./Masthead";
@@ -93,7 +94,9 @@ export default function Sammanfattning({ kapitel, vy, publicerad }: Sammanfattni
                 {k.namn}
               </h2>
               {forsta && <p className={`${t.granssnitt} ${s.dek}`}>{forsta}</p>}
-              <Statusmatare status={status(k.id)} storlek="kapitel" />
+              <div className={s.statusruta}>
+                <Statusruta status={status(k.id)} indikatorer={statusIndikatorer(k, vy)} />
+              </div>
               <PunktLista punkter={egna} />
               <p className={t.granssnitt}>
                 <Lank till={{ sida: "kapitel", id: k.id, vy }} className={t.lank} data-las-kapitlet="">

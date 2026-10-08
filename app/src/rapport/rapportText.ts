@@ -152,7 +152,7 @@ export function utanUpprepning(text: string, kpi: KpiModell): string {
 function kapitletsTexter(kap: KapitelModell): string[] {
   const ut = [...kap.huvudpunkter.map((h) => h.text), ...kap.om_statistiken];
   for (const k of kap.kpier) {
-    ut.push(utanUpprepning(k.analystext, k));
+    ut.push(k.analystext);
     const f = k.fakta;
     if (f) ut.push(f.matt, f.avgransning, f.riktning, f.teori, ...f.faktorer.map((x) => x.text));
   }

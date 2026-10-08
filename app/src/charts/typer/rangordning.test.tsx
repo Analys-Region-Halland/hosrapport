@@ -12,21 +12,28 @@ import { radinteraktion } from "../karna/interaktion";
 import { kpiTillSpec } from "../kpiTillSpec";
 import { RENDERARE, type Scen } from "../register";
 import type { ChartSpec } from "../spec";
-import { allaSpecar, provSpec } from "./provdata";
+import { allaSpecar, provSpec, utanPlatshistorik } from "./provdata";
 import { radTooltip, rangRader } from "./rangordning";
 
 const r = RENDERARE.rangordning;
 const TUNG = 30_000;
 const layout = (spec: ChartSpec, bredd: number): Scen => r.layout(spec, { bredd, hojd: r.hojd(bredd, spec) }, tema);
-const prov = allaSpecar("rang", "rangordning");
+// Regionernas rangordning ritas när fokus har plats för färre än två perioder;
+// annars blir visningen rang ett bumpdiagram (2026-10-08). Fixturerna behåller
+// därför bara fokus senaste värde.
+const prov = allaSpecar("rang", "rangordning", [], utanPlatshistorik);
 const enheter = allaSpecar("enheterRang", "rangordning");
-const telefon = provSpec("ar", "skr-tillganglighet", "kolada-n79179", "rang", ["0012", "0024"]);
+const telefon = provSpec("ar", "skr-tillganglighet", "kolada-n79179", "rang", ["0012", "0024"], utanPlatshistorik);
 
 describe("fixturerna", () => {
   it("täcker rangordningen för alla SKR-indikatorer med regioner och enheterna i akutflödet", () => {
     expect(prov.length).toBeGreaterThan(60);
     expect(prov.every((p) => p.fil.includes("-skr-"))).toBe(true);
     expect(enheter.length).toBeGreaterThan(3);
+  });
+  it("med plats för flera perioder blir visningen rang ett bumpdiagram", () => {
+    expect(provSpec("ar", "skr-tillganglighet", "kolada-n79179", "rang").typ).toBe("bump");
+    expect(allaSpecar("rang", "bump").length).toBeGreaterThan(60);
   });
 });
 
@@ -59,7 +66,7 @@ describe("ordningen och platserna", () => {
   it("lika värden får samma plats och ligger intill varandra", () => {
     const kap = skrUtdrag();
     const kpi = kap.kpier.find((k) => k.id === "kolada-u79063")!;
-    const spec = kpiTillSpec(kpi, kap, { vy: "ar" }, "rang");
+    const spec = kpiTillSpec(utanPlatshistorik(kpi), kap, { vy: "ar" }, "rang");
     const rader = rangRader(spec);
     let lika = 0;
     for (let i = 1; i < rader.length; i++) {

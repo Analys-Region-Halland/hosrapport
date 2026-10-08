@@ -4,17 +4,19 @@
 // Vad som ritas per visning:
 //   tid           linje mot regionerna, linje mot förväntat intervall, stapel
 //                 (summamått, högst 24 perioder, inga regioner) eller enkel linje
-//   rang          regionerna rangordnade senaste perioden, topp 3-gräns utom för neutrala mått
+//   rang          placeringen bland regionerna år för år (bumpdiagram, 2026-10-08) när
+//                 fokus har plats för minst två perioder, annars regionerna
+//                 rangordnade senaste perioden; topp 3-gräns utom för neutrala mått
 //   enheter       små multiplar per underliggande enhet, delad skala
 //   enheterRang   de underliggande enheterna rangordnade
 // Inga legender och inga zoner: varje serie som ska ha namn står i `etiketter`.
 
 import type { Enhet, KapitelModell, KpiModell, Niva, Not, Punkt, TalFormat } from "../data/modell";
 import { platser, sistaMedVarde } from "../data/normalisera";
-import { UNDERTRYCKT, antalILoptext, tal } from "../design/format";
+import { DASH, UNDERTRYCKT, antalILoptext, tal } from "../design/format";
 import type { ChartSpec, SpecKontext, SpecSerie, VisningId } from "./spec";
 import {
-  antalMeningar, figurTitel, figurUndertitel, luckText, mattPeriod, miniSammanfattning, periodKort, textsammanfattning, versal,
+  antalMeningar, figurTitel, figurUndertitel, luckText, mattOchEnhet, mattPeriod, miniSammanfattning, periodKort, textsammanfattning, versal,
 } from "./text";
 import {
   NIVA_ORD, STATUS_ORD, barnNiva, enhet, giltigVisning, indexera, kortNamn, panelEnheter, punkter, rangordning,
@@ -99,7 +101,7 @@ const bas = (u: Underlag, visning: VisningId) => {
   const kalla = kallaFor(u.kpi);
   return {
     id: [u.kpi.id, visning, u.fokusId !== u.kpi.fokus ? u.fokusId : "", u.dagar ? "dagar" : ""].filter(Boolean).join(":"),
-    ...(u.ctx.fristaende ? { kicker: u.kpi.namn } : {}),
+    ...(u.ctx.fristaende ? { kicker: u.kap.namn } : {}),
     titel,
     undertitel: figurUndertitel(u.kpi, u.kap, u.ctx, visning),
     sammanfattning: textsammanfattning(u.kpi, u.kap, u.ctx, visning),
@@ -184,6 +186,58 @@ function linjeRegioner(u: Underlag): ChartSpec {
     },
     hojdklass: "standard",
     ...(platsAv ? { platsAv } : {}),
+  };
+}
+
+// ── Placering över tid (bumpdiagram) ──
+
+/**
+ * Regionernas plats år för år (charts/typer/bump.tsx). Byggs på linjens spec,
+ * som redan har plats per period för varje region; riket har ingen plats och
+ * utgår. null när fokus har plats för färre än två perioder.
+ */
+function bumpSpec(u: Underlag): ChartSpec | null {
+  const linje = linjeRegioner(u);
+  if (!linje.platsAv) return null;
+  const fokus = linje.serier.find((s) => s.roll === "fokus");
+  if ((fokus?.platser?.filter((p) => p !== null).length ?? 0) < 2) return null;
+
+  const serier: SpecSerie[] = [
+    ...linje.serier.filter((s) => s.roll !== "referens" && s.platser?.some((p) => p !== null)),
+    { id: "topp3", namn: "Topp 3", roll: "grans", varde: 3 },
+  ];
+  const regioner = serier.filter((s) => s.roll !== "grans");
+  const medPlats = u.perioder.map((_, i) => regioner.some((s) => s.platser?.[i] != null));
+  const forsta = medPlats.indexOf(true), sista = medPlats.lastIndexOf(true);
+  const intervall = forsta === sista
+    ? periodKort(u.perioder[forsta], u.vy)
+    : `${periodKort(u.perioder[forsta], u.vy)}${DASH}${periodKort(u.perioder[sista], u.vy)}`;
+  const flest = Math.max(...linje.platsAv);
+  const undertitel = `${mattOchEnhet(u.kpi, u.vy)}. Placering bland ${antalILoptext(flest)} regioner år för år, plats 1 är bäst, ${intervall}.`;
+
+  // Tabell: en rad per region, ordnade efter sista platsen; cellerna är platser
+  const sistaPlats = (s: SpecSerie) => [...(s.platser ?? [])].reverse().find((p) => p !== null) ?? Infinity;
+  const ordnade = [...regioner].sort((a, b) => sistaPlats(a) - sistaPlats(b) || a.namn.localeCompare(b.namn, "sv"));
+  // Textsammanfattningen (aria-label, 100–200 tecken) beskriver placeringen över tid
+  const fp = (fokus?.platser ?? []).map((p, i) => ({ p, i })).filter((x): x is { p: number; i: number } => x.p !== null);
+  const fa = fp[0], fb = fp[fp.length - 1];
+  let sammanfattning = `Bumpdiagram över ${u.fokusNamn}s plats bland ${flest} regioner år för år, ${intervall}. `
+    + `Plats ${fa.p} ${periodKort(u.perioder[fa.i], u.vy)} och plats ${fb.p} ${periodKort(u.perioder[fb.i], u.vy)}.`;
+  if (sammanfattning.length < 170) sammanfattning += " Alla platser finns i tabellvyn.";
+  return {
+    ...linje,
+    typ: "bump",
+    undertitel,
+    sammanfattning,
+    serier,
+    etiketter: regioner.map((s) => ({ serieId: s.id, text: s.namn })),
+    tabell: {
+      caption: `${linje.titel}: plats bland regionerna per år`,
+      kolumner: ["Region", ...periodKolumner(u)],
+      rader: ordnade.map((s) => [s.namn, ...(s.platser ?? []).map((p) => (p === null ? null : String(p)))]),
+      fokusRad: ordnade.findIndex((s) => s.roll === "fokus"),
+    },
+    hojdklass: "bump",
   };
 }
 
@@ -403,7 +457,7 @@ export function kpiTillSpec(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext
       if (u.tidTyp === "regioner") return linjeRegioner(u);
       if (u.tidTyp === "forvantat") return linjeForvantat(u);
       return stapelEllerLinje(u);
-    case "rang": return rangSpec(u, "rang");
+    case "rang": return bumpSpec(u) ?? rangSpec(u, "rang");
     case "enheter": return smaMultiplar(u);
     case "enheterRang": return rangSpec(u, "enheterRang");
   }
@@ -448,7 +502,7 @@ export function specTextfel(spec: ChartSpec): string[] {
     ...spec.etiketter.map((e) => e.text), ...spec.noter.map((n) => n.text), ...spec.tabell.kolumner];
   if (texter.some((t) => t.includes(em))) fel.push("em dash i genererad text");
   if (antalMeningar(spec.undertitel) > 2) fel.push(`undertiteln har fler än två meningar: ${spec.undertitel}`);
-  if (spec.titel.length > 75 || /[.?]$/.test(spec.titel)) fel.push(`titeln bryter mot 3.1: ${spec.titel}`);
+  if (spec.titel.length > 120 || /[.?]$/.test(spec.titel)) fel.push(`titeln bryter mot 3.1: ${spec.titel}`);
   const n = spec.sammanfattning.length;
   if (n < 100 || n > 200) fel.push(`sammanfattningen är ${n} tecken: ${spec.sammanfattning}`);
   return fel;

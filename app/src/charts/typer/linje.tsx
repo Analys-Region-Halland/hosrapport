@@ -2,14 +2,16 @@
 // 6.6 och 6.8). Förlaga: linjediagrammet i docs/referens/stilguide-granskning.html
 // (exempel 1.1). Ägare: WP2.
 //
-// Roller: fokus (2,5 px, slutpunkt r 4,5, ensamma värden r 3), referens
-// (1,5 px streckad 6 4, slutpunkt r 3), kontext (0,8 px, inga punkter),
-// kontextAktiv (lyft kontextlinje i överlägget, 1,75 px), markerad (fästa,
-// 2 px, slutpunkt r 3), forvantat (ett band, punkter utanför markeras med form
-// och kort etikett), mal (1 px streckad 2 2). Raka linjer, luckor bryter
-// linjen, inga legender, inga zoner, ingen halo under linjerna.
+// Roller: fokus (2 px, en punkt per period med vit kant, större pulserande
+// slutpunkt), referens (1,25 px streckad, små punkter per period), kontext
+// (tunn, inga punkter), kontextAktiv (lyft kontextlinje i överlägget),
+// markerad (fästa, punkter per period), forvantat (ett band, punkter utanför
+// markeras med form och kort etikett), mal (1 px streckad 2 2). Lätt utjämnade
+// kurvor (monoton, passerar genom varje punkt), luckor bryter linjen, inga
+// legender, inga zoner. Punkterna per period ritas bara när perioderna står
+// glest (tema.diagram.punkter.minstaAvstand), annars bara slutpunkten.
 
-import { area, line } from "d3";
+import { area, curveMonotoneX, line } from "d3";
 import type { Punkt } from "../../data/modell";
 import { period, varde } from "../../design/format";
 import { kompaktHojd, standardHojd, type Tema } from "../../design/tema";
@@ -27,9 +29,10 @@ import type { ChartSpec, SpecSerie } from "../spec";
 
 type Linjepunkt = [number, number | null];
 
-/** Banan för en serie: raka linjer, luckor bryter linjen. */
+/** Banan för en serie: lätt utjämnad (monoton) kurva genom punkterna, luckor bryter linjen. */
 function linjeD(punkter: Linjepunkt[], x: (i: number) => number, y: (v: number) => number): string {
   const gen = line<Linjepunkt>()
+    .curve(curveMonotoneX)
     .defined((d) => d[1] !== null)
     .x((d) => x(d[0]))
     .y((d) => y(d[1] as number));
@@ -40,6 +43,7 @@ function linjeD(punkter: Linjepunkt[], x: (i: number) => number, y: (v: number) 
 /** Bandet för förväntat intervall. */
 function bandD(punkter: [number, number, number][], x: (i: number) => number, y: (v: number) => number): string {
   const gen = area<[number, number, number]>()
+    .curve(curveMonotoneX)
     .x((d) => x(d[0]))
     .y0((d) => y(d[1]))
     .y1((d) => y(d[2]));
@@ -187,6 +191,9 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
 
   const stopp: Stopp[] = [];
   const fokus = spec.serier.find((s) => s.roll === "fokus");
+  // En punkt per period när perioderna står glest nog (stilguiden 6.4, 2026-10-08)
+  const periodPunkter = n > 1 && plot.b / (n - 1) >= t.diagram.punkter.minstaAvstand;
+  const kant = t.diagram.punkter.kant;
 
   for (const s of spec.serier) {
     const v = varden.get(s.id);
@@ -221,15 +228,25 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
         const id: LagerId = s.roll;
         lagg(id, { typ: "linje", serieId: s.id, d: linjeD(v, x, y), farg, bredd: r.bredd, streck: r.streck }, s.id);
         const sista = sistaDefinierade(v);
-        // Ensamma värden mellan luckor (inte för riket, som stilguiden 6.4)
-        if (s.roll !== "referens") {
+        if (periodPunkter) {
+          for (const [i, val] of v) {
+            if (val === null || (sista && i === sista[0])) continue;
+            lagg(id, { typ: "punkt", serieId: s.id, x: x(i), y: y(val), r: r.punktradiePeriod, farg, kant }, s.id);
+          }
+        } else if (s.roll !== "referens") {
+          // Ensamma värden mellan luckor (inte för riket, som stilguiden 6.4)
           const re = s.roll === "fokus" ? roll.fokus.punktradieEnsam : roll.markerad.punktradie;
           for (const [i, val] of ensamma(v)) {
             if (sista && i === sista[0]) continue;
             lagg(id, { typ: "punkt", serieId: s.id, x: x(i), y: y(val), r: re, farg }, s.id);
           }
         }
-        if (sista) lagg(id, { typ: "punkt", serieId: s.id, x: x(sista[0]), y: y(sista[1]), r: r.punktradie, farg }, s.id);
+        if (sista) {
+          lagg(id, {
+            typ: "punkt", serieId: s.id, x: x(sista[0]), y: y(sista[1]), r: r.punktradie, farg, kant,
+            ...(s.roll === "fokus" ? { puls: true } : {}),
+          }, s.id);
+        }
         break;
       }
     }

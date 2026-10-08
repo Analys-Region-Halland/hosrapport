@@ -61,9 +61,14 @@ describe("värdeaxelns ticks", () => {
 
 describe("tidsaxelns etiketter", () => {
   const x = (bredd: number, n: number) => (i: number) => 40 + (i * (bredd - 80)) / Math.max(1, n - 1);
-  it("år: första, vart femte och sista året", () => {
+  it("år: varje år när högst 16 år ryms utan krock", () => {
     const a = axel(ar(2016, 2025));
-    expect(tidsTicks(a, x(800, 10)).map((t) => t.text)).toEqual(["2016", "2020", "2025"]);
+    expect(tidsTicks(a, x(800, 10)).map((t) => t.text)).toEqual(["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"]);
+  });
+  it("år: fler än 16 år ger första, vart femte och sista året", () => {
+    const a = axel(ar(2004, 2025));
+    // 2005 krockar med 2004 och utelämnas.
+    expect(tidsTicks(a, x(800, 22)).map((t) => t.text)).toEqual(["2004", "2010", "2015", "2020", "2025"]);
   });
   it("år: krockar inte i smala diagram", () => {
     const a = axel(ar(2019, 2025));

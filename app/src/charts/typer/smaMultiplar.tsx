@@ -17,7 +17,7 @@
 // panelen under pekaren med enhetens värde och överordnad nivå. Klick på
 // panelens namn (eller Enter) borrar ned när figuren ger onFokus.
 
-import { line } from "d3";
+import { curveMonotoneX, line } from "d3";
 import { period, varde } from "../../design/format";
 import { kompaktHojd, smaMultiplarKolumner, tema, type Tema } from "../../design/tema";
 import { GEOMETRI } from "../karna/geometri";
@@ -34,9 +34,9 @@ import { RitaSmaMultiplar } from "./smaMultiplarRita";
 
 type Punkt = [number, number | null];
 
-/** Banan för en serie: raka linjer, luckor bryter linjen. */
+/** Banan för en serie: lätt utjämnad (monoton) kurva, luckor bryter linjen. */
 function linjeD(punkter: Punkt[], x: (i: number) => number, y: (v: number) => number): string {
-  const gen = line<Punkt>().defined((d) => d[1] !== null).x((d) => x(d[0])).y((d) => y(d[1] as number));
+  const gen = line<Punkt>().curve(curveMonotoneX).defined((d) => d[1] !== null).x((d) => x(d[0])).y((d) => y(d[1] as number));
   (gen as unknown as { digits?: (n: number) => unknown }).digits?.(1);
   return gen(punkter) ?? "";
 }
@@ -163,9 +163,10 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
       }
     });
     const bas = skarp(plot.y + plot.h);
-    lagg("axel", { typ: "streck", x1: plot.x, y1: bas, x2: plot.x + plot.b, y2: bas, farg: rutnatFarg, bredd: t.diagram.xAxel.baslinje, streck: null });
+    const axelFarg = t.farg.diagram.axel;
+    lagg("axel", { typ: "streck", x1: plot.x, y1: bas, x2: plot.x + plot.b, y2: bas, farg: axelFarg, bredd: t.diagram.xAxel.baslinje, streck: null });
     for (const tk of ticksHar) {
-      lagg("axel", { typ: "streck", x1: skarp(tk.x), y1: bas, x2: skarp(tk.x), y2: bas + t.diagram.xAxel.streckLangd, farg: rutnatFarg, bredd: t.diagram.xAxel.baslinje, streck: null });
+      lagg("axel", { typ: "streck", x1: skarp(tk.x), y1: bas, x2: skarp(tk.x), y2: bas + t.diagram.xAxel.streckLangd, farg: axelFarg, bredd: t.diagram.xAxel.baslinje, streck: null });
       lagg("axel", { typ: "text", x: tk.x, y: plot.y + plot.h + GEOMETRI.xEtikettBaslinje, text: tk.text, farg: t.farg.diagram.axeltext, vikt: not.vikt, storlek: not.storlek, ankare: "middle", halo: false });
     }
 
@@ -204,15 +205,19 @@ function layout(spec: ChartSpec, storlek: { bredd: number; hojd: number }, t: Te
     const f = roll.fokus;
     lagg("fokus", { typ: "linje", serieId: serie.id, d: linjeD(v, x, y), farg: f.farg, bredd: f.bredd, streck: f.streck }, serie.id);
     const sista = [...v].reverse().find((d) => d[1] !== null);
+    // En punkt per period när perioderna står glest nog (som linjediagrammet)
+    const periodPunkter = n > 1 && plot.b / (n - 1) >= t.diagram.punkter.minstaAvstand;
     v.forEach(([i, val], j) => {
       if (val === null) return;
       const ensam = (j === 0 || v[j - 1][1] === null) && (j === v.length - 1 || v[j + 1][1] === null);
-      if (ensam && sista && i !== sista[0]) lagg("fokus", { typ: "punkt", serieId: serie.id, x: x(i), y: y(val), r: f.punktradieEnsam, farg: f.farg }, serie.id);
+      if (sista && i !== sista[0] && (periodPunkter || ensam)) {
+        lagg("fokus", { typ: "punkt", serieId: serie.id, x: x(i), y: y(val), r: periodPunkter ? f.punktradiePeriod : f.punktradieEnsam, farg: f.farg, kant: t.diagram.punkter.kant }, serie.id);
+      }
       const s: Stopp = { serieId: serie.id, index: i, x: x(i), y: y(val), varde: val };
       panelStopp.push(s);
       stopp.push(s);
     });
-    if (sista) lagg("fokus", { typ: "punkt", serieId: serie.id, x: x(sista[0]), y: y(sista[1] as number), r: f.punktradie, farg: f.farg }, serie.id);
+    if (sista) lagg("fokus", { typ: "punkt", serieId: serie.id, x: x(sista[0]), y: y(sista[1] as number), r: f.punktradie - 1, farg: f.farg, kant: t.diagram.punkter.kant }, serie.id);
 
     // Referensens etikett bara i första panelen (stilguiden 6.6), vid linjeslutet på den sida där enheten inte är
     if (nr === 0 && referens) {

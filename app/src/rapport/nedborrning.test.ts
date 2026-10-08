@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { kpiTillSpec, specTextfel, visningar } from "../charts/kpiTillSpec";
-import type { SpecKontext } from "../charts/spec";
+import type { ChartSpec, SpecKontext } from "../charts/spec";
 import { UNDERTRYCKT_NOT } from "../data/exempelhierarki";
 import { HALLAND_ID, type KapitelModell, type KpiModell, type VyId } from "../data/modell";
 import { normalisera } from "../data/normalisera";
@@ -40,7 +40,12 @@ describe("nedborrning i akutflödet (månad)", () => {
     expect(flikar(k, l).slice(0, 2)).toEqual(["Region Halland", per]);
     expect(brodsmula(k, kap, l.fokus)).toEqual([{ id: HALLAND_ID, namn: "Region Halland" }]);
     l = { ...l, visning: "enheter" };
-    expect(spec(k, l).titel).toBe(per);
+    // Titeln är indikatornamnet; vad figuren visar står i undertitelns andra mening
+    const visar = (x: ChartSpec, ord: string) => {
+      expect(x.titel).toBe(k.namn);
+      expect(x.undertitel).toContain(`. ${ord}, `);
+    };
+    visar(spec(k, l), per);
     // Aggregatet är aldrig en panel
     expect(spec(k, l).paneler?.map((p) => p.enhetId)).not.toContain(HALLAND_ID);
 
@@ -52,7 +57,7 @@ describe("nedborrning i akutflödet (månad)", () => {
     expect(flikar(k, l).slice(0, 2)).toEqual([namn, under]);
     expect(brodsmula(k, kap, l.fokus).map((b) => b.namn)).toEqual(["Region Halland", namn]);
     const s = spec(k, l);
-    expect(s.titel).toBe(under);
+    visar(s, under);
     expect(s.borrbar).toBe(true);
     expect(s.paneler?.map((p) => p.enhetId)).not.toContain(enhet);
     expect(s.paneler?.every((p) => kap.enheter.find((e) => e.id === p.enhetId)?.parent_id === enhet)).toBe(true);
@@ -62,7 +67,7 @@ describe("nedborrning i akutflödet (månad)", () => {
     // Brödsmulan tillbaka till regionen: Per sjukhus igen
     l = bytFokus(k, kap, vy, l, HALLAND_ID);
     expect(l).toEqual({ fokus: HALLAND_ID, visning: "enheter" });
-    expect(spec(k, l).titel).toBe(per);
+    visar(spec(k, l), per);
   });
 
   it("från enheternas rangordning till nästa nivås rangordning, eller per enhet när den saknas", () => {

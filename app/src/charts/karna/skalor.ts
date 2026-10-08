@@ -230,7 +230,10 @@ export function tidsTicks(axel: Tidsaxel, x: (i: number) => number): TidsTick[] 
 
   const alla = forstaVal(axel);
   if (axel.vy === "ar") {
-    // År: första och sista året går före vart femte år.
+    // År: varje år när alla får plats (varje år har en punkt i linjen), annars
+    // första och sista året före vart femte år.
+    const allaAr = Array.from({ length: n }, (_, i) => i);
+    if (n <= 16 && ensam(allaAr)) return allaAr.map((i) => ({ index: i, x: x(i), text: text(i) }));
     const valda: number[] = [0];
     if (n > 1 && !krockar(valda, n - 1)) valda.push(n - 1);
     for (const i of alla) if (!valda.includes(i) && !krockar(valda, i)) valda.push(i);

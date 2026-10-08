@@ -1,11 +1,37 @@
-/* LagetIKorthet.module.css: översiktstabellen (stilguiden 5.8 och 5.9).
-   Radhöjd 44 px, hårlinje mellan rader, inga lodräta linjer, ingen zebra. */
+/* LagetIKorthet.module.css: översiktstabellen (stilguiden 5.8 och 5.9, omtag
+   2026-10-08 med kommundatas indikatortabell som förlaga). Kolumnhuvud i
+   dagspressstil med en förklarande rad, kraftig linje under huvudet, hela raden
+   klickbar med tonad bakgrund vid hovring, värdet i fetstil med förändringen
+   inom parentes och perioderna i en liten rad under. Inga lodräta linjer,
+   ingen zebra. */
 @layer komponent {
-  .tabell {
-    inline-size: 100%;
+  /* Kortet runt tabellen: samma ram som figurerna (Figur.module.css) */
+  .kort {
+    position: relative;
+    box-sizing: border-box;
     max-inline-size: var(--matt-figur);
     margin-block-start: var(--rum-4);
-    border-collapse: collapse;
+    padding: calc(var(--rum-4) + 4px) var(--rum-3) var(--rum-3);
+    background: var(--farg-yta);
+    border: 1px solid #D9D9D2;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgb(16 32 26 / 0.06), 0 10px 28px -12px rgb(16 48 36 / 0.22);
+  }
+  .kort::before {
+    content: "";
+    position: absolute;
+    inset: -1px -1px auto;
+    block-size: 4px;
+    border-radius: 12px 12px 0 0;
+    background: var(--farg-fokus);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .tabell {
+    inline-size: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
     font-family: var(--typ-granssnitt-familj);
     font-size: var(--typ-granssnitt-storlek);
     line-height: var(--typ-granssnitt-radhojd);
@@ -15,37 +41,42 @@
 
   .tabell th,
   .tabell td {
-    padding-block: var(--rum-1);
-    padding-inline: 0 var(--rum-4);
+    padding-block: var(--rum-2);
+    padding-inline: var(--rum-3);
     border-block-end: var(--matt-harlinje) solid var(--farg-harlinje);
     text-align: start;
     vertical-align: middle;
     font-weight: var(--typ-granssnitt-vikt);
   }
-  .tabell th:last-child,
-  .tabell td:last-child {
-    padding-inline-end: 0;
-  }
 
   .tabell tbody td,
   .tabell tbody th {
-    block-size: var(--komponent-tabell-radhojd);
+    block-size: 52px;
   }
 
-  /* Huvud: not 600 text2, gemener (stilguiden 5.9) */
+  /* Huvud: kolumnnamn i 600 svart, förklaringen under i not-storlek. Kraftig linje under. */
   .tabell thead th {
     vertical-align: bottom;
-    padding-block: 0 var(--rum-1);
+    padding-block: 0 var(--rum-2);
+    border-block-end: 2px solid var(--farg-black);
     font-family: var(--typ-not-familj);
     font-size: var(--typ-not-storlek);
     line-height: var(--typ-not-radhojd);
     font-weight: var(--typ-not-viktStark);
-    color: var(--farg-text2);
-    white-space: nowrap;
+    color: var(--farg-black);
   }
+  .forklaring {
+    display: block;
+    max-inline-size: 15em;
+    margin-block-start: 2px;
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text2);
+    white-space: normal;
+  }
+  .namnkolumn .forklaring { max-inline-size: none; }
+  .tabell thead .tal .forklaring { min-inline-size: 9em; margin-inline-start: auto; text-align: end; }
 
-  .sortera,
-  .huvudtext {
+  .sortera {
     display: inline-flex;
     align-items: center;
     gap: var(--rum-1);
@@ -55,13 +86,11 @@
     background: none;
     border: 0;
     font: inherit;
+    font-size: 14px;
     color: inherit;
-  }
-  .sortera {
     cursor: pointer;
   }
   .sortera:hover {
-    color: var(--farg-black);
     text-decoration-line: underline;
     text-underline-offset: var(--typ-lank-avstand);
   }
@@ -77,27 +106,60 @@
     inline-size: 100%;
   }
 
-  /* Gruppetikett: avsnittets namn, granssnitt 600 black, inte versalt, inte grönt */
+  /* Gruppetikett: avsnittets namn med ett kort grönt streck ovanför */
   .tabell .grupp th {
     block-size: auto;
-    padding-block: var(--rum-5) var(--rum-1);
+    padding-block: var(--rum-5) var(--rum-2);
     font-weight: var(--typ-granssnitt-viktStark);
+    font-size: 16px;
     color: var(--farg-black);
   }
-  .tabell tbody:first-of-type .grupp th {
-    padding-block-start: var(--rum-3);
+  .tabell .grupp th::before {
+    content: "";
+    display: block;
+    inline-size: 36px;
+    block-size: 3px;
+    margin-block-end: var(--rum-2);
+    background: var(--farg-fokus);
   }
+  .tabell tbody:first-of-type .grupp th {
+    padding-block-start: var(--rum-4);
+  }
+
+  /* Raden: hela raden leder till indikatorn */
+  .rad {
+    cursor: pointer;
+  }
+  .rad > * {
+    transition: background-color 120ms;
+  }
+  .rad:hover > *,
+  .rad.pekad > * {
+    background: var(--farg-fokusLjus);
+  }
+  .rad:hover > :first-child,
+  .rad.pekad > :first-child { border-start-start-radius: 8px; border-end-start-radius: 8px; }
+  .rad:hover > :last-child,
+  .rad.pekad > :last-child { border-start-end-radius: 8px; border-end-end-radius: 8px; }
 
   .namn {
     text-wrap: pretty;
   }
+  .nr {
+    flex: none;
+    min-inline-size: 2.2em;
+    color: var(--farg-fokus);
+    font-variant-numeric: var(--typ-siffror);
+  }
   .namnlank,
   .namnlank:visited {
+    display: flex;
+    align-items: baseline;
     color: var(--farg-black);
     text-decoration: none;
   }
-  .namnlank:hover {
-    color: var(--farg-fokus);
+  .rad:hover .namnText,
+  .rad.pekad .namnText {
     text-decoration-line: underline;
     text-decoration-thickness: var(--typ-lank-understrykning);
     text-underline-offset: var(--typ-lank-avstand);
@@ -116,20 +178,87 @@
     justify-content: flex-end;
   }
 
-  .period {
-    display: block;
-    font-family: var(--typ-not-familj);
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    color: var(--farg-text3);
+  .varde b {
+    font-weight: 650;
+  }
+  .av {
+    color: var(--farg-text2);
+  }
+  .varde {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .utveckling {
-    white-space: nowrap;
-  }
-  .mini {
+  /* Förändringen som ett litet chip: grönt åt rätt håll, rött åt fel håll */
+  .chip {
     display: inline-flex;
-    vertical-align: middle;
+    align-items: center;
+    gap: 3px;
+    min-inline-size: 3.2em;
+    justify-content: center;
+    padding: 1px 7px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 650;
+    font-variant-numeric: var(--typ-siffror);
+  }
+  .pil { font-size: 8px; line-height: 1; }
+  .battre { background: var(--farg-status-gron-botten); color: var(--farg-status-gron-text); }
+  .samre { background: var(--farg-status-rod-botten); color: var(--farg-status-rod-text); }
+  .neutral { background: var(--farg-plats-neutral-yta); color: var(--farg-plats-neutral-text); }
+
+  /* Platskortet: bricka i placeringens ton, "av n", förändring och platsskala */
+  .platskort {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+  .platsrad {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bricka {
+    display: inline-block;
+    min-inline-size: 30px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 700;
+    font-variant-numeric: var(--typ-siffror);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .topp { background: var(--farg-plats-topp-yta); color: var(--farg-plats-topp-text); box-shadow: inset 0 0 0 1px var(--farg-plats-topp-punkt); }
+  .gul { background: var(--farg-plats-gul-yta); color: var(--farg-plats-gul-text); }
+  .barnsten { background: var(--farg-plats-barnsten-yta); color: var(--farg-plats-barnsten-text); }
+  .orange { background: var(--farg-plats-orange-yta); color: var(--farg-plats-orange-text); }
+  .rod { background: var(--farg-plats-rod-yta); color: var(--farg-plats-rod-text); }
+  .morkrod { background: var(--farg-plats-morkrod-yta); color: var(--farg-plats-morkrod-text); box-shadow: inset 0 0 0 1px var(--farg-plats-morkrod-punkt); }
+  .skala { display: block; }
+
+  /* Perioderna under värdet; äldre än kapitlets period markeras */
+  .period {
+    display: block;
+    margin-block-start: 2px;
+    font-family: var(--typ-not-familj);
+    font-size: 12.5px;
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+  }
+  .period.aldre {
+    inline-size: fit-content;
+    margin-inline-start: auto;
+    padding-inline: 6px;
+    border-radius: 4px;
+    background: var(--farg-status-gul-botten);
+    color: var(--farg-status-gul-text);
+    font-weight: 600;
   }
 
   .status {
@@ -142,10 +271,13 @@
     color: var(--farg-text3);
   }
 
-  /* Mobil: Indikator, Senaste, Status (stilguiden 5.8) */
+  /* Mobil: Indikator, Halland, Status */
   @media (max-width: 639px) {
     .dMob {
       display: none;
     }
+    .tabell th,
+    .tabell td { padding-inline: var(--rum-2); }
+    .forklaring { display: none; }
   }
 }

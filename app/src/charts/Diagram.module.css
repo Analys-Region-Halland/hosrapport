@@ -37,6 +37,28 @@
     outline-offset: var(--komponent-fokusring-avstand);
   }
 
+  /* Fokusseriens slutpunkt pulserar lugnt (tema.diagram.puls). Ringen har
+     opacitet 0 i SVG:n, så att den inte syns i nedladdade bilder. */
+  .svg [data-puls] {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: puls 2.4s cubic-bezier(0.25, 0.6, 0.35, 1) infinite;
+  }
+
+  @keyframes puls {
+    0% { transform: scale(1); opacity: 0.8; }
+    70% { transform: scale(2.6); opacity: 0; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .svg [data-puls] { animation: none; }
+  }
+
+  @media print {
+    .svg [data-puls] { animation: none; }
+  }
+
   /* Små multiplar (WP3): panelens namn borrar ned när figuren kan det
      (stilguiden 6.7). Hand och understrykning som en länk; tangentbordet når
      samma sak med Enter i panelen. */

@@ -20,7 +20,15 @@ export function RitaForm({ f }: { f: Form }): ReactNode {
     case "yta":
       return <path d={f.d} fill={f.farg} stroke="none" data-serie={f.serieId} />;
     case "punkt":
-      return <circle cx={f.x} cy={f.y} r={f.r} fill={f.farg} data-serie={f.serieId} />;
+      if (!f.kant && !f.puls) return <circle cx={f.x} cy={f.y} r={f.r} fill={f.farg} data-serie={f.serieId} />;
+      return (
+        <g data-serie={f.serieId}>
+          {/* Pulsringen syns bara med animationen (Diagram.module.css); i export är den osynlig */}
+          {f.puls && <circle cx={f.x} cy={f.y} r={f.r} fill="none" stroke={f.farg} strokeWidth={1.5} opacity={0} data-puls="" />}
+          <circle cx={f.x} cy={f.y} r={f.r} fill={f.farg}
+            stroke={f.kant ? tema.farg.yta : undefined} strokeWidth={f.kant || undefined} />
+        </g>
+      );
     case "markor":
       return <path d={markorD(f.form, f.x, f.y, f.storlek)} fill={f.farg} data-serie={f.serieId} data-markor={f.form} />;
     case "streck":
@@ -97,11 +105,11 @@ export function YAxel({ scen }: { scen: Scen }): ReactNode {
   );
 }
 
-/** Tidsaxel: baslinje 1 px med 5 px streck nedåt vid etiketterna. */
+/** Tidsaxel: baslinje 1 px med 5 px streck nedåt vid etiketterna, i axelfärgen (hög kontrast). */
 export function XAxel({ scen }: { scen: Scen }): ReactNode {
   const { plot } = scen;
   const y = skarp(plot.y + plot.h);
-  const farg = tema.farg.diagram.rutnat;
+  const farg = tema.farg.diagram.axel;
   const a = textAttr(tema.farg.diagram.axeltext);
   const x = tema.diagram.xAxel;
   return (
@@ -140,8 +148,8 @@ export function Etikettkolumn({ etiketter }: { etiketter: Etikett[] }): ReactNod
         <g key={e.serieId} data-etikett={e.serieId} style={e.interaktiv ? { cursor: "pointer" } : undefined}>
           {/* Pekaryta: hela etikettraden, inte bara glyferna */}
           <rect x={e.x - (g.slut - g.knack)} y={e.y - (rad * e.rader.length) / 2} width={e.textbredd + g.slut - g.knack} height={rad * e.rader.length} fill="transparent" />
-          <path d={kopplingD(e)} fill="none" stroke={k.farg} strokeWidth={k.bredd} />
-          <EtikettText e={e} />
+          {e.koppling !== false && <path d={kopplingD(e)} fill="none" stroke={k.farg} strokeWidth={k.bredd} />}
+          <EtikettText e={e} halo={e.koppling === false} />
         </g>
       ))}
     </g>

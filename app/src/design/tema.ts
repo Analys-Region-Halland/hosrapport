@@ -11,16 +11,18 @@
 
 const diagramFarg = {
   fokus: "#00664D",
-  kontext: "#D6D6D1",
+  kontext: "#CDCDC7",
   kontextPunkt: "#6B716D",
-  kontextAktiv: "#4A4F4C",
-  referens: "#4A4F4C",
+  kontextAktiv: "#2F3431",
+  referens: "#2F3431",
   forvantat: "#DDE3EA",
-  rutnat: "#D2D2CD",
-  grans: "#6B716D",
-  nollinje: "#6B716D",
-  axeltext: "#6B716D",
-  anslutning: "#A9A9A4",
+  rutnat: "#CBCBC4",
+  // Axlarna i hög kontrast (2026-10-08): baslinje, axelstreck och tickvärden nästan svarta
+  axel: "#1A1A1A",
+  grans: "#4E5450",
+  nollinje: "#1A1A1A",
+  axeltext: "#1A1A1A",
+  anslutning: "#8E8E89",
   // Fästa serier i denna ordning, högst fyra (stilguiden 2.2)
   markering: ["#004990", "#B35900", "#433C9D", "#895B42"],
 } as const;
@@ -39,14 +41,29 @@ export const tema = {
     papper: "#FBFBF9",
     yta: "#FFFFFF",
     black,
-    text2: "#4A4F4C",
-    text3: "#6B716D",
+    text2: "#2F3431",
+    text3: "#4E5450",
     harlinje: "#E6E6E1",
     fokus: "#00664D",
     fokusLjus: "#E9F2EE",
     fokusring: "#00664D",
     diagram: diagramFarg,
     status,
+    // Placeringens ton (2026-10-08), en skala som följer statusgränserna för
+    // rankade mått (I fas 1–3, Bevaka 4–7, Avvikelse 8+) och delar dem finare:
+    // 1–3 grön, 4–5 gul, 6–7 bärnsten, 8–11 orange, 12–16 röd, 17+ mörkröd.
+    // yta = brickans botten, text = siffran, punkt = markör och skalans segment.
+    plats: {
+      topp: { yta: "#D8EEDF", text: "#135634", punkt: "#22804F" },
+      gul: { yta: "#FBF0CC", text: "#6B4D00", punkt: "#D9AB1F" },
+      barnsten: { yta: "#FCE3BF", text: "#734300", punkt: "#E38E12" },
+      orange: { yta: "#FBD9C2", text: "#80360B", punkt: "#E2672A" },
+      rod: { yta: "#F7D0C9", text: "#87251B", punkt: "#C73E2E" },
+      morkrod: { yta: "#EBB9B0", text: "#621510", punkt: "#94221A" },
+      neutral: { yta: "#EFEFEA", text: "#2F3431", punkt: "#6B716D" },
+      // Sista platsen i varje ton utom den sista (mörkröd gäller resten)
+      grans: [3, 5, 7, 11, 16],
+    },
   },
 
   // ── 2.4 Typografi ──
@@ -125,11 +142,12 @@ export const tema = {
     // Serieroller (6.4). bredd = linjebredd, streck = stroke-dasharray (null = heldragen),
     // punktradie = slutpunkt.
     roll: {
-      fokus: { farg: diagramFarg.fokus, bredd: 2.5, streck: null, punktradie: 4.5, punktradieEnsam: 3 },
-      referens: { farg: diagramFarg.referens, bredd: 1.5, streck: "6 4", punktradie: 3 },
+      // punktradiePeriod: en punkt per period (år) när perioderna står glest nog (punkter.minstaAvstand)
+      fokus: { farg: diagramFarg.fokus, bredd: 2, streck: null, punktradie: 5, punktradieEnsam: 3, punktradiePeriod: 3.5 },
+      referens: { farg: diagramFarg.referens, bredd: 1.25, streck: "5 4", punktradie: 3, punktradiePeriod: 2.25 },
       kontext: { farg: diagramFarg.kontext, bredd: 0.8, streck: null, punktradie: 0 },
       kontextAktiv: { farg: diagramFarg.kontextAktiv, bredd: 1.75, streck: null, punktradie: 3 },
-      markerad: { farg: diagramFarg.markering, bredd: 2, streck: null, punktradie: 3 },
+      markerad: { farg: diagramFarg.markering, bredd: 1.75, streck: null, punktradie: 3.5, punktradiePeriod: 2.5 },
       forvantat: { farg: diagramFarg.forvantat, bredd: 0, streck: null, punktradie: 0, intervall: 0.8, markor: 7 },
       grans: { farg: diagramFarg.grans, bredd: 0.8, streck: null, punktradie: 0 },
       mal: { farg: black, bredd: 1, streck: "2 2", punktradie: 0 },
@@ -138,7 +156,7 @@ export const tema = {
     avvikelse: { utanfor: status.gul.markor, langtUtanfor: status.rod.markor, intervallLangt: 0.95 },
     // Höjdformler (6.5): clamp(min, andel × bredd, max)
     hojd: {
-      standard: { min: 260, andel: 0.52, max: 420 },
+      standard: { min: 300, andel: 0.62, max: 520 },
       rangordning: { rad: 24, radMobil: 22 },
       kompakt: { min: 170, andel: 0.66, max: 230 },
       minidiagram: { bredd: 96, hojd: 24 },
@@ -171,6 +189,13 @@ export const tema = {
     tooltip: { helBreddUnder: 560 },
     maxFasta: 4,
     platta: { luft: 24, luftMobil: 16 },
+    // Punkter per period (6.4): vit kant så att punkten lossnar från rutnätet. Punkterna
+    // ritas bara när perioderna står minst minstaAvstand px isär.
+    punkter: { kant: 1.25, minstaAvstand: 14 },
+    // Fokusseriens slutpunkt pulserar (respekterar prefers-reduced-motion); varaktighet i ms
+    puls: { varaktighet: 2400, skala: 2.6 },
+    // Bumpdiagrammet (6.6): fältet bakom topp 3
+    bump: { topp3: "#E8F4EC" },
   },
 } as const;
 

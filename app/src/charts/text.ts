@@ -1,9 +1,9 @@
 // charts/text.ts: figurens titel, undertitel och textsammanfattning enligt
 // stilguiden 6.2, 6.8 och 3.2. Ägare: WP1. Rena funktioner.
 //
-// Titeln är beskrivande och upprepar aldrig indikatornamnet eller perioden.
-// Undertiteln har högst två meningar i fast ordning: mått och enhet. Population,
-// period. Måttet hämtas ur `fakta.matt` (första ledet) eller Kolada-titeln,
+// Titeln är indikatorns namn (2026-10-08), så att figuren står på egna ben när
+// den laddas ned eller förstoras. Undertiteln har högst två meningar i fast
+// ordning: mått och enhet. Vad figuren visar, population, period. Måttet hämtas ur `fakta.matt` (första ledet) eller Kolada-titeln,
 // aldrig ur beskrivningens källhänvisning. Sammanfattningen (aria-label) är
 // 100–200 tecken.
 
@@ -21,8 +21,6 @@ import type { Underlag } from "./underlag";
 /** Stor begynnelsebokstav. */
 export const versal = (s: string) => s.charAt(0).toLocaleUpperCase("sv") + s.slice(1);
 
-/** Antal först i en mening: "Tre", "21". */
-const antalForst = (n: number) => versal(antalILoptext(n));
 
 /**
  * Antal meningar. Ett meningsslut är . ! ? följt av blanksteg och versal eller
@@ -207,21 +205,12 @@ function inom200(grund: string[], tillagg: string[]): string {
 
 // ── Titel, undertitel, sammanfattning ──
 
-/** Figurens titel (stilguiden 6.2). */
-export function figurTitel(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext, visning: VisningId): string {
-  const u = underlag(kpi, kap, ctx);
-  switch (giltigVisning(u, visning)) {
-    case "tid":
-      if (u.tidTyp === "regioner") return `${u.fokusNamn} jämfört med övriga ${NIVA_ORD[u.fokus.niva].flera}`;
-      if (u.tidTyp === "forvantat") return "Mot förväntat intervall";
-      return "Över tid";
-    case "rang": return `${versal(NIVA_ORD.region.bestamd)} rangordnade`;
-    case "enheter": return `Per ${NIVA_ORD[barnNiva(u)].en}`;
-    case "enheterRang": return `${versal(NIVA_ORD[barnNiva(u)].bestamd)} rangordnade`;
-  }
+/** Figurens titel (stilguiden 6.2): indikatorns namn i alla visningar. */
+export function figurTitel(kpi: KpiModell, _kap?: KapitelModell, _ctx?: SpecKontext, _visning?: VisningId): string {
+  return kpi.namn;
 }
 
-/** Figurens undertitel: mått och enhet. Population, period. */
+/** Figurens undertitel: mått och enhet. Vad figuren visar, population, period. */
 export function figurUndertitel(kpi: KpiModell, kap: KapitelModell, ctx: SpecKontext, visning: VisningId): string {
   const u = underlag(kpi, kap, ctx);
   const v = giltigVisning(u, visning);
@@ -230,12 +219,12 @@ export function figurUndertitel(kpi: KpiModell, kap: KapitelModell, ctx: SpecKon
   switch (v) {
     case "tid": {
       if (u.tidTyp === "regioner") {
-        const n = 1 + u.regioner.length;
-        andra = `${antalForst(n)} ${NIVA_ORD.region.flera}${u.referensId ? " och riket" : ""}, ${intervallFor(u, [u.fokusId, ...u.regioner], "kort")}`;
+        const n = u.regioner.length;
+        andra = `${u.fokusNamn} jämfört med övriga ${antalILoptext(n)} ${NIVA_ORD.region.flera}${u.referensId ? " och riket" : ""}, ${intervallFor(u, [u.fokusId, ...u.regioner], "kort")}`;
       } else if (u.tidTyp === "forvantat") {
         // Summamått har redan "per månad" i måttet.
         const per = kpi.aggregering === "summa" ? "" : `per ${PERIODORD[u.vy]} `;
-        andra = `${u.fokusNamnLang}, ${per}${intervallFor(u, [u.fokusId], "kort")}`;
+        andra = `${u.fokusNamnLang} mot förväntat intervall, ${per}${intervallFor(u, [u.fokusId], "kort")}`;
       } else {
         andra = `${u.fokusNamnLang}, ${intervallFor(u, [u.fokusId], "kort")}`;
       }
@@ -243,19 +232,19 @@ export function figurUndertitel(kpi: KpiModell, kap: KapitelModell, ctx: SpecKon
     }
     case "rang": {
       const r = rangordning(u, "rang");
-      andra = `${antalForst(r.rader.length)} ${NIVA_ORD.region.flera} med värde, ${periodKort(r.period, u.vy)}`;
+      andra = `${versal(NIVA_ORD.region.bestamd)} rangordnade, ${antalILoptext(r.rader.length)} med värde, ${periodKort(r.period, u.vy)}`;
       break;
     }
     case "enheter": {
       const n = panelEnheter(u).length;
       const summa = kpi.aggregering === "summa" ? ` i ${u.fokusNamnLang}` : "";
-      andra = `${antalForst(n)} ${NIVA_ORD[barnNiva(u)].flera}${summa}, ${intervallFor(u, u.barn.map((e) => e.id), "kort")}`;
+      andra = `Per ${NIVA_ORD[barnNiva(u)].en}, ${antalILoptext(n)} ${NIVA_ORD[barnNiva(u)].flera}${summa}, ${intervallFor(u, u.barn.map((e) => e.id), "kort")}`;
       break;
     }
     case "enheterRang": {
       const r = rangordning(u, "enheterRang");
       const n = r.rader.filter((x) => x.varde !== null).length;
-      andra = `${antalForst(n)} ${NIVA_ORD[barnNiva(u)].flera} med värde, ${periodKort(r.period, u.vy)}`;
+      andra = `${versal(NIVA_ORD[barnNiva(u)].bestamd)} rangordnade, ${antalILoptext(n)} med värde, ${periodKort(r.period, u.vy)}`;
       break;
     }
   }

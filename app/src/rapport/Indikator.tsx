@@ -3,15 +3,14 @@
 // Ordning, och inget annat:
 //   1 rubrikrad     nummer (farg.fokus) + namn (h3, typ.roll.indikator) +
 //                   statusmarkör efter namnet; ingen markör för beskrivande mått
-//   2 nyckeltal     värde · plats · period (rapport/Nyckeltal)
-//   3 analys        Prosa med begrepp, proveniensrad med länk till Om statistiken
-//   4 figur         figur/Figur med h4, visningar, nivåer (brödsmula, nedborrning)
+//   2 analys        Prosa med begrepp, proveniensrad med länk till Om statistiken
+//   3 figur         figur/Figur med h4, visningar, nivåer (brödsmula, nedborrning)
 //                   och dagflik, monteras när den närmar sig skärmen
-//   5 fördjupning   stängd <details> (rapport/IndikatorFordjupning)
-//   6 kommentar     bara när en finns, eller i redigeringsläget (rapport/Kommentar)
-// Status visas en gång (rubrikraden), värde, plats och period en gång
-// (nyckeltalsraden) och namnet en gång (rubriken; figuren upprepar det inte,
-// det står bara som kicker i förstoring och nedladdning).
+//   4 fördjupning   stängd <details> (rapport/IndikatorFordjupning)
+//   5 kommentar     bara när en finns, eller i redigeringsläget (rapport/Kommentar)
+// Nyckeltalsraden (värde · plats · period) togs bort 2026-10-08: värde och
+// plats står i analysens första mening, i figuren och i Läget i korthet.
+// Figurens titel är indikatornamnet, så att figuren står på egna ben vid export.
 //
 // Begreppen länkas första gången i indikatorn: analysen och fördjupningen
 // delar samma `redan`.
@@ -38,8 +37,6 @@ import IndikatorFordjupning from "./IndikatorFordjupning";
 import Kommentar from "./Kommentar";
 import { figurReserv, indikatorUppskattning } from "./hojder";
 import { brodsmula, bytFokus, giltigtLage, lageFranAdress, lageTillAdress, type NivaLage } from "./nedborrning";
-import Nyckeltal from "./Nyckeltal";
-import { utanUpprepning } from "./rapportText";
 import t from "./delat.module.css";
 import s from "./Indikator.module.css";
 
@@ -60,7 +57,7 @@ export const PROVENIENS = "AI-analys, genererad ur rapportens data.";
 export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, latFigur = true }: IndikatorProps): ReactNode {
   const rubrikId = useId();
   const [redan] = useState(() => new Set<string>());
-  const analys = useMemo(() => utanUpprepning(kpi.analystext, kpi), [kpi]);
+  const analys = kpi.analystext.trim();
   const om = { sida: "kapitel" as const, id: kapitel.id, vy, i: KAPITELBLOCK.om, ...(redigera ? { red: true } : {}) };
   // Uppskattad höjd för content-visibility innan blocket ritats första gången
   const [hojd] = useState(() => indikatorUppskattning(typeof innerWidth === "number" ? innerWidth : tema.matt.figur));
@@ -84,10 +81,6 @@ export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, 
             <StatusMarkor status={kpi.status} />
           </span>
         )}
-      </div>
-
-      <div className={s.nyckeltal}>
-        <Nyckeltal kpi={kpi} vy={vy} />
       </div>
 
       {analys && (
@@ -204,7 +197,7 @@ export function IndikatorFigur({ kpi, kapitel, vy, start }: IndikatorFigurProps)
     <Figur
       spec={spec}
       rubrikniva={4}
-      indikatornamn={kpi.namn}
+      indikatornamn={kapitel.namn}
       visningar={vis}
       visning={lage.visning}
       onVisning={bytVisning}

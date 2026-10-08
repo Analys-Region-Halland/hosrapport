@@ -1,0 +1,121 @@
+/* RadKort: hovringskortet i Läget i korthet (2026-10-08). Ett lyft kort med
+   skugga, samma formspråk som figurkortet. Pekaren går rakt igenom kortet
+   (pointer-events: none), så att raden under fortsätter att styra det. */
+@layer komponent {
+  .kort {
+    position: fixed;
+    z-index: 60;
+    box-sizing: border-box;
+    padding: var(--rum-4);
+    background: var(--farg-yta);
+    border: 1px solid #D4D4CC;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgb(16 32 26 / 0.06), 0 18px 44px -12px rgb(16 48 36 / 0.32);
+    font-family: var(--typ-granssnitt-familj);
+    color: var(--farg-black);
+    pointer-events: none;
+    animation: in 120ms ease-out;
+  }
+  @keyframes in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kort { animation: none; }
+  }
+
+  .huvud {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--rum-3);
+  }
+  .kicker {
+    margin: 0 0 2px;
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-fokus);
+  }
+  .namn {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 650;
+    text-wrap: balance;
+  }
+
+  .siffror {
+    display: flex;
+    gap: var(--rum-6);
+    margin-block-start: var(--rum-3);
+  }
+  .stort {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.15;
+    font-weight: 650;
+    font-variant-numeric: var(--typ-siffror);
+    white-space: nowrap;
+  }
+  .av {
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .under {
+    margin: 2px 0 0;
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text2);
+    font-variant-numeric: var(--typ-siffror);
+  }
+  .battre { color: var(--farg-status-gron-text); font-weight: 600; }
+  .samre { color: var(--farg-status-rod-text); font-weight: 600; }
+
+  .grafer {
+    display: flex;
+    gap: 28px;
+    margin-block-start: var(--rum-4);
+    padding-block-start: var(--rum-3);
+    border-block-start: 1px solid #ECECE6;
+  }
+  .graftitel {
+    display: flex;
+    align-items: center;
+    gap: var(--rum-2);
+    margin: 0 0 var(--rum-1);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+  }
+  .nyckel {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 400;
+    color: var(--farg-text2);
+  }
+  .streckad {
+    inline-size: 14px;
+    border-block-start: 1.25px dashed var(--farg-diagram-referens);
+  }
+
+  .fot {
+    margin: var(--rum-3) 0 0;
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+}
+
+/* Första och senaste värdet ovanför minigrafen (2026-10-08) */
+@layer komponent {
+  .fran {
+    margin: 0 0 var(--rum-2);
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--farg-text2);
+    font-variant-numeric: var(--typ-siffror);
+  }
+  .fran b { font-weight: 700; color: var(--farg-fokus); }
+}

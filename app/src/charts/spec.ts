@@ -40,7 +40,7 @@
 
 import type { Niva, Not, Punkt, Status, TalFormat, VyId } from "../data/modell";
 
-export type DiagramTyp = "linje" | "rangordning" | "stapel" | "smaMultiplar" | "minidiagram";
+export type DiagramTyp = "linje" | "rangordning" | "stapel" | "smaMultiplar" | "minidiagram" | "bump";
 export type SerieRoll = "fokus" | "referens" | "kontext" | "markerad" | "forvantat" | "grans" | "mal";
 export type VisningId = "tid" | "rang" | "enheter" | "enheterRang";
 
@@ -78,7 +78,7 @@ export interface ChartSpec {
   kalla?: { namn: string; url?: string };
   sammanfattning: string;                      // aria-label, 100–200 tecken
   tabell: { caption: string; kolumner: string[]; rader: (string | number | null)[][]; fokusRad?: number };
-  hojdklass: "standard" | "rangordning" | "kompakt" | "minidiagram";
+  hojdklass: "standard" | "rangordning" | "kompakt" | "minidiagram" | "bump";
   platsAv?: number[];                          // nämnaren i "plats r av n" per period (rangordning: en period)
   period?: { iso: string; vy: VyId; text: string };   // rangordningens period; text som i undertiteln ("2025", "mar 2026")
   borrbar?: boolean;                           // enheterna (paneler, rader) ligger under fokus och kan bli fokus (WP10)

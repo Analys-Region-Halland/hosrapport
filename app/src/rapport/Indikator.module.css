@@ -33,9 +33,6 @@
     flex: 0 0 auto;
   }
 
-  .nyckeltal {
-    margin-block-start: var(--rum-2);
-  }
 
   .analys {
     margin-block-start: var(--rum-5);

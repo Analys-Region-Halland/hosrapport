@@ -124,6 +124,7 @@ export const ATERGIVNING: Record<DiagramTyp, string> = {
   stapel: "Stående stapel från noll i fokusfärgen.",
   smaMultiplar: "Ett linjediagram per enhet, högst sex per bild, med delad skala och referensen streckad i varje panel.",
   minidiagram: "Fokuslinjen utan axlar.",
+  bump: "Linjediagram över värdena för fokus och fästa regioner (utan riket); placeringen år för år (bumpdiagrammet) finns bara i webbrapporten.",
 };
 
 /** Högst så här många paneler per bild (små multiplar). */
@@ -609,6 +610,12 @@ export function grafPlan(spec: ChartSpec, ruta: Ruta, sida = 0): GrafPlan {
     case "linje": return linjePlanFull(spec, ruta);
     case "stapel": return stapelPlan(spec, ruta);
     case "rangordning": return rangPlan(spec, ruta);
+    case "bump": {
+      // Bumpdiagrammet har ingen nativ motsvarighet: värdena som linjediagram, med en not
+      const plan = linjePlanFull({ ...spec, typ: "linje", serier: spec.serier.filter((x) => x.roll !== "grans") }, ruta);
+      plan.noter.push("Placeringen bland regionerna år för år finns i webbrapporten.");
+      return plan;
+    }
     case "smaMultiplar": return panelPlan(spec, ruta, sida);
     case "minidiagram": {
       const plan = tomPlan(spec);

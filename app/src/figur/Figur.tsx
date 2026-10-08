@@ -18,8 +18,8 @@
 // Nedborrning (stilguiden 6.7, tillägg i WP10): `onFokus` går både till
 // brödsmulan och till diagrammet, där klick på en panels namn, en rad i
 // enheternas rangordning eller Enter gör enheten till fokus. Brödsmulans
-// landmärke heter "Nivå, {indikatornamn eller titel}", så att flera figurer på
-// samma sida får olika namn.
+// landmärke heter "Nivå, {titel}" (titeln är indikatornamnet), så att flera
+// figurer på samma sida får olika namn.
 
 import { useEffect, useId, useRef, useState } from "react";
 import Diagram from "../charts/Diagram";
@@ -162,7 +162,7 @@ export default function Figur(props: FigurProps) {
       )}
 
       {visaBrodsmula && brodsmula && (
-        <nav className={`${s.hel} ${s.brodsmula}`} aria-label={`Nivå, ${kicker ?? spec.titel}`} data-brodsmula="">
+        <nav className={`${s.hel} ${s.brodsmula}`} aria-label={`Nivå, ${spec.titel}`} data-brodsmula="">
           <ol>
             {brodsmula.map((b, i) => (
               <li key={b.id}>
@@ -190,6 +190,9 @@ export default function Figur(props: FigurProps) {
       {!tabell && (spec.jamforbara?.length ?? 0) > 0 && (
         <div className={`${s.hel} ${s.jamfor}`}>
           <JamforRad spec={spec} fasta={fasta} onFasta={satFasta} />
+          <p className={s.tips} aria-hidden="true">
+            {spec.typ === "rangordning" ? "Peka på en rad för värden, klicka för att fästa regionen" : "Peka på en linje för värden, klicka för att fästa den"}
+          </p>
         </div>
       )}
 

@@ -11,13 +11,14 @@
 // dess <footer>, båda utanför <main>. Ramen (rapport/Ram.tsx) lägger inget eget
 // runt startsidan, så <main id="innehall"> finns här.
 
-import { useId, type ReactNode } from "react";
+import { useId, useMemo, type ReactNode } from "react";
 import { datum } from "../design/format";
 import Lank from "../nav/Lank";
 import { STANDARDVY } from "../nav/route";
 import Kapitelrad from "./Kapitelrad";
-import Statusmatare from "./Statusmatare";
-import type { StartModell } from "./startModell";
+import Statusruta from "./Statusruta";
+import { antalMedStatus, type StartModell } from "./startModell";
+import { useStatusIndikatorer } from "./statusIndikatorer";
 import { useStartModell } from "./useStartModell";
 import s from "./StartSida.module.css";
 
@@ -63,12 +64,20 @@ export default function StartSida(): ReactNode {
 
 function Innehall({ modell }: { modell: StartModell }) {
   const id = useId();
+  const kapitel = useMemo(() => modell.teman.flatMap((t) => t.kapitel), [modell]);
+  const listor = useStatusIndikatorer(kapitel);
+  // Läget just nu får sin lista först när alla kapitel är hämtade (annars vore den ofullständig)
+  const allaListor = kapitel.every((k) => listor.has(k.id)) ? kapitel.flatMap((k) => listor.get(k.id) ?? []) : undefined;
+  const medStatus = kapitel.filter((k) => antalMedStatus(k.status) > 0).length;
   return (
     <>
       <section className={s.lage} aria-labelledby={`${id}-lage`} data-start-lage="">
         <h2 id={`${id}-lage`} className={s.blockrubrik}>Läget just nu</h2>
+        <p className={s.lagetext}>
+          {antalMedStatus(modell.lage)} indikatorer i {medStatus} kapitel har en status. Peka på en kategori för att se vilka.
+        </p>
         <div className={s.lagematare}>
-          <Statusmatare status={modell.lage} storlek="lage" />
+          <Statusruta status={modell.lage} indikatorer={allaListor} storlek="lage" />
         </div>
         <p className={s.lagelank}>
           <Lank till={{ sida: "sammanfattning", vy: STANDARDVY }} className={s.lank} data-start-sammanfattning="">
@@ -82,7 +91,7 @@ function Innehall({ modell }: { modell: StartModell }) {
           <h2 id={`${id}-${t.id}`} className={s.temanamn}>{t.namn}</h2>
           <p className={s.temamening}>{t.mening}</p>
           <ol className={s.kapitellista}>
-            {t.kapitel.map((k) => <Kapitelrad key={k.id} kapitel={k} />)}
+            {t.kapitel.map((k) => <Kapitelrad key={k.id} kapitel={k} indikatorer={listor.get(k.id)} />)}
           </ol>
         </section>
       ))}

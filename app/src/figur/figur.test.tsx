@@ -162,12 +162,21 @@ describe("figuren", () => {
     // Brödsmulans landmärke har ett namn per figur (axe landmark-unique, WP10)
     expect(html).toContain('aria-label="Nivå, Halland jämfört med övriga regioner"');
     expect(html).toContain('<span aria-current="location">Halmstad</span>');
+    // Landmärket heter efter figurens titel (indikatornamnet), inte efter kickern (kapitlet)
     const medNamn = renderToStaticMarkup(
-      <Figur spec={spec()} indikatornamn="Beläggningsgrad"
+      <Figur spec={spec({ titel: "Beläggningsgrad" })} indikatornamn="Akutflöde"
         brodsmula={[{ id: "0013", namn: "Region Halland" }, { id: "halmstad", namn: "Halmstad" }]} />,
     );
     expect(medNamn).toContain('aria-label="Nivå, Beläggningsgrad"');
+    expect(medNamn).not.toContain('aria-label="Nivå, Akutflöde"');
     expect(medNamn).toContain('data-brodsmula-lank="0013"');
+  });
+
+  it("visar ett tips bredvid jämför-raden som beror på graftypen", () => {
+    expect(full).toContain("Peka på en linje för värden, klicka för att fästa den");
+    const rang = renderToStaticMarkup(<Figur spec={spec({ typ: "rangordning" })} />);
+    expect(rang).toContain("Peka på en rad för värden, klicka för att fästa regionen");
+    expect(renderToStaticMarkup(<Figur spec={spec({ jamforbara: [] })} />)).not.toContain("Peka på");
   });
 
   it("jämför med den nivå specen anger, region när den saknas", () => {

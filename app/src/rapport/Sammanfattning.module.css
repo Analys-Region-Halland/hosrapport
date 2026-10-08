@@ -33,3 +33,10 @@
     color: var(--farg-text2);
   }
 }
+
+/* Statusrutan i kapitlets post (2026-10-08): samma ruta som på startsidan, i kapitelradens bredd */
+@layer komponent {
+  .statusruta {
+    max-inline-size: 360px;
+  }
+}

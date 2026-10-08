@@ -3,6 +3,7 @@
 // punkter för Halland, riket, fästa och lyft serie. Ritas om vid varje
 // hovring; de statiska lagren (former.tsx) gör det aldrig. Ägare: WP2.
 
+import { curveBumpX, curveMonotoneX, line } from "d3";
 import { useContext, useMemo, type ReactNode } from "react";
 import { tema } from "../../design/tema";
 import type { AktivPunkt, Scen, Stopp } from "../register";
@@ -50,10 +51,14 @@ export function TidsOverlagg({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpe
   const lyft = aktiv.serieId ? spec.serier.find((s) => s.id === aktiv.serieId) : undefined;
   if (lyft?.roll === "kontext") {
     const st = perSerie.get(lyft.id) ?? [];
-    let d = "";
+    // Samma lätt utjämnade kurva som de statiska linjerna, en bana per sammanhängande del
+    const delbanor: Stopp[][] = [];
     st.forEach((p, i) => {
-      d += `${i > 0 && ordning.get(st[i - 1].index)! === ordning.get(p.index)! - 1 ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+      if (i > 0 && ordning.get(st[i - 1].index)! === ordning.get(p.index)! - 1) delbanor[delbanor.length - 1].push(p);
+      else delbanor.push([p]);
     });
+    const gen = line<Stopp>().curve(scen.kurva === "bump" ? curveBumpX : curveMonotoneX).x((p) => p.x).y((p) => p.y);
+    const d = delbanor.map((b) => gen(b) ?? "").join("");
     const ka = t.diagram.roll.kontextAktiv;
     delar.push(<path key="lyft" d={d} fill="none" stroke={ka.farg} strokeWidth={ka.bredd} strokeLinejoin="round" data-lyft={lyft.id} />);
     // Namnet visas tillfälligt i 600 farg.black (stilguiden 6.4): har serien
@@ -86,7 +91,10 @@ export function TidsOverlagg({ scen, spec, aktiv }: { scen: Scen; spec: ChartSpe
   // Punkter vid perioden för fokus, referens, fästa och lyft serie
   const op = GEOMETRI.overlaggPunkt;
   for (const s of spec.serier) {
-    const visas = s.roll === "fokus" || s.roll === "referens" || s.roll === "markerad" || s.id === lyft?.id;
+    // I bumpdiagrammet har fokus och fästa redan cirklar med platsen; bara den lyfta får en punkt
+    const visas = scen.kurva === "bump"
+      ? s.id === lyft?.id && s.roll === "kontext"
+      : s.roll === "fokus" || s.roll === "referens" || s.roll === "markerad" || s.id === lyft?.id;
     if (!visas) continue;
     const p = perSerie.get(s.id)?.find((x) => x.index === aktiv.index);
     if (!p) continue;

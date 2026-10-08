@@ -55,7 +55,7 @@
     font-variant-numeric: var(--typ-siffror);
   }
 
-  .rad:hover .namn,
+  .rad:hover:not(:has([data-statusruta]:hover)) .namn,
   .lank:focus-visible .namn {
     text-decoration-line: underline;
     text-decoration-thickness: var(--typ-lank-understrykningHover);
@@ -102,13 +102,13 @@
   /* brytpunkt.mellan och uppåt: mätaren i egen spalt, i höjd med namnet */
   @media (min-width: 640px) {
     .rad {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
       column-gap: var(--rum-6);
     }
 
     .matare {
       padding-inline-start: 0;
-      padding-block-start: var(--rum-3);
+      padding-block-start: var(--rum-1);
     }
 
     .matare:empty {

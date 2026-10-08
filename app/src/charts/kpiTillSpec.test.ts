@@ -9,6 +9,7 @@ import { normalisera } from "../data/normalisera";
 import { kpiTillSpec, minidiagramSpec, specTextfel, visningar } from "./kpiTillSpec";
 import type { ChartSpec, SpecKontext, VisningId } from "./spec";
 import { antalMeningar } from "./text";
+import { utanPlatshistorik } from "./typer/provdata";
 
 const DATA = fileURLToPath(new URL("../../public/data/", import.meta.url));
 const filer = readdirSync(DATA).filter((f) => f.endsWith(".json") && f !== "index.json").sort();
@@ -48,7 +49,11 @@ function kontrollera(spec: ChartSpec, kpi: KpiModell, namn: string) {
   // Tabellen: lika många celler som kolumner, fokusraden finns.
   for (const r of spec.tabell.rader) expect(r.length, namn).toBe(spec.tabell.kolumner.length);
   if (spec.tabell.fokusRad !== undefined) expect(spec.tabell.rader[spec.tabell.fokusRad]).toBeDefined();
-  if (spec.typ !== "minidiagram") expect(spec.tabell.caption).toBe(spec.titel);
+  // Bumpdiagrammets tabell har platser i cellerna, och det säger tabellrubriken
+  if (spec.typ === "bump") expect(spec.tabell.caption, namn).toBe(`${spec.titel}: plats bland regionerna per år`);
+  else if (spec.typ !== "minidiagram") expect(spec.tabell.caption, namn).toBe(spec.titel);
+  // Titeln är indikatorns namn i alla visningar (stilguiden 6.2, 2026-10-08).
+  if (spec.typ !== "minidiagram") expect(spec.titel, namn).toBe(kpi.namn);
   expect(kpi.id).toBe(spec.id.split(":")[0]);
 }
 
@@ -79,9 +84,9 @@ describe.each(kapitel)("kpiTillSpec för $fil", ({ kap, vy }) => {
     }
   });
 
-  it("fristående figur får indikatornamnet som kicker", () => {
+  it("fristående figur får kapitelnamnet som kicker", () => {
     const kpi = kap.kpier[0];
-    expect(kpiTillSpec(kpi, kap, { vy, fristaende: true }, "tid").kicker).toBe(kpi.namn);
+    expect(kpiTillSpec(kpi, kap, { vy, fristaende: true }, "tid").kicker).toBe(kap.namn);
     expect(kpiTillSpec(kpi, kap, { vy }, "tid").kicker).toBeUndefined();
   });
 });
@@ -89,11 +94,13 @@ describe.each(kapitel)("kpiTillSpec för $fil", ({ kap, vy }) => {
 describe("rangordningen", () => {
   const skr = kapitel.filter((k) => k.fil.includes("-skr-"));
 
+  // Punktdiagrammet ritas när fokus har plats för färre än två perioder; med hela
+  // serien blir visningen rang ett bumpdiagram (se "placering över tid").
   it("ordningen stämmer med rank i datan för alla SKR-indikatorer", () => {
     let antal = 0;
     for (const { kap, vy } of skr) {
       for (const kpi of kap.kpier) {
-        const spec = kpiTillSpec(kpi, kap, { vy }, "rang");
+        const spec = kpiTillSpec(utanPlatshistorik(kpi), kap, { vy }, "rang");
         expect(spec.typ).toBe("rangordning");
         const rader = spec.serier.filter((s) => s.roll === "fokus" || s.roll === "kontext" || s.roll === "markerad");
         const fokus = kpi.serier[HALLAND_ID];
@@ -127,11 +134,44 @@ describe("rangordningen", () => {
 
   it("riket är referens och regioner utan värde utelämnas med en not", () => {
     const { kap, kpi, vy } = hitta("ar-skr-tillganglighet.json", "kolada-n79179");
-    const spec = kpiTillSpec(kpi, kap, { vy }, "rang");
+    const spec = kpiTillSpec(utanPlatshistorik(kpi), kap, { vy }, "rang");
     expect(spec.serier.find((s) => s.roll === "referens")).toMatchObject({ id: RIKET_ID, namn: "Riket", varde: 88.5 });
     expect(spec.serier.filter((s) => s.roll !== "referens" && s.roll !== "grans")).toHaveLength(19);
     expect(spec.noter.map((n) => n.text)).toContain("Två regioner saknar värde 2025.");
     expect(spec.tabell.rader[spec.tabell.fokusRad as number]).toEqual(["7", "Halland", 89.8]);
+  });
+});
+
+describe("placering över tid (bumpdiagram)", () => {
+  const { kap, kpi, vy } = hitta("ar-skr-tillganglighet.json", "kolada-n79179");
+  const spec = kpiTillSpec(kpi, kap, { vy }, "rang");
+  const linje = kpiTillSpec(kpi, kap, { vy }, "tid");
+
+  it("plats per år för regionerna, riket utgår, topp 3 som gräns och etikett för varje region", () => {
+    expect(spec.typ).toBe("bump");
+    expect(spec.hojdklass).toBe("bump");
+    expect(spec.serier.some((s) => s.id === RIKET_ID || s.roll === "referens")).toBe(false);
+    expect(spec.serier.filter((s) => s.roll === "grans")).toEqual([{ id: "topp3", namn: "Topp 3", roll: "grans", varde: 3 }]);
+    const regioner = spec.serier.filter((s) => s.roll !== "grans");
+    expect(regioner.every((s) => s.platser?.some((p) => p !== null))).toBe(true);
+    expect(spec.etiketter.map((e) => e.serieId)).toEqual(regioner.map((s) => s.id));
+    // Platserna är linjens platser per period; Halland senast på plats 7 som i datan
+    const halland = spec.serier.find((s) => s.id === HALLAND_ID);
+    expect(halland?.platser).toEqual(linje.serier.find((s) => s.id === HALLAND_ID)?.platser);
+    expect(halland?.platser?.at(-1)).toBe(kpi.serier[HALLAND_ID].rank);
+  });
+
+  it("tabellen har platser i cellerna, ordnad efter senaste platsen", () => {
+    expect(spec.tabell.kolumner[0]).toBe("Region");
+    expect(spec.tabell.kolumner).toHaveLength(1 + (spec.serier.find((s) => s.id === HALLAND_ID)?.platser?.length ?? 0));
+    const fokus = spec.tabell.rader[spec.tabell.fokusRad as number];
+    expect(fokus[0]).toBe("Halland");
+    expect(fokus.at(-1)).toBe("7");
+    expect(spec.tabell.rader.flat().slice(1).every((c) => c === null || typeof c === "string")).toBe(true);
+  });
+
+  it("fokus med plats för färre än två perioder ger regionernas rangordning", () => {
+    expect(kpiTillSpec(utanPlatshistorik(kpi), kap, { vy }, "rang").typ).toBe("rangordning");
   });
 });
 
@@ -140,9 +180,14 @@ describe("linje med regioner", () => {
 
   it("titel och undertitel enligt stilguiden 6.2", () => {
     const spec = kpiTillSpec(kpi, kap, { vy }, "tid");
-    expect(spec.titel).toBe("Halland jämfört med övriga regioner");
-    expect(spec.undertitel).toBe("Andelen inkommande telefonsamtal till primärvården som besvarats samma dag, procent. 21 regioner och riket, 2016–2025.");
-    expect(kpiTillSpec(kpi, kap, { vy }, "rang").undertitel).toMatch(/\. 19 regioner med värde, 2025\.$/);
+    expect(spec.titel).toBe(kpi.namn);
+    expect(spec.undertitel).toBe("Andelen inkommande telefonsamtal till primärvården som besvarats samma dag, procent. Halland jämfört med övriga 20 regioner och riket, 2016–2025.");
+    const bump = kpiTillSpec(kpi, kap, { vy }, "rang");
+    expect(bump.titel).toBe(kpi.namn);
+    expect(bump.undertitel).toBe("Andelen inkommande telefonsamtal till primärvården som besvarats samma dag, procent. Placering bland 21 regioner år för år, plats 1 är bäst, 2016–2025.");
+    const rang = kpiTillSpec(utanPlatshistorik(kpi), kap, { vy }, "rang");
+    expect(rang.titel).toBe(kpi.namn);
+    expect(rang.undertitel).toMatch(/\. Regionerna rangordnade, 19 med värde, 2025\.$/);
     expect(visningar(kpi, kap, { vy })).toEqual([{ id: "tid", etikett: "Över tid" }, { id: "rang", etikett: "Rangordning" }]);
   });
 
@@ -183,11 +228,11 @@ describe("linje med regioner", () => {
   it("kronor i undertitel och sammanfattning", () => {
     const k = hitta("ar-skr-kostnader.json", "kolada-u70020");
     const spec = kpiTillSpec(k.kpi, k.kap, { vy }, "tid");
-    expect(spec.undertitel).toBe("Strukturjusterad hälso- och sjukvårdskostnad, kronor per invånare. 21 regioner och riket, 2016–2024.");
+    expect(spec.undertitel).toBe("Strukturjusterad hälso- och sjukvårdskostnad, kronor per invånare. Halland jämfört med övriga 20 regioner och riket, 2016–2024.");
     expect(spec.sammanfattning).toContain(`34${NBSP}371${NBSP}kr`);
     const n = hitta("ar-skr-kostnader.json", "kolada-n70845");
     expect(kpiTillSpec(n.kpi, n.kap, { vy }, "tid").undertitel)
-      .toBe(`Disponibla vårdplatser slutenvård totalt i regionen, antal per 1${NBSP}000 invånare. 21 regioner och riket, 2016–2025.`);
+      .toBe(`Disponibla vårdplatser slutenvård totalt i regionen, antal per 1${NBSP}000 invånare. Halland jämfört med övriga 20 regioner och riket, 2016–2025.`);
   });
 });
 
@@ -196,8 +241,8 @@ describe("intern uppföljning (akutflöde)", () => {
     const { kap, kpi, vy } = hitta("manad-akutflode.json", "belaggning");
     const spec = kpiTillSpec(kpi, kap, { vy }, "tid");
     expect(spec.typ).toBe("linje");
-    expect(spec.titel).toBe("Mot förväntat intervall");
-    expect(spec.undertitel).toBe(`Beläggningsgrad, procent. Region Halland, per månad jan${NBSP}2021–mar${NBSP}2026.`);
+    expect(spec.titel).toBe("Beläggningsgrad");
+    expect(spec.undertitel).toBe(`Beläggningsgrad, procent. Region Halland mot förväntat intervall, per månad jan${NBSP}2021–mar${NBSP}2026.`);
     const band = spec.serier.find((s) => s.roll === "forvantat");
     expect(band?.intervall).toHaveLength(63);
     expect(band?.intervall?.at(-1)).toEqual({ x: "2026-03-01", lo: 96.4, hi: 98.6, lo2: 92.5, hi2: 102.4 });
@@ -213,7 +258,7 @@ describe("intern uppföljning (akutflöde)", () => {
     const { kap, kpi } = hitta("kvartal-akutflode.json", "akutbesok");
     const spec = kpiTillSpec(kpi, kap, { vy: "kvartal" }, "tid");
     expect(spec.typ).toBe("stapel");
-    expect(spec.titel).toBe("Över tid");
+    expect(spec.titel).toBe("Besök akutmottagning");
     expect(spec.y.noll).toBe(true);
     expect(spec.undertitel).toBe(`Besök akutmottagning, antal per kvartal. Region Halland, kv.${NBSP}1${NBSP}2021–kv.${NBSP}1${NBSP}2026.`);
     // Över 24 perioder blir det linje.
@@ -233,7 +278,8 @@ describe("intern uppföljning (akutflöde)", () => {
     const { kap, kpi, vy } = hitta("manad-akutflode.json", "belaggning");
     const spec = kpiTillSpec(kpi, kap, { vy }, "enheter");
     expect(spec.typ).toBe("smaMultiplar");
-    expect(spec.titel).toBe("Per sjukhus");
+    expect(spec.titel).toBe("Beläggningsgrad");
+    expect(spec.undertitel).toMatch(/\. Per sjukhus, tre sjukhus, /);
     // Lägre beläggning är bättre: bäst först (stilguiden 6.6)
     expect(spec.paneler?.map((p) => p.titel)).toEqual(["Kungsbacka", "Varberg", "Halmstad"]);
     expect(spec.serier.find((s) => s.roll === "referens")?.id).toBe(HALLAND_ID);
@@ -242,7 +288,10 @@ describe("intern uppföljning (akutflöde)", () => {
     const besok = hitta("manad-akutflode.json", "akutbesok");
     const summa = kpiTillSpec(besok.kpi, besok.kap, { vy }, "enheter");
     expect(summa.serier.some((s) => s.roll === "referens")).toBe(false);
-    expect(summa.undertitel).toContain("Tre sjukhus i Region Halland");
+    expect(summa.undertitel).toContain("Per sjukhus, tre sjukhus i Region Halland");
+    const rang = kpiTillSpec(kpi, kap, { vy }, "enheterRang");
+    expect(rang.titel).toBe("Beläggningsgrad");
+    expect(rang.undertitel.endsWith(`. Sjukhusen rangordnade, tre med värde, mar${NBSP}2026.`), rang.undertitel).toBe(true);
   });
 });
 
@@ -254,7 +303,8 @@ describe("påhittad hierarki och utdrag", () => {
     expect(visningar(ater, h, { vy: "manad" }).map((v) => v.etikett)).toEqual(["Region Halland", "Per sjukhus", "Sjukhusen rangordnade"]);
     expect(visningar(ater, h, { vy: "manad", fokus: "halmstad" }).map((v) => v.etikett)).toEqual(["Hallands sjukhus Halmstad", "Per avdelning", "Avdelningarna rangordnade"]);
     const avd = kpiTillSpec(ater, h, { vy: "manad", fokus: "halmstad" }, "enheter");
-    expect(avd.titel).toBe("Per avdelning");
+    expect(avd.titel).toBe(ater.namn);
+    expect(avd.undertitel).toMatch(/\. Per avdelning, fyra avdelningar, /);
     expect(avd.paneler).toHaveLength(4);
     const tid = kpiTillSpec(ater, h, { vy: "manad", fokus: "halmstad" }, "tid");
     expect(tid.serier.find((s) => s.roll === "referens")?.id).toBe(HALLAND_ID);
@@ -328,7 +378,7 @@ describe("rättelser i WP3", () => {
   });
 
   it("rangordningen har sin period", () => {
-    expect(kpiTillSpec(telefon.kpi, telefon.kap, { vy: "ar" }, "rang").period).toEqual({ iso: "2025-01-01", vy: "ar", text: "2025" });
+    expect(kpiTillSpec(utanPlatshistorik(telefon.kpi), telefon.kap, { vy: "ar" }, "rang").period).toEqual({ iso: "2025-01-01", vy: "ar", text: "2025" });
     expect(kpiTillSpec(akut.kpi, akut.kap, { vy: "manad" }, "enheterRang").period).toEqual({ iso: "2026-03-01", vy: "manad", text: `mar${NBSP}2026` });
   });
 

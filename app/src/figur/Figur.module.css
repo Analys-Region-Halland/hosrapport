@@ -1,7 +1,9 @@
-/* Figur: plattan runt varje diagram (stilguiden 6.1). Ingen ram, ingen skugga,
-   ingen radie. Plattan är en flexrad som bryts: titelblocket och flikarna delar
-   första raden när de får plats, allt annat tar hela bredden. Avstånden mellan
-   delarna räknas från radavståndet (rum.2) upp till stilguidens värden. */
+/* Figur: kortet runt varje diagram (stilguiden 6.1, omtag 2026-10-08). Kortet
+   lyfter grafen ur sidan: hårlinjeram, rundade hörn, mjuk skugga och en smal
+   grön kant överst. Foten (not, källa, åtgärder) ligger i ett eget band med
+   tonad bakgrund, och åtgärderna är inramade knappar med ikon, så att det syns
+   att grafen går att använda. Kortet är en flexrad som bryts: titelblocket och
+   flikarna delar första raden när de får plats, allt annat tar hela bredden. */
 @layer komponent {
   .platta {
     --figur-luft: var(--rum-5);
@@ -11,11 +13,36 @@
     align-items: flex-start;
     column-gap: var(--rum-5);
     row-gap: var(--rum-2);
+    --figur-radie: 12px;
+    --figur-ram: #D9D9D2;
     max-inline-size: var(--matt-figur);
     margin: 0;
-    padding: var(--figur-luft);
+    padding: calc(var(--figur-luft) + 2px) var(--figur-luft) 0;
     background: var(--farg-yta);
     color: var(--farg-black);
+    border: 1px solid var(--figur-ram);
+    border-radius: var(--figur-radie);
+    box-shadow: 0 1px 2px rgb(16 32 26 / 0.06), 0 10px 28px -12px rgb(16 48 36 / 0.22);
+    transition: box-shadow 160ms ease, border-color 160ms ease;
+  }
+  /* Den gröna kanten överst, innanför hörnen */
+  .platta::before {
+    content: "";
+    position: absolute;
+    inset: -1px -1px auto;
+    block-size: 4px;
+    border-radius: var(--figur-radie) var(--figur-radie) 0 0;
+    background: var(--farg-fokus);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .platta:hover,
+  .platta:focus-within {
+    border-color: #C2C2BA;
+    box-shadow: 0 1px 2px rgb(16 32 26 / 0.07), 0 16px 36px -14px rgb(16 48 36 / 0.3);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .platta { transition: none; }
   }
 
   .rubriker {
@@ -30,23 +57,49 @@
     font-weight: var(--typ-not-viktStark);
     color: var(--farg-text2);
   }
+  /* Titel (indikatorns namn) större och fet, undertiteln i full svärta men
+     mindre och tunnare: hierarkin bärs av storlek och vikt, inte av grått. */
   .titel {
     margin: 0;
     font-family: var(--typ-figurtitel-familj);
-    font-size: var(--typ-figurtitel-storlek);
+    font-size: calc(var(--typ-figurtitel-storlek) + 2px);
     line-height: var(--typ-figurtitel-radhojd);
-    font-weight: var(--typ-figurtitel-vikt);
+    font-weight: 650;
+    letter-spacing: -0.005em;
     color: var(--farg-black);
     text-wrap: balance;
   }
   .undertitel {
-    max-inline-size: 40em;
-    margin: var(--rum-1) 0 0;
+    max-inline-size: 44em;
+    margin: var(--rum-2) 0 0;
+    text-wrap: pretty;
     font-family: var(--typ-granssnitt-familj);
     font-size: var(--typ-granssnitt-storlek);
     line-height: var(--typ-granssnitt-radhojd);
     font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-black);
+  }
+
+  /* Vyvalet som segmentkontroll: en inramad grupp där vald vy är fylld. */
+  .flikar [role="tablist"] {
+    column-gap: 2px;
+    padding: 3px;
+    background: #F1F1EC;
+    border: 1px solid #E2E2DB;
+    border-radius: 10px;
+  }
+  .flikar [role="tab"] {
+    block-size: 30px;
+    padding-inline: var(--rum-3);
+    border: 0;
+    border-radius: 7px;
     color: var(--farg-text2);
+  }
+  .flikar [role="tab"]:hover { color: var(--farg-black); background: rgb(255 255 255 / 0.6); }
+  .flikar [role="tab"][aria-selected="true"] {
+    color: var(--farg-black);
+    background: var(--farg-yta);
+    box-shadow: 0 1px 2px rgb(16 32 26 / 0.12), 0 0 0 1px rgb(16 32 26 / 0.06);
   }
 
   /* Flikarna högerställda på titelraden. */
@@ -125,12 +178,75 @@
     visibility: hidden;
   }
 
-  .jamfor { margin-block-start: calc(var(--rum-3) - var(--rum-2)); }
+  .jamfor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rum-1) var(--rum-4);
+    margin-block-start: calc(var(--rum-3) - var(--rum-2));
+  }
+  /* Tipset om interaktionen, bara där det finns en pekare som kan hovra */
+  .tips {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-text3);
+  }
+  @media (hover: none) {
+    .tips { display: none; }
+  }
 
+  /* Foten: eget band i kortets nederkant med tonad bakgrund */
   .fot {
     display: grid;
     row-gap: var(--rum-1);
-    margin-block-start: calc(var(--rum-4) - var(--rum-2));
+    flex: 0 0 calc(100% + 2 * var(--figur-luft));
+    margin: calc(var(--rum-5) - var(--rum-2)) calc(-1 * var(--figur-luft)) 0;
+    padding: var(--rum-3) var(--figur-luft);
+    background: #F6F6F2;
+    border-block-start: 1px solid #E6E6E0;
+    border-radius: 0 0 calc(var(--figur-radie) - 1px) calc(var(--figur-radie) - 1px);
+  }
+
+  /* Åtgärderna som inramade knappar med ikon (Tabell, Ladda ner, Förstora) */
+  .fot [data-atgarder] {
+    gap: var(--rum-2);
+  }
+  .fot [data-atgarder] button:not([role^="menuitem"]) {
+    gap: 6px;
+    block-size: 32px;
+    padding-inline: 10px 12px;
+    background: var(--farg-yta);
+    border: 1px solid #CFCFC7;
+    border-radius: 8px;
+    color: var(--farg-black);
+    text-decoration: none;
+    box-shadow: 0 1px 1px rgb(16 32 26 / 0.05);
+  }
+  .fot [data-atgarder] button:not([role^="menuitem"]):hover,
+  .fot [data-atgarder] button[aria-expanded="true"] {
+    border-color: var(--farg-black);
+    color: var(--farg-black);
+    text-decoration: none;
+  }
+  .fot [data-atgarder] button:not([role^="menuitem"])::before {
+    content: "";
+    inline-size: 15px;
+    block-size: 15px;
+    flex: none;
+    background: currentColor;
+    mask: var(--ikon) center / contain no-repeat;
+  }
+  .fot [data-atgard="tabell"] {
+    --ikon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5'%3E%3Crect x='1.75' y='2.75' width='12.5' height='10.5' rx='1.5'/%3E%3Cpath d='M1.75 6.25h12.5M1.75 9.75h12.5M6 6.25v7'/%3E%3C/svg%3E");
+  }
+  .fot [data-menyknapp] {
+    --ikon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2v8.5M4.5 7 8 10.5 11.5 7M2.5 13.5h11'/%3E%3C/svg%3E");
+  }
+  .fot [data-atgard="forstora"] {
+    --ikon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9'/%3E%3C/svg%3E");
   }
   .meddelande {
     margin: 0;
@@ -144,11 +260,11 @@
   /* Under brytpunkt.mobil (tema.ts, 639 px): mindre luft och flikarna under
      undertiteln. Mediefrågor kan inte läsa CSS-variabler. */
   @media (max-width: 639px) {
-    .platta { --figur-luft: var(--rum-4); }
+    .platta { --figur-luft: var(--rum-4); --figur-radie: 10px; }
     .flikar { flex-basis: 100%; margin-inline-start: 0; }
   }
 
   @media print {
-    .platta { break-inside: avoid; }
+    .platta { break-inside: avoid; box-shadow: none; }
   }
 }

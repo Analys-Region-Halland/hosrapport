@@ -28,6 +28,7 @@ import { rangordning } from "./typer/rangordning";
 import { stapel } from "./typer/stapel";
 import { smaMultiplar } from "./typer/smaMultiplar";
 import { minidiagram } from "./typer/minidiagram";
+import { bump } from "./typer/bump";
 
 /**
  * Ritordning: axel (seriebrott), zon, band, kontext, mål, referens, markerad,
@@ -43,7 +44,8 @@ export type LagerId = "axel" | "zon" | "band" | "kontext" | "mal" | "referens" |
 export type Form =
   | { typ: "linje"; serieId: string; d: string; farg: string; bredd: number; streck: string | null }
   | { typ: "yta"; serieId: string; d: string; farg: string }
-  | { typ: "punkt"; serieId: string; x: number; y: number; r: number; farg: string }
+  // kant: vit ring runt punkten (punkter per period); puls: slutpunkten pulserar
+  | { typ: "punkt"; serieId: string; x: number; y: number; r: number; farg: string; kant?: number; puls?: boolean }
   | { typ: "markor"; serieId: string; form: "upp" | "ned" | "romb"; x: number; y: number; storlek: number; farg: string }
   | { typ: "streck"; x1: number; y1: number; x2: number; y2: number; farg: string; bredd: number; streck: string | null }
   | { typ: "rekt"; serieId?: string; index?: number; x: number; y: number; b: number; h: number; farg: string; radie?: number }
@@ -73,6 +75,7 @@ export interface Etikett {
   farg: string;
   vikt: number;
   interaktiv: boolean;      // klick fäster eller tar bort serien
+  koppling?: false;         // ingen kopplingslinje (bumpdiagrammets namn ovanför en punkt)
 }
 
 /** Pekar- och tangentbordsmål per period och serie: en definierad punkt. */
@@ -114,6 +117,7 @@ export interface Scen {
   etiketter: Etikett[];       // färdigplacerade efter kollisionslösning
   stopp: Stopp[];             // pekar- och tangentbordsmål per period och serie
   paneler?: ScenPanel[];      // små multiplar: panelerna i visningsordning
+  kurva?: "bump";             // överläggets kurvform: S-kurvor (bumpdiagram); annars monoton (2026-10-08)
 }
 
 export interface Renderare {
@@ -132,4 +136,5 @@ export const RENDERARE: Record<DiagramTyp, Renderare> = {
   stapel,
   smaMultiplar,
   minidiagram,
+  bump,
 };

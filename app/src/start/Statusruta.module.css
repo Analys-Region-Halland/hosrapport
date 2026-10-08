@@ -1,0 +1,234 @@
+/* Statusruta (2026-10-08): ett kort med tre fält, ett per status. Talet stort
+   i statusens textfärg, ordet under, en ruta per indikator i statusens färg.
+   Fältet under pekaren tonas i statusens bakgrund och öppnar listan. Samma
+   kortspråk som figurerna: hårlinjeram, rundade hörn, mjuk skugga. */
+@layer komponent {
+  .ruta {
+    --ram: #D9D9D2;
+    position: relative;
+    z-index: 1; /* ovanför kapitelradens utsträckta länkyta */
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: var(--farg-yta);
+    border: 1px solid var(--ram);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgb(16 32 26 / 0.05), 0 8px 22px -12px rgb(16 48 36 / 0.2);
+  }
+  /* Den öppna rutan ligger över allt annat på sidan, också nästa kapitels ruta */
+  .ruta[data-oppen] { z-index: 40; }
+
+  /* Fälten är inte positionerade: listan placeras mot hela rutan */
+  .falt {
+    min-inline-size: 0;
+  }
+  .falt + .falt .knapp {
+    box-shadow: inset 1px 0 0 #E6E6E0;
+  }
+  .falt:first-child .knapp { border-radius: 11px 0 0 11px; }
+  .falt:last-child .knapp { border-radius: 0 11px 11px 0; }
+
+  .knapp {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    align-content: start;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    padding: 12px 14px 14px;
+    background: none;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color 120ms;
+  }
+  .knapp:disabled { cursor: default; }
+  .knapp:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: calc(-1 * var(--komponent-fokusring-bredd));
+  }
+  .gron .knapp:not(:disabled):hover, .gron.aktiv .knapp { background: var(--farg-status-gron-botten); }
+  .gul .knapp:not(:disabled):hover, .gul.aktiv .knapp { background: var(--farg-status-gul-botten); }
+  .rod .knapp:not(:disabled):hover, .rod.aktiv .knapp { background: var(--farg-status-rod-botten); }
+
+  .tal {
+    font-family: var(--typ-granssnitt-familj);
+    font-size: 26px;
+    line-height: 1.1;
+    font-weight: 650;
+    font-variant-numeric: var(--typ-siffror);
+  }
+  .gron .tal { color: var(--farg-status-gron-text); }
+  .gul .tal { color: var(--farg-status-gul-text); }
+  .rod .tal { color: var(--farg-status-rod-text); }
+  .tomt .tal { color: var(--farg-text3); }
+
+  .ord {
+    display: flex;
+    align-items: baseline;
+    gap: var(--rum-2);
+    margin-block-start: 2px;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-black);
+    white-space: nowrap;
+  }
+  .andel {
+    font-weight: var(--typ-not-vikt);
+    color: var(--farg-text2);
+    font-variant-numeric: var(--typ-siffror);
+  }
+
+  /* En ruta per indikator */
+  .rutor {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 3px;
+    margin-block-start: 10px;
+  }
+  .kvadrat {
+    inline-size: 9px;
+    block-size: 9px;
+    border-radius: 2px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .gron .kvadrat { background: var(--farg-status-gron-markor); }
+  .gul .kvadrat { background: var(--farg-status-gul-markor); }
+  .rod .kvadrat { background: var(--farg-status-rod-markor); }
+
+  /* Läget just nu: större tal och rutor */
+  .lage .knapp { padding: 18px 22px 22px; }
+  .lage .tal { font-size: 44px; letter-spacing: -0.01em; }
+  .lage .ord { font-size: var(--typ-granssnitt-storlek); line-height: var(--typ-granssnitt-radhojd); }
+  .lage .rutor { gap: 4px; margin-block-start: 14px; }
+  .lage .kvadrat { inline-size: 13px; block-size: 13px; border-radius: 3px; }
+  @media (max-width: 639px) {
+    .lage .knapp { padding: 14px 12px 16px; }
+    .lage .tal { font-size: 34px; }
+    .lage .ord { flex-wrap: wrap; column-gap: var(--rum-1); font-size: var(--typ-not-storlek); }
+    .lage .rutor { gap: 3px; }
+    .lage .kvadrat { inline-size: 9px; block-size: 9px; border-radius: 2px; }
+  }
+
+  /* Listan: ett kort under fältet */
+  .lista {
+    position: absolute;
+    inset-block-start: calc(100% + 6px);
+    inset-inline-end: -1px;
+    z-index: 30;
+    box-sizing: border-box;
+    inline-size: max(calc(100% + 2px), 360px);
+    max-inline-size: calc(100vw - 32px);
+    padding: 14px 16px 10px;
+    background: var(--farg-yta);
+    border: 1px solid #D4D4CC;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgb(16 32 26 / 0.06), 0 18px 44px -12px rgb(16 48 36 / 0.32);
+    font-family: var(--typ-granssnitt-familj);
+    color: var(--farg-black);
+    animation: in 120ms ease-out;
+  }
+  /* En osynlig brygga över glipan, så att pekaren kan gå från fältet till listan */
+  .lista::before {
+    content: "";
+    position: absolute;
+    inset: -8px 0 auto;
+    block-size: 8px;
+  }
+  /* Läget just nu: listan i rutans bredd, i två spalter */
+  .lage .lista { inset-inline-start: -1px; }
+  @media (min-width: 720px) {
+    .lage .rullning { max-block-size: none; overflow: visible; columns: 2; column-gap: 32px; }
+    .lage .rullning > div { break-inside: avoid-column; }
+  }
+  @keyframes in {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lista { animation: none; }
+  }
+
+  .listrubrik {
+    display: flex;
+    align-items: center;
+    gap: var(--rum-2);
+    margin: 0 0 var(--rum-2);
+    font-size: var(--typ-granssnitt-storlek);
+    line-height: var(--typ-granssnitt-radhojd);
+    font-weight: var(--typ-granssnitt-viktStark);
+  }
+  .listantal {
+    font-weight: var(--typ-granssnitt-vikt);
+    color: var(--farg-text2);
+  }
+  .prick {
+    inline-size: 10px;
+    block-size: 10px;
+    border-radius: 3px;
+    flex: none;
+  }
+  .gron .prick { background: var(--farg-status-gron-markor); }
+  .gul .prick { background: var(--farg-status-gul-markor); }
+  .rod .prick { background: var(--farg-status-rod-markor); }
+
+  .rullning {
+    max-block-size: min(60vh, 380px);
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-block-start: 1px solid #ECECE6;
+  }
+  .kapitelnamn {
+    margin: var(--rum-3) 0 var(--rum-1);
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    font-weight: var(--typ-not-viktStark);
+    color: var(--farg-fokus);
+  }
+  .indikatorer {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .indikatorer li + li { border-block-start: 1px solid #F0F0EA; }
+  .indikatorlank {
+    display: flex;
+    gap: var(--rum-2);
+    padding-block: 7px;
+    font-family: var(--typ-not-familj);
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--farg-black);
+    text-decoration: none;
+  }
+  .indikatorlank:hover { color: var(--farg-fokus); text-decoration: underline; text-underline-offset: var(--typ-lank-avstand); }
+  .indikatorlank:focus-visible {
+    outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
+    outline-offset: 1px;
+  }
+  .nr {
+    flex: none;
+    min-inline-size: 2.2em;
+    color: var(--farg-fokus);
+    font-variant-numeric: var(--typ-siffror);
+  }
+  .hamtar {
+    margin: 0 0 var(--rum-2);
+    font-size: var(--typ-not-storlek);
+    color: var(--farg-text2);
+  }
+}
+
+/* Spalterna i Läget just nu börjar i samma höjd */
+@layer komponent {
+  .rullning { padding-block-start: var(--rum-3); }
+  .rullning > div:first-child .kapitelnamn { margin-block-start: 0; }
+}

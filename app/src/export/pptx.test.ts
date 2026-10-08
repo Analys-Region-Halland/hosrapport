@@ -15,6 +15,7 @@ import { tema } from "../design/tema";
 import { ATERGIVNING, PANELER_PER_BILD, grafPlan, minstaHojd, panelsidor, type GrafPlan } from "./graf";
 import { delaRader, kortAnalys, meningar, planeraDeck, type LagetRad } from "./innehall";
 import { byggPptx } from "./pptx";
+import { utanPlatshistorik } from "../charts/typer/provdata";
 import { allaFarger, familj, hex } from "./pptxTema";
 
 const DATA = fileURLToPath(new URL("../../public/data/", import.meta.url));
@@ -39,7 +40,7 @@ function hitta(visning: VisningId, villkor: (s: ChartSpec) => boolean, fasta: st
 const serier = (p: GrafPlan) => p.diagram.flatMap((d) => d.serier);
 
 describe("återgivning per graftyp", () => {
-  const typer: DiagramTyp[] = ["linje", "rangordning", "stapel", "smaMultiplar", "minidiagram"];
+  const typer: DiagramTyp[] = ["linje", "rangordning", "stapel", "smaMultiplar", "minidiagram", "bump"];
 
   it("varje graftyp har en beskriven återgivning", () => {
     for (const t of typer) expect(ATERGIVNING[t], t).toMatch(/\S/);
@@ -79,7 +80,11 @@ describe("återgivning per graftyp", () => {
   });
 
   it("rangordning: liggande stapel bäst överst med Halland i fokusfärgen", () => {
-    const { spec } = hitta("rang", (s) => s.typ === "rangordning" && s.serier.some((x) => x.roll === "grans"));
+    // Regionernas rangordning ritas när fokus har plats för färre än två perioder (annars bumpdiagram)
+    const b = hitta("rang", (s) => s.typ === "bump");
+    const spec = kpiTillSpec(utanPlatshistorik(b.kpi), b.kap, { vy: "ar" }, "rang");
+    expect(spec.typ).toBe("rangordning");
+    expect(spec.serier.some((x) => x.roll === "grans")).toBe(true);
     const plan = grafPlan(spec, RUTA);
     const d = plan.diagram[0];
     expect(d.typ).toBe("liggande");
@@ -96,6 +101,16 @@ describe("återgivning per graftyp", () => {
     expect(plan.texter.map((t) => t.text)).toContain("topp 3");
     // 21 rader behöver mer höjd än standardrutan: bilden väljer den höga layouten
     expect(minstaHojd(spec)).toBeGreaterThan(RUTA.h);
+  });
+
+  it("bump: värdena som linjediagram utan topp 3-gräns, med en not om placeringen", () => {
+    const { spec } = hitta("rang", (s) => s.typ === "bump");
+    const plan = grafPlan(spec, RUTA);
+    expect(plan.diagram).toHaveLength(1);
+    expect(plan.diagram[0].typ).toBe("linje");
+    expect(serier(plan).find((x) => x.namn === "Halland")?.farg).toBe(hex(tema.farg.diagram.fokus));
+    expect(plan.linjer.some((l) => l.farg === hex(tema.farg.diagram.grans))).toBe(false);
+    expect(plan.noter).toContain("Placeringen bland regionerna år för år finns i webbrapporten.");
   });
 
   it("stapel över tid: stående staplar från noll", () => {

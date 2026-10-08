@@ -237,15 +237,16 @@ describe("indikatorn visar varje uppgift en gång", () => {
     const html = renderaIndikator(kap, k, vyAv(fil));
     // Status: en markör (rubrikraden), ingen för beskrivande mått
     expect(antal(html, "data-status=")).toBe(k.status ? 1 : 0);
-    // Värde, plats och period står i nyckeltalsraden; platsen inte någon annanstans
-    const { varde, delar } = nyckeltalDelar(k, vyAv(fil));
-    expect(html).toContain(varde);
-    const plats = delar.find((d) => d.startsWith("plats"));
-    if (plats) expect(antal(html, plats)).toBe(1);
-    // Namnet bara i rubriken: figuren har ingen kicker i indikatorn
-    expect(html).toMatch(/<h3[^>]*>.*<\/h3>/);
+    // Ingen nyckeltalsrad (2026-10-08): värde och plats står i analysen, som visas i sin helhet
+    expect(antal(html, "data-nyckeltal")).toBe(0);
+    const forsta = k.analystext.trim().split(/(?<=\.)\s/)[0].slice(0, 40);
+    // Jämförs utan taggar: begreppen i analysen är knappar
+    if (forsta) expect(html.replace(/<[^>]+>/g, ""), "analysens början").toContain(forsta);
+    // Namnet i rubriken (h3) och som figurens titel (h4), aldrig som kicker i indikatorn
+    expect(html).toMatch(new RegExp(`<h3[^>]*>.*${k.namn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</h3>`));
     expect(antal(html, "data-kicker")).toBe(0);
     expect(antal(html, "<h4")).toBe(1);
+    expect(html).toMatch(new RegExp(`<h4[^>]*>${k.namn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</h4>`));
     // Fördjupningen är stängd och proveniensen står en gång
     expect(html).toMatch(/<details(?![^>]*open)/);
     expect(antal(html, "data-proveniens")).toBe(1);

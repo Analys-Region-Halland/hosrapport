@@ -45,8 +45,11 @@ export const GEOMETRI = {
    * till när pekaren går från linjeslutet till en etikett.
    */
   traffHoger: diagram.etikett.kolumnAvstand - (KOPPLING.slut - KOPPLING.knack),
-  /** Klippytan sticker ut så här mycket så att slutpunkter och avvikelsemarkörer (7 px) inte skärs av. */
-  klippMarginal: diagram.roll.forvantat.markor + 1,
+  /**
+   * Klippytan sticker ut så här mycket så att slutpunkter, avvikelsemarkörer (7 px)
+   * och fokuspunktens pulsring (radie × skala plus strecket, 2026-10-08) inte skärs av.
+   */
+  klippMarginal: Math.ceil(Math.max(diagram.roll.forvantat.markor + 1, diagram.roll.fokus.punktradie * diagram.puls.skala + 2)),
   /** Punkter i överlägget (hjälplinjens punkter för visade serier). */
   overlaggPunkt: diagram.overlaggPunkt,
   /** Tooltipen står så här långt från hjälplinjen. */
