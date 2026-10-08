@@ -1,9 +1,9 @@
 // rapport/Kommentar.tsx: verksamhetens kommentar (stilguiden 4.4). Ägare: WP9.
 //
-// Visas bara när en kommentar finns: märket (Textmarke, samma som AI-analysen)
-// med "Verksamhetens kommentar", vem och när ("Robin R, uppdaterad 16 juni
-// 2026"), och därunder texten som vanlig löptext i typ.roll.brod
-// (2026-10-08). I redigeringsläget (route.red) finns "Lägg till kommentar",
+// Visas bara när en kommentar finns, i samma ram som AI-analysen (Textram,
+// 2026-10-08): etiketten "Verksamhetens kommentar", vem och när ("Robin R,
+// uppdaterad 16 juni 2026") och texten som löptext. Titeln och rader som börjar
+// med "## " blir rubriker i kommentaren. I redigeringsläget (route.red) finns "Lägg till kommentar",
 // "Redigera" och "Ta bort". Kommentarerna lagras som i dag via stores/blocks.ts
 // under nyckeln `${vy}:${targetId}`, så att gamla vyns kommentarer syns här och
 // tvärtom. Lagret läses med useSyncExternalStore: ändringar i en annan flik
@@ -15,7 +15,7 @@ import { BLOCKS_KEY, getBlocks, getForfattare, setBlocks, setForfattare } from "
 import { markClean, markDirty } from "../stores/dirty";
 import t from "./delat.module.css";
 import s from "./Kommentar.module.css";
-import Textmarke from "./Textmarke";
+import Textram from "./Textram";
 
 export interface KommentarProps {
   vy: string;
@@ -59,6 +59,25 @@ function skriv(nyckel: string, block: Block[]): void {
   }
 }
 
+/**
+ * Kommentarens stycken (åtskilda av tomrad). En rad som börjar med "#" eller
+ * "##" är en rubrik; texten under den i samma stycke blir ett eget stycke.
+ */
+function stycken(text: string): { text: string; rubrik: boolean }[] {
+  const ut: { text: string; rubrik: boolean }[] = [];
+  for (const stycke of text.split(/\n\s*\n/)) {
+    const rader = stycke.trim().split("\n");
+    const m = /^#{1,3}\s+(.*)$/.exec(rader[0] ?? "");
+    if (m) {
+      ut.push({ text: m[1].trim(), rubrik: true });
+      rader.shift();
+    }
+    const rest = rader.join("\n").trim();
+    if (rest) ut.push({ text: rest, rubrik: false });
+  }
+  return ut;
+}
+
 const nyttId = () => `kommentar-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
 // ── Komponenten ──
@@ -94,13 +113,16 @@ export default function Kommentar({ vy, targetId, redigera }: KommentarProps): R
           <Redigering key={b.id} block={b} onSpara={spara} onAvbryt={() => setRedigerar(null)} />
         ) : (
           <div key={b.id} className={s.post}>
-            <Textmarke ikon="kommentar" rubrik="Verksamhetens kommentar">
-              {[b.author, b.timestamp ? `${b.author ? "uppdaterad" : "Uppdaterad"} ${datum(b.timestamp.slice(0, 10))}` : ""].filter(Boolean).join(", ")}
-            </Textmarke>
-            {b.title && <p className={`${t.brod} ${s.text} ${s.titel}`}>{b.title}</p>}
-            {b.text.split(/\n\s*\n/).filter(Boolean).map((stycke, i) => (
-              <p key={i} className={`${t.brod} ${s.text}`}>{stycke}</p>
-            ))}
+            <Textram
+              ikon="kommentar"
+              etikett="Verksamhetens kommentar"
+              uppgifter={[b.author, b.timestamp ? `${b.author ? "uppdaterad" : "Uppdaterad"} ${datum(b.timestamp.slice(0, 10))}` : ""].filter(Boolean).join(", ")}
+            >
+              {b.title && <h4>{b.title}</h4>}
+              {stycken(b.text).map((st, i) =>
+                st.rubrik ? <h4 key={i}>{st.text}</h4> : <p key={i} className={t.brod}>{st.text}</p>,
+              )}
+            </Textram>
             {redigera && (
               <p className={s.knappar}>
                 <button type="button" className={t.knapp} onClick={() => setRedigerar(b.id)}>Redigera</button>
@@ -163,6 +185,7 @@ function Redigering({ block, onSpara, onAvbryt }: { block: Block; onSpara(b: Blo
         onChange={(e) => setText(e.target.value)}
         autoFocus
       />
+      <p className={s.tips}>En rad som börjar med <code>##</code> blir en rubrik. Tom rad mellan styckena.</p>
       <label className={s.faltetikett} htmlFor={`${id}-signatur`}>Signatur</label>
       <input id={`${id}-signatur`} className={s.falt} value={signatur} onChange={(e) => setSignatur(e.target.value)} />
       <p className={s.knappar}>

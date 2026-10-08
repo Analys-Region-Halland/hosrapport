@@ -199,7 +199,7 @@ Samma sak heter alltid samma sak.
 | Det viktigaste | ≤ 6 punkter, en mening var | En sak per punkt. Valda med regler: statusbyte, bästa och sämsta placering, största rörelse, nått eller lämnat topp 3. Varje punkt slutar med länk till indikatorn. |
 | Avsnittets dek | 1–2 meningar | Vad som skiljer avsnittet ut. Ingen statusräkning (den står i översikten). |
 | Indikatorns analys | 2–4 meningar | Ordning för rankade mått: läge och mål, utveckling, relativt riket och övriga. Börjar inte med siffror som redan står i nyckeltalsraden. Kompletterar grafen, beskriver den inte. |
-| Proveniens | Textmärke före texten | Textmärket (`rapport/Textmarke.tsx`, samma för AI-analysen och verksamhetens kommentar): en liten vit ruta, 1 px ram #D9D9D2, radie 8 px, `typ.roll.not` i `farg.black`, ikon i `farg.fokus`, rubriken i 650 och uppgifterna efter. AI-analysen: **AI-analys** genererad ur rapportens data, `Så skapas texten →` i 600 `farg.fokus`; hela märket är en länk till Om statistiken, hover ger grön ram. Texten därunder är vanlig löptext utan ram (2026-10-08). En märkning per text. |
+| Proveniens | Textram kring texten | Textramen (`rapport/Textram.tsx`, samma för AI-analysen och verksamhetens kommentar, 2026-10-08): vit yta, 1 px ram #DEDED7, radie 10 px, ingen skugga och ingen topplist (figurkortet står starkast), i textspalten och så bred att texten inuti får brödtextens radlängd (padding 14/20/18 px). Överst etiketten som kicker (versaler, `typ.roll.not` 600, spärrad, `farg.fokus`) med ikon, till höger uppgifter i `farg.black` eller en länk i 600 `farg.fokus` med pil. AI-analysen: `✦ AI-ANALYS` och `Så skapas texten →` (Om statistiken). Texten därunder i `typ.roll.brod`. En märkning per text. |
 
 ---
 
@@ -248,7 +248,7 @@ Mål: ≤ 1,3 skärmhöjder i 1440 × 900 med fördjupningen stängd.
 | 2 | Analys | `typ.roll.brod`, 2–5 meningar. Första meningen anger värde, plats och period (det som förr stod i nyckeltalsraden). Proveniensen som en liten ruta före texten (se Proveniens ovan). |
 | 3 | Figur | Avsnitt 6 |
 | 4 | Fördjupning | En `<details>` med summeringen "Om måttet, källan och påverkansfaktorer". Stängd som standard. Innehåll i tre delar med etiketter i `typ.roll.granssnitt` 600: **Vad måttet räknar** (definition, avgränsning, riktning och mål), **Datakälla** (radlista: primärkälla, huvudman, uppdateras, vägen till rapporten), **Påverkansfaktorer** (teoristycke + numrerad lista). |
-| 5 | Verksamhetens kommentar | Visas bara när en kommentar finns: textmärket (se Proveniens) med pratbubbla, **Verksamhetens kommentar** och vem och när (`Robin R, uppdaterad 16 juni 2026`), därunder texten som vanlig löptext i `typ.roll.brod`, utan ram (2026-10-08). "Lägg till kommentar" syns bara i redigeringsläge. |
+| 5 | Verksamhetens kommentar | Visas bara när en kommentar finns, i textramen (se Proveniens): `VERKSAMHETENS KOMMENTAR` med pratbubbla, till höger vem och när (`Robin R, uppdaterad 16 juni 2026`). Titeln och rader som börjar med `## ` blir rubriker (serif 19 px 600), texten i `typ.roll.brod` (2026-10-08). "Lägg till kommentar" syns bara i redigeringsläge. |
 
 Status visas en gång (rubrikraden). Nyckeltalsraden (`71,4 % · plats 4 av 21 · 2025`) används inte (2026-10-08): värde, plats och period står i analysen, figuren och Läget i korthet. Indikatornamnet står i rubriken och som figurens titel, så att figuren står på egna ben när den förstoras, laddas ned eller klistras in i en presentation.
 

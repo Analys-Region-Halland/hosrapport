@@ -3,7 +3,7 @@
 // Ordning, och inget annat:
 //   1 rubrikrad     nummer (farg.fokus) + namn (h3, typ.roll.indikator) +
 //                   statusmarkör efter namnet; ingen markör för beskrivande mått
-//   2 analys        märket AI-analys (Textmarke, länk till Om statistiken), Prosa med begrepp
+//   2 analys        Prosa med begrepp i ramen AI-analys (Textram, länk till Om statistiken)
 //   3 figur         figur/Figur med h4, visningar, nivåer (brödsmula, nedborrning)
 //                   och dagflik, monteras när den närmar sig skärmen
 //   4 fördjupning   stängd <details> (rapport/IndikatorFordjupning)
@@ -34,7 +34,7 @@ import { aktuellRoute, navigera } from "../nav/useRoute";
 import StatusMarkor from "../ui/StatusMarkor";
 import IndikatorFordjupning from "./IndikatorFordjupning";
 import Kommentar from "./Kommentar";
-import Textmarke from "./Textmarke";
+import Textram from "./Textram";
 import { figurReserv, indikatorUppskattning } from "./hojder";
 import { brodsmula, bytFokus, giltigtLage, lageFranAdress, lageTillAdress, type NivaLage } from "./nedborrning";
 import t from "./delat.module.css";
@@ -85,11 +85,9 @@ export default function Indikator({ kpi, kapitel, nummer, vy, redigera = false, 
 
       {analys && (
         <div className={s.analys}>
-          {/* Proveniensen som märke före texten (samma som verksamhetens kommentar) */}
-          <Textmarke ikon="ai" rubrik="AI-analys" till={om} vidare="Så skapas texten" data={{ "data-proveniens": "" }}>
-            genererad ur rapportens data
-          </Textmarke>
-          <Prosa text={analys} redan={redan} className={t.brod} />
+          <Textram ikon="ai" etikett="AI-analys" lank={{ till: om, text: "Så skapas texten" }} data={{ "data-proveniens": "" }}>
+            <Prosa text={analys} redan={redan} className={t.brod} />
+          </Textram>
         </div>
       )}
 

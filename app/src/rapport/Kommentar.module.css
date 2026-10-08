@@ -1,20 +1,21 @@
-/* Kommentar.module.css: verksamhetens kommentar (stilguiden 4.4). Märket före
-   texten är Textmarke; texten har ingen ram eller bakgrund i läsflödet; formuläret i redigeringsläget har fält med
-   hårlinje, eftersom fält måste synas som fält. */
+/* Kommentar.module.css: verksamhetens kommentar (stilguiden 4.4). Kommentaren
+   står i Textram (samma ram som AI-analysen); formuläret i redigeringsläget har
+   fält med hårlinje, eftersom fält måste synas som fält. */
 @layer komponent {
   .kommentar {
     display: grid;
     row-gap: var(--rum-5);
   }
 
-  /* Märket (Textmarke) och texten som vanlig löptext, inget kort (2026-10-08) */
-  .post {
-    max-inline-size: var(--matt-text);
+  .post > .knappar { margin-block-start: var(--rum-2); }
+  .tips {
+    margin: 0;
+    font-family: var(--typ-not-familj);
+    font-size: var(--typ-not-storlek);
+    line-height: var(--typ-not-radhojd);
+    color: var(--farg-black);
   }
-  .post > * + * {
-    margin-block-start: var(--rum-2);
-  }
-  .titel { font-weight: 600; }
+  .tips code { font-weight: 700; }
 
   .text {
     margin: 0;
