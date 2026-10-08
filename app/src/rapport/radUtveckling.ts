@@ -48,6 +48,12 @@ export interface RadUtveckling {
   riket: Periodvarde[];
   /** Platsen bland regionerna över tid; tom för mått utan jämförelse. */
   platser: Periodplats[];
+  /**
+   * Lägsta och högsta värdet bland regionerna (och fokus) under fokus perioder,
+   * minigrafens värdeskala, så att utvecklingen syns i proportion till
+   * skillnaderna mellan regionerna, som i den stora grafen.
+   */
+  spann: [number, number] | null;
   senaste: Periodvarde | null;
   /** Föregående period med värde och förändringen dit. */
   foreg: Periodvarde | null;
@@ -79,6 +85,24 @@ export function radUtveckling(kpi: KpiModell, kap: KapitelModell): RadUtveckling
   const serie = medVarde(fokus?.tidsserie ?? []);
   const riketSerie = kpi.fokus !== RIKET_ID ? kpi.serier[RIKET_ID] : undefined;
   const riket = medVarde(riketSerie?.tidsserie ?? []);
+
+  // Värdeskalans spann: alla regioner under fokus perioder
+  let spann: [number, number] | null = null;
+  if (serie.length) {
+    const perioder = new Set(serie.map((p) => p.period));
+    const regionIds = new Set(kap.enheter.filter((e) => e.niva === "region").map((e) => e.id));
+    regionIds.add(kpi.fokus);
+    let lo = Infinity, hi = -Infinity;
+    for (const [id, s] of Object.entries(kpi.serier)) {
+      if (!regionIds.has(id)) continue;
+      for (const p of s.tidsserie) {
+        if (p.varde === null || !Number.isFinite(p.varde) || !perioder.has(p.period.slice(0, 10))) continue;
+        if (p.varde < lo) lo = p.varde;
+        if (p.varde > hi) hi = p.varde;
+      }
+    }
+    if (lo <= hi) spann = [lo, hi];
+  }
 
   // Platser per period bland regionerna (bara när fokus har en plats från R)
   const platser: Periodplats[] = [];
@@ -118,7 +142,7 @@ export function radUtveckling(kpi: KpiModell, kap: KapitelModell): RadUtveckling
     ? null
     : (forandring > 0) === (kpi.riktning === "hog");
 
-  return { serie, riket, platser, senaste, foreg, forandring, plats, foregPlats, platsForandring, battre };
+  return { serie, riket, platser, spann, senaste, foreg, forandring, plats, foregPlats, platsForandring, battre };
 }
 
 /** "+1,1" eller "−0,4" i värdets format men utan enhet. */

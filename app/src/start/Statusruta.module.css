@@ -199,17 +199,40 @@
     list-style: none;
   }
   .indikatorer li + li { border-block-start: 1px solid #F0F0EA; }
+  /* Raden är en länk vidare till rapporten: under pekaren tonas hela raden,
+     namnet blir grönt och understruket och en pil glider in till höger */
   .indikatorlank {
     display: flex;
+    align-items: baseline;
     gap: var(--rum-2);
-    padding-block: 7px;
+    margin-inline: -8px;
+    padding: 7px 8px;
+    border-radius: 6px;
     font-family: var(--typ-not-familj);
     font-size: 14px;
     line-height: 1.35;
     color: var(--farg-black);
     text-decoration: none;
+    transition: background-color 80ms ease-out;
   }
-  .indikatorlank:hover { color: var(--farg-fokus); text-decoration: underline; text-underline-offset: var(--typ-lank-avstand); }
+  .indikatornamn { flex: 1; }
+  .vidare {
+    flex: none;
+    font-weight: 700;
+    color: var(--farg-fokus);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 80ms ease-out, transform 80ms ease-out;
+  }
+  .indikatorlank:hover, .pekad { background: var(--farg-plats-topp-yta); color: var(--farg-fokus); }
+  .indikatorlank:hover .indikatornamn, .pekad .indikatornamn {
+    text-decoration: underline;
+    text-underline-offset: var(--typ-lank-avstand);
+  }
+  .indikatorlank:hover .vidare, .pekad .vidare { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .indikatorlank, .vidare { transition: none; }
+  }
   .indikatorlank:focus-visible {
     outline: var(--komponent-fokusring-bredd) solid var(--farg-fokusring);
     outline-offset: 1px;

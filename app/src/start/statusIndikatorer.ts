@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { laddaKapitel } from "../data/laddning";
-import type { KapitelModell, Status, VyId } from "../data/modell";
+import type { KapitelModell, KpiModell, Status, VyId } from "../data/modell";
 import { oversiktRader } from "../rapport/oversikt";
 
 export interface StatusIndikator {
@@ -20,13 +20,21 @@ export interface StatusIndikator {
   kapitelId: string;
   kapitelNamn: string;
   vy: VyId;
+  /** Avsnittet i kapitlet, när kapitlet har avsnitt. */
+  avsnitt?: string;
+  /** Indikatorn och kapitlet, för hovringskortet (RadKort). */
+  kpi?: KpiModell;
+  kap: KapitelModell;
 }
 
 /** Kapitlets indikatorer med status, i kapitlets ordning. */
 export function statusIndikatorer(kap: KapitelModell, vy: VyId): StatusIndikator[] {
   return oversiktRader(kap)
     .filter((r): r is typeof r & { status: Status } => r.status !== null)
-    .map((r) => ({ kpiId: r.kpiId, nummer: r.nummer, namn: r.namn, status: r.status, kapitelId: kap.id, kapitelNamn: kap.namn, vy }));
+    .map((r) => ({
+      kpiId: r.kpiId, nummer: r.nummer, namn: r.namn, status: r.status, kapitelId: kap.id, kapitelNamn: kap.namn, vy,
+      avsnitt: r.grupp?.namn, kpi: kap.kpier.find((k) => k.id === r.kpiId), kap,
+    }));
 }
 
 /** Listorna per kapitel, hämtade i bakgrunden. Tom karta tills de finns. */

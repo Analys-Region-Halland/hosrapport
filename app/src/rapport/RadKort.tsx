@@ -3,13 +3,18 @@
 //
 // Visas när pekaren står på raden (eller namnlänken har tangentbordsfokus) och
 // försvinner när den lämnar. Kortet: avsnittet som kicker, indikatorns namn,
-// senaste värdet och platsen med förändringen i ord, och två minigrafer: värdet
-// över tid (Halland och riket streckat) och platsen bland regionerna över tid
-// (plats 1 överst, topp 3 som streckad linje). Sist en rad om att klick leder
+// senaste värdet och platsen med förändringen i ord, och två minigrafer
+// (MiniKurva): värdet över tid på regionernas skala och platsen bland regionerna
+// över tid (plats 1 överst, topp 3 som grönt fält). Sist en rad om att klick leder
 // till indikatorn. Kortet ligger i en portal med fast position, ovanför raden
 // när det finns plats, annars under. Escape stänger (WCAG 1.4.13).
+//
+// Med `sida` (statusrutans lista på startsidan) står kortet bredvid ankaret i
+// stället, till höger om det finns plats, annars till vänster, så att listan
+// syns medan man pekar sig nedåt i den. Höjden mäts innan kortet visas, så att
+// det alltid ryms i fönstret.
 
-import { useEffect, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { KpiModell, Status, VyId } from "../data/modell";
 import { period, varde } from "../design/format";
@@ -26,13 +31,47 @@ export interface RadKortProps {
   status: Status | null;
   utv: RadUtveckling;
   vy: VyId;
-  ankare: { vanster: number; topp: number; botten: number };
+  ankare: { vanster: number; topp: number; botten: number; hoger?: number };
+  /** Kortet bredvid ankaret i stället för ovanför eller under. */
+  sida?: boolean;
+  /** Uppmaningen längst ned. */
+  uppmaning?: string;
   onStang(): void;
 }
 
-const BREDD = 500;
+const BREDD = 520;
+/** Avståndet mellan ankaret och kortet när det står bredvid. */
+const LUFT = 12;
 
-export default function RadKort({ kpi, nummer, avsnitt, status, utv, vy, ankare, onStang }: RadKortProps): ReactNode {
+/**
+ * Kortets läge. Bredvid (`sida`): till höger om ankaret om det får plats,
+ * annars till vänster, i höjd med raden och inom fönstret. Annars, och när det
+ * inte får plats bredvid: ovanför raden om det finns plats, annars under.
+ */
+function lage(h: number, bredd: number, ankare: RadKortProps["ankare"], sida: boolean): { left: number; top: number } {
+  const hoger = ankare.hoger ?? ankare.vanster;
+  const sidled = !sida ? null
+    : innerWidth - hoger >= bredd + 2 * LUFT ? hoger + LUFT
+    : ankare.vanster >= bredd + 2 * LUFT ? ankare.vanster - LUFT - bredd
+    : null;
+  if (sidled !== null) return { left: sidled, top: Math.max(8, Math.min(ankare.topp - 56, innerHeight - h - 8)) };
+  const left = Math.max(8, Math.min(ankare.vanster, innerWidth - bredd - 8));
+  return { left, top: ankare.topp > h + 16 ? ankare.topp - 8 - h : ankare.botten + 8 };
+}
+/** Minigrafernas höjd: plats för hela platsfältet med läsbara steg. */
+const GRAF_HOJD = 156;
+
+export default function RadKort({ kpi, nummer, avsnitt, status, utv, vy, ankare, sida = false, uppmaning = "Klicka på raden för att läsa mer", onStang }: RadKortProps): ReactNode {
+  const ref = useRef<HTMLDivElement>(null);
+  const bredd = Math.min(BREDD, innerWidth - 16);
+  // Läget räknas med kortets uppmätta höjd före första bilden
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const { left, top } = lage(el.offsetHeight, bredd, ankare, sida);
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+  });
   useEffect(() => {
     const tangent = (e: KeyboardEvent) => { if (e.key === "Escape") onStang(); };
     addEventListener("keydown", tangent);
@@ -44,17 +83,10 @@ export default function RadKort({ kpi, nummer, avsnitt, status, utv, vy, ankare,
   const harPlats = utv.platser.length > 1;
   const enhetsord = kpi.format.enhet === "procent" ? " procentenheter" : "";
 
-  const bredd = Math.min(BREDD, innerWidth - 16);
-  const vanster = Math.max(8, Math.min(ankare.vanster, innerWidth - bredd - 8));
-  const hojdGissning = 350;
-  const ovanfor = ankare.topp > hojdGissning + 16;
-  const stil: CSSProperties = ovanfor
-    ? { left: vanster, top: ankare.topp - 8, width: bredd, transform: "translateY(-100%)" }
-    : { left: vanster, top: ankare.botten + 8, width: bredd };
   const grafB = harPlats ? Math.floor((bredd - 32 - 28) / 2) : bredd - 32;
 
   return createPortal(
-    <div className={s.kort} style={stil} role="tooltip" data-radkort={kpi.id}>
+    <div ref={ref} className={s.kort} style={{ width: bredd }} role="tooltip" data-radkort={kpi.id}>
       <div className={s.huvud}>
         <div>
           {avsnitt && <p className={s.kicker}>{nummer} · {avsnitt}</p>}
@@ -105,28 +137,20 @@ export default function RadKort({ kpi, nummer, avsnitt, status, utv, vy, ankare,
       <div className={s.grafer}>
         <div>
           <p className={s.graftitel}>Värde över tid</p>
-          {utv.serie.length > 1 && (
-            <p className={s.fran}>
-              {fmt(utv.serie[0].varde)} <span aria-hidden="true">→</span> <b>{fmt(utv.serie[utv.serie.length - 1].varde)}</b>
-            </p>
-          )}
-          <MiniVarde serie={utv.serie} format={fmt} periodText={per} bredd={grafB} hojd={104} />
+          <MiniVarde serie={utv.serie} spann={utv.spann} format={kpi.format} formatVarde={fmt} periodText={per} bredd={grafB} hojd={GRAF_HOJD} />
         </div>
         {harPlats && (
           <div>
-            <p className={s.graftitel}>Plats bland regionerna</p>
-            <p className={s.fran}>
-              plats {utv.platser[0].plats} <span aria-hidden="true">→</span>{" "}
-              <b style={{ color: tema.farg.plats[platsTon(utv.platser[utv.platser.length - 1].plats, kpi.riktning)].text }}>
-                plats {utv.platser[utv.platser.length - 1].plats}
-              </b>
+            <p className={s.graftitel}>
+              Plats bland regionerna
+              {kpi.riktning !== "neutral" && <span className={s.nyckel}><span className={s.topp3} aria-hidden="true" />topp 3, målet</span>}
             </p>
-            <MiniPlats platser={utv.platser} periodText={per} bredd={grafB} hojd={104} riktning={kpi.riktning} />
+            <MiniPlats platser={utv.platser} periodText={per} bredd={grafB} hojd={GRAF_HOJD} riktning={kpi.riktning} />
           </div>
         )}
       </div>
 
-      <p className={s.fot}>Klicka på raden för att gå till indikatorn</p>
+      <p className={s.fot}>{uppmaning} <span className={s.pil} aria-hidden="true">→</span></p>
     </div>,
     document.body,
   );

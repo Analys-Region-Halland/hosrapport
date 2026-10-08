@@ -5,13 +5,21 @@
 // fokus) öppnas en lista över indikatorerna i kategorin, med länk till var och
 // en. Listan går att peka in i och stängs med Escape (WCAG 1.4.13).
 //
+// Pekar man på en indikator i listan (eller ger länken fokus) visas samma
+// hovringskort som i Läget i korthet (RadKort), bredvid listan, med värdet och
+// platsen över tid och uppmaningen att klicka vidare till rapporten. Kortet
+// kommer nästan direkt och byter indikator utan fördröjning när man pekar sig
+// nedåt i listan.
+//
 // Storlekar: "kapitel" (kapitelraden, kompakt) och "lage" (Läget just nu,
 // större; listan grupperas per kapitel). Färg är aldrig enda bäraren: varje
 // fält har ordet och talet i text.
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Status } from "../data/modell";
 import Lank from "../nav/Lank";
+import RadKort from "../rapport/RadKort";
+import { radUtveckling } from "../rapport/radUtveckling";
 import { antalMedStatus, STATUSORDNING, type StatusRakning } from "./startModell";
 import type { StatusIndikator } from "./statusIndikatorer";
 import s from "./Statusruta.module.css";
@@ -25,11 +33,18 @@ export interface StatusrutaProps {
 
 const ORD: Record<Status, string> = { gron: "I fas", gul: "Bevaka", rod: "Avvikelse" };
 
+interface Pekad { ind: StatusIndikator; ankare: { vanster: number; hoger: number; topp: number; botten: number } }
+
+/** Listor smalare än så har kortet bredvid hela listan; bredare bredvid raden. */
+const SMAL_LISTA = 520;
+
 export default function Statusruta({ status, indikatorer, storlek = "kapitel" }: StatusrutaProps): ReactNode {
   const total = antalMedStatus(status);
   const [oppen, setOppen] = useState<Status | null>(null);
   const timer = useRef(0);
   const id = useId();
+  const [pekad, setPekad] = useState<Pekad | null>(null);
+  const kortTimer = useRef(0);
 
   useEffect(() => {
     if (!oppen) return;
@@ -37,10 +52,36 @@ export default function Statusruta({ status, indikatorer, storlek = "kapitel" }:
     addEventListener("keydown", tangent);
     return () => removeEventListener("keydown", tangent);
   }, [oppen]);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => () => { clearTimeout(timer.current); clearTimeout(kortTimer.current); }, []);
+
+  const stangKort = useCallback(() => { clearTimeout(kortTimer.current); setPekad(null); }, []);
+  const pekadRef = useRef(pekad);
+  useEffect(() => { pekadRef.current = pekad; }, [pekad]);
+  const visaKort = useCallback((ind: StatusIndikator, el: HTMLElement) => {
+    clearTimeout(kortTimer.current);
+    const visa = () => {
+      const rad = el.getBoundingClientRect();
+      const lista = el.closest("[data-statuslista]")?.getBoundingClientRect() ?? rad;
+      const ref = lista.width < SMAL_LISTA ? lista : rad;
+      setPekad({ ind, ankare: { vanster: ref.left, hoger: ref.right, topp: rad.top, botten: rad.bottom } });
+    };
+    // Första kortet efter en kort stund (inte när pekaren bara passerar), sedan direkt
+    if (pekadRef.current) visa();
+    else kortTimer.current = window.setTimeout(visa, 60);
+  }, []);
+  const lamnaRad = useCallback(() => {
+    clearTimeout(kortTimer.current);
+    kortTimer.current = window.setTimeout(() => setPekad(null), 80);
+  }, []);
+  const pekadInd = pekad?.ind;
+  const utv = useMemo(() => (pekadInd?.kpi ? radUtveckling(pekadInd.kpi, pekadInd.kap) : null), [pekadInd]);
 
   if (total === 0) return null;
-  const oppna = (st: Status) => { clearTimeout(timer.current); setOppen(st); };
+  const oppna = (st: Status) => {
+    clearTimeout(timer.current);
+    if (st !== oppen) { clearTimeout(kortTimer.current); setPekad(null); }
+    setOppen(st);
+  };
   const stang = () => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setOppen(null), 140); };
 
   return (
@@ -82,6 +123,7 @@ export default function Statusruta({ status, indikatorer, storlek = "kapitel" }:
             {aktiv && (
               <div
                 id={listId}
+                data-statuslista=""
                 className={s.lista}
                 role="region"
                 aria-label={`${ORD[st]}: ${n} ${n === 1 ? "indikator" : "indikatorer"}`}
@@ -91,17 +133,40 @@ export default function Statusruta({ status, indikatorer, storlek = "kapitel" }:
                   <span className={s.prick} aria-hidden="true" />
                   {ORD[st]} <span className={s.listantal}>{n} {n === 1 ? "indikator" : "indikatorer"}</span>
                 </p>
-                {lista ? <Lista lista={lista} grupperad={storlek === "lage"} /> : <p className={s.hamtar}>Hämtar indikatorerna …</p>}
+                {lista
+                  ? <Lista lista={lista} grupperad={storlek === "lage"} pekadId={pekad?.ind.kpiId} onVisa={visaKort} onLamna={lamnaRad} />
+                  : <p className={s.hamtar}>Hämtar indikatorerna …</p>}
               </div>
             )}
           </div>
         );
       })}
+      {/* Kortet hör till den öppna listan */}
+      {pekad?.ind.kpi && utv && oppen === pekad.ind.status && (
+        <RadKort
+          kpi={pekad.ind.kpi}
+          nummer={pekad.ind.nummer}
+          avsnitt={pekad.ind.avsnitt ?? pekad.ind.kapitelNamn}
+          status={pekad.ind.status}
+          utv={utv}
+          vy={pekad.ind.vy}
+          ankare={pekad.ankare}
+          sida
+          uppmaning="Klicka för att läsa mer i rapporten"
+          onStang={stangKort}
+        />
+      )}
     </div>
   );
 }
 
-function Lista({ lista, grupperad }: { lista: StatusIndikator[]; grupperad: boolean }) {
+function Lista({ lista, grupperad, pekadId, onVisa, onLamna }: {
+  lista: StatusIndikator[];
+  grupperad: boolean;
+  pekadId?: string;
+  onVisa(ind: StatusIndikator, el: HTMLElement): void;
+  onLamna(): void;
+}) {
   const grupper: { namn: string; id: string; rader: StatusIndikator[] }[] = [];
   for (const i of lista) {
     const sista = grupper[grupper.length - 1];
@@ -117,9 +182,17 @@ function Lista({ lista, grupperad }: { lista: StatusIndikator[]; grupperad: bool
           <ul className={s.indikatorer}>
             {g.rader.map((i) => (
               <li key={i.kpiId}>
-                <Lank till={{ sida: "kapitel", id: i.kapitelId, vy: i.vy, i: i.kpiId }} className={s.indikatorlank}>
+                <Lank
+                  till={{ sida: "kapitel", id: i.kapitelId, vy: i.vy, i: i.kpiId }}
+                  className={`${s.indikatorlank} ${pekadId === i.kpiId ? s.pekad : ""}`}
+                  onPointerEnter={(e) => { if (e.pointerType === "mouse") onVisa(i, e.currentTarget); }}
+                  onPointerLeave={(e) => { if (e.pointerType === "mouse") onLamna(); }}
+                  onFocus={(e) => onVisa(i, e.currentTarget)}
+                  onBlur={onLamna}
+                >
                   <span className={s.nr}>{i.nummer}</span>
-                  <span>{i.namn}</span>
+                  <span className={s.indikatornamn}>{i.namn}</span>
+                  <span className={s.vidare} aria-hidden="true">→</span>
                 </Lank>
               </li>
             ))}

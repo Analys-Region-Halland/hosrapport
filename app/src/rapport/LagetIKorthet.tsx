@@ -132,6 +132,7 @@ export default function LagetIKorthet({ kapitel, vy, redigera = false }: LagetIK
           utv={pekadUtv}
           vy={vy}
           ankare={pekad.ankare}
+          uppmaning="Klicka på raden för att läsa mer"
           onStang={stang}
         />
       )}

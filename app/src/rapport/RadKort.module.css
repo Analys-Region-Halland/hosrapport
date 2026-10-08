@@ -83,7 +83,7 @@
     display: flex;
     align-items: center;
     gap: var(--rum-2);
-    margin: 0 0 var(--rum-1);
+    margin: 0 0 var(--rum-2);
     font-size: var(--typ-not-storlek);
     line-height: var(--typ-not-radhojd);
     font-weight: var(--typ-not-viktStark);
@@ -95,27 +95,29 @@
     font-weight: 400;
     color: var(--farg-text2);
   }
-  .streckad {
+  .graftitel { white-space: nowrap; }
+  .nyckel { margin-inline-start: auto; font-size: 12px; }
+  .topp3 {
     inline-size: 14px;
-    border-block-start: 1.25px dashed var(--farg-diagram-referens);
+    block-size: 10px;
+    background: var(--farg-plats-topp-yta);
+    border-block-end: 1.25px solid var(--farg-plats-topp-punkt);
   }
 
+  /* Uppmaningen: ett grönt fält längst ned i kortets fulla bredd */
   .fot {
-    margin: var(--rum-3) 0 0;
-    font-size: var(--typ-not-storlek);
-    line-height: var(--typ-not-radhojd);
-    color: var(--farg-text3);
-  }
-}
-
-/* Första och senaste värdet ovanför minigrafen (2026-10-08) */
-@layer komponent {
-  .fran {
-    margin: 0 0 var(--rum-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rum-2);
+    margin: var(--rum-4) calc(-1 * var(--rum-4)) calc(-1 * var(--rum-4));
+    padding: 10px var(--rum-4);
+    background: var(--farg-fokus);
+    border-radius: 0 0 11px 11px;
     font-size: 14px;
     line-height: 1.3;
-    color: var(--farg-text2);
-    font-variant-numeric: var(--typ-siffror);
+    font-weight: 650;
+    color: var(--farg-yta);
   }
-  .fran b { font-weight: 700; color: var(--farg-fokus); }
+  .pil { font-size: 18px; line-height: 1; }
 }
