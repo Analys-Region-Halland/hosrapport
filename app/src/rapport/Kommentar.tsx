@@ -4,8 +4,9 @@
 // 2026-10-08): etiketten "Verksamhetens kommentar", vem och när ("Robin R,
 // uppdaterad 16 juni 2026") och texten som löptext. Titeln blir kommentarens
 // rubrik, rader som börjar med "## " mellanrubriker och rader med "- " punkter.
-// Utan egen kommentar visas det fiktiva exemplet, när ett finns, märkt
-// "Fiktivt exempel" (data/exempelkommentarer.ts). I redigeringsläget (route.red) finns "Lägg till kommentar",
+// Det fiktiva exemplet, när ett finns, står alltid först, märkt "Fiktivt
+// exempel" och utan redigering (data/exempelkommentarer.ts); egna kommentarer
+// står efter. I redigeringsläget (route.red) finns "Lägg till kommentar",
 // "Redigera" och "Ta bort". Kommentarerna lagras som i dag via stores/blocks.ts
 // under nyckeln `${vy}:${targetId}`, så att gamla vyns kommentarer syns här och
 // tvärtom. Lagret läses med useSyncExternalStore: ändringar i en annan flik
@@ -95,9 +96,10 @@ const nyttId = () => `kommentar-${Date.now().toString(36)}-${Math.random().toStr
 export default function Kommentar({ vy, targetId, redigera }: KommentarProps): ReactNode {
   const nyckel = `${vy}:${targetId}`;
   const json = useSyncExternalStore(prenumerera, () => lasJson(nyckel), () => "[]");
-  const egna: Block[] = JSON.parse(json);
-  // Utan egen kommentar visas ett fiktivt exempel när det finns (data/exempelkommentarer.ts)
-  const block: Block[] = egna.length ? egna : (EXEMPELKOMMENTARER[nyckel] ?? []);
+  // De egna kommentarerna (webbläsarens lager); redigering och borttagning gäller bara dem
+  const block: Block[] = JSON.parse(json);
+  // Det fiktiva exemplet (data/exempelkommentarer.ts) står alltid först och går inte att ändra
+  const exempel = EXEMPELKOMMENTARER[nyckel] ?? [];
   const [redigerar, setRedigerar] = useState<string | null>(null);
   const [ny, setNy] = useState<Block | null>(null);
 
@@ -116,11 +118,11 @@ export default function Kommentar({ vy, targetId, redigera }: KommentarProps): R
     setRedigerar(null);
   };
 
-  if (!block.length && !redigera) return null;
+  if (!block.length && !exempel.length && !redigera) return null;
 
   return (
     <div className={s.kommentar} data-kommentar={targetId}>
-      {block.map((b) =>
+      {[...exempel, ...block].map((b) =>
         redigerar === b.id && redigera ? (
           <Redigering key={b.id} block={b} onSpara={spara} onAvbryt={() => setRedigerar(null)} />
         ) : (
@@ -138,7 +140,7 @@ export default function Kommentar({ vy, targetId, redigera }: KommentarProps): R
                 : <p key={i} className={t.brod}>{st.text}</p>,
               )}
             </Textram>
-            {redigera && (
+            {redigera && !b.id.startsWith(EXEMPEL_PREFIX) && (
               <p className={s.knappar}>
                 <button type="button" className={t.knapp} onClick={() => setRedigerar(b.id)}>Redigera</button>
                 <button type="button" className={t.knapp} onClick={() => taBort(b.id)}>Ta bort</button>
