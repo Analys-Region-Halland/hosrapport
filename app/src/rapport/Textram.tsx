@@ -19,6 +19,8 @@ import s from "./Textram.module.css";
 export interface TextramProps {
   ikon: "ai" | "kommentar";
   etikett: string;
+  /** En markering efter etiketten, t.ex. "Fiktivt exempel". */
+  markering?: string;
   /** Uppgifterna till höger på etikettraden (vem och när). */
   uppgifter?: ReactNode;
   /** Länken till höger på etikettraden. */
@@ -33,13 +35,14 @@ const IKONER: Record<TextramProps["ikon"], ReactNode> = {
   kommentar: <path d="M3.5 4.5h13a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9l-4 3v-3H3.5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z" />,
 };
 
-export default function Textram({ ikon, etikett, uppgifter, lank, children, data = {} }: TextramProps): ReactNode {
+export default function Textram({ ikon, etikett, markering, uppgifter, lank, children, data = {} }: TextramProps): ReactNode {
   return (
     <div className={s.ram} {...data}>
       <div className={s.huvud}>
         <p className={s.etikett}>
           <svg className={s.ikon} viewBox="0 0 20 20" aria-hidden="true">{IKONER[ikon]}</svg>
           {etikett}
+          {markering && <span className={s.markering}>{markering}</span>}
         </p>
         {uppgifter && <p className={s.uppgifter}>{uppgifter}</p>}
         {lank && (

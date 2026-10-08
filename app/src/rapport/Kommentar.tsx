@@ -2,8 +2,10 @@
 //
 // Visas bara när en kommentar finns, i samma ram som AI-analysen (Textram,
 // 2026-10-08): etiketten "Verksamhetens kommentar", vem och när ("Robin R,
-// uppdaterad 16 juni 2026") och texten som löptext. Titeln och rader som börjar
-// med "## " blir rubriker i kommentaren. I redigeringsläget (route.red) finns "Lägg till kommentar",
+// uppdaterad 16 juni 2026") och texten som löptext. Titeln blir kommentarens
+// rubrik, rader som börjar med "## " mellanrubriker och rader med "- " punkter.
+// Utan egen kommentar visas det fiktiva exemplet, när ett finns, märkt
+// "Fiktivt exempel" (data/exempelkommentarer.ts). I redigeringsläget (route.red) finns "Lägg till kommentar",
 // "Redigera" och "Ta bort". Kommentarerna lagras som i dag via stores/blocks.ts
 // under nyckeln `${vy}:${targetId}`, så att gamla vyns kommentarer syns här och
 // tvärtom. Lagret läses med useSyncExternalStore: ändringar i en annan flik
@@ -15,6 +17,7 @@ import { BLOCKS_KEY, getBlocks, getForfattare, setBlocks, setForfattare } from "
 import { markClean, markDirty } from "../stores/dirty";
 import t from "./delat.module.css";
 import s from "./Kommentar.module.css";
+import { EXEMPEL_PREFIX, EXEMPELKOMMENTARER } from "../data/exempelkommentarer";
 import Textram from "./Textram";
 
 export interface KommentarProps {
@@ -59,21 +62,28 @@ function skriv(nyckel: string, block: Block[]): void {
   }
 }
 
+type Stycke = { typ: "rubrik" | "text"; text: string } | { typ: "lista"; punkter: string[] };
+
 /**
  * Kommentarens stycken (åtskilda av tomrad). En rad som börjar med "#" eller
  * "##" är en rubrik; texten under den i samma stycke blir ett eget stycke.
+ * Ett stycke där alla rader börjar med "- " är en punktlista.
  */
-function stycken(text: string): { text: string; rubrik: boolean }[] {
-  const ut: { text: string; rubrik: boolean }[] = [];
+function stycken(text: string): Stycke[] {
+  const ut: Stycke[] = [];
   for (const stycke of text.split(/\n\s*\n/)) {
     const rader = stycke.trim().split("\n");
     const m = /^#{1,3}\s+(.*)$/.exec(rader[0] ?? "");
     if (m) {
-      ut.push({ text: m[1].trim(), rubrik: true });
+      ut.push({ typ: "rubrik", text: m[1].trim() });
       rader.shift();
     }
+    if (rader.length && rader.every((r) => /^-\s+/.test(r.trim()))) {
+      ut.push({ typ: "lista", punkter: rader.map((r) => r.trim().replace(/^-\s+/, "")) });
+      continue;
+    }
     const rest = rader.join("\n").trim();
-    if (rest) ut.push({ text: rest, rubrik: false });
+    if (rest) ut.push({ typ: "text", text: rest });
   }
   return ut;
 }
@@ -85,7 +95,9 @@ const nyttId = () => `kommentar-${Date.now().toString(36)}-${Math.random().toStr
 export default function Kommentar({ vy, targetId, redigera }: KommentarProps): ReactNode {
   const nyckel = `${vy}:${targetId}`;
   const json = useSyncExternalStore(prenumerera, () => lasJson(nyckel), () => "[]");
-  const block: Block[] = JSON.parse(json);
+  const egna: Block[] = JSON.parse(json);
+  // Utan egen kommentar visas ett fiktivt exempel när det finns (data/exempelkommentarer.ts)
+  const block: Block[] = egna.length ? egna : (EXEMPELKOMMENTARER[nyckel] ?? []);
   const [redigerar, setRedigerar] = useState<string | null>(null);
   const [ny, setNy] = useState<Block | null>(null);
 
@@ -116,11 +128,14 @@ export default function Kommentar({ vy, targetId, redigera }: KommentarProps): R
             <Textram
               ikon="kommentar"
               etikett="Verksamhetens kommentar"
+              markering={b.id.startsWith(EXEMPEL_PREFIX) ? "Fiktivt exempel" : undefined}
               uppgifter={[b.author, b.timestamp ? `${b.author ? "uppdaterad" : "Uppdaterad"} ${datum(b.timestamp.slice(0, 10))}` : ""].filter(Boolean).join(", ")}
             >
               {b.title && <h4>{b.title}</h4>}
               {stycken(b.text).map((st, i) =>
-                st.rubrik ? <h4 key={i}>{st.text}</h4> : <p key={i} className={t.brod}>{st.text}</p>,
+                st.typ === "rubrik" ? <h5 key={i}>{st.text}</h5>
+                : st.typ === "lista" ? <ul key={i} className={t.brod}>{st.punkter.map((p, j) => <li key={j}>{p}</li>)}</ul>
+                : <p key={i} className={t.brod}>{st.text}</p>,
               )}
             </Textram>
             {redigera && (
@@ -185,7 +200,7 @@ function Redigering({ block, onSpara, onAvbryt }: { block: Block; onSpara(b: Blo
         onChange={(e) => setText(e.target.value)}
         autoFocus
       />
-      <p className={s.tips}>En rad som börjar med <code>##</code> blir en rubrik. Tom rad mellan styckena.</p>
+      <p className={s.tips}>En rad som börjar med <code>##</code> blir en mellanrubrik, en rad som börjar med <code>-</code> en punkt. Tom rad mellan styckena.</p>
       <label className={s.faltetikett} htmlFor={`${id}-signatur`}>Signatur</label>
       <input id={`${id}-signatur`} className={s.falt} value={signatur} onChange={(e) => setSignatur(e.target.value)} />
       <p className={s.knappar}>
